@@ -1,7 +1,8 @@
 ---
 // src/pages/login.astro
-// STANDALONE — does NOT use BaseLayout
-// No dependency on FloatingChatbot, AnnouncementStrip or any Phase 3 components
+// FINAL FIX: env vars via define:vars, listeners via DOMContentLoaded
+const SUPABASE_URL = import.meta.env.PUBLIC_SUPABASE_URL
+const SUPABASE_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY
 ---
 
 <!DOCTYPE html>
@@ -12,117 +13,63 @@
   <title>Student Login — ATEC Educational Society</title>
   <meta name="robots" content="noindex,nofollow" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500;600&display=swap" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@700;800&family=Inter:wght@400;500;600&display=swap" />
   <link rel="icon" type="image/png" href="/favicon.png" />
+
+  <!-- Pass env vars to browser synchronously BEFORE page renders -->
+  <script define:vars={{ SUPABASE_URL, SUPABASE_KEY }}>
+    window.__SB_URL = SUPABASE_URL
+    window.__SB_KEY = SUPABASE_KEY
+  </script>
+
   <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      font-family: 'Inter', sans-serif;
-      background: linear-gradient(135deg, #0b1f3f 0%, #1c3d7a 100%);
-      min-height: 100vh;
-      display: flex; align-items: center; justify-content: center;
-      padding: 24px 16px;
-    }
-    .wrap {
-      width: 100%; max-width: 440px;
-      display: flex; flex-direction: column; align-items: center; gap: 24px;
-    }
-
-    /* Logo */
-    .logo { display: inline-flex; align-items: center; gap: 10px; text-decoration: none; }
-    .logo-mark {
-      width: 44px; height: 44px; border-radius: 12px;
-      background: #d4f01a;
-      display: flex; align-items: center; justify-content: center;
-      font-family: 'Sora', sans-serif; font-weight: 800; font-size: 20px; color: #0f2347;
-    }
-    .logo-name { font-family: 'Sora', sans-serif; font-weight: 800; font-size: 18px; color: #fff; line-height: 1.1; }
-    .logo-sub { font-size: 11px; color: rgba(255,255,255,0.5); }
-
-    /* Card */
-    .card {
-      width: 100%; background: #fff; border-radius: 20px;
-      padding: 36px 32px; box-shadow: 0 24px 60px rgba(0,0,0,0.3);
-    }
-    h1 { font-family: 'Sora', sans-serif; font-size: 1.5rem; font-weight: 800; color: #0f1724; margin-bottom: 4px; }
-    .sub { font-size: 14px; color: #6b7280; margin-bottom: 28px; }
-
-    /* Google btn */
-    .google-btn {
-      width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px;
-      padding: 12px; border: 1.5px solid #e5e7eb; border-radius: 10px;
-      background: #fff; cursor: pointer; font-size: 14px; font-weight: 600;
-      color: #374151; font-family: 'Inter', sans-serif; transition: border-color 0.2s; margin-bottom: 18px;
-    }
-    .google-btn:hover { border-color: #1c3d7a; }
-
-    .divider { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; }
-    .divider-line { flex: 1; height: 1px; background: #e5e7eb; }
-    .divider span { font-size: 12px; color: #9ca3af; }
-
-    /* Form */
-    label { display: block; font-size: 13px; font-weight: 600; color: #374151; margin-bottom: 5px; }
-    .field { margin-bottom: 14px; }
-    input {
-      width: 100%; padding: 12px 14px;
-      border: 1.5px solid #e5e7eb; border-radius: 10px;
-      font-size: 15px; font-family: 'Inter', sans-serif;
-      outline: none; transition: border-color 0.2s;
-    }
-    input:focus { border-color: #1c3d7a; }
-    .forgot { display: flex; justify-content: flex-end; margin-bottom: 5px; }
-    .forgot a { font-size: 13px; color: #1c3d7a; font-weight: 600; text-decoration: none; }
-    .pass-wrap { position: relative; }
-    .pass-toggle {
-      position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
-      background: none; border: none; cursor: pointer; font-size: 16px; color: #9ca3af; padding: 4px;
-    }
-
-    /* Error */
-    .error {
-      background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px;
-      padding: 10px 14px; font-size: 13px; color: #991b1b;
-      margin-bottom: 14px; display: none;
-    }
-    .error.show { display: block; }
-
-    /* Submit */
-    .submit-btn {
-      width: 100%; padding: 14px; background: #1c3d7a; color: #fff;
-      border: none; border-radius: 10px;
-      font-family: 'Sora', sans-serif; font-weight: 800; font-size: 15px;
-      cursor: pointer; transition: background 0.2s; margin-top: 4px;
-    }
-    .submit-btn:hover { background: #0f2347; }
-    .submit-btn:disabled { background: #9ca3af; cursor: not-allowed; }
-
-    /* Switch */
-    .switch { text-align: center; font-size: 14px; color: #6b7280; margin-top: 20px; }
-    .switch a { color: #1c3d7a; font-weight: 600; text-decoration: none; }
-
-    /* Footer */
-    .foot { font-size: 13px; color: rgba(255,255,255,0.4); text-align: center; }
-    .foot a { color: rgba(255,255,255,0.55); text-decoration: none; }
-    .foot a:hover { color: #d4f01a; }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:'Inter',sans-serif;background:linear-gradient(135deg,#0b1f3f 0%,#1c3d7a 100%);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px 16px}
+    .wrap{width:100%;max-width:440px;display:flex;flex-direction:column;align-items:center;gap:24px}
+    .logo{display:inline-flex;align-items:center;gap:10px;text-decoration:none}
+    .logo-mark{width:44px;height:44px;border-radius:12px;background:#d4f01a;display:flex;align-items:center;justify-content:center;font-family:'Sora',sans-serif;font-weight:800;font-size:20px;color:#0f2347}
+    .logo-name{font-family:'Sora',sans-serif;font-weight:800;font-size:18px;color:#fff;line-height:1.1}
+    .logo-sub{font-size:11px;color:rgba(255,255,255,0.5)}
+    .card{width:100%;background:#fff;border-radius:20px;padding:36px 32px;box-shadow:0 24px 60px rgba(0,0,0,0.3)}
+    h1{font-family:'Sora',sans-serif;font-size:1.5rem;font-weight:800;color:#0f1724;margin-bottom:4px}
+    .sub{font-size:14px;color:#6b7280;margin-bottom:28px}
+    .google-btn{width:100%;display:flex;align-items:center;justify-content:center;gap:10px;padding:12px;border:1.5px solid #e5e7eb;border-radius:10px;background:#fff;cursor:pointer;font-size:14px;font-weight:600;color:#374151;font-family:'Inter',sans-serif;margin-bottom:18px}
+    .google-btn:hover{border-color:#1c3d7a}
+    .divider{display:flex;align-items:center;gap:12px;margin-bottom:18px}
+    .div-line{flex:1;height:1px;background:#e5e7eb}
+    .div-txt{font-size:12px;color:#9ca3af}
+    .field{margin-bottom:14px}
+    label{display:block;font-size:13px;font-weight:600;color:#374151;margin-bottom:5px}
+    .row{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px}
+    .row a{font-size:13px;color:#1c3d7a;font-weight:600;text-decoration:none}
+    .pw{position:relative}
+    .eye{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:16px;color:#9ca3af;padding:4px;line-height:1}
+    input[type=email],input[type=password],input[type=text]{width:100%;padding:12px 14px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:15px;font-family:'Inter',sans-serif;outline:none;transition:border-color 0.2s}
+    input:focus{border-color:#1c3d7a}
+    .err{background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:10px 14px;font-size:13px;color:#991b1b;margin-bottom:14px;display:none}
+    .err.show{display:block}
+    #login-btn{width:100%;padding:14px;background:#1c3d7a;color:#fff;border:none;border-radius:10px;font-family:'Sora',sans-serif;font-weight:800;font-size:15px;cursor:pointer;margin-top:4px}
+    #login-btn:hover{background:#0f2347}
+    #login-btn:disabled{background:#9ca3af;cursor:not-allowed}
+    .switch{text-align:center;font-size:14px;color:#6b7280;margin-top:20px}
+    .switch a{color:#1c3d7a;font-weight:600;text-decoration:none}
+    .foot{font-size:13px;color:rgba(255,255,255,0.4);text-align:center}
+    .foot a{color:rgba(255,255,255,0.55);text-decoration:none}
   </style>
 </head>
 <body>
   <div class="wrap">
-
     <a href="/" class="logo">
       <div class="logo-mark">A</div>
-      <div>
-        <div class="logo-name">ATEC</div>
-        <div class="logo-sub">Educational Society</div>
-      </div>
+      <div><div class="logo-name">ATEC</div><div class="logo-sub">Educational Society</div></div>
     </a>
 
     <div class="card">
       <h1>Welcome Back</h1>
       <p class="sub">Login to access your courses and dashboard</p>
 
-      <!-- Google Login -->
-      <button class="google-btn" id="google-btn" type="button">
+      <!-- NO <form> tag — prevents browser GET submission -->
+      <button type="button" class="google-btn" id="google-btn">
         <svg width="18" height="18" viewBox="0 0 24 24">
           <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
           <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
@@ -133,95 +80,132 @@
       </button>
 
       <div class="divider">
-        <div class="divider-line"></div>
-        <span>or login with email</span>
-        <div class="divider-line"></div>
+        <div class="div-line"></div>
+        <span class="div-txt">or login with email</span>
+        <div class="div-line"></div>
       </div>
 
-      <div id="error-box" class="error"></div>
+      <div id="err" class="err"></div>
 
-      <form id="login-form">
-        <div class="field">
-          <label for="email">Email Address</label>
-          <input type="email" id="email" placeholder="you@example.com" required autocomplete="email" />
+      <div class="field">
+        <label for="em">Email Address</label>
+        <!-- NO name attribute = never leaks to URL -->
+        <input type="email" id="em" placeholder="you@example.com" autocomplete="username" />
+      </div>
+
+      <div class="field">
+        <div class="row">
+          <label for="pw" style="margin:0">Password</label>
+          <a href="/forgot-password">Forgot password?</a>
         </div>
-
-        <div class="field">
-          <div class="forgot"><a href="/forgot-password">Forgot password?</a></div>
-          <div class="pass-wrap">
-            <input type="password" id="password" placeholder="Enter your password" required autocomplete="current-password" />
-            <button type="button" class="pass-toggle" id="pass-toggle">👁️</button>
-          </div>
+        <div class="pw">
+          <input type="password" id="pw" placeholder="Enter your password" autocomplete="current-password" />
+          <button type="button" class="eye" id="eye-btn">👁️</button>
         </div>
+      </div>
 
-        <button type="submit" class="submit-btn" id="submit-btn">Login to My Account</button>
-      </form>
+      <!-- type="button" — NOT "submit", no form tag -->
+      <button type="button" id="login-btn">Login to My Account</button>
 
       <p class="switch">Don't have an account? <a href="/signup">Create one free</a></p>
     </div>
 
     <p class="foot">
-      <a href="/verification">Verify a certificate</a> ·
+      <a href="/verification">Verify certificate</a> ·
       <a href="/courses">Browse courses</a> ·
       <a href="/admin/login">Admin login</a>
     </p>
   </div>
 
-  <script type="module">
-    import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+  <!-- 
+    CRITICAL: Use DOMContentLoaded so listeners attach SYNCHRONOUSLY when DOM is ready.
+    Do NOT use async init() at top level — it attaches listeners too late.
+    Supabase is only imported on button click (lazy), not upfront.
+  -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      var pwInput = document.getElementById('pw')
 
-    const supabase = createClient(
-      import.meta.env.PUBLIC_SUPABASE_URL,
-      import.meta.env.PUBLIC_SUPABASE_ANON_KEY
-    )
-
-    // If already logged in redirect to dashboard
-    const { data: { session } } = await supabase.auth.getSession()
-    if (session) window.location.href = '/dashboard'
-
-    // Google login
-    document.getElementById('google-btn').addEventListener('click', async () => {
-      await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: { redirectTo: window.location.origin + '/dashboard' }
+      // Eye toggle — pure sync, no async needed
+      document.getElementById('eye-btn').addEventListener('click', function () {
+        pwInput.type = pwInput.type === 'password' ? 'text' : 'password'
       })
-    })
 
-    // Password toggle
-    const passInput = document.getElementById('password')
-    document.getElementById('pass-toggle').addEventListener('click', () => {
-      passInput.type = passInput.type === 'password' ? 'text' : 'password'
-    })
+      // Enter key on both fields
+      document.getElementById('em').addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') doLogin()
+      })
+      pwInput.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') doLogin()
+      })
 
-    // Email login
-    const form = document.getElementById('login-form')
-    const btn = document.getElementById('submit-btn')
-    const errorBox = document.getElementById('error-box')
+      // Google login button
+      document.getElementById('google-btn').addEventListener('click', async function () {
+        var mod = await import('https://esm.sh/@supabase/supabase-js@2')
+        var sb = mod.createClient(window.__SB_URL, window.__SB_KEY)
+        await sb.auth.signInWithOAuth({
+          provider: 'google',
+          options: { redirectTo: window.location.origin + '/dashboard' }
+        })
+      })
 
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault()
-      errorBox.classList.remove('show')
-      btn.disabled = true
-      btn.textContent = 'Logging in...'
+      // Main login button — listener attached synchronously
+      document.getElementById('login-btn').addEventListener('click', doLogin)
 
-      const email = document.getElementById('email').value.trim()
-      const password = document.getElementById('password').value
+      // Check if already logged in
+      ;(async function checkSession() {
+        try {
+          var mod = await import('https://esm.sh/@supabase/supabase-js@2')
+          var sb = mod.createClient(window.__SB_URL, window.__SB_KEY)
+          var res = await sb.auth.getSession()
+          if (res.data.session) window.location.href = '/dashboard'
+        } catch (e) {}
+      })()
 
-      const { error } = await supabase.auth.signInWithPassword({ email, password })
+      async function doLogin() {
+        var errEl = document.getElementById('err')
+        var btn = document.getElementById('login-btn')
+        errEl.classList.remove('show')
 
-      if (error) {
-        errorBox.textContent = '⚠️ ' + (error.message === 'Invalid login credentials'
-          ? 'Incorrect email or password. Please try again.'
-          : error.message)
-        errorBox.classList.add('show')
-        btn.disabled = false
-        btn.textContent = 'Login to My Account'
-        return
+        var email = document.getElementById('em').value.trim()
+        var password = pwInput.value
+
+        if (!email || !password) {
+          errEl.textContent = '⚠️ Please enter your email and password'
+          errEl.classList.add('show')
+          return
+        }
+
+        btn.disabled = true
+        btn.textContent = 'Logging in...'
+
+        try {
+          var mod = await import('https://esm.sh/@supabase/supabase-js@2')
+          var supabase = mod.createClient(window.__SB_URL, window.__SB_KEY)
+          var result = await supabase.auth.signInWithPassword({ email: email, password: password })
+
+          if (result.error) {
+            errEl.textContent = '⚠️ ' + (
+              result.error.message === 'Invalid login credentials'
+                ? 'Incorrect email or password. Please try again.'
+                : result.error.message
+            )
+            errEl.classList.add('show')
+            btn.disabled = false
+            btn.textContent = 'Login to My Account'
+            return
+          }
+
+          btn.textContent = '✅ Redirecting...'
+          var params = new URLSearchParams(window.location.search)
+          window.location.href = params.get('redirect') || '/dashboard'
+        } catch (e) {
+          errEl.textContent = '⚠️ Connection error. Please try again.'
+          errEl.classList.add('show')
+          btn.disabled = false
+          btn.textContent = 'Login to My Account'
+        }
       }
-
-      btn.textContent = '✅ Redirecting...'
-      const params = new URLSearchParams(window.location.search)
-      window.location.href = params.get('redirect') ?? '/dashboard'
     })
   </script>
 </body>

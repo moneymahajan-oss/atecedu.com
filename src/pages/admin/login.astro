@@ -1,9 +1,9 @@
 ---
 // src/pages/admin/login.astro
-// FIXED: env vars passed via define:vars
+// FINAL FIX: define:vars + DOMContentLoaded (not async init)
 const SUPABASE_URL = import.meta.env.PUBLIC_SUPABASE_URL
 const SUPABASE_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY
-const ADMIN_EMAILS = ['atecgsp@gmail.com', 'admin@atecedu.com']
+const ADMIN_EMAILS_STR = 'atecgsp@gmail.com,admin@atecedu.com'
 ---
 
 <!DOCTYPE html>
@@ -16,10 +16,11 @@ const ADMIN_EMAILS = ['atecgsp@gmail.com', 'admin@atecedu.com']
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@700;800&family=Inter:wght@400;500;600&display=swap" />
   <link rel="icon" type="image/png" href="/favicon.png" />
 
-  <script define:vars={{ SUPABASE_URL, SUPABASE_KEY, ADMIN_EMAILS }}>
-    window.__SB_URL = SUPABASE_URL
-    window.__SB_KEY = SUPABASE_KEY
-    window.__ADMIN_EMAILS = ADMIN_EMAILS
+  <!-- Synchronous window globals BEFORE DOM renders -->
+  <script define:vars={{ SUPABASE_URL, SUPABASE_KEY, ADMIN_EMAILS_STR }}>
+    window.__SB_URL    = SUPABASE_URL
+    window.__SB_KEY    = SUPABASE_KEY
+    window.__SB_ADMINS = ADMIN_EMAILS_STR.split(',')
   </script>
 
   <style>
@@ -31,20 +32,20 @@ const ADMIN_EMAILS = ['atecgsp@gmail.com', 'admin@atecedu.com']
     .logo-name{font-family:'Sora',sans-serif;font-weight:800;font-size:18px;color:#fff;line-height:1.1}
     .logo-sub{font-size:11px;color:rgba(255,255,255,0.5)}
     .card{width:100%;background:#fff;border-radius:20px;padding:36px 32px;box-shadow:0 24px 60px rgba(0,0,0,0.3)}
-    .admin-badge{display:inline-flex;align-items:center;gap:6px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:6px;padding:4px 10px;font-size:11px;font-weight:700;color:#1e40af;margin-bottom:14px}
+    .badge{display:inline-flex;align-items:center;gap:6px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:6px;padding:4px 10px;font-size:11px;font-weight:700;color:#1e40af;margin-bottom:14px}
     h1{font-family:'Sora',sans-serif;font-size:1.5rem;font-weight:800;color:#0f1724;margin-bottom:4px}
     .sub{font-size:14px;color:#6b7280;margin-bottom:24px}
-    label{display:block;font-size:13px;font-weight:600;color:#374151;margin-bottom:5px}
     .field{margin-bottom:14px}
-    .pass-wrap{position:relative}
-    .pass-toggle{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:16px;color:#9ca3af;padding:4px}
-    input{width:100%;padding:12px 14px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:15px;font-family:'Inter',sans-serif;outline:none;transition:border-color 0.2s}
+    label{display:block;font-size:13px;font-weight:600;color:#374151;margin-bottom:5px}
+    .pw{position:relative}
+    .eye{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:16px;color:#9ca3af;padding:4px;line-height:1}
+    input[type=email],input[type=password],input[type=text]{width:100%;padding:12px 14px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:15px;font-family:'Inter',sans-serif;outline:none;transition:border-color 0.2s}
     input:focus{border-color:#1c3d7a}
-    .error{background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:10px 14px;font-size:13px;color:#991b1b;margin-bottom:14px;display:none}
-    .error.show{display:block}
-    .btn{width:100%;padding:14px;background:#1c3d7a;color:#fff;border:none;border-radius:10px;font-family:'Sora',sans-serif;font-weight:800;font-size:15px;cursor:pointer;transition:background 0.2s}
-    .btn:hover{background:#0f2347}
-    .btn:disabled{background:#9ca3af;cursor:not-allowed}
+    .err{background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:10px 14px;font-size:13px;color:#991b1b;margin-bottom:14px;display:none}
+    .err.show{display:block}
+    #login-btn{width:100%;padding:14px;background:#1c3d7a;color:#fff;border:none;border-radius:10px;font-family:'Sora',sans-serif;font-weight:800;font-size:15px;cursor:pointer}
+    #login-btn:hover{background:#0f2347}
+    #login-btn:disabled{background:#9ca3af;cursor:not-allowed}
     .back{display:block;text-align:center;margin-top:16px;font-size:13px;color:#9ca3af;text-decoration:none}
     .back:hover{color:#1c3d7a}
   </style>
@@ -55,106 +56,130 @@ const ADMIN_EMAILS = ['atecgsp@gmail.com', 'admin@atecedu.com']
       <div class="logo-mark">A</div>
       <div><div class="logo-name">ATEC</div><div class="logo-sub">Educational Society</div></div>
     </a>
-
     <div class="card">
-      <div class="admin-badge">🔐 Admin Access Only</div>
+      <div class="badge">🔐 Admin Access Only</div>
       <h1>Admin Login</h1>
       <p class="sub">Sign in to manage your website</p>
 
-      <div id="error-box" class="error"></div>
+      <div id="err" class="err"></div>
 
       <div class="field">
-        <label for="email">Admin Email</label>
-        <input type="email" id="email" placeholder="atecgsp@gmail.com" autocomplete="email" />
+        <label for="em">Admin Email</label>
+        <!-- NO name attribute -->
+        <input type="email" id="em" placeholder="atecgsp@gmail.com" autocomplete="username" />
       </div>
 
       <div class="field">
-        <label for="password">Password</label>
-        <div class="pass-wrap">
-          <input type="password" id="password" placeholder="Enter your password" autocomplete="current-password" />
-          <button type="button" class="pass-toggle" id="pass-toggle">👁️</button>
+        <label for="pw">Password</label>
+        <div class="pw">
+          <input type="password" id="pw" placeholder="Enter your password" autocomplete="current-password" />
+          <button type="button" class="eye" id="eye-btn">👁️</button>
         </div>
       </div>
 
-      <button class="btn" id="login-btn">Login to Admin Panel</button>
+      <!-- type="button" — NOT submit, no form tag -->
+      <button type="button" id="login-btn">Login to Admin Panel</button>
       <a href="/" class="back">← Back to website</a>
     </div>
   </div>
 
+  <!--
+    DOMContentLoaded ensures listeners attach synchronously when DOM is ready.
+    Supabase loaded lazily only on button click.
+    No async init() at top level — that causes the race condition.
+  -->
   <script>
-    async function init() {
-      const URL  = window.__SB_URL
-      const KEY  = window.__SB_KEY
-      const EMAILS = window.__ADMIN_EMAILS || ['atecgsp@gmail.com']
+    document.addEventListener('DOMContentLoaded', function () {
+      var pwInput = document.getElementById('pw')
+      var admins  = window.__SB_ADMINS || ['atecgsp@gmail.com']
 
-      const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2')
-      const supabase = createClient(URL, KEY)
-
-      // Already logged in as admin? Go straight to admin panel
-      const { data: { session } } = await supabase.auth.getSession()
-      if (session?.user && EMAILS.includes(session.user.email ?? '')) {
-        window.location.href = '/admin'
-        return
-      }
-
-      // Password toggle
-      const passInput = document.getElementById('password')
-      document.getElementById('pass-toggle').addEventListener('click', () => {
-        passInput.type = passInput.type === 'password' ? 'text' : 'password'
+      // Eye toggle
+      document.getElementById('eye-btn').addEventListener('click', function () {
+        pwInput.type = pwInput.type === 'password' ? 'text' : 'password'
       })
 
       // Enter key
-      document.getElementById('password').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin() })
-      document.getElementById('email').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin() })
+      document.getElementById('em').addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') doLogin()
+      })
+      pwInput.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') doLogin()
+      })
+
+      // Login button — attached synchronously
       document.getElementById('login-btn').addEventListener('click', doLogin)
 
-      async function doLogin() {
-        const errorBox = document.getElementById('error-box')
-        const btn = document.getElementById('login-btn')
-        errorBox.classList.remove('show')
+      // If already logged in as admin, redirect
+      ;(async function checkSession() {
+        try {
+          var mod = await import('https://esm.sh/@supabase/supabase-js@2')
+          var sb = mod.createClient(window.__SB_URL, window.__SB_KEY)
+          var res = await sb.auth.getSession()
+          if (res.data.session?.user && admins.includes(res.data.session.user.email)) {
+            window.location.href = '/admin'
+          }
+        } catch (e) {}
+      })()
 
-        const email = document.getElementById('email').value.trim()
-        const password = document.getElementById('password').value
+      async function doLogin() {
+        var errEl = document.getElementById('err')
+        var btn   = document.getElementById('login-btn')
+        errEl.classList.remove('show')
+
+        var email    = document.getElementById('em').value.trim()
+        var password = pwInput.value
 
         if (!email || !password) {
-          errorBox.textContent = '⚠️ Please enter email and password'
-          errorBox.classList.add('show')
+          errEl.textContent = '⚠️ Please enter your email and password'
+          errEl.classList.add('show')
           return
         }
 
-        if (!EMAILS.includes(email)) {
-          errorBox.textContent = '⚠️ This email is not authorised for admin access'
-          errorBox.classList.add('show')
+        if (!admins.includes(email)) {
+          errEl.textContent = '⚠️ This email is not authorised for admin access'
+          errEl.classList.add('show')
           return
         }
 
-        btn.disabled = true
+        btn.disabled    = true
         btn.textContent = 'Logging in...'
 
-        const { data, error } = await supabase.auth.signInWithPassword({ email, password })
+        try {
+          var mod      = await import('https://esm.sh/@supabase/supabase-js@2')
+          var supabase = mod.createClient(window.__SB_URL, window.__SB_KEY)
+          var result   = await supabase.auth.signInWithPassword({ email: email, password: password })
 
-        if (error) {
-          errorBox.textContent = '⚠️ ' + (error.message === 'Invalid login credentials' ? 'Incorrect email or password.' : error.message)
-          errorBox.classList.add('show')
-          btn.disabled = false
+          if (result.error) {
+            errEl.textContent = '⚠️ ' + (
+              result.error.message === 'Invalid login credentials'
+                ? 'Incorrect email or password. Please try again.'
+                : result.error.message
+            )
+            errEl.classList.add('show')
+            btn.disabled    = false
+            btn.textContent = 'Login to Admin Panel'
+            return
+          }
+
+          if (!admins.includes(result.data.user?.email || '')) {
+            await supabase.auth.signOut()
+            errEl.textContent = '⚠️ Access denied. Admin accounts only.'
+            errEl.classList.add('show')
+            btn.disabled    = false
+            btn.textContent = 'Login to Admin Panel'
+            return
+          }
+
+          btn.textContent = '✅ Redirecting...'
+          window.location.href = '/admin'
+        } catch (e) {
+          errEl.textContent = '⚠️ Connection error. Please try again.'
+          errEl.classList.add('show')
+          btn.disabled    = false
           btn.textContent = 'Login to Admin Panel'
-          return
         }
-
-        if (!EMAILS.includes(data.user?.email ?? '')) {
-          await supabase.auth.signOut()
-          errorBox.textContent = '⚠️ Access denied. Admin accounts only.'
-          errorBox.classList.add('show')
-          btn.disabled = false
-          btn.textContent = 'Login to Admin Panel'
-          return
-        }
-
-        btn.textContent = '✅ Redirecting...'
-        window.location.href = '/admin'
       }
-    }
-    init()
+    })
   </script>
 </body>
 </html>

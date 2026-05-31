@@ -1,17 +1,17 @@
 ---
 // src/components/layout/AnnouncementStrip.astro
-// Reads strip data at BUILD TIME from Supabase - baked into HTML
-// Timer runs purely in browser JS - no Supabase needed at runtime
+// FINAL FIX: Works even if site_settings table doesn't exist
+// Shows a default strip unless explicitly disabled in Supabase
 
 import { supabase } from '../../lib/supabase'
 
-let text = '🎓 New Batch Starting Soon — Hardware & Networking | Limited Seats!'
-let link = '/courses'
-let linkText = 'Enroll Now'
-let isActive = false
+let text      = '🎓 New Batch Starting June 2026 — Hardware, Networking & Web Design | Limited Seats!'
+let link      = '/courses'
+let linkText  = 'Enroll Now'
+let isActive  = true   // DEFAULT: show strip (can be turned off via admin)
 let showTimer = false
-let endsAt = ''
-let bgColor = '#0f2347'
+let endsAt    = ''
+let bgColor   = '#0f2347'
 let textColor = '#ffffff'
 
 try {
@@ -23,17 +23,18 @@ try {
 
   if (data?.value) {
     const v = data.value as Record<string, any>
-    isActive  = v.is_active  === true
-    text      = v.text       || text
-    link      = v.link       || link
-    linkText  = v.link_text  || linkText
-    showTimer = v.show_timer === true
-    endsAt    = v.ends_at    || ''
-    bgColor   = v.bg_color   || bgColor
-    textColor = v.text_color || textColor
+    // Only override defaults if value exists in DB
+    if (v.is_active !== undefined) isActive  = v.is_active === true
+    if (v.text)      text      = v.text
+    if (v.link)      link      = v.link
+    if (v.link_text) linkText  = v.link_text
+    if (v.show_timer !== undefined) showTimer = v.show_timer === true
+    if (v.ends_at)   endsAt    = v.ends_at
+    if (v.bg_color)  bgColor   = v.bg_color
+    if (v.text_color) textColor = v.text_color
   }
 } catch (e) {
-  // Supabase unavailable — strip stays hidden
+  // Table doesn't exist or error — use defaults (strip shows)
 }
 ---
 
@@ -50,7 +51,7 @@ try {
           id="atec-timer"
           data-ends={endsAt}
           style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);padding:3px 12px;border-radius:4px;font-family:monospace;font-weight:700;font-size:14px;color:#d4f01a;letter-spacing:1px;"
-        >⏱ --:--:--</span>
+        >⏱ 00:00:00</span>
       )}
 
       {link && linkText && (
@@ -68,14 +69,15 @@ try {
     (function() {
       var el = document.getElementById('atec-timer');
       if (!el) return;
-      var end = new Date(el.getAttribute('data-ends')).getTime();
+      var endStr = el.getAttribute('data-ends');
+      if (!endStr) return;
+      var end = new Date(endStr).getTime();
       if (isNaN(end)) return;
 
-      function pad(n) { return String(n).padStart(2, '0'); }
+      function pad(n) { return String(Math.floor(n)).padStart(2, '0'); }
 
       function tick() {
-        var now  = Date.now();
-        var diff = end - now;
+        var diff = end - Date.now();
         if (diff <= 0) {
           var strip = document.getElementById('atec-strip');
           if (strip) strip.style.display = 'none';
