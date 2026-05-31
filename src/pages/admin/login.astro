@@ -1,7 +1,9 @@
 ---
 // src/pages/admin/login.astro
-// Separate admin login — does NOT use BaseLayout (no navbar/footer)
-import '../../../src/styles/global.css'
+// FIXED: env vars passed via define:vars
+const SUPABASE_URL = import.meta.env.PUBLIC_SUPABASE_URL
+const SUPABASE_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY
+const ADMIN_EMAILS = ['atecgsp@gmail.com', 'admin@atecedu.com']
 ---
 
 <!DOCTYPE html>
@@ -11,181 +13,148 @@ import '../../../src/styles/global.css'
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Admin Login — ATEC</title>
   <meta name="robots" content="noindex,nofollow" />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500;600&display=swap" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@700;800&family=Inter:wght@400;500;600&display=swap" />
+  <link rel="icon" type="image/png" href="/favicon.png" />
+
+  <script define:vars={{ SUPABASE_URL, SUPABASE_KEY, ADMIN_EMAILS }}>
+    window.__SB_URL = SUPABASE_URL
+    window.__SB_KEY = SUPABASE_KEY
+    window.__ADMIN_EMAILS = ADMIN_EMAILS
+  </script>
+
   <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      font-family: 'Inter', sans-serif;
-      background: linear-gradient(135deg, #0b1f3f 0%, #1c3d7a 100%);
-      min-height: 100vh;
-      display: flex; align-items: center; justify-content: center;
-      padding: 24px;
-    }
-    .card {
-      background: #fff; border-radius: 20px;
-      padding: 40px 36px; width: 100%; max-width: 400px;
-      box-shadow: 0 24px 60px rgba(0,0,0,0.3);
-    }
-    .logo { display: flex; align-items: center; gap: 12px; margin-bottom: 28px; }
-    .logo-mark {
-      width: 44px; height: 44px; border-radius: 12px;
-      background: #1c3d7a;
-      display: flex; align-items: center; justify-content: center;
-      font-family: 'Sora', sans-serif; font-weight: 800; font-size: 20px;
-      color: #d4f01a;
-    }
-    .logo-name { font-family: 'Sora', sans-serif; font-weight: 800; font-size: 18px; color: #0f1724; line-height: 1.1; }
-    .logo-sub { font-size: 11px; color: #9ca3af; }
-    h1 { font-family: 'Sora', sans-serif; font-size: 1.4rem; font-weight: 800; color: #0f1724; margin-bottom: 4px; }
-    p.sub { font-size: 13px; color: #6b7280; margin-bottom: 24px; }
-    label { display: block; font-size: 13px; font-weight: 600; color: #374151; margin-bottom: 5px; }
-    input {
-      width: 100%; padding: 12px 14px;
-      border: 1.5px solid #e5e7eb; border-radius: 10px;
-      font-size: 15px; font-family: 'Inter', sans-serif;
-      outline: none; transition: border-color 0.2s;
-      margin-bottom: 14px;
-    }
-    input:focus { border-color: #1c3d7a; }
-    button {
-      width: 100%; padding: 14px;
-      background: #1c3d7a; color: #fff;
-      border: none; border-radius: 10px;
-      font-family: 'Sora', sans-serif; font-weight: 800;
-      font-size: 15px; cursor: pointer;
-      transition: background 0.2s; margin-top: 4px;
-    }
-    button:hover { background: #0f2347; }
-    button:disabled { background: #9ca3af; cursor: not-allowed; }
-    .error {
-      background: #fef2f2; border: 1px solid #fecaca;
-      border-radius: 8px; padding: 10px 14px;
-      font-size: 13px; color: #991b1b;
-      margin-bottom: 14px; display: none;
-    }
-    .error.show { display: block; }
-    .admin-badge {
-      display: inline-flex; align-items: center; gap: 6px;
-      background: #eff6ff; border: 1px solid #bfdbfe;
-      border-radius: 6px; padding: 4px 10px;
-      font-size: 11px; font-weight: 700; color: #1e40af;
-      margin-bottom: 16px;
-    }
-    .back-link {
-      display: block; text-align: center; margin-top: 16px;
-      font-size: 13px; color: #9ca3af; text-decoration: none;
-    }
-    .back-link:hover { color: #1c3d7a; }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:'Inter',sans-serif;background:linear-gradient(135deg,#0b1f3f 0%,#1c3d7a 100%);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
+    .wrap{width:100%;max-width:400px;display:flex;flex-direction:column;align-items:center;gap:24px}
+    .logo{display:inline-flex;align-items:center;gap:10px;text-decoration:none}
+    .logo-mark{width:44px;height:44px;border-radius:12px;background:#d4f01a;display:flex;align-items:center;justify-content:center;font-family:'Sora',sans-serif;font-weight:800;font-size:20px;color:#0f2347}
+    .logo-name{font-family:'Sora',sans-serif;font-weight:800;font-size:18px;color:#fff;line-height:1.1}
+    .logo-sub{font-size:11px;color:rgba(255,255,255,0.5)}
+    .card{width:100%;background:#fff;border-radius:20px;padding:36px 32px;box-shadow:0 24px 60px rgba(0,0,0,0.3)}
+    .admin-badge{display:inline-flex;align-items:center;gap:6px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:6px;padding:4px 10px;font-size:11px;font-weight:700;color:#1e40af;margin-bottom:14px}
+    h1{font-family:'Sora',sans-serif;font-size:1.5rem;font-weight:800;color:#0f1724;margin-bottom:4px}
+    .sub{font-size:14px;color:#6b7280;margin-bottom:24px}
+    label{display:block;font-size:13px;font-weight:600;color:#374151;margin-bottom:5px}
+    .field{margin-bottom:14px}
+    .pass-wrap{position:relative}
+    .pass-toggle{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:16px;color:#9ca3af;padding:4px}
+    input{width:100%;padding:12px 14px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:15px;font-family:'Inter',sans-serif;outline:none;transition:border-color 0.2s}
+    input:focus{border-color:#1c3d7a}
+    .error{background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:10px 14px;font-size:13px;color:#991b1b;margin-bottom:14px;display:none}
+    .error.show{display:block}
+    .btn{width:100%;padding:14px;background:#1c3d7a;color:#fff;border:none;border-radius:10px;font-family:'Sora',sans-serif;font-weight:800;font-size:15px;cursor:pointer;transition:background 0.2s}
+    .btn:hover{background:#0f2347}
+    .btn:disabled{background:#9ca3af;cursor:not-allowed}
+    .back{display:block;text-align:center;margin-top:16px;font-size:13px;color:#9ca3af;text-decoration:none}
+    .back:hover{color:#1c3d7a}
   </style>
 </head>
 <body>
-  <div class="card">
-    <div class="logo">
+  <div class="wrap">
+    <a href="/" class="logo">
       <div class="logo-mark">A</div>
-      <div>
-        <div class="logo-name">ATEC</div>
-        <div class="logo-sub">Educational Society</div>
+      <div><div class="logo-name">ATEC</div><div class="logo-sub">Educational Society</div></div>
+    </a>
+
+    <div class="card">
+      <div class="admin-badge">🔐 Admin Access Only</div>
+      <h1>Admin Login</h1>
+      <p class="sub">Sign in to manage your website</p>
+
+      <div id="error-box" class="error"></div>
+
+      <div class="field">
+        <label for="email">Admin Email</label>
+        <input type="email" id="email" placeholder="atecgsp@gmail.com" autocomplete="email" />
       </div>
+
+      <div class="field">
+        <label for="password">Password</label>
+        <div class="pass-wrap">
+          <input type="password" id="password" placeholder="Enter your password" autocomplete="current-password" />
+          <button type="button" class="pass-toggle" id="pass-toggle">👁️</button>
+        </div>
+      </div>
+
+      <button class="btn" id="login-btn">Login to Admin Panel</button>
+      <a href="/" class="back">← Back to website</a>
     </div>
-
-    <div class="admin-badge">🔐 Admin Access Only</div>
-
-    <h1>Admin Login</h1>
-    <p class="sub">Sign in to manage your website</p>
-
-    <div class="error" id="error-box">⚠️ <span id="error-msg"></span></div>
-
-    <form id="admin-login-form">
-      <label for="email">Admin Email</label>
-      <input
-        type="email" id="email" name="email"
-        placeholder="atecgsp@gmail.com"
-        autocomplete="email" required
-      />
-
-      <label for="password">Password</label>
-      <input
-        type="password" id="password" name="password"
-        placeholder="Enter your password"
-        autocomplete="current-password" required
-      />
-
-      <button type="submit" id="login-btn">Login to Admin Panel</button>
-    </form>
-
-    <a href="/" class="back-link">← Back to website</a>
   </div>
 
-  <script type="module">
-    import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+  <script>
+    async function init() {
+      const URL  = window.__SB_URL
+      const KEY  = window.__SB_KEY
+      const EMAILS = window.__ADMIN_EMAILS || ['atecgsp@gmail.com']
 
-    const SUPABASE_URL = import.meta.env.PUBLIC_SUPABASE_URL
-    const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY
-    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+      const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2')
+      const supabase = createClient(URL, KEY)
 
-    // Admin emails — add yours here
-    const ADMIN_EMAILS = ['atecgsp@gmail.com', 'admin@atecedu.com']
-
-    // If already logged in as admin, redirect directly
-    const { data: { session } } = await supabase.auth.getSession()
-    if (session?.user && ADMIN_EMAILS.includes(session.user.email ?? '')) {
-      window.location.href = '/admin'
-    }
-
-    const form = document.getElementById('admin-login-form')
-    const btn = document.getElementById('login-btn')
-    const errorBox = document.getElementById('error-box')
-    const errorMsg = document.getElementById('error-msg')
-
-    function showError(msg) {
-      errorMsg.textContent = msg
-      errorBox.classList.add('show')
-    }
-    function hideError() {
-      errorBox.classList.remove('show')
-    }
-
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault()
-      hideError()
-
-      const email = document.getElementById('email').value.trim()
-      const password = document.getElementById('password').value
-
-      // Check if email is in admin list BEFORE trying to login
-      if (!ADMIN_EMAILS.includes(email)) {
-        showError('This email is not authorised for admin access.')
+      // Already logged in as admin? Go straight to admin panel
+      const { data: { session } } = await supabase.auth.getSession()
+      if (session?.user && EMAILS.includes(session.user.email ?? '')) {
+        window.location.href = '/admin'
         return
       }
 
-      btn.disabled = true
-      btn.textContent = 'Logging in...'
+      // Password toggle
+      const passInput = document.getElementById('password')
+      document.getElementById('pass-toggle').addEventListener('click', () => {
+        passInput.type = passInput.type === 'password' ? 'text' : 'password'
+      })
 
-      const { data, error } = await supabase.auth.signInWithPassword({ email, password })
+      // Enter key
+      document.getElementById('password').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin() })
+      document.getElementById('email').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin() })
+      document.getElementById('login-btn').addEventListener('click', doLogin)
 
-      if (error) {
-        showError(error.message === 'Invalid login credentials'
-          ? 'Incorrect email or password.'
-          : error.message)
-        btn.disabled = false
-        btn.textContent = 'Login to Admin Panel'
-        return
+      async function doLogin() {
+        const errorBox = document.getElementById('error-box')
+        const btn = document.getElementById('login-btn')
+        errorBox.classList.remove('show')
+
+        const email = document.getElementById('email').value.trim()
+        const password = document.getElementById('password').value
+
+        if (!email || !password) {
+          errorBox.textContent = '⚠️ Please enter email and password'
+          errorBox.classList.add('show')
+          return
+        }
+
+        if (!EMAILS.includes(email)) {
+          errorBox.textContent = '⚠️ This email is not authorised for admin access'
+          errorBox.classList.add('show')
+          return
+        }
+
+        btn.disabled = true
+        btn.textContent = 'Logging in...'
+
+        const { data, error } = await supabase.auth.signInWithPassword({ email, password })
+
+        if (error) {
+          errorBox.textContent = '⚠️ ' + (error.message === 'Invalid login credentials' ? 'Incorrect email or password.' : error.message)
+          errorBox.classList.add('show')
+          btn.disabled = false
+          btn.textContent = 'Login to Admin Panel'
+          return
+        }
+
+        if (!EMAILS.includes(data.user?.email ?? '')) {
+          await supabase.auth.signOut()
+          errorBox.textContent = '⚠️ Access denied. Admin accounts only.'
+          errorBox.classList.add('show')
+          btn.disabled = false
+          btn.textContent = 'Login to Admin Panel'
+          return
+        }
+
+        btn.textContent = '✅ Redirecting...'
+        window.location.href = '/admin'
       }
-
-      // Double-check after login
-      if (!ADMIN_EMAILS.includes(data.user?.email ?? '')) {
-        await supabase.auth.signOut()
-        showError('Access denied. Admin accounts only.')
-        btn.disabled = false
-        btn.textContent = 'Login to Admin Panel'
-        return
-      }
-
-      // Success — go to admin panel
-      btn.textContent = '✅ Redirecting...'
-      window.location.href = '/admin'
-    })
+    }
+    init()
   </script>
 </body>
 </html>

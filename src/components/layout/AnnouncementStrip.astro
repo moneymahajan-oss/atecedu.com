@@ -1,18 +1,12 @@
 ---
 // src/components/layout/AnnouncementStrip.astro
-// FIXED: removed return null which crashed Astro build
-// Now uses conditional rendering safely
+// FIXED: no return null, safe try/catch, proper conditional rendering
 import { supabase } from '../../lib/supabase'
 
 let strip: {
-  text: string
-  link: string
-  link_text: string
-  is_active: boolean
-  bg_color: string
-  text_color: string
-  ends_at: string
-  show_timer: boolean
+  text: string; link: string; link_text: string
+  is_active: boolean; bg_color: string; text_color: string
+  ends_at: string; show_timer: boolean
 } | null = null
 
 try {
@@ -23,41 +17,30 @@ try {
     .single()
   strip = data?.value ?? null
 } catch (e) {
-  // Silently fail — strip just won't show
   strip = null
 }
 
-const showStrip = strip && strip.is_active === true
+const show = strip?.is_active === true
 ---
 
-{showStrip && (
+{show && (
   <div
     id="announcement-strip"
-    style={`background:${strip!.bg_color ?? '#0f2347'};color:${strip!.text_color ?? '#ffffff'};padding:10px 0;font-size:13px;font-weight:500;`}
+    style={`background:${strip!.bg_color ?? '#0f2347'};color:${strip!.text_color ?? '#fff'};padding:10px 0;font-size:13px;font-weight:500;`}
   >
     <div style="max-width:1280px;margin:0 auto;padding:0 24px;display:flex;align-items:center;justify-content:center;gap:16px;flex-wrap:wrap;">
-
       <span>{strip!.text}</span>
-
       {strip!.show_timer && strip!.ends_at && (
-        <span
-          id="strip-countdown"
-          data-ends={strip!.ends_at}
-          style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.25);padding:2px 12px;border-radius:4px;font-family:'Sora',sans-serif;font-weight:700;font-size:14px;color:#d4f01a;"
-        >
+        <span id="strip-countdown" data-ends={strip!.ends_at}
+          style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.25);padding:2px 12px;border-radius:4px;font-family:'Sora',sans-serif;font-weight:700;font-size:14px;color:#d4f01a;">
           ⏱ --:--:--
         </span>
       )}
-
       {strip!.link && strip!.link_text && (
-        <a
-          href={strip!.link}
-          style={`color:${strip!.text_color ?? '#ffffff'};font-weight:700;text-decoration:underline;text-underline-offset:2px;white-space:nowrap;`}
-        >
+        <a href={strip!.link} style={`color:${strip!.text_color ?? '#fff'};font-weight:700;text-decoration:underline;text-underline-offset:2px;white-space:nowrap;`}>
           {strip!.link_text} →
         </a>
       )}
-
     </div>
   </div>
 )}
@@ -67,27 +50,21 @@ const showStrip = strip && strip.is_active === true
   if (el) {
     const endsAt = el.getAttribute('data-ends')
     if (endsAt) {
-      const endTime = new Date(endsAt).getTime()
+      const end = new Date(endsAt).getTime()
       const pad = (n: number) => String(n).padStart(2, '0')
-
       function tick() {
-        const diff = endTime - Date.now()
+        const diff = end - Date.now()
         if (diff <= 0) {
-          const stripEl = document.getElementById('announcement-strip')
-          if (stripEl) stripEl.style.display = 'none'
+          const s = document.getElementById('announcement-strip')
+          if (s) s.style.display = 'none'
           return
         }
         const d = Math.floor(diff / 86400000)
         const h = Math.floor((diff % 86400000) / 3600000)
         const m = Math.floor((diff % 3600000) / 60000)
         const s = Math.floor((diff % 60000) / 1000)
-        if (el) {
-          el.textContent = d > 0
-            ? `⏱ ${d}d ${pad(h)}h ${pad(m)}m ${pad(s)}s`
-            : `⏱ ${pad(h)}:${pad(m)}:${pad(s)}`
-        }
+        el!.textContent = d > 0 ? `⏱ ${d}d ${pad(h)}h ${pad(m)}m ${pad(s)}s` : `⏱ ${pad(h)}:${pad(m)}:${pad(s)}`
       }
-
       tick()
       setInterval(tick, 1000)
     }
