@@ -1,5 +1,6 @@
 ---
 // src/layouts/AdminLayout.astro
+// FIXED: env vars passed via data attributes, not import.meta.env in script
 import '../styles/global.css'
 
 interface Props {
@@ -7,6 +8,10 @@ interface Props {
   activeSection?: string
 }
 const { title = 'Admin Panel', activeSection = '' } = Astro.props
+
+// Pass env vars to client safely via Astro
+const supabaseUrl = import.meta.env.PUBLIC_SUPABASE_URL
+const supabaseKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY
 ---
 
 <!DOCTYPE html>
@@ -18,24 +23,28 @@ const { title = 'Admin Panel', activeSection = '' } = Astro.props
   <meta name="robots" content="noindex,nofollow" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500;600&display=swap" />
+  <link rel="icon" type="image/png" href="/favicon.png" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: 'Inter', sans-serif; background: #f1f5f9; color: #1e293b; min-height: 100vh; }
 
-    /* Auth guard — hide everything until verified */
-    #admin-wrapper { display: none; }
+    /* Auth overlay */
     #auth-checking {
       position: fixed; inset: 0; background: #0f2347;
       display: flex; align-items: center; justify-content: center;
       flex-direction: column; gap: 16px; z-index: 9999;
     }
     #auth-checking .spinner {
-      width: 40px; height: 40px; border: 3px solid rgba(255,255,255,0.2);
-      border-top-color: #d4f01a; border-radius: 50%;
+      width: 40px; height: 40px;
+      border: 3px solid rgba(255,255,255,0.2);
+      border-top-color: #d4f01a;
+      border-radius: 50%;
       animation: spin 0.8s linear infinite;
     }
     #auth-checking p { color: rgba(255,255,255,0.6); font-size: 14px; }
     @keyframes spin { to { transform: rotate(360deg); } }
+
+    #admin-wrapper { display: none; }
 
     /* Topbar */
     .admin-topbar {
@@ -47,20 +56,22 @@ const { title = 'Admin Panel', activeSection = '' } = Astro.props
     .topbar-left { display: flex; align-items: center; gap: 14px; }
     .sidebar-toggle { display: flex; flex-direction: column; gap: 4px; background: none; border: none; cursor: pointer; padding: 6px; border-radius: 6px; }
     .sidebar-toggle:hover { background: rgba(255,255,255,0.1); }
-    .sidebar-toggle span { display: block; width: 20px; height: 2px; background: rgba(255,255,255,0.7); border-radius: 2px; transition: all 0.3s; }
+    .sidebar-toggle span { display: block; width: 20px; height: 2px; background: rgba(255,255,255,0.7); border-radius: 2px; }
     .admin-brand { display: flex; align-items: center; gap: 10px; text-decoration: none; }
     .brand-mark { width: 32px; height: 32px; border-radius: 8px; background: #d4f01a; display: flex; align-items: center; justify-content: center; font-family: 'Sora', sans-serif; font-weight: 800; font-size: 16px; color: #0f2347; }
-    .brand-name { font-size: 14px; font-weight: 700; color: #fff; line-height: 1.1; font-family: 'Sora', sans-serif; }
+    .brand-name { font-size: 14px; font-weight: 700; color: #fff; font-family: 'Sora', sans-serif; line-height: 1.1; }
     .brand-sub { font-size: 10px; color: rgba(255,255,255,0.4); }
     .topbar-right { display: flex; align-items: center; gap: 8px; }
-    .topbar-btn { padding: 6px 14px; border-radius: 7px; font-size: 12px; font-weight: 600; cursor: pointer; background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.8); border: 1px solid rgba(255,255,255,0.15); text-decoration: none; transition: all 0.2s; font-family: 'Inter', sans-serif; }
+    .topbar-btn { padding: 6px 14px; border-radius: 7px; font-size: 12px; font-weight: 600; cursor: pointer; background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.8); border: 1px solid rgba(255,255,255,0.15); text-decoration: none; font-family: 'Inter', sans-serif; transition: all 0.2s; }
     .topbar-btn:hover { background: rgba(255,255,255,0.18); }
     .topbar-btn.danger { color: #fca5a5; border-color: rgba(252,165,165,0.3); }
     .topbar-btn.danger:hover { background: rgba(239,68,68,0.2); }
-    .admin-email-badge { font-size: 11px; color: rgba(255,255,255,0.5); padding: 4px 10px; background: rgba(255,255,255,0.08); border-radius: 6px; }
+    .email-badge { font-size: 11px; color: rgba(255,255,255,0.5); padding: 4px 10px; background: rgba(255,255,255,0.08); border-radius: 6px; max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
     /* Layout */
     .admin-layout { display: flex; padding-top: 56px; min-height: 100vh; }
+
+    /* Sidebar */
     .admin-sidebar {
       width: 220px; flex-shrink: 0; background: #fff;
       border-right: 1px solid #e2e8f0;
@@ -68,25 +79,33 @@ const { title = 'Admin Panel', activeSection = '' } = Astro.props
       overflow-y: auto; transition: transform 0.3s; z-index: 50;
     }
     .admin-sidebar.collapsed { transform: translateX(-220px); }
-    .sidebar-nav { padding: 16px 0; }
+    .sidebar-nav { padding: 12px 0; }
     .nav-group { margin-bottom: 4px; }
     .nav-group-label { font-size: 10px; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase; color: #94a3b8; padding: 8px 18px 4px; }
     .nav-item { display: flex; align-items: center; gap: 8px; padding: 9px 18px; font-size: 13px; font-weight: 500; color: #475569; text-decoration: none; transition: all 0.15s; border-left: 3px solid transparent; }
     .nav-item:hover { background: #f8fafc; color: #1c3d7a; }
     .nav-item.active { background: #eff6ff; color: #1c3d7a; font-weight: 700; border-left-color: #1c3d7a; }
-    .nav-icon { font-size: 15px; width: 18px; text-align: center; }
-    .admin-main { flex: 1; margin-left: 220px; padding: 28px; transition: margin-left 0.3s; }
+    .nav-icon { font-size: 15px; width: 18px; text-align: center; flex-shrink: 0; }
+
+    /* Main */
+    .admin-main { flex: 1; margin-left: 220px; padding: 28px; transition: margin-left 0.3s; min-height: calc(100vh - 56px); }
     .admin-main.expanded { margin-left: 0; }
 
     @media (max-width: 768px) {
       .admin-sidebar { transform: translateX(-220px); }
       .admin-sidebar.open { transform: translateX(0); }
       .admin-main { margin-left: 0; }
-      .admin-email-badge { display: none; }
+      .email-badge { display: none; }
     }
   </style>
 </head>
 <body>
+  <!-- Pass env vars safely to client via data attributes -->
+  <div id="env-config"
+    data-url={supabaseUrl}
+    data-key={supabaseKey}
+    style="display:none"
+  ></div>
 
   <!-- Auth checking overlay -->
   <div id="auth-checking">
@@ -94,7 +113,7 @@ const { title = 'Admin Panel', activeSection = '' } = Astro.props
     <p>Verifying admin access...</p>
   </div>
 
-  <!-- Admin UI (hidden until auth verified) -->
+  <!-- Admin UI -->
   <div id="admin-wrapper">
     <header class="admin-topbar">
       <div class="topbar-left">
@@ -110,7 +129,7 @@ const { title = 'Admin Panel', activeSection = '' } = Astro.props
         </a>
       </div>
       <div class="topbar-right">
-        <span class="admin-email-badge" id="admin-email-display">admin</span>
+        <span class="email-badge" id="admin-email">admin</span>
         <a href="/" target="_blank" class="topbar-btn">🌐 Live Site</a>
         <button id="admin-logout" class="topbar-btn danger">🚪 Logout</button>
       </div>
@@ -119,10 +138,14 @@ const { title = 'Admin Panel', activeSection = '' } = Astro.props
     <div class="admin-layout">
       <aside class="admin-sidebar" id="admin-sidebar">
         <nav class="sidebar-nav">
+
           <div class="nav-group">
             <div class="nav-group-label">Overview</div>
-            <a href="/admin" class:list={['nav-item', { active: activeSection === 'dashboard' }]}><span class="nav-icon">📊</span> Dashboard</a>
+            <a href="/admin" class:list={['nav-item', { active: activeSection === 'dashboard' }]}>
+              <span class="nav-icon">📊</span> Dashboard
+            </a>
           </div>
+
           <div class="nav-group">
             <div class="nav-group-label">Content</div>
             <a href="/admin/homepage" class:list={['nav-item', { active: activeSection === 'homepage' }]}><span class="nav-icon">🏠</span> Homepage</a>
@@ -134,6 +157,7 @@ const { title = 'Admin Panel', activeSection = '' } = Astro.props
             <a href="/admin/blog" class:list={['nav-item', { active: activeSection === 'blog' }]}><span class="nav-icon">✍️</span> Blog</a>
             <a href="/admin/student-photos" class:list={['nav-item', { active: activeSection === 'student-photos' }]}><span class="nav-icon">🖼️</span> Student Photos</a>
           </div>
+
           <div class="nav-group">
             <div class="nav-group-label">Students</div>
             <a href="/admin/students" class:list={['nav-item', { active: activeSection === 'students' }]}><span class="nav-icon">👥</span> All Students</a>
@@ -141,10 +165,12 @@ const { title = 'Admin Panel', activeSection = '' } = Astro.props
             <a href="/admin/certificates" class:list={['nav-item', { active: activeSection === 'certificates' }]}><span class="nav-icon">📜</span> Certificates</a>
             <a href="/admin/enquiries" class:list={['nav-item', { active: activeSection === 'enquiries' }]}><span class="nav-icon">💬</span> Enquiries</a>
           </div>
+
           <div class="nav-group">
             <div class="nav-group-label">Finance</div>
             <a href="/admin/payments" class:list={['nav-item', { active: activeSection === 'payments' }]}><span class="nav-icon">💳</span> Payments</a>
           </div>
+
           <div class="nav-group">
             <div class="nav-group-label">Settings</div>
             <a href="/admin/offer-timer" class:list={['nav-item', { active: activeSection === 'offer-timer' }]}><span class="nav-icon">⏱️</span> Offer Timer</a>
@@ -154,6 +180,7 @@ const { title = 'Admin Panel', activeSection = '' } = Astro.props
             <a href="/admin/zoom" class:list={['nav-item', { active: activeSection === 'zoom' }]}><span class="nav-icon">🎥</span> Zoom Links</a>
             <a href="/admin/chatbot" class:list={['nav-item', { active: activeSection === 'chatbot' }]}><span class="nav-icon">🤖</span> Chatbot</a>
           </div>
+
         </nav>
       </aside>
 
@@ -163,46 +190,72 @@ const { title = 'Admin Panel', activeSection = '' } = Astro.props
     </div>
   </div>
 
-  <script type="module">
-    import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-
+  <script>
+    // Admin emails allowed
     const ADMIN_EMAILS = ['atecgsp@gmail.com', 'admin@atecedu.com']
 
-    const supabase = createClient(
-      import.meta.env.PUBLIC_SUPABASE_URL,
-      import.meta.env.PUBLIC_SUPABASE_ANON_KEY
-    )
+    async function initAdmin() {
+      try {
+        // Get env vars from data attributes (set by Astro at build time)
+        const envEl = document.getElementById('env-config')
+        const SUPABASE_URL = envEl?.getAttribute('data-url') || ''
+        const SUPABASE_KEY = envEl?.getAttribute('data-key') || ''
 
-    // Auth guard — runs before showing anything
-    const { data: { session } } = await supabase.auth.getSession()
+        if (!SUPABASE_URL || !SUPABASE_KEY) {
+          console.error('Supabase env vars missing')
+          window.location.href = '/admin/login'
+          return
+        }
 
-    if (!session?.user || !ADMIN_EMAILS.includes(session.user.email ?? '')) {
-      window.location.href = '/admin/login'
-    } else {
-      // Show admin email in topbar
-      const emailEl = document.getElementById('admin-email-display')
-      if (emailEl) emailEl.textContent = session.user.email ?? 'admin'
+        // Dynamically import Supabase
+        const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2')
+        const supabase = createClient(SUPABASE_URL, SUPABASE_KEY)
 
-      // Show admin UI
-      document.getElementById('auth-checking').style.display = 'none'
-      document.getElementById('admin-wrapper').style.display = 'block'
+        // Check session
+        const { data: { session } } = await supabase.auth.getSession()
+
+        if (!session?.user) {
+          window.location.href = '/admin/login'
+          return
+        }
+
+        if (!ADMIN_EMAILS.includes(session.user.email ?? '')) {
+          await supabase.auth.signOut()
+          window.location.href = '/admin/login'
+          return
+        }
+
+        // Show admin UI
+        const emailEl = document.getElementById('admin-email')
+        if (emailEl) emailEl.textContent = session.user.email ?? 'admin'
+
+        document.getElementById('auth-checking')!.style.display = 'none'
+        document.getElementById('admin-wrapper')!.style.display = 'block'
+
+        // Sidebar toggle
+        const sidebar = document.getElementById('admin-sidebar')
+        const main = document.getElementById('admin-main')
+        let collapsed = false
+
+        document.getElementById('sidebar-toggle')?.addEventListener('click', () => {
+          collapsed = !collapsed
+          sidebar?.classList.toggle('collapsed', collapsed)
+          main?.classList.toggle('expanded', collapsed)
+        })
+
+        // Logout
+        document.getElementById('admin-logout')?.addEventListener('click', async () => {
+          await supabase.auth.signOut()
+          window.location.href = '/admin/login'
+        })
+
+      } catch (err) {
+        console.error('Admin auth error:', err)
+        window.location.href = '/admin/login'
+      }
     }
 
-    // Sidebar toggle
-    const sidebar = document.getElementById('admin-sidebar')
-    const main = document.getElementById('admin-main')
-    let collapsed = false
-    document.getElementById('sidebar-toggle')?.addEventListener('click', () => {
-      collapsed = !collapsed
-      sidebar?.classList.toggle('collapsed', collapsed)
-      main?.classList.toggle('expanded', collapsed)
-    })
-
-    // Logout
-    document.getElementById('admin-logout')?.addEventListener('click', async () => {
-      await supabase.auth.signOut()
-      window.location.href = '/admin/login'
-    })
+    initAdmin()
   </script>
 </body>
 </html>
