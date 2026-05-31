@@ -1,6 +1,5 @@
 ---
 // src/layouts/BaseLayout.astro
-// KEY FIX: sets window.__SB_URL and window.__SB_KEY so ALL client components can use Supabase
 import '../styles/global.css'
 import Navbar from '../components/layout/Navbar.astro'
 import Footer from '../components/layout/Footer.astro'
@@ -19,10 +18,44 @@ interface Props {
 
 const { title: propTitle, description: propDesc, ogImage: propOgImage, canonical, pageSlug, noIndex = false } = Astro.props
 
-// Read env vars in frontmatter (this is where they work)
+// Read env vars in frontmatter — only place they work
 const SUPABASE_URL = import.meta.env.PUBLIC_SUPABASE_URL
 const SUPABASE_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY
 
+// Chatbot config — fetched at build time, baked into page
+let chatbotConfig = {
+  is_enabled: true,
+  bot_name: 'ATEC Assistant',
+  bot_avatar: '🎓',
+  greeting: 'Hi! 👋 Welcome to ATEC Educational Society. How can I help you today?',
+  whatsapp: '+917009933289',
+  primary: '#1c3d7a',
+  accent: '#d4f01a',
+  quick_replies: ['View Courses', 'Course Fees', 'How to Enroll', 'Verify Certificate', 'Talk to Advisor']
+}
+
+try {
+  const { data } = await supabase
+    .from('site_settings')
+    .select('value')
+    .eq('key', 'chatbot_config')
+    .single()
+  if (data?.value) {
+    const v = data.value as Record<string, any>
+    chatbotConfig = {
+      is_enabled:   v.is_enabled   !== false,
+      bot_name:     v.bot_name     || chatbotConfig.bot_name,
+      bot_avatar:   v.bot_avatar   || chatbotConfig.bot_avatar,
+      greeting:     v.greeting     || chatbotConfig.greeting,
+      whatsapp:     v.whatsapp_number || chatbotConfig.whatsapp,
+      primary:      v.primary_color   || chatbotConfig.primary,
+      accent:       v.accent_color    || chatbotConfig.accent,
+      quick_replies: v.quick_replies  || chatbotConfig.quick_replies,
+    }
+  }
+} catch (e) { /* use defaults */ }
+
+// SEO
 let seoTitle = propTitle ?? 'ATEC Gurdaspur — Computer Courses Online & Hybrid'
 let seoDesc  = propDesc  ?? "ATEC Gurdaspur — India's trusted computer institute since 2000. ISO 9001:2015 certified."
 let seoImage = propOgImage ?? 'https://atecedu.com/og-default.jpg'
@@ -37,6 +70,9 @@ try {
 } catch (e) {}
 
 const canonicalUrl = canonical ?? `https://atecedu.com${Astro.url.pathname}`
+
+// Serialize chatbot config for window injection
+const chatbotConfigJSON = JSON.stringify(chatbotConfig)
 ---
 
 <!DOCTYPE html>
@@ -62,18 +98,24 @@ const canonicalUrl = canonical ?? `https://atecedu.com${Astro.url.pathname}`
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="icon" type="image/png" href="/favicon.png" />
 
-  <!-- Set Supabase credentials as window globals BEFORE any React component loads -->
-  <!-- This is the correct way to pass build-time env vars to client-side code in Astro -->
-  <script define:vars={{ SUPABASE_URL, SUPABASE_KEY }}>
-    window.__SB_URL = SUPABASE_URL
-    window.__SB_KEY = SUPABASE_KEY
+  <!--
+    define:vars is Astro's official way to pass build-time values to browser.
+    These run SYNCHRONOUSLY before any React component hydrates.
+  -->
+  <script define:vars={{ SUPABASE_URL, SUPABASE_KEY, chatbotConfigJSON }}>
+    window.__SB_URL          = SUPABASE_URL
+    window.__SB_KEY          = SUPABASE_KEY
+    window.__CHATBOT_CONFIG  = JSON.parse(chatbotConfigJSON)
   </script>
 </head>
 <body>
   <AnnouncementStrip />
   <Navbar />
-  <main><slot /></main>
+  <main>
+    <slot />
+  </main>
   <Footer />
+  <!-- client:idle = hydrates after page is interactive, doesn't block rendering -->
   <FloatingChatbot client:idle />
 </body>
 </html>

@@ -1,13 +1,18 @@
 ---
 // src/components/layout/AnnouncementStrip.astro
-// FIXED: no return null, safe try/catch, proper conditional rendering
+// Reads strip data at BUILD TIME from Supabase - baked into HTML
+// Timer runs purely in browser JS - no Supabase needed at runtime
+
 import { supabase } from '../../lib/supabase'
 
-let strip: {
-  text: string; link: string; link_text: string
-  is_active: boolean; bg_color: string; text_color: string
-  ends_at: string; show_timer: boolean
-} | null = null
+let text = '🎓 New Batch Starting Soon — Hardware & Networking | Limited Seats!'
+let link = '/courses'
+let linkText = 'Enroll Now'
+let isActive = false
+let showTimer = false
+let endsAt = ''
+let bgColor = '#0f2347'
+let textColor = '#ffffff'
 
 try {
   const { data } = await supabase
@@ -15,58 +20,78 @@ try {
     .select('value')
     .eq('key', 'announcement_strip')
     .single()
-  strip = data?.value ?? null
-} catch (e) {
-  strip = null
-}
 
-const show = strip?.is_active === true
+  if (data?.value) {
+    const v = data.value as Record<string, any>
+    isActive  = v.is_active  === true
+    text      = v.text       || text
+    link      = v.link       || link
+    linkText  = v.link_text  || linkText
+    showTimer = v.show_timer === true
+    endsAt    = v.ends_at    || ''
+    bgColor   = v.bg_color   || bgColor
+    textColor = v.text_color || textColor
+  }
+} catch (e) {
+  // Supabase unavailable — strip stays hidden
+}
 ---
 
-{show && (
+{isActive && (
   <div
-    id="announcement-strip"
-    style={`background:${strip!.bg_color ?? '#0f2347'};color:${strip!.text_color ?? '#fff'};padding:10px 0;font-size:13px;font-weight:500;`}
+    id="atec-strip"
+    style={`background:${bgColor};color:${textColor};padding:9px 0;font-size:13px;font-weight:500;font-family:'Inter',sans-serif;`}
   >
-    <div style="max-width:1280px;margin:0 auto;padding:0 24px;display:flex;align-items:center;justify-content:center;gap:16px;flex-wrap:wrap;">
-      <span>{strip!.text}</span>
-      {strip!.show_timer && strip!.ends_at && (
-        <span id="strip-countdown" data-ends={strip!.ends_at}
-          style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.25);padding:2px 12px;border-radius:4px;font-family:'Sora',sans-serif;font-weight:700;font-size:14px;color:#d4f01a;">
-          ⏱ --:--:--
-        </span>
+    <div style="max-width:1280px;margin:0 auto;padding:0 20px;display:flex;align-items:center;justify-content:center;gap:14px;flex-wrap:wrap;">
+      <span>{text}</span>
+
+      {showTimer && endsAt && (
+        <span
+          id="atec-timer"
+          data-ends={endsAt}
+          style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);padding:3px 12px;border-radius:4px;font-family:monospace;font-weight:700;font-size:14px;color:#d4f01a;letter-spacing:1px;"
+        >⏱ --:--:--</span>
       )}
-      {strip!.link && strip!.link_text && (
-        <a href={strip!.link} style={`color:${strip!.text_color ?? '#fff'};font-weight:700;text-decoration:underline;text-underline-offset:2px;white-space:nowrap;`}>
-          {strip!.link_text} →
-        </a>
+
+      {link && linkText && (
+        <a
+          href={link}
+          style={`color:${textColor};font-weight:700;text-decoration:underline;text-underline-offset:3px;white-space:nowrap;opacity:0.9;`}
+        >{linkText} →</a>
       )}
     </div>
   </div>
 )}
 
-<script>
-  const el = document.getElementById('strip-countdown')
-  if (el) {
-    const endsAt = el.getAttribute('data-ends')
-    if (endsAt) {
-      const end = new Date(endsAt).getTime()
-      const pad = (n: number) => String(n).padStart(2, '0')
+{isActive && showTimer && endsAt && (
+  <script>
+    (function() {
+      var el = document.getElementById('atec-timer');
+      if (!el) return;
+      var end = new Date(el.getAttribute('data-ends')).getTime();
+      if (isNaN(end)) return;
+
+      function pad(n) { return String(n).padStart(2, '0'); }
+
       function tick() {
-        const diff = end - Date.now()
+        var now  = Date.now();
+        var diff = end - now;
         if (diff <= 0) {
-          const s = document.getElementById('announcement-strip')
-          if (s) s.style.display = 'none'
-          return
+          var strip = document.getElementById('atec-strip');
+          if (strip) strip.style.display = 'none';
+          return;
         }
-        const d = Math.floor(diff / 86400000)
-        const h = Math.floor((diff % 86400000) / 3600000)
-        const m = Math.floor((diff % 3600000) / 60000)
-        const s = Math.floor((diff % 60000) / 1000)
-        el!.textContent = d > 0 ? `⏱ ${d}d ${pad(h)}h ${pad(m)}m ${pad(s)}s` : `⏱ ${pad(h)}:${pad(m)}:${pad(s)}`
+        var d = Math.floor(diff / 86400000);
+        var h = Math.floor((diff % 86400000) / 3600000);
+        var m = Math.floor((diff % 3600000) / 60000);
+        var s = Math.floor((diff % 60000) / 1000);
+        el.textContent = d > 0
+          ? ('⏱ ' + d + 'd ' + pad(h) + 'h ' + pad(m) + 'm ' + pad(s) + 's')
+          : ('⏱ ' + pad(h) + ':' + pad(m) + ':' + pad(s));
       }
-      tick()
-      setInterval(tick, 1000)
-    }
-  }
-</script>
+
+      tick();
+      setInterval(tick, 1000);
+    })();
+  </script>
+)}
