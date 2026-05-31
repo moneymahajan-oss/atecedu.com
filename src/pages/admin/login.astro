@@ -1,8 +1,7 @@
 ---
 // src/pages/admin/login.astro
-// FINAL FIX: define:vars + DOMContentLoaded (not async init)
-const SUPABASE_URL = import.meta.env.PUBLIC_SUPABASE_URL
-const SUPABASE_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY
+const SUPABASE_URL    = import.meta.env.PUBLIC_SUPABASE_URL     || ''
+const SUPABASE_KEY    = import.meta.env.PUBLIC_SUPABASE_ANON_KEY || ''
 const ADMIN_EMAILS_STR = 'atecgsp@gmail.com,admin@atecedu.com'
 ---
 
@@ -16,7 +15,6 @@ const ADMIN_EMAILS_STR = 'atecgsp@gmail.com,admin@atecedu.com'
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@700;800&family=Inter:wght@400;500;600&display=swap" />
   <link rel="icon" type="image/png" href="/favicon.png" />
 
-  <!-- Synchronous window globals BEFORE DOM renders -->
   <script define:vars={{ SUPABASE_URL, SUPABASE_KEY, ADMIN_EMAILS_STR }}>
     window.__SB_URL    = SUPABASE_URL
     window.__SB_KEY    = SUPABASE_KEY
@@ -39,7 +37,7 @@ const ADMIN_EMAILS_STR = 'atecgsp@gmail.com,admin@atecedu.com'
     label{display:block;font-size:13px;font-weight:600;color:#374151;margin-bottom:5px}
     .pw{position:relative}
     .eye{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:16px;color:#9ca3af;padding:4px;line-height:1}
-    input[type=email],input[type=password],input[type=text]{width:100%;padding:12px 14px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:15px;font-family:'Inter',sans-serif;outline:none;transition:border-color 0.2s}
+    input[type=email],input[type=password]{width:100%;padding:12px 14px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:15px;font-family:'Inter',sans-serif;outline:none;transition:border-color 0.2s}
     input:focus{border-color:#1c3d7a}
     .err{background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:10px 14px;font-size:13px;color:#991b1b;margin-bottom:14px;display:none}
     .err.show{display:block}
@@ -65,7 +63,6 @@ const ADMIN_EMAILS_STR = 'atecgsp@gmail.com,admin@atecedu.com'
 
       <div class="field">
         <label for="em">Admin Email</label>
-        <!-- NO name attribute -->
         <input type="email" id="em" placeholder="atecgsp@gmail.com" autocomplete="username" />
       </div>
 
@@ -77,109 +74,81 @@ const ADMIN_EMAILS_STR = 'atecgsp@gmail.com,admin@atecedu.com'
         </div>
       </div>
 
-      <!-- type="button" — NOT submit, no form tag -->
       <button type="button" id="login-btn">Login to Admin Panel</button>
       <a href="/" class="back">← Back to website</a>
     </div>
   </div>
 
-  <!--
-    DOMContentLoaded ensures listeners attach synchronously when DOM is ready.
-    Supabase loaded lazily only on button click.
-    No async init() at top level — that causes the race condition.
-  -->
+  <!-- Uses Vite-bundled npm package — NOT CDN import -->
   <script>
-    document.addEventListener('DOMContentLoaded', function () {
-      var pwInput = document.getElementById('pw')
-      var admins  = window.__SB_ADMINS || ['atecgsp@gmail.com']
+    import { createClient } from '@supabase/supabase-js'
 
-      // Eye toggle
-      document.getElementById('eye-btn').addEventListener('click', function () {
-        pwInput.type = pwInput.type === 'password' ? 'text' : 'password'
-      })
+    const admins  = window.__SB_ADMINS || ['atecgsp@gmail.com']
+    const supabase = createClient(window.__SB_URL, window.__SB_KEY)
 
-      // Enter key
-      document.getElementById('em').addEventListener('keydown', function (e) {
-        if (e.key === 'Enter') doLogin()
-      })
-      pwInput.addEventListener('keydown', function (e) {
-        if (e.key === 'Enter') doLogin()
-      })
-
-      // Login button — attached synchronously
-      document.getElementById('login-btn').addEventListener('click', doLogin)
-
-      // If already logged in as admin, redirect
-      ;(async function checkSession() {
-        try {
-          var mod = await import('https://esm.sh/@supabase/supabase-js@2')
-          var sb = mod.createClient(window.__SB_URL, window.__SB_KEY)
-          var res = await sb.auth.getSession()
-          if (res.data.session?.user && admins.includes(res.data.session.user.email)) {
-            window.location.href = '/admin'
-          }
-        } catch (e) {}
-      })()
-
-      async function doLogin() {
-        var errEl = document.getElementById('err')
-        var btn   = document.getElementById('login-btn')
-        errEl.classList.remove('show')
-
-        var email    = document.getElementById('em').value.trim()
-        var password = pwInput.value
-
-        if (!email || !password) {
-          errEl.textContent = '⚠️ Please enter your email and password'
-          errEl.classList.add('show')
-          return
-        }
-
-        if (!admins.includes(email)) {
-          errEl.textContent = '⚠️ This email is not authorised for admin access'
-          errEl.classList.add('show')
-          return
-        }
-
-        btn.disabled    = true
-        btn.textContent = 'Logging in...'
-
-        try {
-          var mod      = await import('https://esm.sh/@supabase/supabase-js@2')
-          var supabase = mod.createClient(window.__SB_URL, window.__SB_KEY)
-          var result   = await supabase.auth.signInWithPassword({ email: email, password: password })
-
-          if (result.error) {
-            errEl.textContent = '⚠️ ' + (
-              result.error.message === 'Invalid login credentials'
-                ? 'Incorrect email or password. Please try again.'
-                : result.error.message
-            )
-            errEl.classList.add('show')
-            btn.disabled    = false
-            btn.textContent = 'Login to Admin Panel'
-            return
-          }
-
-          if (!admins.includes(result.data.user?.email || '')) {
-            await supabase.auth.signOut()
-            errEl.textContent = '⚠️ Access denied. Admin accounts only.'
-            errEl.classList.add('show')
-            btn.disabled    = false
-            btn.textContent = 'Login to Admin Panel'
-            return
-          }
-
-          btn.textContent = '✅ Redirecting...'
-          window.location.href = '/admin'
-        } catch (e) {
-          errEl.textContent = '⚠️ Connection error. Please try again.'
-          errEl.classList.add('show')
-          btn.disabled    = false
-          btn.textContent = 'Login to Admin Panel'
-        }
+    // If already logged in as admin, go to panel
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user && admins.includes(session.user.email)) {
+        window.location.href = '/admin'
       }
     })
+
+    // Eye toggle
+    document.getElementById('eye-btn').addEventListener('click', function () {
+      var pw = document.getElementById('pw')
+      pw.type = pw.type === 'password' ? 'text' : 'password'
+    })
+
+    // Enter key
+    document.getElementById('em').addEventListener('keydown', function (e) { if (e.key === 'Enter') doLogin() })
+    document.getElementById('pw').addEventListener('keydown', function (e) { if (e.key === 'Enter') doLogin() })
+    document.getElementById('login-btn').addEventListener('click', doLogin)
+
+    async function doLogin() {
+      var errEl = document.getElementById('err')
+      var btn   = document.getElementById('login-btn')
+      errEl.classList.remove('show')
+
+      var email    = document.getElementById('em').value.trim()
+      var password = document.getElementById('pw').value
+
+      if (!email || !password) {
+        errEl.textContent = '⚠️ Please enter your email and password'
+        errEl.classList.add('show')
+        return
+      }
+
+      if (!admins.includes(email)) {
+        errEl.textContent = '⚠️ This email is not authorised for admin access'
+        errEl.classList.add('show')
+        return
+      }
+
+      btn.disabled    = true
+      btn.textContent = 'Logging in...'
+
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password })
+
+      if (error) {
+        errEl.textContent = '⚠️ ' + (error.message === 'Invalid login credentials' ? 'Incorrect email or password.' : error.message)
+        errEl.classList.add('show')
+        btn.disabled    = false
+        btn.textContent = 'Login to Admin Panel'
+        return
+      }
+
+      if (!admins.includes(data.user?.email || '')) {
+        await supabase.auth.signOut()
+        errEl.textContent = '⚠️ Access denied. Admin accounts only.'
+        errEl.classList.add('show')
+        btn.disabled    = false
+        btn.textContent = 'Login to Admin Panel'
+        return
+      }
+
+      btn.textContent = '✅ Redirecting...'
+      window.location.href = '/admin'
+    }
   </script>
 </body>
 </html>
