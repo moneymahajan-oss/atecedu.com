@@ -1,5 +1,5 @@
 ---
-// src/layouts/BaseLayout.astro  (UPDATED — adds FloatingChatbot to every page)
+// src/layouts/BaseLayout.astro
 import '../styles/global.css'
 import Navbar from '../components/layout/Navbar.astro'
 import Footer from '../components/layout/Footer.astro'
@@ -16,46 +16,20 @@ interface Props {
   noIndex?: boolean
 }
 
-const {
-  title: propTitle,
-  description: propDesc,
-  ogImage: propOgImage,
-  canonical,
-  pageSlug,
-  noIndex = false,
-} = Astro.props
+const { title: propTitle, description: propDesc, ogImage: propOgImage, canonical, pageSlug, noIndex = false } = Astro.props
 
 let seoTitle = propTitle ?? 'ATEC Gurdaspur — Computer Courses Online & Hybrid'
-let seoDesc = propDesc ?? 'ATEC Gurdaspur — India\'s trusted computer institute since 2000. Online, hybrid and classroom courses. ISO 9001:2015 certified.'
+let seoDesc  = propDesc  ?? "ATEC Gurdaspur — India's trusted computer institute since 2000. ISO 9001:2015 certified."
 let seoImage = propOgImage ?? 'https://atecedu.com/og-default.jpg'
 
 if (pageSlug) {
-  const { data: seoData } = await supabase
-    .from('seo_meta')
-    .select('meta_title, meta_description, og_image')
-    .eq('page_slug', pageSlug)
-    .single()
-
-  if (seoData) {
-    if (seoData.meta_title) seoTitle = seoData.meta_title
-    if (seoData.meta_description) seoDesc = seoData.meta_description
-    if (seoData.og_image) seoImage = seoData.og_image
-  }
+  const { data: seoData } = await supabase.from('seo_meta').select('meta_title,meta_description,og_image').eq('page_slug', pageSlug).single()
+  if (seoData?.meta_title)       seoTitle = seoData.meta_title
+  if (seoData?.meta_description) seoDesc  = seoData.meta_description
+  if (seoData?.og_image)         seoImage = seoData.og_image
 }
 
 const canonicalUrl = canonical ?? `https://atecedu.com${Astro.url.pathname}`
-
-// Fetch announcement strip
-const { data: stripData } = await supabase
-  .from('site_settings')
-  .select('value')
-  .eq('key', 'announcement_strip')
-  .single()
-
-const strip = stripData?.value as {
-  text: string; link: string; link_text: string
-  is_active: boolean; ends_at?: string
-} | null
 ---
 
 <!DOCTYPE html>
@@ -66,9 +40,7 @@ const strip = stripData?.value as {
   <title>{seoTitle}</title>
   <meta name="description" content={seoDesc} />
   <link rel="canonical" href={canonicalUrl} />
-  {noIndex && <meta name="robots" content="noindex,nofollow" />}
-  {!noIndex && <meta name="robots" content="index,follow" />}
-
+  {noIndex ? <meta name="robots" content="noindex,nofollow" /> : <meta name="robots" content="index,follow" />}
   <meta property="og:title" content={seoTitle} />
   <meta property="og:description" content={seoDesc} />
   <meta property="og:image" content={seoImage} />
@@ -76,55 +48,19 @@ const strip = stripData?.value as {
   <meta property="og:type" content="website" />
   <meta property="og:site_name" content="ATEC Gurdaspur" />
   <meta property="og:locale" content="en_IN" />
-
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content={seoTitle} />
   <meta name="twitter:description" content={seoDesc} />
   <meta name="twitter:image" content={seoImage} />
-
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="icon" type="image/png" href="/favicon.png" />
-  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-
-  <script type="application/ld+json">
-  {
-    "@context": "https://schema.org",
-    "@type": "EducationalOrganization",
-    "name": "ATEC Educational Society",
-    "url": "https://atecedu.com",
-    "logo": "https://atecedu.com/logo.png",
-    "description": "India's trusted computer institute since 2000.",
-    "address": {
-      "@type": "PostalAddress",
-      "streetAddress": "Hardochanni Road",
-      "addressLocality": "Gurdaspur",
-      "addressRegion": "Punjab",
-      "postalCode": "143521",
-      "addressCountry": "IN"
-    },
-    "telephone": "+917009933289",
-    "email": "atecgsp@gmail.com",
-    "foundingDate": "2000"
-  }
-  </script>
 </head>
 <body>
-  {strip?.is_active && (
-    <AnnouncementStrip
-      text={strip.text}
-      link={strip.link}
-      linkText={strip.link_text}
-      endsAt={strip.ends_at}
-    />
-  )}
+  <AnnouncementStrip />
   <Navbar />
-  <main>
-    <slot />
-  </main>
+  <main><slot /></main>
   <Footer />
-
-  <!-- Floating chatbot on every page -->
   <FloatingChatbot client:idle />
 </body>
 </html>
