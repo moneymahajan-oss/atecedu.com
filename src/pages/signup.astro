@@ -1,87 +1,222 @@
 ---
 // src/pages/signup.astro
-import BaseLayout from '../layouts/BaseLayout.astro'
-import SignupForm from '../components/auth/SignupForm'
+// STANDALONE — does NOT use BaseLayout
 ---
 
-<BaseLayout
-  title="Create Account — ATEC Educational Society"
-  description="Create your free ATEC student account to enroll in courses and get certified."
-  noIndex={true}
->
-  <div class="auth-page">
-    <div class="auth-container">
+<!DOCTYPE html>
+<html lang="en-IN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Create Account — ATEC Educational Society</title>
+  <meta name="robots" content="noindex,nofollow" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500;600&display=swap" />
+  <link rel="icon" type="image/png" href="/favicon.png" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(135deg, #0b1f3f 0%, #1c3d7a 100%);
+      min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px 16px;
+    }
+    .wrap { width: 100%; max-width: 480px; display: flex; flex-direction: column; align-items: center; gap: 24px; }
+    .logo { display: inline-flex; align-items: center; gap: 10px; text-decoration: none; }
+    .logo-mark { width: 44px; height: 44px; border-radius: 12px; background: #d4f01a; display: flex; align-items: center; justify-content: center; font-family: 'Sora', sans-serif; font-weight: 800; font-size: 20px; color: #0f2347; }
+    .logo-name { font-family: 'Sora', sans-serif; font-weight: 800; font-size: 18px; color: #fff; line-height: 1.1; }
+    .logo-sub { font-size: 11px; color: rgba(255,255,255,0.5); }
+    .card { width: 100%; background: #fff; border-radius: 20px; padding: 36px 32px; box-shadow: 0 24px 60px rgba(0,0,0,0.3); }
+    h1 { font-family: 'Sora', sans-serif; font-size: 1.5rem; font-weight: 800; color: #0f1724; margin-bottom: 4px; }
+    .sub { font-size: 14px; color: #6b7280; margin-bottom: 24px; }
+    .steps { display: flex; gap: 8px; margin-bottom: 8px; }
+    .step-bar { flex: 1; height: 4px; border-radius: 2px; background: #e5e7eb; transition: background 0.3s; }
+    .step-bar.active { background: #1c3d7a; }
+    .step-label { font-size: 12px; color: #9ca3af; margin-bottom: 20px; }
+    label { display: block; font-size: 13px; font-weight: 600; color: #374151; margin-bottom: 5px; }
+    .field { margin-bottom: 14px; }
+    .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    input {
+      width: 100%; padding: 11px 14px; border: 1.5px solid #e5e7eb; border-radius: 10px;
+      font-size: 15px; font-family: 'Inter', sans-serif; outline: none; transition: border-color 0.2s;
+    }
+    input:focus { border-color: #1c3d7a; }
+    .error { background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 10px 14px; font-size: 13px; color: #991b1b; margin-bottom: 14px; display: none; }
+    .error.show { display: block; }
+    .success { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 12px; padding: 32px; text-align: center; display: none; }
+    .success.show { display: block; }
+    .btn { width: 100%; padding: 13px; background: #1c3d7a; color: #fff; border: none; border-radius: 10px; font-family: 'Sora', sans-serif; font-weight: 800; font-size: 15px; cursor: pointer; transition: background 0.2s; }
+    .btn:hover { background: #0f2347; }
+    .btn:disabled { background: #9ca3af; cursor: not-allowed; }
+    .btn-back { flex: 0 0 auto; padding: 13px 20px; border: 1.5px solid #e5e7eb; background: #fff; border-radius: 10px; font-weight: 600; font-size: 14px; cursor: pointer; font-family: 'Inter', sans-serif; }
+    .btn-row { display: flex; gap: 10px; }
+    .switch { text-align: center; font-size: 14px; color: #6b7280; margin-top: 18px; }
+    .switch a { color: #1c3d7a; font-weight: 600; text-decoration: none; }
+    .foot { font-size: 13px; color: rgba(255,255,255,0.4); text-align: center; }
+    .foot a { color: rgba(255,255,255,0.55); }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <a href="/" class="logo">
+      <div class="logo-mark">A</div>
+      <div>
+        <div class="logo-name">ATEC</div>
+        <div class="logo-sub">Educational Society</div>
+      </div>
+    </a>
 
-      <div class="auth-brand">
-        <a href="/" class="auth-logo">
-          <div class="auth-logo-mark">A</div>
-          <div>
-            <div class="auth-logo-name">ATEC</div>
-            <div class="auth-logo-sub">Educational Society</div>
+    <div class="card">
+      <h1>Create Your Account</h1>
+      <p class="sub">Join 5,000+ students — free to sign up</p>
+
+      <div class="steps">
+        <div class="step-bar active" id="step1-bar"></div>
+        <div class="step-bar" id="step2-bar"></div>
+      </div>
+      <p class="step-label" id="step-label">Step 1 of 2 — Personal Details</p>
+
+      <div id="error-box" class="error"></div>
+      <div id="success-box" class="success">
+        <div style="font-size:48px;margin-bottom:12px">🎉</div>
+        <h3 style="font-family:'Sora',sans-serif;font-weight:700;font-size:1.2rem;margin-bottom:8px">Account Created!</h3>
+        <p style="font-size:14px;color:#6b7280;margin-bottom:20px">Check your email and click the confirmation link to activate your account.</p>
+        <a href="/login" style="display:inline-block;padding:12px 28px;background:#1c3d7a;color:#fff;border-radius:10px;font-family:'Sora',sans-serif;font-weight:700;font-size:14px;text-decoration:none">Go to Login</a>
+      </div>
+
+      <!-- Step 1 -->
+      <div id="step1">
+        <div class="grid2">
+          <div class="field">
+            <label>Full Name *</label>
+            <input type="text" id="fullName" placeholder="As per certificate" required />
           </div>
-        </a>
+          <div class="field">
+            <label>Father's Name</label>
+            <input type="text" id="fatherName" placeholder="Optional" />
+          </div>
+        </div>
+        <div class="grid2">
+          <div class="field">
+            <label>Phone Number *</label>
+            <input type="tel" id="phone" placeholder="+91 XXXXX XXXXX" required />
+          </div>
+          <div class="field">
+            <label>City</label>
+            <input type="text" id="city" placeholder="Your city" />
+          </div>
+        </div>
+        <button class="btn" id="next-btn" type="button">Continue →</button>
       </div>
 
-      <div class="auth-card">
-        <h1 class="auth-title">Create Your Account</h1>
-        <p class="auth-sub">Join 5,000+ students — it's free to sign up</p>
-        <SignupForm client:load />
-        <p class="auth-switch">
-          Already have an account? <a href="/login">Login here</a>
-        </p>
+      <!-- Step 2 -->
+      <div id="step2" style="display:none">
+        <div class="field">
+          <label>Email Address *</label>
+          <input type="email" id="email" placeholder="you@example.com" required />
+        </div>
+        <div class="field">
+          <label>Password *</label>
+          <input type="password" id="password" placeholder="Min 6 characters" required minlength="6" />
+        </div>
+        <div class="field">
+          <label>Confirm Password *</label>
+          <input type="password" id="confirm" placeholder="Re-enter password" required />
+        </div>
+        <div class="btn-row">
+          <button class="btn-back" id="back-btn" type="button">← Back</button>
+          <button class="btn" id="submit-btn" type="button">Create My Account 🎓</button>
+        </div>
       </div>
 
-      <p class="auth-footer-note">
-        By signing up you agree to our <a href="/terms">Terms of Use</a>
-      </p>
+      <p class="switch">Already have an account? <a href="/login">Login here</a></p>
     </div>
-  </div>
-</BaseLayout>
 
-<style>
-.auth-page {
-  min-height: calc(100vh - var(--nav-height));
-  background: linear-gradient(135deg, #0b1f3f 0%, #1c3d7a 100%);
-  display: flex; align-items: center; justify-content: center;
-  padding: 40px 16px;
-}
-.auth-container {
-  width: 100%; max-width: 480px;
-  display: flex; flex-direction: column; align-items: center; gap: 24px;
-}
-.auth-brand { text-align: center; }
-.auth-logo {
-  display: inline-flex; align-items: center; gap: 10px; text-decoration: none;
-}
-.auth-logo-mark {
-  width: 44px; height: 44px; border-radius: 12px;
-  background: var(--lemon);
-  display: flex; align-items: center; justify-content: center;
-  font-family: var(--font-display); font-weight: 800; font-size: 20px;
-  color: var(--navy);
-}
-.auth-logo-name {
-  font-family: var(--font-display); font-weight: 800; font-size: 20px;
-  color: #fff; line-height: 1.1;
-}
-.auth-logo-sub { font-size: 11px; color: rgba(255,255,255,0.5); }
-.auth-card {
-  width: 100%;
-  background: var(--white); border-radius: var(--radius-xl);
-  padding: 36px 32px;
-  box-shadow: 0 24px 60px rgba(0,0,0,0.3);
-}
-.auth-title {
-  font-family: var(--font-display); font-size: 1.6rem; font-weight: 800;
-  color: var(--text-primary); margin-bottom: 6px;
-}
-.auth-sub { font-size: 14px; color: var(--text-muted); margin-bottom: 28px; }
-.auth-switch {
-  text-align: center; font-size: 14px; color: var(--text-muted); margin-top: 20px;
-}
-.auth-switch a { color: var(--navy); font-weight: 600; }
-.auth-footer-note {
-  font-size: 13px; color: rgba(255,255,255,0.45); text-align: center;
-}
-.auth-footer-note a { color: rgba(255,255,255,0.6); }
-</style>
+    <p class="foot">By signing up you agree to our <a href="/terms">Terms of Use</a></p>
+  </div>
+
+  <script type="module">
+    import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+    const supabase = createClient(
+      import.meta.env.PUBLIC_SUPABASE_URL,
+      import.meta.env.PUBLIC_SUPABASE_ANON_KEY
+    )
+
+    const errorBox = document.getElementById('error-box')
+    const step1El = document.getElementById('step1')
+    const step2El = document.getElementById('step2')
+    const step1Bar = document.getElementById('step1-bar')
+    const step2Bar = document.getElementById('step2-bar')
+    const stepLabel = document.getElementById('step-label')
+
+    function showError(msg) {
+      errorBox.textContent = '⚠️ ' + msg
+      errorBox.classList.add('show')
+    }
+    function hideError() { errorBox.classList.remove('show') }
+
+    document.getElementById('next-btn').addEventListener('click', () => {
+      hideError()
+      const name = document.getElementById('fullName').value.trim()
+      const phone = document.getElementById('phone').value.trim()
+      if (!name || !phone) { showError('Full name and phone are required'); return }
+      step1El.style.display = 'none'
+      step2El.style.display = 'block'
+      step2Bar.classList.add('active')
+      stepLabel.textContent = 'Step 2 of 2 — Account Setup'
+    })
+
+    document.getElementById('back-btn').addEventListener('click', () => {
+      hideError()
+      step2El.style.display = 'none'
+      step1El.style.display = 'block'
+      step2Bar.classList.remove('active')
+      stepLabel.textContent = 'Step 1 of 2 — Personal Details'
+    })
+
+    document.getElementById('submit-btn').addEventListener('click', async () => {
+      hideError()
+      const email = document.getElementById('email').value.trim()
+      const password = document.getElementById('password').value
+      const confirm = document.getElementById('confirm').value
+      const fullName = document.getElementById('fullName').value.trim()
+      const fatherName = document.getElementById('fatherName').value.trim()
+      const phone = document.getElementById('phone').value.trim()
+      const city = document.getElementById('city').value.trim()
+
+      if (password !== confirm) { showError('Passwords do not match'); return }
+      if (password.length < 6) { showError('Password must be at least 6 characters'); return }
+
+      const btn = document.getElementById('submit-btn')
+      btn.disabled = true
+      btn.textContent = 'Creating Account...'
+
+      const { data, error } = await supabase.auth.signUp({
+        email, password,
+        options: {
+          data: { full_name: fullName },
+          emailRedirectTo: window.location.origin + '/dashboard'
+        }
+      })
+
+      if (error) {
+        showError(error.message)
+        btn.disabled = false
+        btn.textContent = 'Create My Account 🎓'
+        return
+      }
+
+      if (data.user) {
+        await supabase.from('student_profiles').upsert({
+          id: data.user.id,
+          full_name: fullName,
+          father_name: fatherName || null,
+          phone, city
+        })
+      }
+
+      step2El.style.display = 'none'
+      document.getElementById('success-box').classList.add('show')
+    })
+  </script>
+</body>
+</html>
