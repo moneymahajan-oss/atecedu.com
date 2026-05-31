@@ -1,6 +1,5 @@
 ---
 // src/layouts/AdminLayout.astro
-// FIXED: uses define:vars to pass env vars to browser script
 import '../styles/global.css'
 
 interface Props {
@@ -9,9 +8,9 @@ interface Props {
 }
 const { title = 'Admin Panel', activeSection = '' } = Astro.props
 
-const SUPABASE_URL = import.meta.env.PUBLIC_SUPABASE_URL
-const SUPABASE_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY
-const ADMIN_EMAILS = ['atecgsp@gmail.com', 'admin@atecedu.com']
+const SUPABASE_URL   = import.meta.env.PUBLIC_SUPABASE_URL     || ''
+const SUPABASE_KEY   = import.meta.env.PUBLIC_SUPABASE_ANON_KEY || ''
+const ADMIN_EMAILS   = ['atecgsp@gmail.com', 'admin@atecedu.com']
 ---
 
 <!DOCTYPE html>
@@ -25,11 +24,10 @@ const ADMIN_EMAILS = ['atecgsp@gmail.com', 'admin@atecedu.com']
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500;600&display=swap" />
   <link rel="icon" type="image/png" href="/favicon.png" />
 
-  <!-- Pass env vars to browser using define:vars (Astro's correct method) -->
   <script define:vars={{ SUPABASE_URL, SUPABASE_KEY, ADMIN_EMAILS }}>
-    window.__SB_URL = SUPABASE_URL
-    window.__SB_KEY = SUPABASE_KEY
-    window.__ADMIN_EMAILS = ADMIN_EMAILS
+    window.__SB_URL         = SUPABASE_URL
+    window.__SB_KEY         = SUPABASE_KEY
+    window.__ADMIN_EMAILS   = ADMIN_EMAILS
   </script>
 
   <style>
@@ -137,28 +135,30 @@ const ADMIN_EMAILS = ['atecgsp@gmail.com', 'admin@atecedu.com']
     </div>
   </div>
 
+  <!-- Uses npm @supabase/supabase-js bundled by Vite — NOT esm.sh CDN -->
   <script>
+    import { createClient } from '@supabase/supabase-js'
+
     async function initAdmin() {
       try {
-        const URL = window.__SB_URL
-        const KEY = window.__SB_KEY
+        const URL    = window.__SB_URL
+        const KEY    = window.__SB_KEY
         const EMAILS = window.__ADMIN_EMAILS || ['atecgsp@gmail.com']
 
         if (!URL || !KEY) {
-          window.location.href = '/admin/login'
+          window.location.replace('/admin/login')
           return
         }
 
-        const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2')
         const supabase = createClient(URL, KEY)
-
         const { data: { session } } = await supabase.auth.getSession()
 
         if (!session?.user || !EMAILS.includes(session.user.email ?? '')) {
-          window.location.href = '/admin/login'
+          window.location.replace('/admin/login')
           return
         }
 
+        // Auth passed — show admin UI
         const emailEl = document.getElementById('admin-email')
         if (emailEl) emailEl.textContent = session.user.email ?? 'admin'
 
@@ -166,26 +166,27 @@ const ADMIN_EMAILS = ['atecgsp@gmail.com', 'admin@atecedu.com']
         document.getElementById('admin-wrapper').style.display = 'block'
 
         // Sidebar toggle
-        const sidebar = document.getElementById('admin-sidebar')
-        const main = document.getElementById('admin-main')
-        let collapsed = false
+        const sidebar  = document.getElementById('admin-sidebar')
+        const mainEl   = document.getElementById('admin-main')
+        let collapsed  = false
         document.getElementById('sidebar-toggle')?.addEventListener('click', () => {
           collapsed = !collapsed
           sidebar?.classList.toggle('collapsed', collapsed)
-          main?.classList.toggle('expanded', collapsed)
+          mainEl?.classList.toggle('expanded', collapsed)
         })
 
         // Logout
         document.getElementById('admin-logout')?.addEventListener('click', async () => {
           await supabase.auth.signOut()
-          window.location.href = '/admin/login'
+          window.location.replace('/admin/login')
         })
 
       } catch (err) {
         console.error('Admin init error:', err)
-        window.location.href = '/admin/login'
+        window.location.replace('/admin/login')
       }
     }
+
     initAdmin()
   </script>
 </body>
