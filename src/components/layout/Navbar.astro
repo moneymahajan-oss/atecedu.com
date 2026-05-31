@@ -1,120 +1,208 @@
 ---
-const navLinks = [
+// src/components/layout/Navbar.astro
+const links = [
   { href: '/',             label: 'Home' },
   { href: '/courses',      label: 'Courses' },
   { href: '/verification', label: 'Verify Certificate' },
+  { href: '/centres',      label: 'Centres' },
   { href: '/about',        label: 'About' },
 ]
-
-const currentPath = Astro.url.pathname
+const pathname = Astro.url.pathname
 ---
 
-<header id="navbar" class="fixed top-0 left-0 right-0 z-50 transition-all duration-300">
-  <div class="bg-[#0D1B3E]/95 backdrop-blur-md border-b border-white/10">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="flex items-center justify-between h-16">
+<header class="navbar" id="main-navbar">
+  <div class="container">
+    <div class="nav-inner">
 
-        <!-- Logo -->
-        <a href="/" class="flex items-center gap-3 group">
-          <img
-            src="/logo.png"
-            alt="ATEC Gurdaspur"
-            class="h-9 w-auto"
-          />
-          <div class="hidden sm:block">
-            <p class="text-white font-display font-700 text-sm leading-tight">ATEC</p>
-            <p class="text-[#E8F531] text-[10px] font-sans font-500 tracking-widest uppercase leading-tight">Gurdaspur</p>
-          </div>
-        </a>
-
-        <!-- Desktop nav -->
-        <nav class="hidden md:flex items-center gap-1">
-          {navLinks.map(link => (
-            <a
-              href={link.href}
-              class={`nav-link px-4 py-2 text-sm font-sans font-500 rounded-lg transition-colors duration-200 ${
-                currentPath === link.href || (link.href !== '/' && currentPath.startsWith(link.href))
-                  ? 'text-[#E8F531] active'
-                  : 'text-white/80 hover:text-white'
-              }`}
-            >
-              {link.label}
-            </a>
-          ))}
-        </nav>
-
-        <!-- CTA + mobile toggle -->
-        <div class="flex items-center gap-3">
-          <a
-            href="/courses"
-            class="hidden sm:inline-flex items-center gap-1.5 bg-[#E8F531] text-[#0D1B3E] text-sm font-display font-700 px-4 py-2 rounded-xl hover:bg-[#C9D420] transition-colors duration-200"
-          >
-            Enroll Now
-          </a>
-
-          <!-- Mobile menu button -->
-          <button
-            id="mobile-menu-btn"
-            aria-label="Toggle menu"
-            class="md:hidden p-2 text-white/80 hover:text-white"
-          >
-            <svg id="icon-open"  class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
-            <svg id="icon-close" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-          </button>
+      <!-- Logo -->
+      <a href="/" class="nav-logo" aria-label="ATEC Educational Society Home">
+        <div class="logo-mark">
+          <span>A</span>
         </div>
+        <div class="logo-text">
+          <span class="logo-name">ATEC</span>
+          <span class="logo-sub">Educational Society</span>
+        </div>
+      </a>
 
-      </div>
-    </div>
-
-    <!-- Mobile menu -->
-    <div id="mobile-menu" class="hidden md:hidden border-t border-white/10">
-      <nav class="flex flex-col px-4 py-3 gap-1">
-        {navLinks.map(link => (
+      <!-- Desktop links -->
+      <nav class="nav-links" aria-label="Main navigation">
+        {links.map(link => (
           <a
             href={link.href}
-            class={`px-4 py-3 text-sm font-sans font-500 rounded-xl transition-colors duration-200 ${
-              currentPath === link.href
-                ? 'bg-white/10 text-[#E8F531]'
-                : 'text-white/80 hover:bg-white/5 hover:text-white'
-            }`}
+            class:list={['nav-link', { active: pathname === link.href || (link.href !== '/' && pathname.startsWith(link.href)) }]}
           >
             {link.label}
           </a>
         ))}
-        <a
-          href="/courses"
-          class="mt-2 text-center bg-[#E8F531] text-[#0D1B3E] text-sm font-display font-700 px-4 py-3 rounded-xl hover:bg-[#C9D420] transition-colors"
-        >
-          Enroll Now
-        </a>
       </nav>
+
+      <!-- Desktop CTAs -->
+      <div class="nav-ctas">
+        <a href="/login" class="btn btn-outline btn-sm">Login</a>
+        <a href="/courses" class="btn btn-primary btn-sm">Enroll Now</a>
+      </div>
+
+      <!-- Mobile hamburger -->
+      <button class="hamburger" id="hamburger-btn" aria-label="Open menu" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Mobile menu -->
+  <div class="mobile-menu" id="mobile-menu" aria-hidden="true">
+    <nav>
+      {links.map(link => (
+        <a
+          href={link.href}
+          class:list={['mobile-link', { active: pathname === link.href }]}
+        >
+          {link.label}
+        </a>
+      ))}
+    </nav>
+    <div class="mobile-ctas">
+      <a href="/login" class="btn btn-outline" style="flex:1;justify-content:center">Login</a>
+      <a href="/courses" class="btn btn-primary" style="flex:1;justify-content:center">Enroll Now</a>
     </div>
   </div>
 </header>
 
-<!-- Spacer so content starts below fixed navbar -->
-<div class="h-16"></div>
+<style>
+.navbar {
+  position: sticky;
+  top: 0;
+  z-index: 999;
+  background: rgba(255,255,255,0.97);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--gray-200);
+  transition: box-shadow 0.3s;
+}
+.navbar.scrolled { box-shadow: var(--shadow-md); }
+
+.nav-inner {
+  display: flex;
+  align-items: center;
+  height: var(--nav-height);
+  gap: 32px;
+}
+
+/* Logo */
+.nav-logo { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+.logo-mark {
+  width: 38px; height: 38px;
+  background: var(--navy);
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 18px;
+  color: var(--lemon);
+  letter-spacing: -1px;
+}
+.logo-text { display: flex; flex-direction: column; line-height: 1.1; }
+.logo-name {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 18px;
+  color: var(--navy);
+  letter-spacing: -0.5px;
+}
+.logo-sub { font-size: 10px; color: var(--text-muted); font-weight: 400; letter-spacing: 0.3px; }
+
+/* Desktop nav */
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex: 1;
+}
+.nav-link {
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  transition: all 0.15s;
+}
+.nav-link:hover { background: var(--gray-100); color: var(--navy); }
+.nav-link.active { color: var(--navy); font-weight: 600; background: #eff6ff; }
+
+.nav-ctas { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+
+/* Hamburger */
+.hamburger {
+  display: none;
+  flex-direction: column;
+  gap: 5px;
+  padding: 8px;
+  margin-left: auto;
+  border-radius: 8px;
+}
+.hamburger:hover { background: var(--gray-100); }
+.hamburger span {
+  display: block;
+  width: 22px; height: 2px;
+  background: var(--navy);
+  border-radius: 2px;
+  transition: all 0.3s;
+}
+.hamburger.open span:nth-child(1) { transform: rotate(45deg) translate(5px, 5px); }
+.hamburger.open span:nth-child(2) { opacity: 0; }
+.hamburger.open span:nth-child(3) { transform: rotate(-45deg) translate(5px, -5px); }
+
+/* Mobile menu */
+.mobile-menu {
+  display: none;
+  flex-direction: column;
+  padding: 16px;
+  border-top: 1px solid var(--gray-200);
+  background: var(--white);
+  gap: 4px;
+}
+.mobile-menu.open { display: flex; }
+.mobile-link {
+  display: block;
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+.mobile-link:hover, .mobile-link.active {
+  background: var(--gray-50);
+  color: var(--navy);
+}
+.mobile-ctas {
+  display: flex;
+  gap: 10px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--gray-200);
+}
+
+@media (max-width: 900px) {
+  .nav-links, .nav-ctas { display: none; }
+  .hamburger { display: flex; }
+}
+</style>
 
 <script>
-  const btn   = document.getElementById('mobile-menu-btn')
-  const menu  = document.getElementById('mobile-menu')
-  const open  = document.getElementById('icon-open')
-  const close = document.getElementById('icon-close')
+const navbar = document.getElementById('main-navbar')
+const hamburger = document.getElementById('hamburger-btn')
+const mobileMenu = document.getElementById('mobile-menu')
 
-  btn?.addEventListener('click', () => {
-    const isOpen = !menu?.classList.contains('hidden')
-    menu?.classList.toggle('hidden', isOpen)
-    open?.classList.toggle('hidden', !isOpen)
-    close?.classList.toggle('hidden', isOpen)
-  })
+// Scroll shadow
+window.addEventListener('scroll', () => {
+  navbar?.classList.toggle('scrolled', window.scrollY > 10)
+}, { passive: true })
 
-  // Scroll shadow
-  window.addEventListener('scroll', () => {
-    const navbar = document.getElementById('navbar')
-    if (window.scrollY > 10) {
-      navbar?.querySelector('div')?.classList.add('shadow-lg')
-    } else {
-      navbar?.querySelector('div')?.classList.remove('shadow-lg')
-    }
-  })
+// Mobile toggle
+hamburger?.addEventListener('click', () => {
+  const open = mobileMenu?.classList.toggle('open')
+  hamburger.classList.toggle('open', open)
+  hamburger.setAttribute('aria-expanded', String(open))
+  mobileMenu?.setAttribute('aria-hidden', String(!open))
+})
 </script>

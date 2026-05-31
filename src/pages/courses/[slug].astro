@@ -1,0 +1,621 @@
+---
+// src/pages/courses/[slug].astro
+import BaseLayout from '../../layouts/BaseLayout.astro'
+import { supabase } from '../../lib/supabase'
+import AddToCartButton from '../../components/courses/AddToCartButton'
+
+export async function getStaticPaths() {
+  const { data: courses } = await supabase
+    .from('courses')
+    .select('slug')
+    .eq('is_active', true)
+  return (courses ?? []).map(c => ({ params: { slug: c.slug } }))
+}
+
+const { slug } = Astro.params
+
+const { data: course } = await supabase
+  .from('courses')
+  .select('*')
+  .eq('slug', slug)
+  .eq('is_active', true)
+  .single()
+
+if (!course) return Astro.redirect('/courses', 302)
+
+// Fetch related courses
+const { data: related } = await supabase
+  .from('courses')
+  .select('id,title,slug,mode,fee_inr,thumbnail_url,duration_weeks')
+  .eq('is_active', true)
+  .eq('category', course.category ?? '')
+  .neq('slug', slug)
+  .limit(3)
+
+const syllabus = (course.syllabus as { week: number; topic: string; subtopics?: string[] }[]) ?? []
+const whatYouLearn = (course.what_you_learn as string[]) ?? []
+const highlights = (course.highlights as string[]) ?? []
+const faq = (course.faq as { q: string; a: string }[]) ?? []
+
+const discount = course.original_fee_inr && course.fee_inr
+  ? Math.round((1 - course.fee_inr / course.original_fee_inr) * 100)
+  : null
+
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "Course",
+  "name": course.title,
+  "description": course.description ?? course.short_description,
+  "url": `https://atecedu.com/courses/${slug}`,
+  "image": course.thumbnail_url,
+  "provider": {
+    "@type": "EducationalOrganization",
+    "name": "ATEC Educational Society",
+    "url": "https://atecedu.com"
+  },
+  "offers": {
+    "@type": "Offer",
+    "price": course.fee_inr,
+    "priceCurrency": "INR",
+    "availability": "https://schema.org/InStock"
+  },
+  "hasCourseInstance": {
+    "@type": "CourseInstance",
+    "courseMode": course.mode,
+    "duration": `P${course.duration_weeks}W`,
+    "inLanguage": course.language ?? "hi"
+  }
+}
+---
+
+<BaseLayout
+  title={`${course.title} — ATEC Educational Society`}
+  description={course.short_description ?? course.description ?? ''}
+  ogImage={course.thumbnail_url ?? undefined}
+  pageSlug={`course-${slug}`}
+>
+
+  <!-- Breadcrumb + hero -->
+  <div class="course-hero">
+    <div class="container">
+      <nav class="breadcrumb" aria-label="Breadcrumb">
+        <a href="/">Home</a>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+        <a href="/courses">Courses</a>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+        <span>{course.title}</span>
+      </nav>
+
+      <div class="hero-inner">
+        <div class="hero-content">
+          <div class="hero-badges">
+            <span class:list={['badge', `badge-${course.mode}`]}>{course.mode}</span>
+            {course.is_featured && <span class="badge badge-new">Featured</span>}
+            {course.level && <span class="badge badge-outline">{course.level}</span>}
+          </div>
+          <h1 class="course-title">{course.title}</h1>
+          {course.short_description && (
+            <p class="course-sub">{course.short_description}</p>
+          )}
+
+          <!-- Metadata row -->
+          <div class="meta-row">
+            {course.rating && (
+              <div class="meta-item">
+                <span style="color:#f59e0b">{'★'.repeat(Math.round(course.rating ?? 4))}</span>
+                <span class="meta-val">{course.rating}</span>
+                {course.reviews_count > 0 && <span class="meta-label">({course.reviews_count} reviews)</span>}
+              </div>
+            )}
+            {course.total_enrolled > 0 && (
+              <div class="meta-item">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+                <span class="meta-val">{course.total_enrolled.toLocaleString('en-IN')}</span>
+                <span class="meta-label">enrolled</span>
+              </div>
+            )}
+            <div class="meta-item">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/></svg>
+              <span class="meta-val">{course.duration_weeks} weeks</span>
+            </div>
+            {course.language && (
+              <div class="meta-item">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 8l6 6M4 14l6-6 2-3M2 5h12M7 2h1M22 22l-5-10-5 10M14 18h6"/></svg>
+                <span class="meta-val">{course.language}</span>
+              </div>
+            )}
+          </div>
+
+          <div class="hero-cert">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+            Certificate included upon completion
+          </div>
+        </div>
+
+        <!-- Right: pricing card (desktop) -->
+        <div class="pricing-card desktop-only">
+          {course.promo_video_url || course.demo_zoom_url ? (
+            <div class="demo-video-wrap">
+              {course.promo_video_url ? (
+                <div class="video-embed" style="border-radius:var(--radius-lg) var(--radius-lg) 0 0">
+                  <iframe
+                    src={`https://www.youtube.com/embed/${course.promo_video_url}?rel=0&modestbranding=1`}
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowfullscreen
+                    title={`${course.title} demo`}
+                    loading="lazy"
+                  />
+                </div>
+              ) : (
+                <div class="demo-placeholder">
+                  <a href={course.demo_zoom_url ?? '#'} target="_blank" rel="noopener" class="zoom-preview">
+                    <div class="zoom-icon">▶</div>
+                    <span>Watch Demo Class on Zoom</span>
+                  </a>
+                </div>
+              )}
+            </div>
+          ) : (
+            course.thumbnail_url && (
+              <div class="card-thumb-wrap">
+                <img src={course.thumbnail_url} alt={course.title} loading="lazy" class="card-thumb-img" />
+              </div>
+            )
+          )}
+          <div class="pricing-body">
+            <div class="pricing-price-row">
+              <span class="pricing-price">₹{course.fee_inr?.toLocaleString('en-IN')}</span>
+              {course.original_fee_inr && (
+                <>
+                  <span class="pricing-old">₹{course.original_fee_inr?.toLocaleString('en-IN')}</span>
+                  {discount && <span class="pricing-discount">{discount}% off</span>}
+                </>
+              )}
+            </div>
+
+            <div class="pricing-btns">
+              <AddToCartButton client:load courseId={course.id} courseTitle={course.title} />
+            </div>
+
+            <div class="pricing-includes">
+              <div class="include-title">This course includes:</div>
+              {[
+                { icon: '📹', text: `${course.duration_weeks} weeks of content` },
+                { icon: '📱', text: 'Access on mobile & desktop' },
+                { icon: '📜', text: 'Certificate of completion' },
+                { icon: '💬', text: 'Live doubt clearing sessions' },
+                ...(course.mode === 'hybrid' || course.mode === 'classroom'
+                  ? [{ icon: '🔬', text: 'Hands-on lab practicals' }]
+                  : []),
+                ...(course.demo_zoom_url
+                  ? [{ icon: '🎥', text: 'Zoom live classes' }]
+                  : []),
+              ].map(item => (
+                <div class="include-item">
+                  <span>{item.icon}</span>
+                  <span>{item.text}</span>
+                </div>
+              ))}
+            </div>
+
+            <div class="pricing-guarantee">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              7-day money-back guarantee
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main content + sticky sidebar -->
+  <div class="course-body">
+    <div class="container">
+      <div class="course-layout">
+
+        <!-- Left: details -->
+        <div class="course-details">
+
+          <!-- What you'll learn -->
+          {whatYouLearn.length > 0 && (
+            <section class="detail-section">
+              <h2>What You'll Learn</h2>
+              <div class="learn-grid">
+                {whatYouLearn.map(item => (
+                  <div class="learn-item">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="color:var(--lemon);flex-shrink:0"><polyline points="20 6 9 17 4 12"/></svg>
+                    <span>{item}</span>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+
+          <!-- Highlights -->
+          {highlights.length > 0 && (
+            <section class="detail-section">
+              <h2>Course Highlights</h2>
+              <div class="highlights-grid">
+                {highlights.map(item => (
+                  <div class="highlight-pill">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--navy)"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                    {item}
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+
+          <!-- Course description -->
+          {course.description && (
+            <section class="detail-section">
+              <h2>About This Course</h2>
+              <div class="course-description" set:html={course.description} />
+            </section>
+          )}
+
+          <!-- Syllabus accordion -->
+          {syllabus.length > 0 && (
+            <section class="detail-section">
+              <h2>Course Syllabus</h2>
+              <div class="syllabus-summary">
+                {syllabus.length} weeks · {syllabus.reduce((acc, w) => acc + (w.subtopics?.length ?? 1), 0)} topics
+              </div>
+              <div class="accordion" id="syllabus-accordion">
+                {syllabus.map((week, i) => (
+                  <div class="accordion-item">
+                    <button
+                      class="accordion-trigger"
+                      data-index={i}
+                      aria-expanded={i === 0 ? 'true' : 'false'}
+                    >
+                      <span>
+                        <span class="week-badge">Week {week.week}</span>
+                        {week.topic}
+                      </span>
+                      <svg class="acc-chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style={i === 0 ? 'transform:rotate(180deg)' : ''}><path d="M6 9l6 6 6-6"/></svg>
+                    </button>
+                    <div class="accordion-content" style={i === 0 ? '' : 'display:none'}>
+                      {week.subtopics && week.subtopics.length > 0 ? (
+                        <ul class="subtopic-list">
+                          {week.subtopics.map(sub => (
+                            <li>
+                              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline;vertical-align:-1px;margin-right:6px;color:var(--navy)"><circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/></svg>
+                              {sub}
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <p style="color:var(--text-muted);font-size:14px">Practical sessions and assessments</p>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+
+          <!-- Prerequisites -->
+          {course.prerequisites && (
+            <section class="detail-section">
+              <h2>Prerequisites</h2>
+              <p style="color:var(--text-secondary);font-size:15px;line-height:1.7">{course.prerequisites}</p>
+            </section>
+          )}
+
+          <!-- FAQ -->
+          {faq.length > 0 && (
+            <section class="detail-section">
+              <h2>Frequently Asked Questions</h2>
+              <div class="accordion" id="faq-accordion">
+                {faq.map((item, i) => (
+                  <div class="accordion-item">
+                    <button
+                      class="accordion-trigger"
+                      data-faq={i}
+                      aria-expanded="false"
+                    >
+                      <span>{item.q}</span>
+                      <svg class="acc-chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+                    </button>
+                    <div class="accordion-content" style="display:none">
+                      <p style="color:var(--text-secondary);font-size:14px;line-height:1.7">{item.a}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+        </div>
+
+        <!-- Right: sticky pricing (mobile-shown in body) -->
+        <div class="sticky-sidebar">
+          <div class="pricing-card">
+            {(course.promo_video_url || course.thumbnail_url) && (
+              <div class="demo-video-wrap">
+                {course.promo_video_url ? (
+                  <div class="video-embed" style="border-radius:var(--radius-lg) var(--radius-lg) 0 0">
+                    <iframe
+                      src={`https://www.youtube.com/embed/${course.promo_video_url}?rel=0&modestbranding=1`}
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowfullscreen title={`${course.title} demo`} loading="lazy"
+                    />
+                  </div>
+                ) : (
+                  <div class="card-thumb-wrap">
+                    <img src={course.thumbnail_url} alt={course.title} loading="lazy" class="card-thumb-img" />
+                  </div>
+                )}
+              </div>
+            )}
+            <div class="pricing-body">
+              <div class="pricing-price-row">
+                <span class="pricing-price">₹{course.fee_inr?.toLocaleString('en-IN')}</span>
+                {course.original_fee_inr && (
+                  <>
+                    <span class="pricing-old">₹{course.original_fee_inr?.toLocaleString('en-IN')}</span>
+                    {discount && <span class="pricing-discount">{discount}% off</span>}
+                  </>
+                )}
+              </div>
+              <div class="pricing-btns">
+                <AddToCartButton client:load courseId={course.id} courseTitle={course.title} />
+              </div>
+              <div class="pricing-includes">
+                <div class="include-title">Includes:</div>
+                {[
+                  { icon: '📹', text: `${course.duration_weeks} weeks` },
+                  { icon: '📜', text: 'Certificate' },
+                  { icon: '💬', text: 'Live Q&A' },
+                  ...(course.mode === 'hybrid' ? [{ icon: '🔬', text: 'Lab practicals' }] : []),
+                ].map(item => (
+                  <div class="include-item"><span>{item.icon}</span><span>{item.text}</span></div>
+                ))}
+              </div>
+              <div class="pricing-guarantee">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                7-day money-back guarantee
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Related courses -->
+  {(related ?? []).length > 0 && (
+    <section class="related-section">
+      <div class="container">
+        <h2 style="margin-bottom:28px">Related Courses</h2>
+        <div class="related-grid">
+          {(related ?? []).map(c => (
+            <a href={`/courses/${c.slug}`} class="related-card">
+              {c.thumbnail_url && (
+                <div class="related-thumb">
+                  <img src={c.thumbnail_url} alt={c.title} loading="lazy" />
+                </div>
+              )}
+              <div class="related-body">
+                <div class="related-mode badge" style="font-size:11px">{c.mode}</div>
+                <h3 class="related-title">{c.title}</h3>
+                <div class="related-meta">
+                  <span>{c.duration_weeks}w</span>
+                  <span style="margin-left:auto;font-family:var(--font-display);font-weight:700;color:var(--navy)">₹{c.fee_inr?.toLocaleString('en-IN')}</span>
+                </div>
+              </div>
+            </a>
+          ))}
+        </div>
+      </div>
+    </section>
+  )}
+
+  <!-- Mobile floating CTA -->
+  <div class="floating-cta">
+    <div style="font-family:var(--font-display);font-size:18px;font-weight:800;color:var(--navy)">
+      ₹{course.fee_inr?.toLocaleString('en-IN')}
+    </div>
+    <AddToCartButton client:load courseId={course.id} courseTitle={course.title} compact />
+  </div>
+
+  <!-- JSON-LD -->
+  <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
+
+</BaseLayout>
+
+<style>
+/* Course hero */
+.course-hero {
+  background: linear-gradient(135deg, #0b1f3f 0%, #1c3d7a 100%);
+  padding: 48px 0 56px;
+}
+.hero-inner {
+  display: grid; grid-template-columns: 1fr 400px;
+  gap: 48px; align-items: start;
+}
+@media (max-width: 1024px) { .hero-inner { grid-template-columns: 1fr; } }
+.hero-content {}
+.hero-badges { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+.badge-outline {
+  background: rgba(255,255,255,0.1);
+  color: rgba(255,255,255,0.85);
+  border: 1px solid rgba(255,255,255,0.25);
+}
+.course-title {
+  font-family: var(--font-display);
+  font-size: clamp(1.6rem, 3.5vw, 2.4rem);
+  font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 14px;
+}
+.course-sub { font-size: 16px; color: rgba(255,255,255,0.75); line-height: 1.6; margin-bottom: 20px; }
+.meta-row { display: flex; flex-wrap: wrap; gap: 16px; margin-bottom: 16px; }
+.meta-item { display: flex; align-items: center; gap: 5px; font-size: 13px; color: rgba(255,255,255,0.7); }
+.meta-val { font-weight: 600; color: #fff; }
+.meta-label { color: rgba(255,255,255,0.55); }
+.hero-cert {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 13px; color: var(--lemon); font-weight: 600;
+}
+.breadcrumb a { color: rgba(255,255,255,0.55) !important; }
+.breadcrumb { color: rgba(255,255,255,0.3); margin-bottom: 24px; }
+.breadcrumb span { color: rgba(255,255,255,0.85); }
+
+/* Pricing card */
+.pricing-card {
+  background: var(--white);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
+}
+.demo-video-wrap {}
+.card-thumb-wrap { height: 200px; overflow: hidden; }
+.card-thumb-img { width: 100%; height: 100%; object-fit: cover; }
+.demo-placeholder {
+  height: 180px;
+  background: #0b1f3f;
+  display: flex; align-items: center; justify-content: center;
+}
+.zoom-preview { text-align: center; color: #fff; text-decoration: none; }
+.zoom-icon {
+  width: 60px; height: 60px; border-radius: 50%;
+  background: var(--lemon);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px; color: var(--navy);
+  margin: 0 auto 10px;
+}
+.pricing-body { padding: 24px; }
+.pricing-price-row { display: flex; align-items: baseline; gap: 10px; margin-bottom: 20px; }
+.pricing-price { font-family: var(--font-display); font-size: 2rem; font-weight: 800; color: var(--navy); }
+.pricing-old { font-size: 15px; color: var(--text-muted); text-decoration: line-through; }
+.pricing-discount {
+  font-size: 13px; font-weight: 700;
+  background: #dcfce7; color: #166534;
+  padding: 2px 8px; border-radius: 4px;
+}
+.pricing-btns { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+.pricing-includes { margin-bottom: 16px; }
+.include-title { font-size: 13px; font-weight: 700; color: var(--text-primary); margin-bottom: 10px; }
+.include-item { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-secondary); margin-bottom: 6px; }
+.pricing-guarantee {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 13px; color: var(--text-muted);
+  padding-top: 14px; border-top: 1px solid var(--gray-200);
+}
+
+/* Desktop hero card */
+.desktop-only { display: block; }
+@media (max-width: 1024px) { .desktop-only { display: none !important; } }
+
+/* Course body */
+.course-body { padding: 48px 0; background: var(--gray-50); }
+.course-layout {
+  display: grid; grid-template-columns: 1fr 340px; gap: 40px; align-items: start;
+}
+@media (max-width: 1024px) {
+  .course-layout { grid-template-columns: 1fr; }
+  .sticky-sidebar { display: none; }
+}
+.sticky-sidebar {
+  position: sticky; top: calc(var(--nav-height) + 20px);
+}
+
+/* Detail sections */
+.detail-section {
+  background: var(--white);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--gray-200);
+  padding: 32px;
+  margin-bottom: 24px;
+}
+.detail-section h2 {
+  font-family: var(--font-display);
+  font-size: 1.4rem; font-weight: 800;
+  margin-bottom: 20px; color: var(--text-primary);
+  padding-bottom: 14px; border-bottom: 2px solid var(--lemon);
+  display: inline-block;
+}
+
+.learn-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+}
+@media (max-width: 640px) { .learn-grid { grid-template-columns: 1fr; } }
+.learn-item {
+  display: flex; align-items: flex-start; gap: 8px;
+  font-size: 14px; color: var(--text-secondary); line-height: 1.5;
+  background: #f9fff0; padding: 10px 14px; border-radius: 8px;
+}
+
+.highlights-grid { display: flex; flex-wrap: wrap; gap: 10px; }
+.highlight-pill {
+  display: flex; align-items: center; gap: 6px;
+  background: #eff6ff; color: var(--navy);
+  padding: 8px 16px; border-radius: 24px;
+  font-size: 13px; font-weight: 600;
+}
+
+.course-description { font-size: 15px; color: var(--text-secondary); line-height: 1.8; }
+.course-description p { margin-bottom: 12px; }
+.course-description ul { margin-left: 20px; margin-bottom: 12px; }
+.course-description li { margin-bottom: 4px; }
+
+/* Syllabus */
+.syllabus-summary { font-size: 13px; color: var(--text-muted); margin-bottom: 16px; }
+.week-badge {
+  display: inline-block; font-size: 11px; font-weight: 700;
+  background: var(--lemon); color: var(--navy);
+  padding: 2px 8px; border-radius: 4px; margin-right: 10px;
+}
+.acc-chevron { transition: transform 0.2s; flex-shrink: 0; }
+.subtopic-list {
+  list-style: none; padding: 0;
+  display: flex; flex-direction: column; gap: 8px;
+}
+.subtopic-list li { font-size: 14px; color: var(--text-secondary); }
+
+/* Related */
+.related-section { padding: 60px 0; }
+.related-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 20px; }
+.related-card {
+  text-decoration: none; color: inherit;
+  background: var(--white); border-radius: var(--radius-lg);
+  border: 1px solid var(--gray-200); overflow: hidden;
+  transition: all 0.2s;
+}
+.related-card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+.related-thumb { height: 140px; overflow: hidden; }
+.related-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.related-body { padding: 16px; }
+.related-mode { margin-bottom: 8px; }
+.related-title { font-family: var(--font-display); font-size: 14px; font-weight: 700; margin-bottom: 10px; line-height: 1.3; }
+.related-meta { display: flex; align-items: center; font-size: 13px; color: var(--text-muted); }
+
+/* Floating CTA */
+.floating-cta {
+  display: none;
+}
+@media (max-width: 1024px) {
+  .floating-cta {
+    display: flex; align-items: center; justify-content: space-between;
+    position: fixed; bottom: 0; left: 0; right: 0;
+    background: var(--white); border-top: 1px solid var(--gray-200);
+    padding: 12px 16px; z-index: 999;
+    box-shadow: 0 -4px 16px rgba(0,0,0,0.08);
+  }
+}
+</style>
+
+<script>
+// Accordion: syllabus + FAQ
+document.querySelectorAll('.accordion-trigger').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const item = btn.parentElement as HTMLElement
+    const content = item.querySelector('.accordion-content') as HTMLElement
+    const chevron = btn.querySelector('.acc-chevron') as HTMLElement
+    const isOpen = btn.getAttribute('aria-expanded') === 'true'
+
+    btn.setAttribute('aria-expanded', String(!isOpen))
+    content.style.display = isOpen ? 'none' : 'block'
+    chevron.style.transform = isOpen ? '' : 'rotate(180deg)'
+  })
+})
+</script>

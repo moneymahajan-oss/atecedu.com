@@ -1,99 +1,139 @@
 ---
+// src/layouts/BaseLayout.astro
 import '../styles/global.css'
 import Navbar from '../components/layout/Navbar.astro'
 import Footer from '../components/layout/Footer.astro'
+import AnnouncementStrip from '../components/layout/AnnouncementStrip.astro'
+import { supabase } from '../lib/supabase'
 
 interface Props {
-  title: string
-  description: string
+  title?: string
+  description?: string
   ogImage?: string
   canonical?: string
-  noindex?: boolean
-  schema?: string
+  pageSlug?: string
+  noIndex?: boolean
 }
 
 const {
-  title,
-  description,
-  ogImage,
+  title: propTitle,
+  description: propDesc,
+  ogImage: propOgImage,
   canonical,
-  noindex = false,
-  schema,
+  pageSlug,
+  noIndex = false,
 } = Astro.props
 
-const site      = 'https://atecedu.com'
-const image     = ogImage ?? `${site}/og-default.jpg`
-const canonUrl  = canonical ?? `${site}${Astro.url.pathname}`
+// Fetch SEO meta from DB if pageSlug provided
+let seoTitle = propTitle ?? 'ATEC Gurdaspur — Computer Courses Online & Hybrid'
+let seoDesc = propDesc ?? 'ATEC Gurdaspur — India\'s trusted computer institute since 2000. Online, hybrid and classroom courses in hardware, networking, web design and more. ISO 9001:2015 certified.'
+let seoImage = propOgImage ?? 'https://atecedu.com/og-default.jpg'
+
+if (pageSlug) {
+  const { data: seoData } = await supabase
+    .from('seo_meta')
+    .select('meta_title, meta_description, og_image')
+    .eq('page_slug', pageSlug)
+    .single()
+
+  if (seoData) {
+    if (seoData.meta_title) seoTitle = seoData.meta_title
+    if (seoData.meta_description) seoDesc = seoData.meta_description
+    if (seoData.og_image) seoImage = seoData.og_image
+  }
+}
+
+const canonicalUrl = canonical ?? `https://atecedu.com${Astro.url.pathname}`
+
+// Fetch announcement strip
+const { data: stripData } = await supabase
+  .from('site_settings')
+  .select('value')
+  .eq('key', 'announcement_strip')
+  .single()
+
+const strip = stripData?.value as {
+  text: string
+  link: string
+  link_text: string
+  is_active: boolean
+  ends_at?: string
+} | null
 ---
-<!doctype html>
-<html lang="en">
+
+<!DOCTYPE html>
+<html lang="en-IN">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{seoTitle}</title>
+  <meta name="description" content={seoDesc} />
+  <link rel="canonical" href={canonicalUrl} />
+  {noIndex && <meta name="robots" content="noindex,nofollow" />}
+  {!noIndex && <meta name="robots" content="index,follow" />}
 
-  <!-- Primary SEO -->
-  <title>{title}</title>
-  <meta name="description" content={description} />
-  {noindex
-    ? <meta name="robots" content="noindex,nofollow" />
-    : <meta name="robots" content="index,follow" />
-  }
-  <link rel="canonical" href={canonUrl} />
+  <!-- Open Graph -->
+  <meta property="og:title" content={seoTitle} />
+  <meta property="og:description" content={seoDesc} />
+  <meta property="og:image" content={seoImage} />
+  <meta property="og:url" content={canonicalUrl} />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="ATEC Gurdaspur" />
+  <meta property="og:locale" content="en_IN" />
 
-  <!-- Open Graph — controls WhatsApp / Facebook / LinkedIn previews -->
-  <meta property="og:title"       content={title} />
-  <meta property="og:description" content={description} />
-  <meta property="og:image"       content={image} />
-  <meta property="og:url"         content={canonUrl} />
-  <meta property="og:type"        content="website" />
-  <meta property="og:site_name"   content="ATEC Gurdaspur" />
-  <meta property="og:locale"      content="en_IN" />
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content={seoTitle} />
+  <meta name="twitter:description" content={seoDesc} />
+  <meta name="twitter:image" content={seoImage} />
 
-  <!-- Twitter / X card -->
-  <meta name="twitter:card"        content="summary_large_image" />
-  <meta name="twitter:title"       content={title} />
-  <meta name="twitter:description" content={description} />
-  <meta name="twitter:image"       content={image} />
-
-  <!-- Favicon -->
-  <link rel="icon" type="image/png" href="/logo.png" />
-  <link rel="apple-touch-icon"     href="/logo.png" />
-
-  <!-- Sitemap -->
-  <link rel="sitemap" href="/sitemap-index.xml" />
-
-  <!-- Fonts preconnect (speeds up Google Fonts load) -->
+  <!-- Preconnect -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 
-  <!-- Structured data passed from individual pages -->
-  {schema && <script type="application/ld+json" set:html={schema} />}
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="/favicon.png" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
 
-  <!-- Organisation schema on every page (helps Google Knowledge Panel) -->
-  <script type="application/ld+json">{
-    JSON.stringify({
-      "@context": "https://schema.org",
-      "@type": "EducationalOrganization",
-      "name": "ATEC Gurdaspur",
-      "alternateName": "Avenue to Excellent Careers",
-      "url": "https://atecedu.com",
-      "logo": "https://atecedu.com/logo.png",
-      "foundingDate": "2000",
-      "telephone": "+91-7009933289",
-      "email": "atecgsp@gmail.com",
-      "address": {
-        "@type": "PostalAddress",
-        "streetAddress": "Hardochanni Road",
-        "addressLocality": "Gurdaspur",
-        "addressRegion": "Punjab",
-        "postalCode": "143521",
-        "addressCountry": "IN"
-      },
-      "sameAs": ["https://ateceducation.in"]
-    })
-  }</script>
+  <!-- JSON-LD: Organisation -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "EducationalOrganization",
+    "name": "ATEC Educational Society",
+    "url": "https://atecedu.com",
+    "logo": "https://atecedu.com/logo.png",
+    "description": "India's trusted computer institute since 2000. Online, hybrid and classroom courses.",
+    "address": {
+      "@type": "PostalAddress",
+      "streetAddress": "Hardochanni Road",
+      "addressLocality": "Gurdaspur",
+      "addressRegion": "Punjab",
+      "postalCode": "143521",
+      "addressCountry": "IN"
+    },
+    "telephone": "+917009933289",
+    "email": "atecgsp@gmail.com",
+    "foundingDate": "2000",
+    "hasCredential": {
+      "@type": "EducationalOccupationalCredential",
+      "credentialCategory": "ISO 9001:2015"
+    },
+    "sameAs": [
+      "https://ateceducation.in"
+    ]
+  }
+  </script>
 </head>
 <body>
+  {strip?.is_active && (
+    <AnnouncementStrip
+      text={strip.text}
+      link={strip.link}
+      linkText={strip.link_text}
+      endsAt={strip.ends_at}
+    />
+  )}
   <Navbar />
   <main>
     <slot />

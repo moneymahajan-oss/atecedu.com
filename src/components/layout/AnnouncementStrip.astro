@@ -1,0 +1,53 @@
+---
+// src/components/layout/AnnouncementStrip.astro
+interface Props {
+  text: string
+  link?: string
+  linkText?: string
+  endsAt?: string
+}
+const { text, link, linkText, endsAt } = Astro.props
+---
+
+<div class="announcement-strip" id="announcement-strip">
+  <div class="container">
+    <div class="inner">
+      <span>{text}</span>
+      {endsAt && (
+        <span class="countdown" id="countdown-timer">
+          ⏱ <span id="cd-hours">00</span>:<span id="cd-mins">00</span>:<span id="cd-secs">00</span>
+        </span>
+      )}
+      {link && linkText && (
+        <a href={link}>{linkText} →</a>
+      )}
+    </div>
+  </div>
+</div>
+
+{endsAt && (
+  <script define:vars={{ endsAt }}>
+    const end = new Date(endsAt).getTime()
+    function tick() {
+      const now = Date.now()
+      const diff = end - now
+      if (diff <= 0) {
+        const el = document.getElementById('countdown-timer')
+        if (el) el.remove()
+        return
+      }
+      const h = Math.floor(diff / 3600000)
+      const m = Math.floor((diff % 3600000) / 60000)
+      const s = Math.floor((diff % 60000) / 1000)
+      const pad = (n) => String(n).padStart(2, '0')
+      const hEl = document.getElementById('cd-hours')
+      const mEl = document.getElementById('cd-mins')
+      const sEl = document.getElementById('cd-secs')
+      if (hEl) hEl.textContent = pad(h)
+      if (mEl) mEl.textContent = pad(m)
+      if (sEl) sEl.textContent = pad(s)
+    }
+    tick()
+    setInterval(tick, 1000)
+  </script>
+)}
