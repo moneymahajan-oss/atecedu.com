@@ -1,0 +1,120 @@
+---
+const navLinks = [
+  { href: '/',             label: 'Home' },
+  { href: '/courses',      label: 'Courses' },
+  { href: '/verification', label: 'Verify Certificate' },
+  { href: '/about',        label: 'About' },
+]
+
+const currentPath = Astro.url.pathname
+---
+
+<header id="navbar" class="fixed top-0 left-0 right-0 z-50 transition-all duration-300">
+  <div class="bg-[#0D1B3E]/95 backdrop-blur-md border-b border-white/10">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16">
+
+        <!-- Logo -->
+        <a href="/" class="flex items-center gap-3 group">
+          <img
+            src="/logo.png"
+            alt="ATEC Gurdaspur"
+            class="h-9 w-auto"
+          />
+          <div class="hidden sm:block">
+            <p class="text-white font-display font-700 text-sm leading-tight">ATEC</p>
+            <p class="text-[#E8F531] text-[10px] font-sans font-500 tracking-widest uppercase leading-tight">Gurdaspur</p>
+          </div>
+        </a>
+
+        <!-- Desktop nav -->
+        <nav class="hidden md:flex items-center gap-1">
+          {navLinks.map(link => (
+            <a
+              href={link.href}
+              class={`nav-link px-4 py-2 text-sm font-sans font-500 rounded-lg transition-colors duration-200 ${
+                currentPath === link.href || (link.href !== '/' && currentPath.startsWith(link.href))
+                  ? 'text-[#E8F531] active'
+                  : 'text-white/80 hover:text-white'
+              }`}
+            >
+              {link.label}
+            </a>
+          ))}
+        </nav>
+
+        <!-- CTA + mobile toggle -->
+        <div class="flex items-center gap-3">
+          <a
+            href="/courses"
+            class="hidden sm:inline-flex items-center gap-1.5 bg-[#E8F531] text-[#0D1B3E] text-sm font-display font-700 px-4 py-2 rounded-xl hover:bg-[#C9D420] transition-colors duration-200"
+          >
+            Enroll Now
+          </a>
+
+          <!-- Mobile menu button -->
+          <button
+            id="mobile-menu-btn"
+            aria-label="Toggle menu"
+            class="md:hidden p-2 text-white/80 hover:text-white"
+          >
+            <svg id="icon-open"  class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+            <svg id="icon-close" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+          </button>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Mobile menu -->
+    <div id="mobile-menu" class="hidden md:hidden border-t border-white/10">
+      <nav class="flex flex-col px-4 py-3 gap-1">
+        {navLinks.map(link => (
+          <a
+            href={link.href}
+            class={`px-4 py-3 text-sm font-sans font-500 rounded-xl transition-colors duration-200 ${
+              currentPath === link.href
+                ? 'bg-white/10 text-[#E8F531]'
+                : 'text-white/80 hover:bg-white/5 hover:text-white'
+            }`}
+          >
+            {link.label}
+          </a>
+        ))}
+        <a
+          href="/courses"
+          class="mt-2 text-center bg-[#E8F531] text-[#0D1B3E] text-sm font-display font-700 px-4 py-3 rounded-xl hover:bg-[#C9D420] transition-colors"
+        >
+          Enroll Now
+        </a>
+      </nav>
+    </div>
+  </div>
+</header>
+
+<!-- Spacer so content starts below fixed navbar -->
+<div class="h-16"></div>
+
+<script>
+  const btn   = document.getElementById('mobile-menu-btn')
+  const menu  = document.getElementById('mobile-menu')
+  const open  = document.getElementById('icon-open')
+  const close = document.getElementById('icon-close')
+
+  btn?.addEventListener('click', () => {
+    const isOpen = !menu?.classList.contains('hidden')
+    menu?.classList.toggle('hidden', isOpen)
+    open?.classList.toggle('hidden', !isOpen)
+    close?.classList.toggle('hidden', isOpen)
+  })
+
+  // Scroll shadow
+  window.addEventListener('scroll', () => {
+    const navbar = document.getElementById('navbar')
+    if (window.scrollY > 10) {
+      navbar?.querySelector('div')?.classList.add('shadow-lg')
+    } else {
+      navbar?.querySelector('div')?.classList.remove('shadow-lg')
+    }
+  })
+</script>

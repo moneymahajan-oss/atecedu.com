@@ -1,0 +1,103 @@
+---
+import '../styles/global.css'
+import Navbar from '../components/layout/Navbar.astro'
+import Footer from '../components/layout/Footer.astro'
+
+interface Props {
+  title: string
+  description: string
+  ogImage?: string
+  canonical?: string
+  noindex?: boolean
+  schema?: string
+}
+
+const {
+  title,
+  description,
+  ogImage,
+  canonical,
+  noindex = false,
+  schema,
+} = Astro.props
+
+const site      = 'https://atecedu.com'
+const image     = ogImage ?? `${site}/og-default.jpg`
+const canonUrl  = canonical ?? `${site}${Astro.url.pathname}`
+---
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- Primary SEO -->
+  <title>{title}</title>
+  <meta name="description" content={description} />
+  {noindex
+    ? <meta name="robots" content="noindex,nofollow" />
+    : <meta name="robots" content="index,follow" />
+  }
+  <link rel="canonical" href={canonUrl} />
+
+  <!-- Open Graph — controls WhatsApp / Facebook / LinkedIn previews -->
+  <meta property="og:title"       content={title} />
+  <meta property="og:description" content={description} />
+  <meta property="og:image"       content={image} />
+  <meta property="og:url"         content={canonUrl} />
+  <meta property="og:type"        content="website" />
+  <meta property="og:site_name"   content="ATEC Gurdaspur" />
+  <meta property="og:locale"      content="en_IN" />
+
+  <!-- Twitter / X card -->
+  <meta name="twitter:card"        content="summary_large_image" />
+  <meta name="twitter:title"       content={title} />
+  <meta name="twitter:description" content={description} />
+  <meta name="twitter:image"       content={image} />
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="/logo.png" />
+  <link rel="apple-touch-icon"     href="/logo.png" />
+
+  <!-- Sitemap -->
+  <link rel="sitemap" href="/sitemap-index.xml" />
+
+  <!-- Fonts preconnect (speeds up Google Fonts load) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+  <!-- Structured data passed from individual pages -->
+  {schema && <script type="application/ld+json" set:html={schema} />}
+
+  <!-- Organisation schema on every page (helps Google Knowledge Panel) -->
+  <script type="application/ld+json">{
+    JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "EducationalOrganization",
+      "name": "ATEC Gurdaspur",
+      "alternateName": "Avenue to Excellent Careers",
+      "url": "https://atecedu.com",
+      "logo": "https://atecedu.com/logo.png",
+      "foundingDate": "2000",
+      "telephone": "+91-7009933289",
+      "email": "atecgsp@gmail.com",
+      "address": {
+        "@type": "PostalAddress",
+        "streetAddress": "Hardochanni Road",
+        "addressLocality": "Gurdaspur",
+        "addressRegion": "Punjab",
+        "postalCode": "143521",
+        "addressCountry": "IN"
+      },
+      "sameAs": ["https://ateceducation.in"]
+    })
+  }</script>
+</head>
+<body>
+  <Navbar />
+  <main>
+    <slot />
+  </main>
+  <Footer />
+</body>
+</html>

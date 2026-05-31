@@ -1,0 +1,14 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro'
+import CertificateVerifier from '../components/verification/CertificateVerifier.tsx'
+---
+
+<BaseLayout
+  title="Certificate Verification | ATEC Gurdaspur"
+  description="Instantly verify any ATEC Gurdaspur certificate online. Enter certificate number, batch ID, student name or father's name to verify authenticity."
+  canonical="https://atecedu.com/verification"
+>
+  <section class="min-h-screen bg-gray-50 py-16 px-4">
+    <CertificateVerifier client:load />
+  </section>
+</BaseLayout>

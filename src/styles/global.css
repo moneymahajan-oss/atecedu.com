@@ -1,0 +1,87 @@
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --navy:        #0D1B3E;
+    --navy-light:  #162550;
+    --navy-dark:   #080F22;
+    --accent:      #E8F531;
+    --accent-dark: #C9D420;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-white text-gray-800 font-sans antialiased;
+  }
+
+  h1, h2, h3, h4 {
+    @apply font-display;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply inline-flex items-center gap-2 bg-accent text-navy font-display font-bold px-6 py-3 rounded-xl hover:bg-accent-dark transition-all duration-200 text-sm tracking-wide;
+  }
+
+  .btn-outline {
+    @apply inline-flex items-center gap-2 border-2 border-navy text-navy font-display font-semibold px-6 py-3 rounded-xl hover:bg-navy hover:text-white transition-all duration-200 text-sm;
+  }
+
+  .btn-ghost {
+    @apply inline-flex items-center gap-2 border border-white/30 text-white font-sans font-medium px-6 py-3 rounded-xl hover:border-accent hover:text-accent transition-all duration-200 text-sm;
+  }
+
+  .section-title {
+    @apply font-display text-4xl text-navy font-bold leading-tight;
+  }
+
+  .badge {
+    @apply inline-flex items-center gap-1.5 text-xs font-sans font-medium px-3 py-1 rounded-full;
+  }
+
+  .badge-online  { @apply bg-blue-50   text-blue-700   border border-blue-200; }
+  .badge-hybrid  { @apply bg-purple-50 text-purple-700 border border-purple-200; }
+  .badge-offline { @apply bg-gray-100  text-gray-600   border border-gray-200; }
+
+  .card {
+    @apply bg-white rounded-2xl border border-gray-100 shadow-card hover:shadow-card-hover transition-shadow duration-300;
+  }
+
+  .input {
+    @apply w-full px-4 py-3 rounded-xl border border-gray-200 text-gray-800 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-navy/20 focus:border-navy transition-all duration-200;
+  }
+}
+
+.nav-link {
+  position: relative;
+}
+.nav-link::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: var(--accent);
+  transition: width 0.2s ease;
+}
+.nav-link:hover::after,
+.nav-link.active::after {
+  width: 100%;
+}
+
+.accent-dot {
+  width: 6px;
+  height: 6px;
+  background: var(--accent);
+  border-radius: 50%;
+  display: inline-block;
+}

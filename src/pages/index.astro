@@ -1,0 +1,190 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro'
+import { supabase } from '../lib/supabase'
+import type { Course } from '../lib/supabase'
+
+const { data: featuredCourses } = await supabase
+  .from('courses')
+  .select('id, title, slug, short_description, mode, fee_inr, original_fee_inr, duration_weeks, category')
+  .eq('is_active', true)
+  .eq('is_featured', true)
+  .order('sort_order')
+  .limit(6)
+
+const courses = (featuredCourses ?? []) as Course[]
+
+const stats = [
+  { value: '25+', label: 'Years of Excellence' },
+  { value: '5000+', label: 'Students Trained' },
+  { value: '15+', label: 'Courses Offered' },
+  { value: '100%', label: 'Placement Support' },
+]
+
+const modeLabel: Record<string, string> = {
+  online:  'Online',
+  hybrid:  'Hybrid',
+  offline: 'Classroom',
+}
+const modeBg: Record<string, string> = {
+  online:  'bg-blue-50 text-blue-700 border-blue-200',
+  hybrid:  'bg-purple-50 text-purple-700 border-purple-200',
+  offline: 'bg-gray-100 text-gray-600 border-gray-200',
+}
+---
+
+<BaseLayout
+  title="ATEC Gurdaspur — Computer Courses Online & Hybrid | Hardware, Networking, Web Design"
+  description="ATEC Gurdaspur — India's trusted computer institute since 2000. Online, hybrid and classroom courses in hardware, networking, web design, Tally and more. ISO 9001:2015 certified."
+>
+
+  <section class="bg-[#0D1B3E] relative overflow-hidden">
+    <div class="absolute inset-0 pointer-events-none" aria-hidden="true">
+      <div class="absolute top-0 right-0 w-1/2 h-full bg-[#E8F531]/[0.03] [clip-path:polygon(30%_0,100%_0,100%_100%,0%_100%)]"></div>
+    </div>
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 lg:py-28 relative">
+      <div class="max-w-3xl">
+        <div class="inline-flex items-center gap-2 border border-[#E8F531]/30 text-[#E8F531] text-xs font-sans font-500 px-3 py-1.5 rounded-full mb-6">
+          <span class="w-1.5 h-1.5 rounded-full bg-[#E8F531] animate-pulse"></span>
+          ISO 9001:2015 Certified · Est. 2000 · Gurdaspur, Punjab
+        </div>
+        <h1 class="font-display text-4xl sm:text-5xl lg:text-6xl font-800 text-white leading-tight mb-6">
+          Turning Students Into<br />
+          <span class="text-[#E8F531]">Professionals</span><br />
+          Since 2000
+        </h1>
+        <p class="text-white/70 text-lg leading-relaxed mb-8 max-w-xl">
+          Online, hybrid and classroom courses in hardware, networking, web design and more.
+          Learn from India's most trusted chip-level repair institute.
+        </p>
+        <div class="flex flex-wrap gap-3">
+          <a href="/courses" class="inline-flex items-center gap-2 bg-[#E8F531] text-[#0D1B3E] font-display font-700 px-6 py-3.5 rounded-xl hover:bg-[#C9D420] transition-colors">
+            Explore Courses
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+          </a>
+          <a href="/verification" class="inline-flex items-center gap-2 border border-white/30 text-white font-sans font-500 px-6 py-3.5 rounded-xl hover:border-[#E8F531] hover:text-[#E8F531] transition-colors">
+            Verify Certificate
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="bg-[#080F22] border-b border-white/10">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-8">
+        {stats.map(s => (
+          <div class="text-center">
+            <p class="font-display text-3xl sm:text-4xl font-800 text-[#E8F531] mb-1">{s.value}</p>
+            <p class="text-white/50 text-sm font-sans">{s.label}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <section class="bg-white border-b border-gray-100">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5">
+      <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
+        <p class="text-sm text-gray-600 font-sans">
+          <strong class="text-[#0D1B3E]">Employer?</strong> Instantly verify any ATEC student certificate online.
+        </p>
+        <a href="/verification" class="inline-flex items-center gap-2 bg-[#0D1B3E] text-white text-sm font-display font-600 px-5 py-2.5 rounded-xl hover:bg-[#162550] transition-colors whitespace-nowrap">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          Verify Certificate
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <section class="bg-gray-50 py-20">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-end justify-between mb-10">
+        <div>
+          <p class="text-[#E8F531] bg-[#0D1B3E] text-xs font-sans font-500 px-3 py-1 rounded-full inline-block mb-3">Our Courses</p>
+          <h2 class="font-display text-3xl sm:text-4xl font-700 text-[#0D1B3E]">Learn at Your Own Pace</h2>
+        </div>
+        <a href="/courses" class="hidden sm:inline-flex items-center gap-1 text-sm bg-[#0D1B3E] hover:bg-[#162550] text-white px-4 py-2 rounded-xl transition-colors">
+          All Courses →
+        </a>
+      </div>
+      {courses.length === 0 ? (
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {['Hardware & Networking', 'Web Designing', 'Tally ERP', 'Linux Administrator', 'Java Programming', 'Desktop Publishing'].map(name => (
+            <div class="card p-6">
+              <div class="w-10 h-10 rounded-xl bg-[#0D1B3E]/10 mb-4"></div>
+              <h3 class="font-display font-600 text-[#0D1B3E] mb-2">{name}</h3>
+              <p class="text-sm text-gray-500 mb-4">Professional certification course with hands-on training.</p>
+              <span class="badge badge-hybrid border">Hybrid</span>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {courses.map(course => (
+            <a href={`/courses/${course.slug}`} class="card p-6 block group hover:border-[#0D1B3E]/20 transition-all">
+              <div class="flex items-start justify-between mb-3">
+                <span class={`badge border text-xs ${modeBg[course.mode] ?? 'bg-gray-100 text-gray-600 border-gray-200'}`}>
+                  {modeLabel[course.mode] ?? course.mode}
+                </span>
+                {course.duration_weeks && <span class="text-xs text-gray-400">{course.duration_weeks}w</span>}
+              </div>
+              <h3 class="font-display font-600 text-[#0D1B3E] mb-2 group-hover:text-[#162550]">{course.title}</h3>
+              {course.short_description && <p class="text-sm text-gray-500 mb-4 line-clamp-2">{course.short_description}</p>}
+              <div class="flex items-center justify-between">
+                <div>
+                  {course.fee_inr ? (
+                    <div class="flex items-baseline gap-2">
+                      <span class="font-display font-700 text-[#0D1B3E]">₹{course.fee_inr.toLocaleString('en-IN')}</span>
+                      {course.original_fee_inr && <span class="text-xs text-gray-400 line-through">₹{course.original_fee_inr.toLocaleString('en-IN')}</span>}
+                    </div>
+                  ) : (
+                    <span class="text-sm text-gray-500">Contact for fee</span>
+                  )}
+                </div>
+                <svg class="w-4 h-4 text-gray-400 group-hover:text-[#0D1B3E] transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+              </div>
+            </a>
+          ))}
+        </div>
+      )}
+      <div class="text-center mt-8 sm:hidden">
+        <a href="/courses" class="btn-primary">View All Courses →</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="bg-white py-20">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center mb-12">
+        <h2 class="font-display text-3xl sm:text-4xl font-700 text-[#0D1B3E] mb-3">Why Choose ATEC?</h2>
+        <p class="text-gray-500 max-w-xl mx-auto">25 years of producing industry-ready professionals from Gurdaspur, Punjab.</p>
+      </div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        {[
+          { icon: '🏆', title: 'ISO 9001:2015', desc: 'Internationally certified quality training standards.' },
+          { icon: '🔧', title: 'Chip-Level Repair', desc: "India's most trusted hardware repair training institute." },
+          { icon: '🌐', title: 'Online & Hybrid', desc: 'Learn from anywhere. Practical sessions at our Gurdaspur lab.' },
+          { icon: '📜', title: 'Verified Certificates', desc: 'Every certificate verifiable online by employers instantly.' },
+        ].map(item => (
+          <div class="card p-6 text-center">
+            <div class="text-3xl mb-3">{item.icon}</div>
+            <h3 class="font-display font-600 text-[#0D1B3E] mb-2">{item.title}</h3>
+            <p class="text-sm text-gray-500 leading-relaxed">{item.desc}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <section class="bg-[#0D1B3E] py-16">
+    <div class="max-w-3xl mx-auto px-4 text-center">
+      <h2 class="font-display text-3xl sm:text-4xl font-700 text-white mb-4">Ready to Start Your Career?</h2>
+      <p class="text-white/60 mb-8">Join 5000+ students who launched their careers with ATEC since 2000.</p>
+      <div class="flex flex-wrap items-center justify-center gap-3">
+        <a href="/courses" class="bg-[#E8F531] text-[#0D1B3E] font-display font-700 px-7 py-3.5 rounded-xl hover:bg-[#C9D420] transition-colors">Browse Courses</a>
+        <a href="tel:+917009933289" class="border border-white/30 text-white font-sans font-500 px-7 py-3.5 rounded-xl hover:border-[#E8F531] hover:text-[#E8F531] transition-colors">Call Us: +91 7009933289</a>
+      </div>
+    </div>
+  </section>
+
+</BaseLayout>

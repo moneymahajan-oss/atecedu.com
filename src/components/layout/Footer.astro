@@ -1,0 +1,94 @@
+---
+const year = new Date().getFullYear()
+
+const links = {
+  'Courses': [
+    { href: '/courses',                   label: 'All Courses' },
+    { href: '/courses/hardware-networking', label: 'Hardware & Networking' },
+    { href: '/courses/web-designing',      label: 'Web Designing' },
+    { href: '/courses/tally',              label: 'Tally' },
+  ],
+  'Institute': [
+    { href: '/about',        label: 'About ATEC' },
+    { href: '/verification', label: 'Verify Certificate' },
+    { href: '/dashboard',    label: 'Student Login' },
+  ],
+}
+---
+
+<footer class="bg-[#080F22] text-white/70">
+
+  <!-- Main footer -->
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-10">
+
+      <!-- Brand column -->
+      <div class="md:col-span-1">
+        <a href="/" class="flex items-center gap-3 mb-4">
+          <img src="/logo.png" alt="ATEC" class="h-10 w-auto" />
+        </a>
+        <p class="text-sm leading-relaxed text-white/50 mb-6">
+          Turning Students Into Professionals Since 2000. ISO 9001:2015 certified institute, Gurdaspur, Punjab.
+        </p>
+        <div class="flex flex-col gap-2 text-sm">
+          <a href="tel:+917009933289" class="flex items-center gap-2 hover:text-[#E8F531] transition-colors">
+            <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21L8.5 10.5a11.05 11.05 0 005 5l.612-1.724a1 1 0 011.21-.502l4.493 1.498A1 1 0 0121 15.72V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>
+            +91 7009933289
+          </a>
+          <a href="mailto:atecgsp@gmail.com" class="flex items-center gap-2 hover:text-[#E8F531] transition-colors">
+            <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+            atecgsp@gmail.com
+          </a>
+          <p class="flex items-start gap-2 text-white/50">
+            <svg class="w-4 h-4 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+            Hardochanni Road, Gurdaspur 143521, Punjab
+          </p>
+        </div>
+      </div>
+
+      <!-- Nav columns -->
+      {Object.entries(links).map(([heading, items]) => (
+        <div>
+          <h3 class="text-white font-display font-600 text-sm mb-4 tracking-wide">{heading}</h3>
+          <ul class="flex flex-col gap-2">
+            {items.map(item => (
+              <li>
+                <a href={item.href} class="text-sm hover:text-[#E8F531] transition-colors duration-200">
+                  {item.label}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ))}
+
+      <!-- Certificate verification CTA -->
+      <div>
+        <h3 class="text-white font-display font-600 text-sm mb-4 tracking-wide">Verify Certificate</h3>
+        <p class="text-sm text-white/50 mb-4 leading-relaxed">
+          Employers can instantly verify any ATEC certificate online.
+        </p>
+        <a
+          href="/verification"
+          class="inline-flex items-center gap-2 bg-[#E8F531] text-[#0D1B3E] text-sm font-display font-700 px-4 py-2.5 rounded-xl hover:bg-[#C9D420] transition-colors"
+        >
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          Verify Now
+        </a>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Bottom bar -->
+  <div class="border-t border-white/10">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-white/40">
+      <p>© {year} ATEC Gurdaspur. All rights reserved.</p>
+      <div class="flex items-center gap-1">
+        <span class="w-2 h-2 rounded-full bg-[#E8F531] animate-pulse"></span>
+        <span>ISO 9001:2015 Certified</span>
+      </div>
+    </div>
+  </div>
+
+</footer>
