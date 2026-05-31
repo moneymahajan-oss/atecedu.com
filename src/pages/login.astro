@@ -1,0 +1,92 @@
+---
+// src/pages/login.astro
+import BaseLayout from '../layouts/BaseLayout.astro'
+import LoginForm from '../components/auth/LoginForm'
+---
+
+<BaseLayout
+  title="Student Login — ATEC Educational Society"
+  description="Login to your ATEC student account to access your courses, certificates and dashboard."
+  noIndex={true}
+>
+  <div class="auth-page">
+    <div class="auth-container">
+
+      <div class="auth-brand">
+        <a href="/" class="auth-logo">
+          <div class="auth-logo-mark">A</div>
+          <div>
+            <div class="auth-logo-name">ATEC</div>
+            <div class="auth-logo-sub">Educational Society</div>
+          </div>
+        </a>
+      </div>
+
+      <div class="auth-card">
+        <h1 class="auth-title">Welcome Back</h1>
+        <p class="auth-sub">Login to access your courses and dashboard</p>
+        <LoginForm client:load />
+        <p class="auth-switch">
+          Don't have an account? <a href="/signup">Create one free</a>
+        </p>
+      </div>
+
+      <p class="auth-footer-note">
+        <a href="/verification">Verify a certificate</a> ·
+        <a href="/courses">Browse courses</a>
+      </p>
+    </div>
+  </div>
+</BaseLayout>
+
+<style>
+.auth-page {
+  min-height: calc(100vh - var(--nav-height));
+  background: linear-gradient(135deg, #0b1f3f 0%, #1c3d7a 100%);
+  display: flex; align-items: center; justify-content: center;
+  padding: 40px 16px;
+}
+.auth-container {
+  width: 100%; max-width: 440px;
+  display: flex; flex-direction: column; align-items: center; gap: 24px;
+}
+.auth-brand { text-align: center; }
+.auth-logo {
+  display: inline-flex; align-items: center; gap: 10px;
+  text-decoration: none;
+}
+.auth-logo-mark {
+  width: 44px; height: 44px; border-radius: 12px;
+  background: var(--lemon);
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-display); font-weight: 800; font-size: 20px;
+  color: var(--navy);
+}
+.auth-logo-name {
+  font-family: var(--font-display); font-weight: 800; font-size: 20px;
+  color: #fff; line-height: 1.1;
+}
+.auth-logo-sub { font-size: 11px; color: rgba(255,255,255,0.5); }
+
+.auth-card {
+  width: 100%;
+  background: var(--white); border-radius: var(--radius-xl);
+  padding: 36px 32px;
+  box-shadow: 0 24px 60px rgba(0,0,0,0.3);
+}
+.auth-title {
+  font-family: var(--font-display); font-size: 1.6rem; font-weight: 800;
+  color: var(--text-primary); margin-bottom: 6px;
+}
+.auth-sub { font-size: 14px; color: var(--text-muted); margin-bottom: 28px; }
+.auth-switch {
+  text-align: center; font-size: 14px; color: var(--text-muted);
+  margin-top: 20px;
+}
+.auth-switch a { color: var(--navy); font-weight: 600; }
+.auth-footer-note {
+  font-size: 13px; color: rgba(255,255,255,0.45); text-align: center;
+}
+.auth-footer-note a { color: rgba(255,255,255,0.6); }
+.auth-footer-note a:hover { color: var(--lemon); }
+</style>

@@ -1,0 +1,36 @@
+---
+// src/pages/checkout.astro
+import BaseLayout from '../layouts/BaseLayout.astro'
+import CheckoutView from '../components/checkout/CheckoutView'
+---
+
+<BaseLayout
+  title="Checkout — ATEC Educational Society"
+  description="Complete your enrollment and start learning."
+  noIndex={true}
+>
+  <div class="checkout-page">
+    <div class="container">
+      <div class="page-header-inner">
+        <nav class="breadcrumb">
+          <a href="/">Home</a>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+          <a href="/cart">Cart</a>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+          <span>Checkout</span>
+        </nav>
+        <h1>Checkout</h1>
+      </div>
+      <CheckoutView client:load />
+    </div>
+  </div>
+
+  <!-- Load Razorpay SDK -->
+  <script src="https://checkout.razorpay.com/v1/checkout.js" is:inline></script>
+</BaseLayout>
+
+<style>
+.checkout-page { padding: 48px 0 80px; background: var(--gray-50); min-height: 70vh; }
+.page-header-inner { margin-bottom: 32px; }
+.page-header-inner h1 { font-family: var(--font-display); font-size: 2rem; font-weight: 800; margin-top: 8px; }
+</style>

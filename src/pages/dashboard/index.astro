@@ -1,0 +1,21 @@
+---
+// src/pages/dashboard/index.astro
+import BaseLayout from '../../layouts/BaseLayout.astro'
+import DashboardHome from '../../components/dashboard/DashboardHome'
+---
+
+<BaseLayout
+  title="My Dashboard — ATEC Educational Society"
+  description="Student dashboard — access your courses, certificates and profile."
+  noIndex={true}
+>
+  <div class="dashboard-page">
+    <div class="container">
+      <DashboardHome client:load />
+    </div>
+  </div>
+</BaseLayout>
+
+<style>
+.dashboard-page { padding: 40px 0 80px; background: var(--gray-50); min-height: 80vh; }
+</style>
