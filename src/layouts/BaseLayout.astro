@@ -1,9 +1,10 @@
 ---
-// src/layouts/BaseLayout.astro
+// src/layouts/BaseLayout.astro  (UPDATED — adds FloatingChatbot to every page)
 import '../styles/global.css'
 import Navbar from '../components/layout/Navbar.astro'
 import Footer from '../components/layout/Footer.astro'
 import AnnouncementStrip from '../components/layout/AnnouncementStrip.astro'
+import FloatingChatbot from '../components/chatbot/FloatingChatbot'
 import { supabase } from '../lib/supabase'
 
 interface Props {
@@ -24,9 +25,8 @@ const {
   noIndex = false,
 } = Astro.props
 
-// Fetch SEO meta from DB if pageSlug provided
 let seoTitle = propTitle ?? 'ATEC Gurdaspur — Computer Courses Online & Hybrid'
-let seoDesc = propDesc ?? 'ATEC Gurdaspur — India\'s trusted computer institute since 2000. Online, hybrid and classroom courses in hardware, networking, web design and more. ISO 9001:2015 certified.'
+let seoDesc = propDesc ?? 'ATEC Gurdaspur — India\'s trusted computer institute since 2000. Online, hybrid and classroom courses. ISO 9001:2015 certified.'
 let seoImage = propOgImage ?? 'https://atecedu.com/og-default.jpg'
 
 if (pageSlug) {
@@ -53,11 +53,8 @@ const { data: stripData } = await supabase
   .single()
 
 const strip = stripData?.value as {
-  text: string
-  link: string
-  link_text: string
-  is_active: boolean
-  ends_at?: string
+  text: string; link: string; link_text: string
+  is_active: boolean; ends_at?: string
 } | null
 ---
 
@@ -72,7 +69,6 @@ const strip = stripData?.value as {
   {noIndex && <meta name="robots" content="noindex,nofollow" />}
   {!noIndex && <meta name="robots" content="index,follow" />}
 
-  <!-- Open Graph -->
   <meta property="og:title" content={seoTitle} />
   <meta property="og:description" content={seoDesc} />
   <meta property="og:image" content={seoImage} />
@@ -81,21 +77,16 @@ const strip = stripData?.value as {
   <meta property="og:site_name" content="ATEC Gurdaspur" />
   <meta property="og:locale" content="en_IN" />
 
-  <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content={seoTitle} />
   <meta name="twitter:description" content={seoDesc} />
   <meta name="twitter:image" content={seoImage} />
 
-  <!-- Preconnect -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-
-  <!-- Favicon -->
   <link rel="icon" type="image/png" href="/favicon.png" />
   <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
 
-  <!-- JSON-LD: Organisation -->
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -103,7 +94,7 @@ const strip = stripData?.value as {
     "name": "ATEC Educational Society",
     "url": "https://atecedu.com",
     "logo": "https://atecedu.com/logo.png",
-    "description": "India's trusted computer institute since 2000. Online, hybrid and classroom courses.",
+    "description": "India's trusted computer institute since 2000.",
     "address": {
       "@type": "PostalAddress",
       "streetAddress": "Hardochanni Road",
@@ -114,14 +105,7 @@ const strip = stripData?.value as {
     },
     "telephone": "+917009933289",
     "email": "atecgsp@gmail.com",
-    "foundingDate": "2000",
-    "hasCredential": {
-      "@type": "EducationalOccupationalCredential",
-      "credentialCategory": "ISO 9001:2015"
-    },
-    "sameAs": [
-      "https://ateceducation.in"
-    ]
+    "foundingDate": "2000"
   }
   </script>
 </head>
@@ -139,5 +123,8 @@ const strip = stripData?.value as {
     <slot />
   </main>
   <Footer />
+
+  <!-- Floating chatbot on every page -->
+  <FloatingChatbot client:idle />
 </body>
 </html>

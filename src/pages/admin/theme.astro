@@ -1,0 +1,8 @@
+---
+// src/pages/admin/theme.astro
+import AdminLayout from '../../layouts/AdminLayout.astro'
+import ThemeManager from '../../components/admin/ThemeManager'
+---
+<AdminLayout title="Theme Manager" activeSection="theme">
+  <ThemeManager client:load />
+</AdminLayout>

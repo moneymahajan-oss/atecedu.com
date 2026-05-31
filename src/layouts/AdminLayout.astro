@@ -1,0 +1,268 @@
+---
+// src/layouts/AdminLayout.astro
+// Shared layout for all /admin pages - auth-gated, admin-only
+import '../styles/global.css'
+import { supabase } from '../lib/supabase'
+
+interface Props {
+  title?: string
+  activeSection?: string
+}
+const { title = 'Admin Panel', activeSection = '' } = Astro.props
+---
+
+<!DOCTYPE html>
+<html lang="en-IN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{title} — ATEC Admin</title>
+  <meta name="robots" content="noindex,nofollow" />
+  <link rel="icon" type="image/png" href="/favicon.png" />
+</head>
+<body class="admin-body">
+
+  <!-- Top bar -->
+  <header class="admin-topbar">
+    <div class="topbar-left">
+      <button class="sidebar-toggle" id="sidebar-toggle" aria-label="Toggle sidebar">
+        <span></span><span></span><span></span>
+      </button>
+      <a href="/admin" class="admin-brand">
+        <div class="brand-mark">A</div>
+        <div>
+          <div class="brand-name">ATEC Admin</div>
+          <div class="brand-sub">Control Panel</div>
+        </div>
+      </a>
+    </div>
+    <div class="topbar-right">
+      <a href="/" target="_blank" class="topbar-btn" title="View live site">
+        🌐 Live Site
+      </a>
+      <button id="admin-logout" class="topbar-btn danger">🚪 Logout</button>
+    </div>
+  </header>
+
+  <div class="admin-layout">
+
+    <!-- Sidebar -->
+    <aside class="admin-sidebar" id="admin-sidebar">
+      <nav class="sidebar-nav">
+
+        <div class="nav-group">
+          <div class="nav-group-label">Overview</div>
+          <a href="/admin" class:list={['nav-item', { active: activeSection === 'dashboard' }]}>
+            <span class="nav-icon">📊</span> Dashboard
+          </a>
+        </div>
+
+        <div class="nav-group">
+          <div class="nav-group-label">Content</div>
+          <a href="/admin/homepage" class:list={['nav-item', { active: activeSection === 'homepage' }]}>
+            <span class="nav-icon">🏠</span> Homepage Manager
+          </a>
+          <a href="/admin/courses" class:list={['nav-item', { active: activeSection === 'courses' }]}>
+            <span class="nav-icon">📚</span> Courses
+          </a>
+          <a href="/admin/instructors" class:list={['nav-item', { active: activeSection === 'instructors' }]}>
+            <span class="nav-icon">👨‍🏫</span> Instructors
+          </a>
+          <a href="/admin/testimonials" class:list={['nav-item', { active: activeSection === 'testimonials' }]}>
+            <span class="nav-icon">⭐</span> Testimonials
+          </a>
+          <a href="/admin/centres" class:list={['nav-item', { active: activeSection === 'centres' }]}>
+            <span class="nav-icon">🏢</span> Centres
+          </a>
+          <a href="/admin/news" class:list={['nav-item', { active: activeSection === 'news' }]}>
+            <span class="nav-icon">📰</span> News / Press
+          </a>
+          <a href="/admin/blog" class:list={['nav-item', { active: activeSection === 'blog' }]}>
+            <span class="nav-icon">✍️</span> Blog
+          </a>
+          <a href="/admin/student-photos" class:list={['nav-item', { active: activeSection === 'student-photos' }]}>
+            <span class="nav-icon">🖼️</span> Student Photos
+          </a>
+        </div>
+
+        <div class="nav-group">
+          <div class="nav-group-label">Students</div>
+          <a href="/admin/students" class:list={['nav-item', { active: activeSection === 'students' }]}>
+            <span class="nav-icon">👥</span> All Students
+          </a>
+          <a href="/admin/enrollments" class:list={['nav-item', { active: activeSection === 'enrollments' }]}>
+            <span class="nav-icon">🎓</span> Enrollments
+          </a>
+          <a href="/admin/certificates" class:list={['nav-item', { active: activeSection === 'certificates' }]}>
+            <span class="nav-icon">📜</span> Certificates
+          </a>
+          <a href="/admin/enquiries" class:list={['nav-item', { active: activeSection === 'enquiries' }]}>
+            <span class="nav-icon">💬</span> Enquiries
+          </a>
+        </div>
+
+        <div class="nav-group">
+          <div class="nav-group-label">Finance</div>
+          <a href="/admin/payments" class:list={['nav-item', { active: activeSection === 'payments' }]}>
+            <span class="nav-icon">💳</span> Payments
+          </a>
+        </div>
+
+        <div class="nav-group">
+          <div class="nav-group-label">Settings</div>
+          <a href="/admin/offer-timer" class:list={['nav-item', { active: activeSection === 'offer-timer' }]}>
+            <span class="nav-icon">⏱️</span> Offer Timer
+          </a>
+          <a href="/admin/theme" class:list={['nav-item', { active: activeSection === 'theme' }]}>
+            <span class="nav-icon">🎨</span> Theme & Colors
+          </a>
+          <a href="/admin/seo" class:list={['nav-item', { active: activeSection === 'seo' }]}>
+            <span class="nav-icon">🔍</span> SEO Manager
+          </a>
+          <a href="/admin/social" class:list={['nav-item', { active: activeSection === 'social' }]}>
+            <span class="nav-icon">📱</span> Social Links
+          </a>
+          <a href="/admin/zoom" class:list={['nav-item', { active: activeSection === 'zoom' }]}>
+            <span class="nav-icon">🎥</span> Zoom Links
+          </a>
+          <a href="/admin/chatbot" class:list={['nav-item', { active: activeSection === 'chatbot' }]}>
+            <span class="nav-icon">🤖</span> Chatbot
+          </a>
+        </div>
+
+      </nav>
+    </aside>
+
+    <!-- Main content -->
+    <main class="admin-main">
+      <slot />
+    </main>
+  </div>
+
+</body>
+</html>
+
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+.admin-body {
+  font-family: 'Inter', sans-serif;
+  background: #f1f5f9;
+  color: #1e293b;
+  min-height: 100vh;
+}
+
+/* Topbar */
+.admin-topbar {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  height: 56px;
+  background: #0f2347;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 20px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+.topbar-left { display: flex; align-items: center; gap: 14px; }
+.sidebar-toggle {
+  display: flex; flex-direction: column; gap: 4px;
+  background: none; border: none; cursor: pointer; padding: 6px;
+}
+.sidebar-toggle span { display: block; width: 20px; height: 2px; background: rgba(255,255,255,0.7); border-radius: 2px; }
+.admin-brand { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+.brand-mark {
+  width: 32px; height: 32px; border-radius: 8px;
+  background: #d4f01a;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 800; font-size: 16px; color: #0f2347;
+  font-family: 'Sora', sans-serif;
+}
+.brand-name { font-size: 14px; font-weight: 700; color: #fff; line-height: 1.1; }
+.brand-sub { font-size: 10px; color: rgba(255,255,255,0.4); }
+.topbar-right { display: flex; align-items: center; gap: 8px; }
+.topbar-btn {
+  padding: 6px 14px; border-radius: 7px;
+  font-size: 12px; font-weight: 600; cursor: pointer;
+  background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.8);
+  border: 1px solid rgba(255,255,255,0.15); text-decoration: none;
+  transition: all 0.2s;
+}
+.topbar-btn:hover { background: rgba(255,255,255,0.18); }
+.topbar-btn.danger { color: #fca5a5; border-color: rgba(252,165,165,0.3); }
+.topbar-btn.danger:hover { background: rgba(239,68,68,0.2); }
+
+/* Layout */
+.admin-layout {
+  display: flex;
+  padding-top: 56px;
+  min-height: 100vh;
+}
+
+/* Sidebar */
+.admin-sidebar {
+  width: 220px; flex-shrink: 0;
+  background: #fff;
+  border-right: 1px solid #e2e8f0;
+  position: fixed; top: 56px; left: 0; bottom: 0;
+  overflow-y: auto;
+  transition: transform 0.3s;
+  z-index: 50;
+}
+.admin-sidebar.collapsed { transform: translateX(-220px); }
+.sidebar-nav { padding: 16px 0; }
+.nav-group { margin-bottom: 6px; }
+.nav-group-label {
+  font-size: 10px; font-weight: 700; letter-spacing: 0.8px;
+  text-transform: uppercase; color: #94a3b8;
+  padding: 8px 18px 4px;
+}
+.nav-item {
+  display: flex; align-items: center; gap: 8px;
+  padding: 9px 18px; font-size: 13px; font-weight: 500;
+  color: #475569; text-decoration: none;
+  transition: all 0.15s; border-left: 3px solid transparent;
+}
+.nav-item:hover { background: #f8fafc; color: #1c3d7a; }
+.nav-item.active {
+  background: #eff6ff; color: #1c3d7a; font-weight: 700;
+  border-left-color: #1c3d7a;
+}
+.nav-icon { font-size: 15px; }
+
+/* Main */
+.admin-main {
+  flex: 1;
+  margin-left: 220px;
+  padding: 28px;
+  transition: margin-left 0.3s;
+  min-height: calc(100vh - 56px);
+}
+.admin-main.expanded { margin-left: 0; }
+
+@media (max-width: 768px) {
+  .admin-sidebar { transform: translateX(-220px); }
+  .admin-sidebar.open { transform: translateX(0); }
+  .admin-main { margin-left: 0; }
+}
+</style>
+
+<script>
+const sidebar = document.getElementById('admin-sidebar')
+const toggleBtn = document.getElementById('sidebar-toggle')
+const main = document.querySelector('.admin-main')
+let collapsed = false
+
+toggleBtn?.addEventListener('click', () => {
+  collapsed = !collapsed
+  sidebar?.classList.toggle('collapsed', collapsed)
+  main?.classList.toggle('expanded', collapsed)
+})
+
+// Logout
+document.getElementById('admin-logout')?.addEventListener('click', async () => {
+  const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2')
+  const sb = createClient(
+    (window as any).__SUPABASE_URL__ || '',
+    (window as any).__SUPABASE_ANON_KEY__ || ''
+  )
+  // Use the app's supabase instance
+  window.location.href = '/login'
+})
+</script>

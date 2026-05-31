@@ -1,0 +1,8 @@
+---
+// src/pages/admin/offer-timer.astro
+import AdminLayout from '../../layouts/AdminLayout.astro'
+import OfferTimerManager from '../../components/admin/OfferTimerManager'
+---
+<AdminLayout title="Offer Timer" activeSection="offer-timer">
+  <OfferTimerManager client:load />
+</AdminLayout>

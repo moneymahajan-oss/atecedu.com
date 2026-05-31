@@ -1,0 +1,13 @@
+---
+import AdminLayout from '../../layouts/AdminLayout.astro'
+const { pathname } = Astro.url
+const section = pathname.split('/').pop() ?? ''
+---
+<AdminLayout title="Manager" activeSection={section}>
+  <div style="background:#fff;border-radius:16px;border:1px solid #e2e8f0;padding:40px;text-align:center;">
+    <div style="font-size:48px;margin-bottom:16px">📋</div>
+    <h2 style="font-family:Sora,sans-serif;font-weight:700;font-size:1.3rem;margin-bottom:8px">Section Ready</h2>
+    <p style="color:#64748b;font-size:14px;max-width:400px;margin:0 auto">This admin section is set up and connected to Supabase. Tell Claude "build the [section name] admin manager" to get the full CRUD component.</p>
+    <a href="/admin" style="display:inline-block;margin-top:20px;padding:10px 24px;background:#1c3d7a;color:#fff;border-radius:10px;font-weight:700;font-size:14px;text-decoration:none">← Back to Dashboard</a>
+  </div>
+</AdminLayout>

@@ -1,0 +1,8 @@
+---
+// src/pages/admin/courses.astro
+import AdminLayout from '../../layouts/AdminLayout.astro'
+import CoursesManager from '../../components/admin/CoursesManager'
+---
+<AdminLayout title="Courses Manager" activeSection="courses">
+  <CoursesManager client:load />
+</AdminLayout>

@@ -1,0 +1,8 @@
+---
+// src/pages/admin/chatbot.astro
+import AdminLayout from '../../layouts/AdminLayout.astro'
+import ChatbotManager from '../../components/admin/ChatbotManager'
+---
+<AdminLayout title="Chatbot Settings" activeSection="chatbot">
+  <ChatbotManager client:load />
+</AdminLayout>
