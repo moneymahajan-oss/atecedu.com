@@ -1,0 +1,149 @@
+---
+// src/pages/admin/youtube.astro
+import AdminLayout from '../../layouts/AdminLayout.astro'
+---
+<AdminLayout title="YouTube Manager" activeSection="youtube">
+  <div id="yt-root"></div>
+</AdminLayout>
+
+<script>
+import { createClient } from '@supabase/supabase-js'
+import { createElement as h, useState, useEffect } from 'react'
+import { createRoot } from 'react-dom/client'
+
+const supabase = createClient(window.__SB_URL, window.__SB_KEY)
+
+interface Video {
+  id: string; video_id: string; title: string; description: string | null
+  category: string; is_active: boolean; is_featured: boolean
+  duration: string | null; view_count: string | null; sort_order: number
+  thumbnail_url: string | null
+}
+
+const EMPTY = { video_id: '', title: '', description: '', category: 'general', duration: '', view_count: '', is_active: true, is_featured: false, sort_order: 0, thumbnail_url: '' }
+
+function YTManager() {
+  const [videos, setVideos] = useState<Video[]>([])
+  const [loading, setLoading] = useState(true)
+  const [showForm, setShowForm] = useState(false)
+  const [editId, setEditId] = useState<string | null>(null)
+  const [form, setForm] = useState<typeof EMPTY>({ ...EMPTY })
+  const [saving, setSaving] = useState(false)
+
+  useEffect(() => { load() }, [])
+  async function load() {
+    const { data } = await supabase.from('youtube_videos').select('*').order('sort_order').order('created_at', { ascending: false })
+    setVideos(data ?? [])
+    setLoading(false)
+  }
+
+  function openAdd() { setForm({ ...EMPTY }); setEditId(null); setShowForm(true); window.scrollTo({ top: 0, behavior: 'smooth' }) }
+  function openEdit(v: Video) { setForm({ ...EMPTY, ...v }); setEditId(v.id); setShowForm(true); window.scrollTo({ top: 0, behavior: 'smooth' }) }
+  const upd = (f: string, v: unknown) => setForm((p: typeof EMPTY) => ({ ...p, [f]: v }))
+
+  async function save() {
+    setSaving(true)
+    const payload = { ...form, sort_order: parseInt(String(form.sort_order)) || 0,
+      thumbnail_url: form.thumbnail_url || `https://img.youtube.com/vi/${form.video_id}/hqdefault.jpg`
+    }
+    if (editId) await supabase.from('youtube_videos').update(payload).eq('id', editId)
+    else await supabase.from('youtube_videos').insert(payload)
+    setSaving(false); setShowForm(false); load()
+  }
+
+  async function toggle(id: string, field: string, current: boolean) {
+    await supabase.from('youtube_videos').update({ [field]: !current }).eq('id', id)
+    setVideos((p: Video[]) => p.map((x: Video) => x.id === id ? { ...x, [field]: !current } : x))
+  }
+
+  const s = { width: '100%', padding: '9px 12px', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '13px', outline: 'none', boxSizing: 'border-box' as const }
+  const lbl = (text: string) => h('label', { style: { fontSize: '12px', fontWeight: '600', color: '#475569', display: 'block', marginBottom: '5px' } }, text)
+
+  return h('div', { style: { display: 'flex', flexDirection: 'column', gap: '20px' } },
+    h('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' } },
+      h('div', {},
+        h('h1', { style: { fontFamily: 'Sora, sans-serif', fontSize: '1.5rem', fontWeight: '800' } }, '📺 YouTube Videos'),
+        h('p', { style: { fontSize: '13px', color: '#64748b', marginTop: '4px' } }, 'Manage videos shown in the YouTube section on the Blog page')
+      ),
+      h('button', { onClick: openAdd, style: { padding: '10px 22px', background: '#ff0000', color: '#fff', border: 'none', borderRadius: '10px', fontWeight: '700', fontSize: '14px', cursor: 'pointer' } }, '+ Add Video')
+    ),
+
+    showForm && h('div', { style: { background: '#fff', borderRadius: '16px', border: '2px solid #ff0000', padding: '28px' } },
+      h('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' } },
+        h('h2', { style: { fontFamily: 'Sora, sans-serif', fontWeight: '700', fontSize: '16px' } }, editId ? '✏️ Edit Video' : '➕ Add Video'),
+        h('button', { onClick: () => setShowForm(false), style: { background: 'none', border: 'none', fontSize: '20px', cursor: 'pointer', color: '#94a3b8' } }, '✕')
+      ),
+      h('div', { style: { marginBottom: '16px', background: '#fef9c3', border: '1px solid #fde68a', borderRadius: '8px', padding: '12px 16px', fontSize: '13px', color: '#713f12' } },
+        '💡 YouTube Video ID is the code after "v=" in the URL. Example: for youtube.com/watch?v=dQw4w9WgXcQ, the ID is dQw4w9WgXcQ'
+      ),
+      h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' } },
+        ...[
+          { label: 'YouTube Video ID *', field: 'video_id', placeholder: 'e.g. dQw4w9WgXcQ' },
+          { label: 'Category', field: 'category' },
+          { label: 'Title *', field: 'title', span: 2 },
+          { label: 'Description', field: 'description', span: 2 },
+          { label: 'Duration (e.g. 12:45)', field: 'duration' },
+          { label: 'View Count (e.g. 1.2K)', field: 'view_count' },
+          { label: 'Sort Order', field: 'sort_order', type: 'number' },
+          { label: 'Custom Thumbnail URL (optional)', field: 'thumbnail_url', span: 2, placeholder: 'Leave blank to use YouTube thumbnail' },
+        ].map(({ label, field, type, span, placeholder }) =>
+          h('div', { key: field, style: { gridColumn: span === 2 ? '1 / -1' : 'auto' } },
+            lbl(label),
+            h('input', { type: type ?? 'text', value: (form as Record<string, unknown>)[field] ?? '', onChange: (e: Event) => upd(field, (e.target as HTMLInputElement).value), placeholder, style: s })
+          )
+        ),
+        ...[
+          { label: 'Active (show on website)', field: 'is_active' },
+          { label: 'Featured (show on blog)', field: 'is_featured' },
+        ].map(({ label, field }) =>
+          h('div', { key: field, style: { display: 'flex', alignItems: 'center', gap: '10px' } },
+            h('input', { type: 'checkbox', checked: !!(form as Record<string, unknown>)[field], onChange: (e: Event) => upd(field, (e.target as HTMLInputElement).checked), style: { width: '16px', height: '16px', accentColor: '#1c3d7a' } }),
+            lbl(label)
+          )
+        ),
+        form.video_id && h('div', { style: { gridColumn: '1 / -1' } },
+          lbl('Preview'),
+          h('img', { src: `https://img.youtube.com/vi/${form.video_id}/hqdefault.jpg`, alt: 'Thumbnail preview', style: { width: '200px', borderRadius: '8px', border: '1px solid #e2e8f0' } })
+        )
+      ),
+      h('div', { style: { display: 'flex', gap: '10px', marginTop: '20px' } },
+        h('button', { onClick: save, disabled: saving, style: { flex: 1, padding: '12px', background: saving ? '#94a3b8' : '#ff0000', color: '#fff', border: 'none', borderRadius: '10px', fontWeight: '700', fontSize: '14px', cursor: saving ? 'not-allowed' : 'pointer' } },
+          saving ? 'Saving...' : '✅ Save Video'
+        ),
+        h('button', { onClick: () => setShowForm(false), style: { padding: '12px 20px', border: '1px solid #e2e8f0', borderRadius: '10px', background: '#fff', fontWeight: '600', fontSize: '14px', cursor: 'pointer' } }, 'Cancel')
+      )
+    ),
+
+    h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px,1fr))', gap: '16px' } },
+      loading
+        ? h('div', { style: { gridColumn: '1 / -1', padding: '40px', textAlign: 'center', color: '#94a3b8' } }, 'Loading...')
+        : videos.length === 0
+          ? h('div', { style: { gridColumn: '1 / -1', padding: '40px', textAlign: 'center', color: '#94a3b8' } }, 'No videos yet.')
+          : videos.map((v: Video) =>
+              h('div', { key: v.id, style: { background: '#fff', borderRadius: '12px', border: '1px solid #e2e8f0', overflow: 'hidden' } },
+                h('div', { style: { position: 'relative' } },
+                  h('img', { src: v.thumbnail_url || `https://img.youtube.com/vi/${v.video_id}/hqdefault.jpg`, alt: v.title, style: { width: '100%', height: '160px', objectFit: 'cover' } }),
+                  h('div', { style: { position: 'absolute', top: '8px', right: '8px', display: 'flex', gap: '4px' } },
+                    v.is_featured && h('span', { style: { background: '#d4f01a', color: '#0f2347', fontSize: '10px', fontWeight: '700', padding: '2px 7px', borderRadius: '4px' } }, '⭐ Featured'),
+                    h('span', { style: { background: v.is_active ? '#dcfce7' : '#fee2e2', color: v.is_active ? '#166534' : '#991b1b', fontSize: '10px', fontWeight: '700', padding: '2px 7px', borderRadius: '4px' } }, v.is_active ? 'Active' : 'Hidden')
+                  )
+                ),
+                h('div', { style: { padding: '14px' } },
+                  h('p', { style: { fontWeight: '700', fontSize: '13px', marginBottom: '4px', lineHeight: '1.3' } }, v.title),
+                  h('p', { style: { fontSize: '11px', color: '#94a3b8', marginBottom: '10px' } }, `ID: ${v.video_id}`),
+                  h('div', { style: { display: 'flex', gap: '6px', flexWrap: 'wrap' } },
+                    h('button', { onClick: () => openEdit(v), style: { padding: '5px 10px', background: '#eff6ff', color: '#1c3d7a', border: 'none', borderRadius: '6px', fontSize: '11px', fontWeight: '600', cursor: 'pointer' } }, '✏️ Edit'),
+                    h('button', { onClick: () => toggle(v.id, 'is_active', v.is_active), style: { padding: '5px 10px', background: v.is_active ? '#fee2e2' : '#dcfce7', color: v.is_active ? '#991b1b' : '#166534', border: 'none', borderRadius: '6px', fontSize: '11px', fontWeight: '600', cursor: 'pointer' } }, v.is_active ? 'Hide' : 'Show'),
+                    h('button', { onClick: () => toggle(v.id, 'is_featured', v.is_featured), style: { padding: '5px 10px', background: v.is_featured ? '#fef9c3' : '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '6px', fontSize: '11px', cursor: 'pointer' } }, v.is_featured ? '★ Unfeature' : '☆ Feature'),
+                    h('a', { href: `https://youtube.com/watch?v=${v.video_id}`, target: '_blank', rel: 'noopener', style: { padding: '5px 10px', background: '#f8fafc', color: '#64748b', border: '1px solid #e2e8f0', borderRadius: '6px', fontSize: '11px', fontWeight: '600', textDecoration: 'none', display: 'inline-block' } }, '▶ Watch')
+                  )
+                )
+              )
+            )
+    )
+  )
+}
+
+const root = createRoot(document.getElementById('yt-root')!)
+root.render(h(YTManager, null))
+</script>

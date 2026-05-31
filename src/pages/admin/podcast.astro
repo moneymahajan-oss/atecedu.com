@@ -1,0 +1,152 @@
+---
+// src/pages/admin/podcast.astro
+import AdminLayout from '../../layouts/AdminLayout.astro'
+---
+<AdminLayout title="Podcast Manager" activeSection="podcast">
+  <div id="pod-root"></div>
+</AdminLayout>
+
+<script>
+import { createClient } from '@supabase/supabase-js'
+import { createElement as h, useState, useEffect } from 'react'
+import { createRoot } from 'react-dom/client'
+
+const supabase = createClient(window.__SB_URL, window.__SB_KEY)
+
+interface Episode {
+  id: string; title: string; slug: string; excerpt: string | null
+  duration: string | null; episode_number: number | null; guest_name: string | null
+  guest_designation: string | null; is_published: boolean; published_at: string | null
+  thumbnail_url: string | null; youtube_url: string | null; spotify_url: string | null
+  anchor_url: string | null; sort_order: number
+}
+
+const EMPTY = {
+  title: '', slug: '', description: '', excerpt: '',
+  duration: '', episode_number: 1, season_number: 1,
+  guest_name: '', guest_designation: '',
+  thumbnail_url: '', audio_url: '',
+  youtube_url: '', spotify_url: '', anchor_url: '',
+  is_published: true, sort_order: 0,
+}
+
+function PodcastManager() {
+  const [episodes, setEpisodes] = useState<Episode[]>([])
+  const [loading, setLoading] = useState(true)
+  const [showForm, setShowForm] = useState(false)
+  const [editId, setEditId] = useState<string | null>(null)
+  const [form, setForm] = useState<typeof EMPTY>({ ...EMPTY })
+  const [saving, setSaving] = useState(false)
+
+  useEffect(() => { load() }, [])
+  async function load() {
+    const { data } = await supabase.from('podcast_episodes').select('*').order('sort_order').order('published_at', { ascending: false })
+    setEpisodes(data ?? [])
+    setLoading(false)
+  }
+
+  function openAdd() { setForm({ ...EMPTY }); setEditId(null); setShowForm(true); window.scrollTo({ top: 0, behavior: 'smooth' }) }
+  function openEdit(ep: Episode) { setForm({ ...EMPTY, ...ep }); setEditId(ep.id); setShowForm(true); window.scrollTo({ top: 0, behavior: 'smooth' }) }
+  const upd = (f: string, v: unknown) => setForm((p: typeof EMPTY) => ({ ...p, [f]: v }))
+
+  async function save() {
+    setSaving(true)
+    let slug = form.slug || form.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
+    const payload = { ...form, slug, episode_number: parseInt(String(form.episode_number)) || 1, sort_order: parseInt(String(form.sort_order)) || 0 }
+    if (editId) await supabase.from('podcast_episodes').update(payload).eq('id', editId)
+    else await supabase.from('podcast_episodes').insert(payload)
+    setSaving(false); setShowForm(false); load()
+  }
+
+  async function togglePublish(id: string, current: boolean) {
+    await supabase.from('podcast_episodes').update({ is_published: !current }).eq('id', id)
+    setEpisodes((p: Episode[]) => p.map((x: Episode) => x.id === id ? { ...x, is_published: !current } : x))
+  }
+
+  const s = { width: '100%', padding: '9px 12px', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '13px', outline: 'none', boxSizing: 'border-box' as const }
+  const lbl = (text: string) => h('label', { style: { fontSize: '12px', fontWeight: '600', color: '#475569', display: 'block', marginBottom: '5px' } }, text)
+
+  return h('div', { style: { display: 'flex', flexDirection: 'column', gap: '20px' } },
+    h('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' } },
+      h('div', {},
+        h('h1', { style: { fontFamily: 'Sora, sans-serif', fontSize: '1.5rem', fontWeight: '800' } }, '🎙️ Podcast Manager'),
+        h('p', { style: { fontSize: '13px', color: '#64748b', marginTop: '4px' } }, 'Manage podcast episodes shown on the Blog page')
+      ),
+      h('button', { onClick: openAdd, style: { padding: '10px 22px', background: '#7c3aed', color: '#fff', border: 'none', borderRadius: '10px', fontWeight: '700', fontSize: '14px', cursor: 'pointer' } }, '+ New Episode')
+    ),
+
+    showForm && h('div', { style: { background: '#fff', borderRadius: '16px', border: '2px solid #7c3aed', padding: '28px' } },
+      h('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' } },
+        h('h2', { style: { fontFamily: 'Sora, sans-serif', fontWeight: '700', fontSize: '16px' } }, editId ? '✏️ Edit Episode' : '➕ New Episode'),
+        h('button', { onClick: () => setShowForm(false), style: { background: 'none', border: 'none', fontSize: '20px', cursor: 'pointer', color: '#94a3b8' } }, '✕')
+      ),
+      h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' } },
+        ...[
+          { label: 'Episode Title *', field: 'title', span: 2 },
+          { label: 'Episode Number', field: 'episode_number', type: 'number' },
+          { label: 'Duration (e.g. 38 min)', field: 'duration' },
+          { label: 'Slug (auto-generated)', field: 'slug' },
+          { label: 'Sort Order', field: 'sort_order', type: 'number' },
+          { label: 'Excerpt', field: 'excerpt', span: 2 },
+          { label: 'Guest Name', field: 'guest_name' },
+          { label: 'Guest Designation/Title', field: 'guest_designation' },
+          { label: 'Thumbnail URL', field: 'thumbnail_url', span: 2 },
+          { label: 'YouTube Video ID (if on YouTube)', field: 'youtube_url', placeholder: 'e.g. dQw4w9WgXcQ' },
+          { label: 'Spotify URL (full link)', field: 'spotify_url' },
+          { label: 'Anchor/Other Podcast URL', field: 'anchor_url' },
+          { label: 'Direct Audio URL (if hosted externally)', field: 'audio_url', span: 2 },
+          { label: 'Full Description', field: 'description', span: 2 },
+        ].map(({ label, field, type, span, placeholder }) =>
+          h('div', { key: field, style: { gridColumn: span === 2 ? '1 / -1' : 'auto' } },
+            lbl(label),
+            field === 'description'
+              ? h('textarea', { value: (form as Record<string, unknown>)[field] ?? '', onChange: (e: Event) => upd(field, (e.target as HTMLTextAreaElement).value), rows: 4, style: { ...s, height: 'auto' } })
+              : h('input', { type: type ?? 'text', value: (form as Record<string, unknown>)[field] ?? '', onChange: (e: Event) => upd(field, (e.target as HTMLInputElement).value), placeholder, style: s })
+          )
+        ),
+        h('div', { style: { display: 'flex', alignItems: 'center', gap: '10px' } },
+          h('input', { type: 'checkbox', checked: !!form.is_published, onChange: (e: Event) => upd('is_published', (e.target as HTMLInputElement).checked), style: { width: '16px', height: '16px', accentColor: '#7c3aed' } }),
+          lbl('Published (visible on website)')
+        )
+      ),
+      h('div', { style: { display: 'flex', gap: '10px', marginTop: '20px' } },
+        h('button', { onClick: save, disabled: saving, style: { flex: 1, padding: '12px', background: saving ? '#94a3b8' : '#7c3aed', color: '#fff', border: 'none', borderRadius: '10px', fontWeight: '700', fontSize: '14px', cursor: saving ? 'not-allowed' : 'pointer' } },
+          saving ? 'Saving...' : '✅ Save Episode'
+        ),
+        h('button', { onClick: () => setShowForm(false), style: { padding: '12px 20px', border: '1px solid #e2e8f0', borderRadius: '10px', background: '#fff', fontWeight: '600', fontSize: '14px', cursor: 'pointer' } }, 'Cancel')
+      )
+    ),
+
+    h('div', { style: { display: 'flex', flexDirection: 'column', gap: '12px' } },
+      loading
+        ? h('div', { style: { padding: '40px', textAlign: 'center', color: '#94a3b8' } }, 'Loading...')
+        : episodes.length === 0
+          ? h('div', { style: { padding: '40px', textAlign: 'center', color: '#94a3b8', background: '#fff', borderRadius: '14px', border: '1px solid #e2e8f0' } }, 'No episodes yet. Click "New Episode" to add your first podcast episode.')
+          : episodes.map((ep: Episode) =>
+              h('div', { key: ep.id, style: { background: '#fff', borderRadius: '12px', border: '1px solid #e2e8f0', padding: '20px', display: 'flex', gap: '16px', alignItems: 'flex-start' } },
+                h('div', { style: { width: '48px', height: '48px', borderRadius: '10px', background: '#7c3aed', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Sora, sans-serif', fontWeight: '800', fontSize: '12px', flexShrink: 0 } }, `EP ${ep.episode_number ?? '?'}`),
+                ep.thumbnail_url && h('img', { src: ep.thumbnail_url, alt: ep.title, style: { width: '72px', height: '72px', borderRadius: '8px', objectFit: 'cover', flexShrink: 0 } }),
+                h('div', { style: { flex: 1, minWidth: 0 } },
+                  h('div', { style: { fontWeight: '700', fontSize: '14px', marginBottom: '4px' } }, ep.title),
+                  ep.guest_name && h('p', { style: { fontSize: '12px', color: '#7c3aed', marginBottom: '4px', fontWeight: '600' } }, `Guest: ${ep.guest_name}${ep.guest_designation ? ` — ${ep.guest_designation}` : ''}`),
+                  ep.excerpt && h('p', { style: { fontSize: '12px', color: '#64748b', marginBottom: '8px', lineHeight: '1.4' } }, ep.excerpt),
+                  h('div', { style: { display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' } },
+                    ep.duration && h('span', { style: { fontSize: '11px', color: '#64748b' } }, `⏱ ${ep.duration}`),
+                    ep.youtube_url && h('span', { style: { background: '#fee2e2', color: '#991b1b', fontSize: '11px', fontWeight: '700', padding: '2px 7px', borderRadius: '4px' } }, '▶ YouTube'),
+                    ep.spotify_url && h('span', { style: { background: '#dcfce7', color: '#166534', fontSize: '11px', fontWeight: '700', padding: '2px 7px', borderRadius: '4px' } }, '🎵 Spotify'),
+                    ep.anchor_url && h('span', { style: { background: '#eff6ff', color: '#1e40af', fontSize: '11px', fontWeight: '700', padding: '2px 7px', borderRadius: '4px' } }, '🎙️ Anchor')
+                  )
+                ),
+                h('div', { style: { display: 'flex', flexDirection: 'column', gap: '6px', flexShrink: 0 } },
+                  h('button', { onClick: () => openEdit(ep), style: { padding: '5px 12px', background: '#eff6ff', color: '#1c3d7a', border: 'none', borderRadius: '6px', fontSize: '12px', fontWeight: '600', cursor: 'pointer' } }, '✏️ Edit'),
+                  h('button', { onClick: () => togglePublish(ep.id, ep.is_published), style: { padding: '5px 12px', background: ep.is_published ? '#fee2e2' : '#dcfce7', color: ep.is_published ? '#991b1b' : '#166534', border: 'none', borderRadius: '6px', fontSize: '12px', fontWeight: '600', cursor: 'pointer' } }, ep.is_published ? '⭕ Unpublish' : '✅ Publish')
+                )
+              )
+            )
+    )
+  )
+}
+
+const root = createRoot(document.getElementById('pod-root')!)
+root.render(h(PodcastManager, null))
+</script>

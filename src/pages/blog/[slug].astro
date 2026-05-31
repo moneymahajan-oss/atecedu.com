@@ -1,0 +1,349 @@
+---
+// src/pages/blog/[slug].astro
+import BaseLayout from '../../layouts/BaseLayout.astro'
+import { supabase } from '../../lib/supabase'
+
+export async function getStaticPaths() {
+  const { data: posts } = await supabase
+    .from('blog_posts')
+    .select('slug')
+    .eq('is_published', true)
+  return (posts ?? []).map(p => ({ params: { slug: p.slug } }))
+}
+
+const { slug } = Astro.params
+
+const { data: post } = await supabase
+  .from('blog_posts')
+  .select('*')
+  .eq('slug', slug)
+  .eq('is_published', true)
+  .single()
+
+if (!post) return Astro.redirect('/blog', 302)
+
+// Related posts
+const { data: related } = await supabase
+  .from('blog_posts')
+  .select('id,title,slug,excerpt,thumbnail_url,category,read_time_mins,published_at')
+  .eq('is_published', true)
+  .eq('category', post.category ?? 'General')
+  .neq('slug', slug)
+  .limit(3)
+
+const publishedDate = post.published_at
+  ? new Date(post.published_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })
+  : ''
+
+// JSON-LD Article schema
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": post.title,
+  "description": post.excerpt ?? post.meta_description,
+  "image": post.thumbnail_url ?? post.og_image,
+  "author": {
+    "@type": "Organization",
+    "name": post.author ?? 'ATEC Team'
+  },
+  "publisher": {
+    "@type": "EducationalOrganization",
+    "name": "ATEC Educational Society",
+    "url": "https://atecedu.com",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://atecedu.com/favicon.png"
+    }
+  },
+  "datePublished": post.published_at,
+  "dateModified": post.updated_at ?? post.published_at,
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": `https://atecedu.com/blog/${slug}`
+  }
+}
+---
+
+<BaseLayout
+  title={post.meta_title ?? `${post.title} | ATEC Blog`}
+  description={post.meta_description ?? post.excerpt ?? ''}
+  ogImage={post.og_image ?? post.thumbnail_url ?? undefined}
+  canonical={`https://atecedu.com/blog/${slug}`}
+  pageSlug={`blog-${slug}`}
+>
+
+  <!-- Breadcrumb -->
+  <div class="article-hero">
+    <div class="container">
+      <nav class="breadcrumb" aria-label="Breadcrumb">
+        <a href="/">Home</a>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+        <a href="/blog">Blog</a>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+        <span>{post.title}</span>
+      </nav>
+
+      <div class="article-meta-top">
+        {post.category && <span class="article-cat">{post.category}</span>}
+        {post.read_time_mins && <span class="read-time">⏱ {post.read_time_mins} min read</span>}
+      </div>
+
+      <h1 class="article-title">{post.title}</h1>
+
+      {post.excerpt && <p class="article-excerpt">{post.excerpt}</p>}
+
+      <div class="article-byline">
+        <div class="author-avatar">
+          {(post.author ?? 'ATEC Team')[0]}
+        </div>
+        <div>
+          <div class="author-name">{post.author ?? 'ATEC Team'}</div>
+          {publishedDate && <div class="publish-date">{publishedDate}</div>}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Thumbnail -->
+  {post.thumbnail_url && (
+    <div class="article-thumb-wrap">
+      <div class="container">
+        <img src={post.thumbnail_url} alt={post.title} class="article-thumb" loading="eager" />
+      </div>
+    </div>
+  )}
+
+  <!-- Content -->
+  <div class="article-layout">
+    <div class="container">
+      <div class="article-grid">
+
+        <!-- Main content -->
+        <article class="article-content">
+          {post.content
+            ? <div class="prose" set:html={post.content} />
+            : <p style="color:var(--text-muted);font-style:italic">Content coming soon...</p>
+          }
+
+          <!-- Tags -->
+          {(post.tags ?? []).length > 0 && (
+            <div class="article-tags">
+              <span class="tags-label">Tags:</span>
+              {(post.tags ?? []).map((tag: string) => (
+                <span class="tag-pill">#{tag}</span>
+              ))}
+            </div>
+          )}
+
+          <!-- Share row -->
+          <div class="share-row">
+            <span class="share-label">Share this article:</span>
+            <div class="share-btns">
+              <a
+                href={`https://wa.me/?text=${encodeURIComponent(`${post.title} — https://atecedu.com/blog/${slug}`)}`}
+                target="_blank" rel="noopener"
+                class="share-btn whatsapp"
+              >
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+                WhatsApp
+              </a>
+              <a
+                href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(`https://atecedu.com/blog/${slug}`)}`}
+                target="_blank" rel="noopener"
+                class="share-btn linkedin"
+              >
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-2-2 2 2 0 00-2 2v7h-4v-7a6 6 0 016-6zM2 9h4v12H2z"/><circle cx="4" cy="4" r="2"/></svg>
+                LinkedIn
+              </a>
+            </div>
+          </div>
+        </article>
+
+        <!-- Sidebar -->
+        <aside class="article-sidebar">
+
+          <!-- Course CTA -->
+          <div class="sidebar-cta">
+            <div class="sidebar-cta-icon">🎓</div>
+            <h3>Start Your Tech Career</h3>
+            <p>Browse ATEC's industry-relevant courses. New batches starting every month.</p>
+            <a href="/courses" class="btn btn-primary" style="width:100%;justify-content:center">Browse Courses</a>
+            <a href="tel:+917009933289" class="btn btn-outline btn-sm" style="width:100%;justify-content:center;margin-top:8px">📞 Call Us</a>
+          </div>
+
+          <!-- Recent posts -->
+          {(related ?? []).length > 0 && (
+            <div class="sidebar-section">
+              <h4 class="sidebar-title">Related Articles</h4>
+              <div class="sidebar-posts">
+                {(related ?? []).map(rel => (
+                  <a href={`/blog/${rel.slug}`} class="sidebar-post">
+                    {rel.thumbnail_url && (
+                      <div class="sidebar-post-thumb">
+                        <img src={rel.thumbnail_url} alt={rel.title} loading="lazy" />
+                      </div>
+                    )}
+                    <div class="sidebar-post-body">
+                      <h5>{rel.title}</h5>
+                      {rel.read_time_mins && <span>⏱ {rel.read_time_mins} min</span>}
+                    </div>
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <!-- Certificate verifier -->
+          <div class="sidebar-verify">
+            <div style="font-size:28px;margin-bottom:8px">📜</div>
+            <h4>Verify a Certificate</h4>
+            <p>Employers can verify ATEC certificates instantly online.</p>
+            <a href="/verification" class="btn btn-outline btn-sm" style="width:100%;justify-content:center;margin-top:12px">Verify Now</a>
+          </div>
+
+        </aside>
+      </div>
+    </div>
+  </div>
+
+  <!-- JSON-LD -->
+  <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
+
+</BaseLayout>
+
+<style>
+/* Hero */
+.article-hero {
+  background: linear-gradient(135deg, #0b1f3f 0%, #1c3d7a 100%);
+  padding: 40px 0 48px;
+}
+.breadcrumb { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-bottom: 20px; font-size: 13px; }
+.breadcrumb a { color: rgba(255,255,255,0.55); text-decoration: none; }
+.breadcrumb a:hover { color: var(--lemon); }
+.breadcrumb span { color: rgba(255,255,255,0.85); }
+.breadcrumb svg { color: rgba(255,255,255,0.3); flex-shrink: 0; }
+
+.article-meta-top { display: flex; gap: 12px; align-items: center; margin-bottom: 16px; }
+.article-cat {
+  background: var(--lemon); color: var(--navy-dark);
+  font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 20px;
+}
+.read-time { font-size: 13px; color: rgba(255,255,255,0.65); }
+
+.article-title {
+  font-size: clamp(1.6rem, 4vw, 2.8rem);
+  font-weight: 800; color: #fff; line-height: 1.2;
+  margin-bottom: 16px; max-width: 800px;
+}
+.article-excerpt { font-size: 17px; color: rgba(255,255,255,0.75); line-height: 1.7; max-width: 680px; margin-bottom: 28px; }
+
+.article-byline { display: flex; align-items: center; gap: 12px; }
+.author-avatar {
+  width: 44px; height: 44px; border-radius: 50%;
+  background: var(--lemon); color: var(--navy-dark);
+  font-family: var(--font-display); font-weight: 800; font-size: 18px;
+  display: flex; align-items: center; justify-content: center;
+}
+.author-name { font-weight: 700; color: #fff; font-size: 14px; }
+.publish-date { font-size: 12px; color: rgba(255,255,255,0.55); margin-top: 2px; }
+
+/* Thumbnail */
+.article-thumb-wrap { padding: 32px 0 0; background: var(--gray-50); }
+.article-thumb { width: 100%; max-height: 480px; object-fit: cover; border-radius: var(--radius-lg); }
+
+/* Layout */
+.article-layout { padding: 48px 0 80px; background: var(--gray-50); }
+.article-grid {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 48px; align-items: start;
+}
+@media (max-width: 1024px) {
+  .article-grid { grid-template-columns: 1fr; }
+  .article-sidebar { display: none; }
+}
+
+/* Article content */
+.article-content {
+  background: var(--white);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--gray-200);
+  padding: 40px;
+}
+
+/* Prose styles — these style the set:html content */
+.prose { font-size: 16px; line-height: 1.85; color: var(--text-secondary); }
+.prose h2 {
+  font-family: var(--font-display); font-size: 1.5rem; font-weight: 800;
+  color: var(--text-primary); margin: 36px 0 16px;
+  padding-bottom: 10px; border-bottom: 2px solid var(--lemon);
+  display: inline-block;
+}
+.prose h3 { font-family: var(--font-display); font-size: 1.2rem; font-weight: 700; color: var(--text-primary); margin: 28px 0 12px; }
+.prose p { margin-bottom: 18px; }
+.prose ul, .prose ol { margin: 0 0 18px 24px; }
+.prose li { margin-bottom: 8px; }
+.prose strong { color: var(--text-primary); font-weight: 700; }
+.prose a { color: var(--navy); text-decoration: underline; }
+.prose a:hover { color: var(--navy-mid); }
+.prose blockquote {
+  border-left: 4px solid var(--lemon);
+  background: var(--off-white);
+  padding: 16px 20px;
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+  margin: 24px 0;
+  font-style: italic;
+}
+.prose img { width: 100%; border-radius: var(--radius-md); margin: 24px 0; }
+.prose code { background: var(--gray-100); padding: 2px 6px; border-radius: 4px; font-size: 0.9em; }
+.prose pre { background: #0f1724; color: #e2e8f0; padding: 20px; border-radius: var(--radius-md); overflow-x: auto; margin: 24px 0; }
+.prose pre code { background: none; padding: 0; }
+
+/* Tags */
+.article-tags { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 32px; padding-top: 24px; border-top: 1px solid var(--gray-200); }
+.tags-label { font-size: 13px; font-weight: 600; color: var(--text-muted); }
+.tag-pill { background: var(--off-white); color: var(--navy); border: 1px solid var(--gray-200); padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+
+/* Share */
+.share-row { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--gray-200); }
+.share-label { font-size: 13px; font-weight: 600; color: var(--text-muted); }
+.share-btns { display: flex; gap: 8px; }
+.share-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 7px 16px; border-radius: 8px;
+  font-size: 13px; font-weight: 600; text-decoration: none;
+  transition: all 0.2s;
+}
+.share-btn.whatsapp { background: #dcfce7; color: #166534; }
+.share-btn.whatsapp:hover { background: #25D366; color: #fff; }
+.share-btn.linkedin { background: #dbeafe; color: #1e40af; }
+.share-btn.linkedin:hover { background: #0A66C2; color: #fff; }
+
+/* Sidebar */
+.article-sidebar { position: sticky; top: calc(var(--nav-height) + 20px); display: flex; flex-direction: column; gap: 20px; }
+
+.sidebar-cta {
+  background: var(--navy); color: #fff;
+  border-radius: var(--radius-lg); padding: 24px; text-align: center;
+}
+.sidebar-cta-icon { font-size: 36px; margin-bottom: 12px; }
+.sidebar-cta h3 { font-family: var(--font-display); font-size: 16px; font-weight: 800; margin-bottom: 8px; }
+.sidebar-cta p { font-size: 13px; color: rgba(255,255,255,0.75); line-height: 1.6; margin-bottom: 16px; }
+
+.sidebar-section { background: var(--white); border-radius: var(--radius-lg); border: 1px solid var(--gray-200); padding: 20px; }
+.sidebar-title { font-family: var(--font-display); font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); margin-bottom: 14px; }
+.sidebar-posts { display: flex; flex-direction: column; gap: 12px; }
+.sidebar-post { display: flex; gap: 10px; text-decoration: none; color: inherit; }
+.sidebar-post:hover .sidebar-post-body h5 { color: var(--navy); }
+.sidebar-post-thumb { width: 60px; height: 60px; flex-shrink: 0; border-radius: 8px; overflow: hidden; background: var(--gray-100); }
+.sidebar-post-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.sidebar-post-body h5 { font-size: 13px; font-weight: 600; line-height: 1.3; margin-bottom: 4px; transition: color 0.15s; }
+.sidebar-post-body span { font-size: 11px; color: var(--text-muted); }
+
+.sidebar-verify {
+  background: #f0fdf4; border: 1px solid #bbf7d0;
+  border-radius: var(--radius-lg); padding: 20px; text-align: center;
+}
+.sidebar-verify h4 { font-family: var(--font-display); font-size: 14px; font-weight: 700; color: var(--text-primary); margin-bottom: 6px; }
+.sidebar-verify p { font-size: 12px; color: var(--text-secondary); line-height: 1.5; }
+</style>
