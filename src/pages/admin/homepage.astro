@@ -1,13 +1,140 @@
 ---
+// src/pages/admin/homepage.astro
 import AdminLayout from '../../layouts/AdminLayout.astro'
-const { pathname } = Astro.url
-const section = pathname.split('/').pop() ?? ''
 ---
-<AdminLayout title="Manager" activeSection={section}>
-  <div style="background:#fff;border-radius:16px;border:1px solid #e2e8f0;padding:40px;text-align:center;">
-    <div style="font-size:48px;margin-bottom:16px">📋</div>
-    <h2 style="font-family:Sora,sans-serif;font-weight:700;font-size:1.3rem;margin-bottom:8px">Section Ready</h2>
-    <p style="color:#64748b;font-size:14px;max-width:400px;margin:0 auto">This admin section is set up and connected to Supabase. Tell Claude "build the [section name] admin manager" to get the full CRUD component.</p>
-    <a href="/admin" style="display:inline-block;margin-top:20px;padding:10px 24px;background:#1c3d7a;color:#fff;border-radius:10px;font-weight:700;font-size:14px;text-decoration:none">← Back to Dashboard</a>
-  </div>
+<AdminLayout title="Homepage Manager" activeSection="homepage">
+  <div id="root"></div>
 </AdminLayout>
+<script>
+import { createClient } from '@supabase/supabase-js'
+import { createElement as h, useState, useEffect } from 'react'
+import { createRoot } from 'react-dom/client'
+const sb = createClient(window.__SB_URL, window.__SB_KEY)
+
+function Mgr() {
+  const [hero, setHero] = useState({ heading:'', subheading:'', youtube_video_id:'', stats:[] })
+  const [strip, setStrip] = useState({ text:'', link:'', link_text:'', is_active:true, bg_color:'#0f2347', text_color:'#ffffff', show_timer:false, ends_at:'' })
+  const [social, setSocial] = useState({ youtube:'', instagram:'', facebook:'', whatsapp:'', twitter:'' })
+  const [saving, setSaving] = useState('')
+  const [saved, setSaved] = useState('')
+  const [stats, setStats] = useState([{value:'25+',label:'Years of Excellence'},{value:'5000+',label:'Students Trained'},{value:'15+',label:'Courses Offered'},{value:'100%',label:'Placement Support'}])
+
+  useEffect(() => { load() }, [])
+  async function load() {
+    const { data } = await sb.from('site_settings').select('key,value').in('key', ['hero','announcement_strip','social_links'])
+    data?.forEach(d => {
+      if (d.key==='hero') { setHero(d.value||{}); setStats(d.value?.stats||stats) }
+      if (d.key==='announcement_strip') setStrip(d.value||{})
+      if (d.key==='social_links') setSocial(d.value||{})
+    })
+  }
+
+  async function saveHero() {
+    setSaving('hero')
+    const val = {...hero, stats}
+    await sb.from('site_settings').upsert({key:'hero', value:val}, {onConflict:'key'})
+    setSaving(''); setSaved('hero'); setTimeout(()=>setSaved(''),2000)
+  }
+  async function saveStrip() {
+    setSaving('strip')
+    await sb.from('site_settings').upsert({key:'announcement_strip', value:strip}, {onConflict:'key'})
+    setSaving(''); setSaved('strip'); setTimeout(()=>setSaved(''),2000)
+  }
+  async function saveSocial() {
+    setSaving('social')
+    await sb.from('site_settings').upsert({key:'social_links', value:social}, {onConflict:'key'})
+    setSaving(''); setSaved('social'); setTimeout(()=>setSaved(''),2000)
+  }
+
+  const s = {width:'100%',padding:'9px 12px',border:'1px solid #e2e8f0',borderRadius:'8px',fontSize:'13px',outline:'none',boxSizing:'border-box'}
+  const lbl = t => h('label',{style:{fontSize:'12px',fontWeight:'600',color:'#475569',display:'block',marginBottom:'5px'}},t)
+  const card = (title, emoji, children, onSave, saveKey) =>
+    h('div',{style:{background:'#fff',borderRadius:'16px',border:'1px solid #e2e8f0',padding:'28px'}},
+      h('div',{style:{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'24px'}},
+        h('h2',{style:{fontFamily:'Sora,sans-serif',fontWeight:'700',fontSize:'16px'}},`${emoji} ${title}`),
+        h('button',{onClick:onSave,disabled:saving===saveKey,
+          style:{padding:'8px 20px',background:saved===saveKey?'#166534':saving===saveKey?'#94a3b8':'#1c3d7a',color:'#fff',border:'none',borderRadius:'8px',fontWeight:'700',fontSize:'13px',cursor:saving===saveKey?'not-allowed':'pointer'}},
+          saved===saveKey?'✅ Saved!':saving===saveKey?'Saving...':'Save Changes'
+        )
+      ),
+      ...children
+    )
+
+  return h('div',{style:{display:'flex',flexDirection:'column',gap:'24px'}},
+    h('h1',{style:{fontFamily:'Sora,sans-serif',fontSize:'1.5rem',fontWeight:'800'}},'🏠 Homepage Manager'),
+    h('div',{style:{background:'#fef9c3',border:'1px solid #fde68a',borderRadius:'10px',padding:'12px 16px',fontSize:'13px',color:'#713f12'}},
+      '⚠️ After saving, push a commit to GitHub to trigger a Cloudflare rebuild — homepage content is rendered at build time.'
+    ),
+
+    // Hero section
+    card('Hero Section', '🦸', [
+      h('div',{style:{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'14px'}},
+        h('div',{style:{gridColumn:'1/-1'}}, lbl('Main Heading'),
+          h('input',{type:'text',value:hero.heading||'',onChange:e=>setHero(p=>({...p,heading:e.target.value})),style:s,placeholder:'Turning Students Into Professionals Since 2000'})
+        ),
+        h('div',{style:{gridColumn:'1/-1'}}, lbl('Sub Heading'),
+          h('textarea',{value:hero.subheading||'',onChange:e=>setHero(p=>({...p,subheading:e.target.value})),rows:2,style:{...s,height:'auto',resize:'vertical'},placeholder:'Online, hybrid & classroom courses...'})
+        ),
+        h('div',{style:{gridColumn:'1/-1'}}, lbl('YouTube Video ID for Hero (optional — leave blank for placeholder card)'),
+          h('input',{type:'text',value:hero.youtube_video_id||'',onChange:e=>setHero(p=>({...p,youtube_video_id:e.target.value})),style:s,placeholder:'e.g. dQw4w9WgXcQ (from youtube.com/watch?v=ID)'}),
+          hero.youtube_video_id && h('div',{style:{marginTop:'8px',fontSize:'12px',color:'#64748b'}},
+            `Preview: https://img.youtube.com/vi/${hero.youtube_video_id}/hqdefault.jpg`
+          )
+        )
+      ),
+      h('div',{style:{marginTop:'16px'}},
+        h('div',{style:{fontSize:'12px',fontWeight:'600',color:'#475569',marginBottom:'10px'}},'Stats Bar (4 items)'),
+        h('div',{style:{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'10px'}},
+          ...stats.map((stat, i) =>
+            h('div',{key:i,style:{display:'flex',gap:'8px',alignItems:'center',background:'#f8fafc',padding:'10px 12px',borderRadius:'8px'}},
+              h('input',{type:'text',value:stat.value,onChange:e=>{const ns=[...stats];ns[i]={...ns[i],value:e.target.value};setStats(ns)},
+                style:{width:'60px',padding:'6px',border:'1px solid #e2e8f0',borderRadius:'6px',fontSize:'13px',fontWeight:'700',textAlign:'center',outline:'none'},placeholder:'25+'}),
+              h('input',{type:'text',value:stat.label,onChange:e=>{const ns=[...stats];ns[i]={...ns[i],label:e.target.value};setStats(ns)},
+                style:{flex:1,padding:'6px',border:'1px solid #e2e8f0',borderRadius:'6px',fontSize:'13px',outline:'none'},placeholder:'Years of Excellence'})
+            )
+          )
+        )
+      )
+    ], saveHero, 'hero'),
+
+    // Announcement strip
+    card('Announcement Strip', '📢', [
+      h('div',{style:{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'14px'}},
+        h('div',{style:{gridColumn:'1/-1'}}, lbl('Strip Text'),
+          h('input',{type:'text',value:strip.text||'',onChange:e=>setStrip(p=>({...p,text:e.target.value})),style:s,placeholder:'🎓 New Batch Starting...'})),
+        h('div',{}, lbl('Link URL'), h('input',{type:'text',value:strip.link||'',onChange:e=>setStrip(p=>({...p,link:e.target.value})),style:s,placeholder:'/courses'})),
+        h('div',{}, lbl('Link Text'), h('input',{type:'text',value:strip.link_text||'',onChange:e=>setStrip(p=>({...p,link_text:e.target.value})),style:s,placeholder:'Enroll Now'})),
+        h('div',{}, lbl('Background Color'), h('input',{type:'color',value:strip.bg_color||'#0f2347',onChange:e=>setStrip(p=>({...p,bg_color:e.target.value})),style:{...s,height:'40px',padding:'4px'}})),
+        h('div',{}, lbl('Text Color'), h('input',{type:'color',value:strip.text_color||'#ffffff',onChange:e=>setStrip(p=>({...p,text_color:e.target.value})),style:{...s,height:'40px',padding:'4px'}})),
+        strip.show_timer && h('div',{style:{gridColumn:'1/-1'}}, lbl('Timer End Date & Time'),
+          h('input',{type:'datetime-local',value:strip.ends_at||'',onChange:e=>setStrip(p=>({...p,ends_at:e.target.value})),style:s})
+        ),
+        ...[{l:'Active',k:'is_active'},{l:'Show Countdown Timer',k:'show_timer'}].map(({l,k}) =>
+          h('div',{key:k,style:{display:'flex',alignItems:'center',gap:'10px'}},
+            h('input',{type:'checkbox',checked:!!strip[k],onChange:e=>setStrip(p=>({...p,[k]:e.target.checked})),style:{width:'16px',height:'16px',accentColor:'#1c3d7a'}}),
+            lbl(l)
+          )
+        )
+      )
+    ], saveStrip, 'strip'),
+
+    // Social links
+    card('Social Media Links', '📱', [
+      h('div',{style:{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'14px'}},
+        ...[
+          {l:'YouTube Channel URL',k:'youtube',ph:'https://youtube.com/@ATECGurdaspur'},
+          {l:'Instagram URL',k:'instagram',ph:'https://instagram.com/atecgurdaspur'},
+          {l:'Facebook URL',k:'facebook',ph:'https://facebook.com/atecgurdaspur'},
+          {l:'WhatsApp Number',k:'whatsapp',ph:'+917009933289'},
+          {l:'Twitter/X URL',k:'twitter',ph:'https://twitter.com/atecgurdaspur'},
+        ].map(({l,k,ph}) =>
+          h('div',{key:k}, lbl(l),
+            h('input',{type:'text',value:social[k]||'',onChange:e=>setSocial(p=>({...p,[k]:e.target.value})),style:s,placeholder:ph})
+          )
+        )
+      )
+    ], saveSocial, 'social')
+  )
+}
+createRoot(document.getElementById('root')).render(h(Mgr,null))
+</script>

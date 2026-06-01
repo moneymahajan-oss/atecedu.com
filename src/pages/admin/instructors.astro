@@ -1,13 +1,106 @@
 ---
+// src/pages/admin/instructors.astro
 import AdminLayout from '../../layouts/AdminLayout.astro'
-const { pathname } = Astro.url
-const section = pathname.split('/').pop() ?? ''
 ---
-<AdminLayout title="Manager" activeSection={section}>
-  <div style="background:#fff;border-radius:16px;border:1px solid #e2e8f0;padding:40px;text-align:center;">
-    <div style="font-size:48px;margin-bottom:16px">📋</div>
-    <h2 style="font-family:Sora,sans-serif;font-weight:700;font-size:1.3rem;margin-bottom:8px">Section Ready</h2>
-    <p style="color:#64748b;font-size:14px;max-width:400px;margin:0 auto">This admin section is set up and connected to Supabase. Tell Claude "build the [section name] admin manager" to get the full CRUD component.</p>
-    <a href="/admin" style="display:inline-block;margin-top:20px;padding:10px 24px;background:#1c3d7a;color:#fff;border-radius:10px;font-weight:700;font-size:14px;text-decoration:none">← Back to Dashboard</a>
-  </div>
+<AdminLayout title="Instructors" activeSection="instructors">
+  <div id="root"></div>
 </AdminLayout>
+<script>
+import { createClient } from '@supabase/supabase-js'
+import { createElement as h, useState, useEffect } from 'react'
+import { createRoot } from 'react-dom/client'
+const sb = createClient(window.__SB_URL, window.__SB_KEY)
+
+const EMPTY = { name:'', designation:'', bio:'', photo_url:'', sort_order:0, is_active:true }
+
+function Mgr() {
+  const [rows, setRows] = useState([])
+  const [form, setForm] = useState({...EMPTY})
+  const [editId, setEditId] = useState(null)
+  const [show, setShow] = useState(false)
+  const [saving, setSaving] = useState(false)
+
+  useEffect(() => { load() }, [])
+  async function load() {
+    const { data } = await sb.from('instructors').select('*').order('sort_order')
+    setRows(data ?? [])
+  }
+  const upd = (k, v) => setForm(p => ({...p, [k]: v}))
+  function openAdd() { setForm({...EMPTY}); setEditId(null); setShow(true); window.scrollTo({top:0}) }
+  function openEdit(r) { setForm({...EMPTY, ...r}); setEditId(r.id); setShow(true); window.scrollTo({top:0}) }
+  async function save() {
+    setSaving(true)
+    const payload = {...form, sort_order: parseInt(form.sort_order)||0}
+    if (editId) await sb.from('instructors').update(payload).eq('id', editId)
+    else await sb.from('instructors').insert(payload)
+    setSaving(false); setShow(false); load()
+  }
+  async function toggle(id, cur) {
+    await sb.from('instructors').update({is_active: !cur}).eq('id', id)
+    setRows(p => p.map(r => r.id===id ? {...r, is_active: !cur} : r))
+  }
+
+  const s = {width:'100%',padding:'9px 12px',border:'1px solid #e2e8f0',borderRadius:'8px',fontSize:'13px',outline:'none',boxSizing:'border-box'}
+  const lbl = t => h('label',{style:{fontSize:'12px',fontWeight:'600',color:'#475569',display:'block',marginBottom:'5px'}},t)
+
+  return h('div',{style:{display:'flex',flexDirection:'column',gap:'20px'}},
+    h('div',{style:{display:'flex',justifyContent:'space-between',alignItems:'center',flexWrap:'wrap',gap:'12px'}},
+      h('h1',{style:{fontFamily:'Sora,sans-serif',fontSize:'1.5rem',fontWeight:'800'}},'👨‍🏫 Instructors'),
+      h('button',{onClick:openAdd,style:{padding:'10px 22px',background:'#1c3d7a',color:'#fff',border:'none',borderRadius:'10px',fontWeight:'700',fontSize:'14px',cursor:'pointer'}},'+ Add Instructor')
+    ),
+    show && h('div',{style:{background:'#fff',borderRadius:'16px',border:'2px solid #1c3d7a',padding:'28px'}},
+      h('div',{style:{display:'flex',justifyContent:'space-between',marginBottom:'20px'}},
+        h('h2',{style:{fontFamily:'Sora,sans-serif',fontWeight:'700',fontSize:'16px'}}, editId ? '✏️ Edit' : '➕ Add Instructor'),
+        h('button',{onClick:()=>setShow(false),style:{background:'none',border:'none',fontSize:'20px',cursor:'pointer',color:'#94a3b8'}},'✕')
+      ),
+      h('div',{style:{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'14px'}},
+        ...[
+          {l:'Name *',k:'name'},{l:'Designation',k:'designation'},
+          {l:'Photo URL',k:'photo_url'},{l:'Sort Order',k:'sort_order',type:'number'},
+          {l:'Bio',k:'bio',span:2},
+        ].map(({l,k,type,span})=>
+          h('div',{key:k,style:{gridColumn:span===2?'1/-1':'auto'}}, lbl(l),
+            k==='bio'
+              ? h('textarea',{value:form[k]??'',onChange:e=>upd(k,e.target.value),rows:3,style:{...s,height:'auto',resize:'vertical'}})
+              : h('input',{type:type||'text',value:form[k]??'',onChange:e=>upd(k,e.target.value),style:s})
+          )
+        ),
+        h('div',{style:{display:'flex',alignItems:'center',gap:'10px'}},
+          h('input',{type:'checkbox',checked:!!form.is_active,onChange:e=>upd('is_active',e.target.checked),style:{width:'16px',height:'16px',accentColor:'#1c3d7a'}}),
+          lbl('Active (shown on website)')
+        ),
+        form.photo_url && h('div',{style:{gridColumn:'1/-1'}},
+          lbl('Photo Preview'),
+          h('img',{src:form.photo_url,alt:'Preview',style:{width:'80px',height:'80px',borderRadius:'50%',objectFit:'cover',border:'2px solid #e2e8f0'}})
+        )
+      ),
+      h('div',{style:{display:'flex',gap:'10px',marginTop:'20px'}},
+        h('button',{onClick:save,disabled:saving,style:{flex:1,padding:'12px',background:saving?'#94a3b8':'#1c3d7a',color:'#fff',border:'none',borderRadius:'10px',fontWeight:'700',cursor:saving?'not-allowed':'pointer'}},
+          saving?'Saving...':editId?'✅ Update':'✅ Add'
+        ),
+        h('button',{onClick:()=>setShow(false),style:{padding:'12px 20px',border:'1px solid #e2e8f0',borderRadius:'10px',background:'#fff',fontWeight:'600',cursor:'pointer'}},'Cancel')
+      )
+    ),
+    h('div',{style:{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(260px,1fr))',gap:'16px'}},
+      rows.length===0
+        ? h('div',{style:{gridColumn:'1/-1',padding:'40px',textAlign:'center',color:'#94a3b8',background:'#fff',borderRadius:'14px',border:'1px solid #e2e8f0'}},'No instructors yet.')
+        : rows.map(r => h('div',{key:r.id,style:{background:'#fff',borderRadius:'12px',border:'1px solid #e2e8f0',padding:'20px',textAlign:'center'}},
+            h('div',{style:{width:'64px',height:'64px',borderRadius:'50%',margin:'0 auto 12px',overflow:'hidden',background:'#1c3d7a',display:'flex',alignItems:'center',justifyContent:'center'}},
+              r.photo_url
+                ? h('img',{src:r.photo_url,alt:r.name,style:{width:'100%',height:'100%',objectFit:'cover'}})
+                : h('span',{style:{color:'#d4f01a',fontWeight:'800',fontSize:'22px'}},r.name?.[0]||'?')
+            ),
+            h('div',{style:{fontWeight:'700',fontSize:'14px',marginBottom:'3px'}},r.name),
+            h('div',{style:{fontSize:'12px',color:'#64748b',marginBottom:'12px'}},r.designation),
+            h('div',{style:{display:'flex',gap:'6px',justifyContent:'center'}},
+              h('button',{onClick:()=>openEdit(r),style:{padding:'5px 12px',background:'#eff6ff',color:'#1c3d7a',border:'none',borderRadius:'6px',fontSize:'12px',fontWeight:'600',cursor:'pointer'}},'✏️ Edit'),
+              h('button',{onClick:()=>toggle(r.id,r.is_active),style:{padding:'5px 12px',background:r.is_active?'#fee2e2':'#dcfce7',color:r.is_active?'#991b1b':'#166534',border:'none',borderRadius:'6px',fontSize:'12px',fontWeight:'600',cursor:'pointer'}},
+                r.is_active?'Hide':'Show'
+              )
+            )
+          ))
+    )
+  )
+}
+createRoot(document.getElementById('root')).render(h(Mgr,null))
+</script>
