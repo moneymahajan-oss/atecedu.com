@@ -1,33 +1,47 @@
 ---
 // src/pages/blog/index.astro
+// FIXED: try/catch around all Supabase queries so missing tables don't break build
 import BaseLayout from '../../layouts/BaseLayout.astro'
 import { supabase } from '../../lib/supabase'
 
-const { data: posts } = await supabase
-  .from('blog_posts')
-  .select('id,title,slug,excerpt,thumbnail_url,author,published_at,category,read_time_mins,tags')
-  .eq('is_published', true)
-  .order('published_at', { ascending: false })
+// Wrap every query in try/catch — if tables don't exist yet, page still builds
+let posts: any[] = []
+let youtubeVideos: any[] = []
+let podcasts: any[] = []
 
-const { data: youtubeVideos } = await supabase
-  .from('youtube_videos')
-  .select('*')
-  .eq('is_active', true)
-  .eq('is_featured', true)
-  .order('sort_order')
-  .limit(4)
+try {
+  const { data } = await supabase
+    .from('blog_posts')
+    .select('id,title,slug,excerpt,thumbnail_url,author,published_at,category,read_time_mins,tags')
+    .eq('is_published', true)
+    .order('published_at', { ascending: false })
+  posts = data ?? []
+} catch (e) { /* table may not exist yet */ }
 
-const { data: podcasts } = await supabase
-  .from('podcast_episodes')
-  .select('*')
-  .eq('is_published', true)
-  .order('sort_order')
-  .limit(3)
+try {
+  const { data } = await supabase
+    .from('youtube_videos')
+    .select('*')
+    .eq('is_active', true)
+    .eq('is_featured', true)
+    .order('sort_order')
+    .limit(4)
+  youtubeVideos = data ?? []
+} catch (e) { /* table may not exist yet */ }
+
+try {
+  const { data } = await supabase
+    .from('podcast_episodes')
+    .select('*')
+    .eq('is_published', true)
+    .order('sort_order')
+    .limit(3)
+  podcasts = data ?? []
+} catch (e) { /* table may not exist yet */ }
 
 // Get unique categories from posts
-const categories = ['All', ...new Set((posts ?? []).map(p => p.category).filter(Boolean))]
+const categories = ['All', ...new Set(posts.map((p: any) => p.category).filter(Boolean))]
 
-// JSON-LD for Blog
 const jsonLd = {
   "@context": "https://schema.org",
   "@type": "Blog",

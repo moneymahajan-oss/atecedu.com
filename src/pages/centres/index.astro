@@ -3,13 +3,17 @@
 import BaseLayout from '../../layouts/BaseLayout.astro'
 import { supabase } from '../../lib/supabase'
 
-const { data: centres } = await supabase
-  .from('centres')
-  .select('*')
-  .eq('is_active', true)
-  .order('sort_order')
+let centres: any[] = []
+try {
+  const { data } = await supabase
+    .from('centres')
+    .select('*')
+    .eq('is_active', true)
+    .order('sort_order')
+  centres = data ?? []
+} catch (e) { /* table may not exist yet */ }
 
-// Fallback centres if table is empty
+// Always show at least the main centre as fallback
 const fallbackCentres = [
   {
     id: '1',
@@ -19,13 +23,13 @@ const fallbackCentres = [
     address: 'Hardochanni Road, Near Bus Stand, Gurdaspur 143521',
     phone: '+91 7009933289',
     email: 'atecgsp@gmail.com',
-    map_url: 'https://maps.google.com/?q=ATEC+Gurdaspur',
+    map_url: 'https://maps.google.com/?q=ATEC+Gurdaspur+Punjab',
     photo_url: null,
     is_main: true,
   },
 ]
 
-const displayCentres = (centres ?? []).length > 0 ? centres! : fallbackCentres
+const displayCentres = centres.length > 0 ? centres : fallbackCentres
 
 const jsonLd = {
   "@context": "https://schema.org",
@@ -44,7 +48,7 @@ const jsonLd = {
   "telephone": "+91-7009933289",
   "email": "atecgsp@gmail.com"
 }
----
+
 
 <BaseLayout
   title="Our Centres — ATEC Educational Society | Gurdaspur, Punjab"

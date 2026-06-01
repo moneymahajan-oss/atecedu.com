@@ -4,65 +4,67 @@ import BaseLayout from '../../layouts/BaseLayout.astro'
 import { supabase } from '../../lib/supabase'
 
 export async function getStaticPaths() {
-  const { data: posts } = await supabase
-    .from('blog_posts')
-    .select('slug')
-    .eq('is_published', true)
-  return (posts ?? []).map(p => ({ params: { slug: p.slug } }))
+  try {
+    const { data: posts } = await supabase
+      .from('blog_posts')
+      .select('slug')
+      .eq('is_published', true)
+    return (posts ?? []).map((p: { slug: string }) => ({ params: { slug: p.slug } }))
+  } catch (e) {
+    return [] // table doesn't exist yet — no blog pages built
+  }
 }
 
 const { slug } = Astro.params
 
-const { data: post } = await supabase
-  .from('blog_posts')
-  .select('*')
-  .eq('slug', slug)
-  .eq('is_published', true)
-  .single()
+let post: any = null
+let related: any[] = []
+
+try {
+  const { data } = await supabase
+    .from('blog_posts')
+    .select('*')
+    .eq('slug', slug)
+    .eq('is_published', true)
+    .single()
+  post = data
+} catch (e) {}
 
 if (!post) return Astro.redirect('/blog', 302)
 
-// Related posts
-const { data: related } = await supabase
-  .from('blog_posts')
-  .select('id,title,slug,excerpt,thumbnail_url,category,read_time_mins,published_at')
-  .eq('is_published', true)
-  .eq('category', post.category ?? 'General')
-  .neq('slug', slug)
-  .limit(3)
+try {
+  const { data } = await supabase
+    .from('blog_posts')
+    .select('id,title,slug,excerpt,thumbnail_url,category,read_time_mins,published_at')
+    .eq('is_published', true)
+    .eq('category', post.category ?? 'General')
+    .neq('slug', slug)
+    .limit(3)
+  related = data ?? []
+} catch (e) {}
 
 const publishedDate = post.published_at
   ? new Date(post.published_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })
   : ''
 
-// JSON-LD Article schema
 const jsonLd = {
   "@context": "https://schema.org",
   "@type": "Article",
   "headline": post.title,
   "description": post.excerpt ?? post.meta_description,
   "image": post.thumbnail_url ?? post.og_image,
-  "author": {
-    "@type": "Organization",
-    "name": post.author ?? 'ATEC Team'
-  },
+  "author": { "@type": "Organization", "name": post.author ?? 'ATEC Team' },
   "publisher": {
     "@type": "EducationalOrganization",
     "name": "ATEC Educational Society",
     "url": "https://atecedu.com",
-    "logo": {
-      "@type": "ImageObject",
-      "url": "https://atecedu.com/favicon.png"
-    }
+    "logo": { "@type": "ImageObject", "url": "https://atecedu.com/favicon.png" }
   },
   "datePublished": post.published_at,
   "dateModified": post.updated_at ?? post.published_at,
-  "mainEntityOfPage": {
-    "@type": "WebPage",
-    "@id": `https://atecedu.com/blog/${slug}`
-  }
+  "mainEntityOfPage": { "@type": "WebPage", "@id": `https://atecedu.com/blog/${slug}` }
 }
----
+
 
 <BaseLayout
   title={post.meta_title ?? `${post.title} | ATEC Blog`}
