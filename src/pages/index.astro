@@ -1,77 +1,96 @@
 ---
 // src/pages/index.astro
-// Architecture: Static HTML shell (loads instantly, good SEO)
-//               + HomepageDynamic React island (fetches live from Supabase)
-// Result: Admin changes appear IMMEDIATELY — no rebuild needed.
+// Enchanting hero — no badges, no trust avatars. All admin-controlled.
 import BaseLayout from '../layouts/BaseLayout.astro'
 import HomepageDynamic from '../components/home/HomepageDynamic'
 ---
 
 <BaseLayout
   title="ATEC Educational Society — Computer Courses Online & Hybrid | Gurdaspur"
-  description="ATEC Gurdaspur — India's trusted computer institute since 2000. Online, hybrid and classroom courses in hardware, networking, web design, Tally and more. ISO 9001:2015 certified."
+  description="ATEC Gurdaspur — India's trusted computer institute since 2000. Online, hybrid and classroom courses in hardware, networking, web design, GenAI, MERN, Tally and more."
   pageSlug="homepage"
 >
 
   <!-- ============================================================
-       HERO — Static shell, text updated live by JS below
+       ENCHANTING HERO
   ============================================================ -->
-  <section class="hero-section">
+  <section class="hero-enchant">
+    <!-- Animated gradient orbs -->
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+    <div class="grid-overlay"></div>
+
     <div class="container">
-      <div class="hero-inner">
-        <div class="hero-content">
-          <div class="hero-badges">
-            <span class="hero-badge-pill">
-              <span class="live-dot"></span>
-              ISO 9001:2015 Certified
-            </span>
-            <span class="hero-badge-pill">Est. 2000 · Gurdaspur</span>
+      <div class="hero-grid">
+        <div class="hero-left">
+          <div class="hero-eyebrow">
+            <span class="eyebrow-pulse"></span>
+            <span id="hero-eyebrow-text">Trusted Since 2000 · Gurdaspur</span>
           </div>
-          <!-- Text updated live by script below — default shown until Supabase loads -->
-          <h1 class="hero-heading" id="hero-heading">
-            Turning Students Into <em class="hero-highlight">Professionals</em> Since 2000
+
+          <h1 class="hero-title" id="hero-heading">
+            <span class="title-line">Turning Students Into</span>
+            <span class="title-line gradient-text">Professionals</span>
+            <span class="title-line">Since 2000</span>
           </h1>
-          <p class="hero-sub" id="hero-sub">
-            Online, hybrid &amp; classroom courses in hardware, networking, web design and more.
+
+          <p class="hero-tagline" id="hero-sub">
+            Online, hybrid &amp; classroom courses in hardware, networking, web design, GenAI, MERN, Tally and kids programs.
           </p>
-          <div class="hero-btns">
-            <a href="/courses" class="btn btn-primary">
-              Explore Courses
+
+          <div class="hero-actions">
+            <a href="/courses" class="cta-primary" id="hero-cta1">
+              <span class="cta-shimmer"></span>
+              <span class="cta-label">Explore Courses</span>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
             </a>
-            <a href="/verification" class="btn btn-outline-white">Verify Certificate</a>
+            <a href="https://wa.me/917009933289?text=Hi! I want to know about ATEC courses." target="_blank" rel="noopener" class="cta-whatsapp" id="hero-cta2">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+              <span class="cta-label" id="hero-cta2-label">Chat on WhatsApp</span>
+            </a>
           </div>
-          <div class="hero-trust">
-            <div class="trust-avatars">
-              {[1,2,3,4].map(i => (
-                <div class="trust-avatar" style={`background: hsl(${i * 60}, 60%, 50%)`}>{i}</div>
-              ))}
-            </div>
-            <span class="trust-text">5,000+ students trained &amp; placed</span>
+
+          <div class="hero-feature-pills">
+            <span class="feature-pill">⚡ Live Zoom Classes</span>
+            <span class="feature-pill">🎓 Verified Certificate</span>
+            <span class="feature-pill">💼 100% Placement Support</span>
           </div>
         </div>
 
-        <!-- Hero visual — YouTube embed or placeholder, updated live -->
-        <div class="hero-visual" id="hero-visual">
-          <div class="hero-placeholder-card" id="hero-placeholder">
-            <div class="placeholder-inner">
-              <div class="placeholder-logo">ATEC</div>
-              <p>India's Most Trusted<br />Computer Institute</p>
-              <div class="placeholder-stats-mini">
-                <div class="mini-stat"><span class="mini-val">25+</span><span class="mini-label">Years</span></div>
-                <div class="mini-stat"><span class="mini-val">5000+</span><span class="mini-label">Students</span></div>
+        <div class="hero-right">
+          <div class="hero-visual-card" id="hero-visual">
+            <!-- Placeholder visual until admin sets YouTube ID -->
+            <div class="visual-content">
+              <div class="visual-shimmer"></div>
+              <div class="visual-logo">A</div>
+              <div class="visual-title">ATEC</div>
+              <div class="visual-sub">Educational Society</div>
+              <div class="visual-divider"></div>
+              <div class="visual-stats">
+                <div class="vs-item">
+                  <div class="vs-num">25+</div>
+                  <div class="vs-lbl">Years</div>
+                </div>
+                <div class="vs-item">
+                  <div class="vs-num">5000+</div>
+                  <div class="vs-lbl">Students</div>
+                </div>
+                <div class="vs-item">
+                  <div class="vs-num">15+</div>
+                  <div class="vs-lbl">Courses</div>
+                </div>
               </div>
+              <div class="visual-badge">ISO 9001:2015 ✓</div>
             </div>
           </div>
         </div>
       </div>
     </div>
-    <div class="hero-bg-circle hero-bg-circle-1"></div>
-    <div class="hero-bg-circle hero-bg-circle-2"></div>
   </section>
 
   <!-- ============================================================
-       WHY CHOOSE ATEC — Static (never changes, no need for DB)
+       WHY ATEC — Static
   ============================================================ -->
   <section class="why-section section">
     <div class="container">
@@ -99,13 +118,12 @@ import HomepageDynamic from '../components/home/HomepageDynamic'
   </section>
 
   <!-- ============================================================
-       DYNAMIC CONTENT — React island fetches live from Supabase
-       Stats bar, Courses, Instructors, Testimonials, Centres, News
+       DYNAMIC CONTENT — courses, instructors, testimonials, etc.
   ============================================================ -->
   <HomepageDynamic client:load />
 
   <!-- ============================================================
-       BLOG TEASER — Static links to blog
+       BLOG TEASER
   ============================================================ -->
   <section class="section" style="background:var(--off-white)">
     <div class="container">
@@ -135,7 +153,7 @@ import HomepageDynamic from '../components/home/HomepageDynamic'
         <a href="/blog/web-designing-vs-web-development" class="blog-teaser-card">
           <div class="btc-icon">🌐</div>
           <div class="btc-tag">Career Guide</div>
-          <h3>Web Designing vs Web Development: Which Career is Right for You?</h3>
+          <h3>Web Designing vs Web Development: Which Career is Right?</h3>
           <p>Difference, tools, jobs and salary breakdown.</p>
           <span class="btc-read">Read Article →</span>
         </a>
@@ -150,7 +168,7 @@ import HomepageDynamic from '../components/home/HomepageDynamic'
   </section>
 
   <!-- ============================================================
-       CTA — Static
+       CTA
   ============================================================ -->
   <section class="cta-section">
     <div class="container">
@@ -161,9 +179,9 @@ import HomepageDynamic from '../components/home/HomepageDynamic'
         </div>
         <div class="cta-btns">
           <a href="/courses" class="btn btn-primary">Browse Courses</a>
-          <a href="tel:+917009933289" class="btn btn-outline-white">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 10.8a19.79 19.79 0 01-3.07-8.67A2 2 0 012 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.91 7.91a16 16 0 006.16 6.16l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>
-            Call +91 7009933289
+          <a href="https://wa.me/917009933289" target="_blank" rel="noopener" class="btn btn-outline-white">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+            WhatsApp Us
           </a>
         </div>
       </div>
@@ -172,131 +190,389 @@ import HomepageDynamic from '../components/home/HomepageDynamic'
 
 </BaseLayout>
 
-<!-- Live hero text update from Supabase (runs after page loads) -->
+<!-- ── LIVE UPDATE FROM ADMIN — no rebuild ────────────────────── -->
 <script>
   import { createClient } from '@supabase/supabase-js'
 
-  const url = window.__SB_URL
-  const key = window.__SB_KEY
+  const url = (window as any).__SB_URL
+  const key = (window as any).__SB_KEY
   if (url && key) {
     const sb = createClient(url, key)
 
-    // Update hero text live
     sb.from('site_settings').select('value').eq('key', 'hero').single().then(({ data }) => {
       if (!data?.value) return
       const v = data.value
 
+      // Heading — supports <em> for highlight
       if (v.heading) {
         const el = document.getElementById('hero-heading')
-        if (el) el.innerHTML = v.heading
+        if (el) {
+          // Render heading: if contains <em>, use it. Else render plain.
+          if (v.heading.includes('<') || v.heading.includes('|')) {
+            // Pipe-split format: "Line 1|Highlight|Line 3" gradient on middle
+            const parts = v.heading.split('|').map((s: string) => s.trim()).filter(Boolean)
+            if (parts.length === 3) {
+              el.innerHTML = `<span class="title-line">${parts[0]}</span><span class="title-line gradient-text">${parts[1]}</span><span class="title-line">${parts[2]}</span>`
+            } else {
+              el.innerHTML = v.heading
+            }
+          } else {
+            el.innerHTML = `<span class="title-line gradient-text">${v.heading}</span>`
+          }
+        }
       }
+
+      // Subheading
       if (v.subheading) {
         const el = document.getElementById('hero-sub')
         if (el) el.textContent = v.subheading
       }
-      // Swap placeholder for YouTube embed if video ID set
+
+      // Heading font size
+      if (v.heading_font_size) {
+        const el = document.getElementById('hero-heading') as HTMLElement
+        if (el) el.style.fontSize = `clamp(2rem, ${v.heading_font_size}vw, ${v.heading_font_size}rem)`
+      }
+
+      // CTA 1 (primary)
+      const cta1 = document.getElementById('hero-cta1') as HTMLAnchorElement
+      if (cta1) {
+        if (v.cta_link) cta1.href = v.cta_link
+        const lbl = cta1.querySelector('.cta-label')
+        if (lbl && v.cta_text) lbl.textContent = v.cta_text
+        if ((v.cta_link||'').startsWith('http')) { cta1.target='_blank'; cta1.rel='noopener' }
+      }
+
+      // CTA 2 (WhatsApp)
+      const cta2 = document.getElementById('hero-cta2') as HTMLAnchorElement
+      if (cta2) {
+        if (v.cta2_link) cta2.href = v.cta2_link
+        const lbl = document.getElementById('hero-cta2-label')
+        if (lbl && v.cta2_text) lbl.textContent = v.cta2_text
+      }
+
+      // Swap visual to YouTube embed if video ID provided
       if (v.youtube_video_id) {
-        // Extract ID if a full URL was accidentally saved
-        let ytId = v.youtube_video_id.trim()
+        let ytId = (v.youtube_video_id || '').trim()
         const short = ytId.match(/youtu\.be\/([a-zA-Z0-9_-]{11})/)
         const long  = ytId.match(/(?:v=|\/embed\/|\/shorts\/|\/v\/)([a-zA-Z0-9_-]{11})/)
         if (short) ytId = short[1]
         else if (long) ytId = long[1]
 
-        const placeholder = document.getElementById('hero-placeholder')
-        if (placeholder && ytId.length === 11) {
-          const wrap = document.createElement('div')
-          wrap.className = 'hero-video-wrap'
-          wrap.innerHTML = `<div class="video-embed"><iframe src="https://www.youtube.com/embed/${ytId}?autoplay=1&mute=1&loop=1&playlist=${ytId}&controls=0&modestbranding=1" allow="autoplay; encrypted-media" allowfullscreen loading="lazy"></iframe></div>`
-          placeholder.replaceWith(wrap)
+        const visual = document.getElementById('hero-visual')
+        if (visual && ytId.length === 11) {
+          visual.innerHTML = `
+            <div class="video-frame">
+              <iframe src="https://www.youtube.com/embed/${ytId}?autoplay=1&mute=1&loop=1&playlist=${ytId}&controls=0&modestbranding=1&rel=0&showinfo=0&playsinline=1" allow="autoplay; encrypted-media" allowfullscreen loading="lazy" frameborder="0"></iframe>
+            </div>`
         }
       }
     })
-
-    // Update announcement strip live
-    sb.from('site_settings').select('value').eq('key', 'announcement_strip').single().then(({ data }) => {
-      if (!data?.value) return
-      const v = data.value
-      const strip = document.getElementById('atec-strip') as HTMLElement
-      if (!strip) return
-
-      if (!v.is_active) { strip.style.display = 'none'; return }
-      strip.style.background = v.bg_color || '#0f2347'
-      strip.style.color = v.text_color || '#fff'
-
-      const textEl = strip.querySelector('.strip-text')
-      if (textEl && v.text) textEl.textContent = v.text
-
-      const linkEl = strip.querySelector('.strip-link') as HTMLAnchorElement
-      if (linkEl) {
-        linkEl.href = v.link || '#'
-        linkEl.textContent = (v.link_text || 'Learn More') + ' →'
-      }
-    })
   }
+
+  // Mouse-tracking glow on Enroll button
+  document.querySelectorAll('.btn-enchant, .cta-primary').forEach((btn) => {
+    btn.addEventListener('mousemove', (e: any) => {
+      const r = btn.getBoundingClientRect()
+      ;(btn as HTMLElement).style.setProperty('--mx', ((e.clientX - r.left) / r.width * 100) + '%')
+      ;(btn as HTMLElement).style.setProperty('--my', ((e.clientY - r.top) / r.height * 100) + '%')
+    })
+  })
 </script>
 
 <style>
-/* Hero */
-.hero-section{background:linear-gradient(135deg,#0b1f3f 0%,#1c3d7a 55%,#1e4694 100%);padding:80px 0 72px;position:relative;overflow:hidden;min-height:580px}
-.hero-inner{display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:center}
-@media(max-width:900px){.hero-inner{grid-template-columns:1fr;gap:40px}}
-.hero-content{position:relative;z-index:2}
-.hero-badges{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px}
-.hero-badge-pill{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:20px;padding:5px 14px;font-size:12px;color:rgba(255,255,255,0.85);font-weight:500}
-.live-dot{width:7px;height:7px;background:#4ade80;border-radius:50%;animation:pulse 1.5s infinite}
-@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.6;transform:scale(1.3)}}
-.hero-heading{font-size:clamp(2rem,4.5vw,3.2rem);font-weight:800;color:#fff;line-height:1.15;margin-bottom:20px}
-.hero-highlight{color:var(--lemon);font-style:normal}
-.hero-sub{font-size:17px;color:rgba(255,255,255,0.75);line-height:1.65;max-width:480px;margin-bottom:32px}
-.hero-btns{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:32px}
-.hero-trust{display:flex;align-items:center;gap:12px}
-.trust-avatars{display:flex}
-.trust-avatar{width:30px;height:30px;border-radius:50%;border:2px solid rgba(255,255,255,0.6);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;margin-left:-8px}
-.trust-avatar:first-child{margin-left:0}
-.trust-text{font-size:13px;color:rgba(255,255,255,0.7)}
-.hero-visual{position:relative;z-index:2}
-.hero-video-wrap{border-radius:var(--radius-xl);overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.4)}
-.hero-placeholder-card{background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:var(--radius-xl);padding:48px;text-align:center;color:#fff}
-.placeholder-logo{font-family:var(--font-display);font-size:48px;font-weight:800;color:var(--lemon);margin-bottom:12px}
-.placeholder-inner p{color:rgba(255,255,255,0.7);font-size:16px;margin-bottom:24px}
-.placeholder-stats-mini{display:flex;gap:24px;justify-content:center}
-.mini-stat{text-align:center}
-.mini-val{display:block;font-family:var(--font-display);font-size:28px;font-weight:800;color:var(--lemon)}
-.mini-label{font-size:12px;color:rgba(255,255,255,0.6)}
-.hero-bg-circle{position:absolute;border-radius:50%;background:rgba(212,240,26,0.04);pointer-events:none}
-.hero-bg-circle-1{width:600px;height:600px;top:-200px;right:-100px}
-.hero-bg-circle-2{width:400px;height:400px;bottom:-150px;left:-100px}
-/* Why */
-.why-section{}
-.why-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:24px;margin-top:48px}
-.why-card{background:var(--white);border-radius:var(--radius-lg);border:1px solid var(--gray-200);padding:28px;transition:all 0.2s}
-.why-card:hover{box-shadow:var(--shadow-md);transform:translateY(-2px);border-color:var(--navy)}
-.why-icon{font-size:32px;margin-bottom:14px}
-.why-title{font-family:var(--font-display);font-size:16px;font-weight:700;margin-bottom:10px}
-.why-desc{font-size:14px;color:var(--text-secondary);line-height:1.6}
+/* ═══════════════════════════════════════════════════════════
+   ENCHANTING HERO
+   ═══════════════════════════════════════════════════════════ */
+.hero-enchant {
+  position: relative;
+  background: radial-gradient(ellipse at top left, #1e4694 0%, #0b1f3f 60%, #050d1e 100%);
+  padding: 80px 0 96px;
+  overflow: hidden;
+  min-height: 640px;
+  color: #fff;
+}
+
+/* Animated orbs */
+.orb {
+  position: absolute; border-radius: 50%; filter: blur(80px);
+  pointer-events: none; mix-blend-mode: screen;
+  animation: float 14s ease-in-out infinite;
+}
+.orb-1 { width: 520px; height: 520px; background: rgba(212, 240, 26, 0.18); top: -180px; right: -100px; }
+.orb-2 { width: 420px; height: 420px; background: rgba(78, 164, 255, 0.22); bottom: -150px; left: 10%; animation-delay: -5s; }
+.orb-3 { width: 300px; height: 300px; background: rgba(255, 107, 157, 0.15); top: 40%; right: 30%; animation-delay: -10s; }
+@keyframes float {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33%      { transform: translate(40px, -30px) scale(1.1); }
+  66%      { transform: translate(-30px, 40px) scale(0.95); }
+}
+
+/* Grid overlay */
+.grid-overlay {
+  position: absolute; inset: 0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+  background-size: 60px 60px;
+  pointer-events: none;
+  mask-image: radial-gradient(ellipse at center, black 30%, transparent 70%);
+}
+
+.hero-grid {
+  position: relative; z-index: 2;
+  display: grid; grid-template-columns: 1.1fr 1fr;
+  gap: 60px; align-items: center;
+}
+@media (max-width: 900px) { .hero-grid { grid-template-columns: 1fr; gap: 40px; } }
+
+/* Eyebrow */
+.hero-eyebrow {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: rgba(212, 240, 26, 0.1);
+  border: 1px solid rgba(212, 240, 26, 0.25);
+  color: var(--lemon, #d4f01a);
+  padding: 6px 14px; border-radius: 24px;
+  font-size: 12px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 1px;
+  margin-bottom: 24px;
+}
+.eyebrow-pulse {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: #4ade80; box-shadow: 0 0 10px #4ade80;
+  animation: pulse-dot 1.5s infinite;
+}
+@keyframes pulse-dot { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(1.4); } }
+
+/* Title */
+.hero-title {
+  font-family: var(--font-display, 'Sora', sans-serif);
+  font-size: clamp(2rem, 5vw, 4rem);
+  font-weight: 900; line-height: 1.05;
+  letter-spacing: -0.02em;
+  margin-bottom: 24px;
+  color: #fff;
+}
+.title-line { display: block; }
+.gradient-text {
+  background: linear-gradient(90deg, #d4f01a 0%, #ffd84e 25%, #ff9c4e 50%, #ff6b9d 75%, #d4f01a 100%);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  animation: gradient-shift 5s ease infinite;
+}
+@keyframes gradient-shift { 0%, 100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
+
+.hero-tagline {
+  font-size: 17px;
+  color: rgba(255,255,255,0.78);
+  line-height: 1.65; max-width: 540px;
+  margin-bottom: 36px;
+}
+
+/* CTAs */
+.hero-actions {
+  display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 36px;
+}
+
+.cta-primary {
+  position: relative; overflow: hidden;
+  display: inline-flex; align-items: center; gap: 10px;
+  padding: 14px 28px;
+  background: linear-gradient(135deg, #d4f01a 0%, #a8e000 50%, #d4f01a 100%);
+  background-size: 200% 200%;
+  color: #0f2347;
+  font-family: var(--font-display, 'Sora', sans-serif);
+  font-weight: 800; font-size: 15px;
+  border-radius: 12px; text-decoration: none;
+  box-shadow: 0 10px 32px rgba(212, 240, 26, 0.4), 0 0 0 1px rgba(15, 35, 71, 0.1);
+  transition: all 0.3s ease;
+  animation: enchant-shimmer 3s ease infinite;
+}
+.cta-primary:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 16px 48px rgba(212, 240, 26, 0.6);
+}
+.cta-shimmer {
+  position: absolute; inset: 0;
+  background: radial-gradient(circle at var(--mx, 50%) var(--my, 50%), rgba(255,255,255,0.5), transparent 60%);
+  opacity: 0; transition: opacity 0.2s; pointer-events: none;
+}
+.cta-primary:hover .cta-shimmer { opacity: 1; }
+.cta-label, .cta-primary svg { position: relative; z-index: 1; }
+
+.cta-whatsapp {
+  display: inline-flex; align-items: center; gap: 10px;
+  padding: 14px 28px;
+  background: linear-gradient(135deg, #25d366 0%, #128c7e 100%);
+  color: #fff;
+  font-family: var(--font-display, 'Sora', sans-serif);
+  font-weight: 700; font-size: 15px;
+  border-radius: 12px; text-decoration: none;
+  box-shadow: 0 8px 24px rgba(37, 211, 102, 0.35);
+  transition: all 0.25s ease;
+}
+.cta-whatsapp:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 36px rgba(37, 211, 102, 0.55);
+}
+
+/* Feature pills */
+.hero-feature-pills {
+  display: flex; gap: 10px; flex-wrap: wrap;
+}
+.feature-pill {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.12);
+  color: rgba(255,255,255,0.85);
+  padding: 7px 14px; border-radius: 24px;
+  font-size: 12.5px; font-weight: 500;
+  backdrop-filter: blur(10px);
+}
+
+/* Visual card */
+.hero-visual-card {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  background: linear-gradient(135deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 100%);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 24px;
+  overflow: hidden;
+  box-shadow:
+    0 32px 80px rgba(0,0,0,0.4),
+    inset 0 1px 0 rgba(255,255,255,0.08);
+  backdrop-filter: blur(20px);
+}
+
+.visual-content {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 32px;
+  text-align: center;
+}
+.visual-shimmer {
+  position: absolute; inset: 0;
+  background: linear-gradient(135deg, transparent 30%, rgba(255,255,255,0.06) 50%, transparent 70%);
+  transform: translateX(-100%);
+  animation: visual-shimmer 4s ease-in-out infinite;
+}
+@keyframes visual-shimmer {
+  0% { transform: translateX(-100%); }
+  50%, 100% { transform: translateX(100%); }
+}
+
+.visual-logo {
+  width: 80px; height: 80px;
+  background: linear-gradient(135deg, #d4f01a, #a8e000);
+  color: #0f2347;
+  border-radius: 20px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-display, 'Sora', sans-serif);
+  font-weight: 900; font-size: 40px;
+  margin-bottom: 16px;
+  box-shadow: 0 12px 32px rgba(212, 240, 26, 0.4);
+  position: relative; z-index: 1;
+}
+.visual-title {
+  font-family: var(--font-display); font-size: 32px; font-weight: 900;
+  color: #fff; margin-bottom: 4px; letter-spacing: -0.5px;
+  position: relative; z-index: 1;
+}
+.visual-sub {
+  font-size: 13px; color: rgba(255,255,255,0.6);
+  position: relative; z-index: 1; margin-bottom: 20px;
+}
+.visual-divider {
+  width: 60px; height: 2px;
+  background: linear-gradient(90deg, transparent, var(--lemon, #d4f01a), transparent);
+  margin-bottom: 20px;
+  position: relative; z-index: 1;
+}
+.visual-stats {
+  display: flex; gap: 28px;
+  position: relative; z-index: 1;
+}
+.vs-item { text-align: center; }
+.vs-num {
+  font-family: var(--font-display); font-weight: 800; font-size: 22px;
+  color: var(--lemon, #d4f01a);
+}
+.vs-lbl { font-size: 11px; color: rgba(255,255,255,0.55); margin-top: 2px; }
+.visual-badge {
+  position: absolute; top: 16px; right: 16px;
+  background: rgba(74, 222, 128, 0.15);
+  border: 1px solid rgba(74, 222, 128, 0.3);
+  color: #4ade80;
+  font-size: 11px; font-weight: 700; padding: 4px 10px;
+  border-radius: 20px;
+  position: relative; z-index: 1;
+}
+
+/* YouTube embed slot when video ID is set */
+.video-frame {
+  position: absolute; inset: 0;
+  border-radius: 24px; overflow: hidden;
+}
+.video-frame iframe {
+  width: 100%; height: 100%; border: none;
+}
+
+@keyframes enchant-shimmer {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+/* Why section */
+.why-section { padding: 96px 0; }
+.why-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 24px; margin-top: 48px;
+}
+.why-card {
+  background: var(--white);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--gray-200);
+  padding: 32px;
+  transition: all 0.25s;
+}
+.why-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 16px 40px rgba(28, 61, 122, 0.12);
+  border-color: var(--navy);
+}
+.why-icon { font-size: 36px; margin-bottom: 16px; }
+.why-title { font-family: var(--font-display); font-size: 17px; font-weight: 700; margin-bottom: 12px; }
+.why-desc { font-size: 14px; color: var(--text-secondary); line-height: 1.65; }
+
 /* Blog teaser */
-.blog-teaser-header{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:32px;flex-wrap:wrap}
-.blog-teaser-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:20px;margin-bottom:24px}
-.blog-teaser-card{background:var(--white);border-radius:var(--radius-lg);border:1px solid var(--gray-200);padding:24px;text-decoration:none;color:inherit;transition:all 0.2s;display:flex;flex-direction:column;gap:8px}
-.blog-teaser-card:hover{box-shadow:var(--shadow-md);transform:translateY(-2px);border-color:var(--navy)}
-.btc-icon{font-size:28px}
-.btc-tag{font-size:11px;font-weight:700;color:var(--navy);text-transform:uppercase;letter-spacing:0.5px}
-.blog-teaser-card h3{font-family:var(--font-display);font-size:15px;font-weight:700;line-height:1.3;color:var(--text-primary)}
-.blog-teaser-card p{font-size:13px;color:var(--text-secondary);line-height:1.5;flex:1}
-.btc-read{font-size:13px;font-weight:700;color:var(--navy);margin-top:auto}
-.blog-teaser-extras{display:flex;gap:10px;flex-wrap:wrap}
-.extra-pill{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;background:var(--white);border:1px solid var(--gray-200);border-radius:24px;font-size:13px;font-weight:600;color:var(--navy);text-decoration:none;transition:all 0.2s}
-.extra-pill:hover{background:var(--navy);color:#fff;border-color:var(--navy)}
+.blog-teaser-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; margin-bottom: 32px; flex-wrap: wrap; }
+.blog-teaser-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; margin-bottom: 24px; }
+.blog-teaser-card { background: var(--white); border-radius: var(--radius-lg); border: 1px solid var(--gray-200); padding: 24px; text-decoration: none; color: inherit; transition: all 0.2s; display: flex; flex-direction: column; gap: 8px; }
+.blog-teaser-card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); border-color: var(--navy); }
+.btc-icon { font-size: 28px; }
+.btc-tag { font-size: 11px; font-weight: 700; color: var(--navy); text-transform: uppercase; letter-spacing: 0.5px; }
+.blog-teaser-card h3 { font-family: var(--font-display); font-size: 15px; font-weight: 700; line-height: 1.3; color: var(--text-primary); }
+.blog-teaser-card p { font-size: 13px; color: var(--text-secondary); line-height: 1.5; flex: 1; }
+.btc-read { font-size: 13px; font-weight: 700; color: var(--navy); margin-top: auto; }
+.blog-teaser-extras { display: flex; gap: 10px; flex-wrap: wrap; }
+.extra-pill { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; background: var(--white); border: 1px solid var(--gray-200); border-radius: 24px; font-size: 13px; font-weight: 600; color: var(--navy); text-decoration: none; transition: all 0.2s; }
+.extra-pill:hover { background: var(--navy); color: #fff; border-color: var(--navy); }
+
 /* CTA */
-.cta-section{background:var(--navy);padding:80px 0}
-.cta-inner{display:flex;align-items:center;justify-content:space-between;gap:40px;flex-wrap:wrap}
-.cta-text h2{color:#fff;margin-bottom:12px}
-.cta-text p{color:rgba(255,255,255,0.7);max-width:480px}
-.cta-btns{display:flex;gap:12px;flex-wrap:wrap;flex-shrink:0}
+.cta-section { background: var(--navy); padding: 80px 0; }
+.cta-inner { display: flex; align-items: center; justify-content: space-between; gap: 40px; flex-wrap: wrap; }
+.cta-text h2 { color: #fff; margin-bottom: 12px; }
+.cta-text p { color: rgba(255,255,255,0.7); max-width: 480px; }
+.cta-btns { display: flex; gap: 12px; flex-wrap: wrap; flex-shrink: 0; }
+
 /* Section header */
-.section-header{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:40px;flex-wrap:wrap}
-.section-header.center{flex-direction:column;align-items:center;text-align:center}
-.section-header h2{margin-top:4px}
-.section-desc{font-size:16px;color:var(--text-secondary);margin-top:8px}
+.section-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; margin-bottom: 40px; flex-wrap: wrap; }
+.section-header.center { flex-direction: column; align-items: center; text-align: center; }
+.section-header h2 { margin-top: 4px; }
+.section-desc { font-size: 16px; color: var(--text-secondary); margin-top: 8px; }
 </style>

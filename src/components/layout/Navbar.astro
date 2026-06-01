@@ -1,49 +1,57 @@
 ---
 // src/components/layout/Navbar.astro
-const links = [
+// Dynamic: logo URL+size, nav links, CTA button — all controlled from Admin → Homepage
+// Defaults render instantly; live values overwrite via JS without rebuild.
+
+const pathname = Astro.url.pathname
+
+// Default fallback links (used until Supabase loads — prevents blank navbar)
+const defaultLinks = [
   { href: '/',             label: 'Home' },
   { href: '/courses',      label: 'Courses' },
   { href: '/verification', label: 'Verify Certificate' },
   { href: '/centres',      label: 'Centres' },
+  { href: '/blog',         label: 'Blog' },
   { href: '/about',        label: 'About' },
 ]
-const pathname = Astro.url.pathname
 ---
 
 <header class="navbar" id="main-navbar">
   <div class="container">
     <div class="nav-inner">
 
-      <!-- Logo -->
-      <a href="/" class="nav-logo" aria-label="ATEC Educational Society Home">
-        <div class="logo-mark">
+      <!-- LOGO — text+mark by default, swappable image once loaded -->
+      <a href="/" class="nav-logo" id="nav-logo" aria-label="ATEC Educational Society Home">
+        <div class="logo-mark" id="logo-mark">
           <span>A</span>
         </div>
-        <div class="logo-text">
+        <div class="logo-text" id="logo-text">
           <span class="logo-name">ATEC</span>
           <span class="logo-sub">Educational Society</span>
         </div>
       </a>
 
-      <!-- Desktop links -->
-      <nav class="nav-links" aria-label="Main navigation">
-        {links.map(link => (
+      <!-- Desktop nav -->
+      <nav class="nav-links" id="nav-links" aria-label="Main navigation">
+        {defaultLinks.map(link => (
           <a
             href={link.href}
             class:list={['nav-link', { active: pathname === link.href || (link.href !== '/' && pathname.startsWith(link.href)) }]}
-          >
-            {link.label}
-          </a>
+          >{link.label}</a>
         ))}
       </nav>
 
       <!-- Desktop CTAs -->
-      <div class="nav-ctas">
-        <a href="/login" class="btn btn-outline btn-sm">Login</a>
-        <a href="/courses" class="btn btn-primary btn-sm">Enroll Now</a>
+      <div class="nav-ctas" id="nav-ctas">
+        <a href="/login" class="btn btn-outline btn-sm" id="nav-login-btn">Login</a>
+        <a href="https://wa.me/917009933289" target="_blank" rel="noopener" class="btn-enchant" id="nav-cta-btn">
+          <span class="enchant-glow"></span>
+          <span class="enchant-text">Enroll Now</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </a>
       </div>
 
-      <!-- Mobile hamburger -->
+      <!-- Hamburger -->
       <button class="hamburger" id="hamburger-btn" aria-label="Open menu" aria-expanded="false">
         <span></span><span></span><span></span>
       </button>
@@ -52,157 +60,279 @@ const pathname = Astro.url.pathname
 
   <!-- Mobile menu -->
   <div class="mobile-menu" id="mobile-menu" aria-hidden="true">
-    <nav>
-      {links.map(link => (
+    <nav id="mobile-nav-links">
+      {defaultLinks.map(link => (
         <a
           href={link.href}
           class:list={['mobile-link', { active: pathname === link.href }]}
-        >
-          {link.label}
-        </a>
+        >{link.label}</a>
       ))}
     </nav>
-    <div class="mobile-ctas">
+    <div class="mobile-ctas" id="mobile-ctas">
       <a href="/login" class="btn btn-outline" style="flex:1;justify-content:center">Login</a>
-      <a href="/courses" class="btn btn-primary" style="flex:1;justify-content:center">Enroll Now</a>
+      <a href="https://wa.me/917009933289" target="_blank" rel="noopener" class="btn-enchant" style="flex:1;justify-content:center">
+        <span class="enchant-glow"></span>
+        <span class="enchant-text">Enroll Now</span>
+      </a>
     </div>
   </div>
 </header>
 
+<script>
+  import { createClient } from '@supabase/supabase-js'
+
+  // Hamburger
+  const hb = document.getElementById('hamburger-btn')
+  const mm = document.getElementById('mobile-menu')
+  hb?.addEventListener('click', () => {
+    const open = mm?.classList.toggle('open')
+    hb.setAttribute('aria-expanded', String(open ?? false))
+    document.body.style.overflow = open ? 'hidden' : ''
+  })
+  document.querySelectorAll('.mobile-link, #mobile-ctas a').forEach(a => {
+    a.addEventListener('click', () => {
+      mm?.classList.remove('open')
+      hb?.setAttribute('aria-expanded', 'false')
+      document.body.style.overflow = ''
+    })
+  })
+
+  // Sticky shadow on scroll
+  const nav = document.getElementById('main-navbar')
+  window.addEventListener('scroll', () => {
+    nav?.classList.toggle('scrolled', window.scrollY > 20)
+  })
+
+  // ── LIVE UPDATE FROM SUPABASE — no rebuild needed ──
+  const url = (window as any).__SB_URL
+  const key = (window as any).__SB_KEY
+  if (url && key) {
+    const sb = createClient(url, key)
+    const pathname = window.location.pathname
+
+    // Branding (logo)
+    sb.from('site_settings').select('value').eq('key','branding').single().then(({data}) => {
+      if (!data?.value) return
+      const b = data.value
+      const mark = document.getElementById('logo-mark')
+      const text = document.getElementById('logo-text')
+      const size = parseInt(b.logo_size) || 38
+
+      if (mark) {
+        mark.style.width = size + 'px'
+        mark.style.height = size + 'px'
+        mark.style.fontSize = Math.round(size * 0.45) + 'px'
+        if (b.logo_url && b.logo_url.trim()) {
+          mark.innerHTML = `<img src="${b.logo_url}" alt="${b.brand_name||'ATEC'}" style="width:100%;height:100%;object-fit:contain;border-radius:inherit" />`
+          mark.style.background = 'transparent'
+          mark.style.padding = '0'
+        }
+      }
+      if (text) {
+        if (b.show_text === false) {
+          text.style.display = 'none'
+        } else {
+          const nameEl = text.querySelector('.logo-name')
+          const subEl  = text.querySelector('.logo-sub')
+          if (nameEl && b.brand_name)    nameEl.textContent = b.brand_name
+          if (subEl && b.brand_tagline)  subEl.textContent  = b.brand_tagline
+        }
+      }
+    })
+
+    // Navigation links + CTA
+    sb.from('site_settings').select('value').eq('key','navigation').single().then(({data}) => {
+      if (!data?.value) return
+      const n = data.value
+
+      // Desktop nav
+      if (Array.isArray(n.links) && n.links.length > 0) {
+        const nl = document.getElementById('nav-links')
+        const ml = document.getElementById('mobile-nav-links')
+        const buildLink = (link: any, isMobile = false) => {
+          const isActive = pathname === link.href || (link.href !== '/' && pathname.startsWith(link.href))
+          const cls = isMobile ? 'mobile-link' : 'nav-link'
+          return `<a href="${link.href}" class="${cls}${isActive ? ' active' : ''}">${link.label}</a>`
+        }
+        if (nl) nl.innerHTML = n.links.map((l: any) => buildLink(l, false)).join('')
+        if (ml) ml.innerHTML = n.links.map((l: any) => buildLink(l, true)).join('')
+        // Re-bind mobile close on click
+        document.querySelectorAll('.mobile-link').forEach(a => {
+          a.addEventListener('click', () => {
+            mm?.classList.remove('open')
+            document.body.style.overflow = ''
+          })
+        })
+      }
+
+      // CTA button (Enroll Now)
+      const cta = document.getElementById('nav-cta-btn') as HTMLAnchorElement
+      if (cta) {
+        if (n.cta_link) cta.href = n.cta_link
+        const ctaText = cta.querySelector('.enchant-text')
+        if (ctaText && n.cta_text) ctaText.textContent = n.cta_text
+
+        // Set target=_blank only for external/WhatsApp links
+        const isExternal = (n.cta_link || '').startsWith('http')
+        if (isExternal) {
+          cta.target = '_blank'
+          cta.rel = 'noopener'
+        } else {
+          cta.removeAttribute('target')
+          cta.removeAttribute('rel')
+        }
+
+        // Apply style preset
+        cta.classList.remove('cta-style-lemon','cta-style-pink','cta-style-orange','cta-style-blue','cta-style-green')
+        cta.classList.add('cta-style-' + (n.cta_style || 'lemon'))
+      }
+
+      // Mobile CTA
+      const mCta = document.querySelector('#mobile-ctas .btn-enchant') as HTMLAnchorElement
+      if (mCta) {
+        if (n.cta_link) mCta.href = n.cta_link
+        const t = mCta.querySelector('.enchant-text')
+        if (t && n.cta_text) t.textContent = n.cta_text
+        if ((n.cta_link || '').startsWith('http')) {
+          mCta.target = '_blank'
+          mCta.rel = 'noopener'
+        }
+      }
+
+      // Hide login if disabled
+      if (n.show_login === false) {
+        const li = document.getElementById('nav-login-btn')
+        if (li) li.style.display = 'none'
+      }
+    })
+
+    // Theme colors (CSS variables)
+    sb.from('site_settings').select('value').eq('key','theme').single().then(({data}) => {
+      if (!data?.value) return
+      const t = data.value
+      const root = document.documentElement
+      if (t.primary)   root.style.setProperty('--navy', t.primary)
+      if (t.accent)    root.style.setProperty('--lemon', t.accent)
+      if (t.navy_dark) root.style.setProperty('--navy-dark', t.navy_dark)
+      if (t.off_white) root.style.setProperty('--off-white', t.off_white)
+    })
+  }
+</script>
+
 <style>
 .navbar {
-  position: sticky;
-  top: 0;
-  z-index: 999;
+  position: sticky; top: 0; z-index: 999;
   background: rgba(255,255,255,0.97);
   backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--gray-200);
   transition: box-shadow 0.3s;
 }
 .navbar.scrolled { box-shadow: var(--shadow-md); }
-
-.nav-inner {
-  display: flex;
-  align-items: center;
-  height: var(--nav-height);
-  gap: 32px;
-}
+.nav-inner { display: flex; align-items: center; height: var(--nav-height); gap: 32px; }
 
 /* Logo */
-.nav-logo { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+.nav-logo { display: flex; align-items: center; gap: 10px; flex-shrink: 0; text-decoration: none; }
 .logo-mark {
   width: 38px; height: 38px;
-  background: var(--navy);
-  border-radius: 10px;
+  background: var(--navy); border-radius: 10px;
   display: flex; align-items: center; justify-content: center;
-  font-family: var(--font-display);
-  font-weight: 800;
-  font-size: 18px;
+  font-family: var(--font-display); font-weight: 800; font-size: 18px;
   color: var(--lemon);
-  letter-spacing: -1px;
+  transition: all 0.2s;
 }
 .logo-text { display: flex; flex-direction: column; line-height: 1.1; }
-.logo-name {
-  font-family: var(--font-display);
-  font-weight: 800;
-  font-size: 18px;
-  color: var(--navy);
-  letter-spacing: -0.5px;
-}
-.logo-sub { font-size: 10px; color: var(--text-muted); font-weight: 400; letter-spacing: 0.3px; }
+.logo-name { font-family: var(--font-display); font-weight: 800; font-size: 18px; color: var(--navy); }
+.logo-sub  { font-size: 11px; color: var(--text-muted); }
 
-/* Desktop nav */
+/* Nav links */
 .nav-links {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  flex: 1;
+  display: flex; gap: 28px; flex: 1; justify-content: center;
 }
 .nav-link {
-  padding: 6px 14px;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--text-secondary);
-  transition: all 0.15s;
+  font-size: 14px; font-weight: 500; color: var(--text-secondary);
+  text-decoration: none; padding: 8px 0;
+  position: relative; transition: color 0.15s;
 }
-.nav-link:hover { background: var(--gray-100); color: var(--navy); }
-.nav-link.active { color: var(--navy); font-weight: 600; background: #eff6ff; }
+.nav-link:hover { color: var(--navy); }
+.nav-link.active { color: var(--navy); font-weight: 600; }
+.nav-link.active::after {
+  content: ''; position: absolute; bottom: -2px; left: 0; right: 0;
+  height: 2px; background: var(--lemon); border-radius: 2px;
+}
 
-.nav-ctas { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+/* CTAs */
+.nav-ctas { display: flex; gap: 10px; align-items: center; flex-shrink: 0; }
+
+/* ── ENCHANTING CTA BUTTON ────────────────────────────── */
+.btn-enchant {
+  position: relative;
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 9px 22px;
+  background: linear-gradient(135deg, #d4f01a 0%, #a8e000 50%, #d4f01a 100%);
+  background-size: 200% 200%;
+  color: var(--navy-dark, #0f2347);
+  font-family: var(--font-display, 'Sora', sans-serif);
+  font-weight: 800; font-size: 13.5px;
+  border-radius: 10px; text-decoration: none;
+  box-shadow: 0 4px 16px rgba(212, 240, 26, 0.4), 0 0 0 1px rgba(15, 35, 71, 0.06);
+  transition: all 0.25s ease;
+  overflow: hidden;
+  animation: enchant-shimmer 3s ease infinite;
+  isolation: isolate;
+}
+.btn-enchant:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(212, 240, 26, 0.55), 0 0 0 1px rgba(15, 35, 71, 0.1);
+}
+.btn-enchant:active { transform: translateY(0); }
+.enchant-glow {
+  position: absolute; inset: 0;
+  background: radial-gradient(circle at var(--mx, 50%) var(--my, 50%), rgba(255,255,255,0.6), transparent 50%);
+  opacity: 0; transition: opacity 0.2s;
+  pointer-events: none; z-index: 0;
+}
+.btn-enchant:hover .enchant-glow { opacity: 1; }
+.enchant-text, .btn-enchant svg { position: relative; z-index: 1; }
+@keyframes enchant-shimmer {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+/* Color presets for CTA */
+.cta-style-pink   { background: linear-gradient(135deg, #ff6b9d 0%, #c44569 50%, #ff6b9d 100%); color: #fff; box-shadow: 0 4px 16px rgba(196, 69, 105, 0.4); }
+.cta-style-orange { background: linear-gradient(135deg, #ffa726 0%, #fb8c00 50%, #ffa726 100%); color: #fff; box-shadow: 0 4px 16px rgba(251, 140, 0, 0.4); }
+.cta-style-blue   { background: linear-gradient(135deg, #4ea4ff 0%, #1c3d7a 50%, #4ea4ff 100%); color: #fff; box-shadow: 0 4px 16px rgba(28, 61, 122, 0.4); }
+.cta-style-green  { background: linear-gradient(135deg, #25d366 0%, #128c7e 50%, #25d366 100%); color: #fff; box-shadow: 0 4px 16px rgba(37, 211, 102, 0.4); }
+.cta-style-lemon  { /* default already styled above */ }
 
 /* Hamburger */
 .hamburger {
   display: none;
-  flex-direction: column;
-  gap: 5px;
-  padding: 8px;
-  margin-left: auto;
-  border-radius: 8px;
+  width: 36px; height: 36px;
+  background: none; border: none; cursor: pointer;
+  flex-direction: column; gap: 5px; justify-content: center; align-items: center;
 }
-.hamburger:hover { background: var(--gray-100); }
-.hamburger span {
-  display: block;
-  width: 22px; height: 2px;
-  background: var(--navy);
-  border-radius: 2px;
-  transition: all 0.3s;
-}
-.hamburger.open span:nth-child(1) { transform: rotate(45deg) translate(5px, 5px); }
-.hamburger.open span:nth-child(2) { opacity: 0; }
-.hamburger.open span:nth-child(3) { transform: rotate(-45deg) translate(5px, -5px); }
+.hamburger span { width: 22px; height: 2px; background: var(--navy); border-radius: 2px; transition: all 0.3s; }
 
-/* Mobile menu */
+/* Mobile */
 .mobile-menu {
   display: none;
-  flex-direction: column;
-  padding: 16px;
-  border-top: 1px solid var(--gray-200);
-  background: var(--white);
-  gap: 4px;
+  position: fixed; top: var(--nav-height); left: 0; right: 0; bottom: 0;
+  background: #fff; z-index: 998;
+  padding: 24px; overflow-y: auto;
 }
-.mobile-menu.open { display: flex; }
+.mobile-menu.open { display: block; }
 .mobile-link {
-  display: block;
-  padding: 12px 16px;
-  border-radius: 8px;
-  font-size: 15px;
-  font-weight: 500;
-  color: var(--text-secondary);
+  display: block; padding: 16px 0;
+  font-family: var(--font-display); font-size: 17px; font-weight: 600;
+  color: var(--text-primary); text-decoration: none;
+  border-bottom: 1px solid var(--gray-200);
 }
-.mobile-link:hover, .mobile-link.active {
-  background: var(--gray-50);
-  color: var(--navy);
-}
-.mobile-ctas {
-  display: flex;
-  gap: 10px;
-  margin-top: 12px;
-  padding-top: 12px;
-  border-top: 1px solid var(--gray-200);
-}
+.mobile-link.active { color: var(--navy); }
+.mobile-ctas { display: flex; gap: 10px; margin-top: 24px; }
 
 @media (max-width: 900px) {
   .nav-links, .nav-ctas { display: none; }
   .hamburger { display: flex; }
 }
 </style>
-
-<script>
-const navbar = document.getElementById('main-navbar')
-const hamburger = document.getElementById('hamburger-btn')
-const mobileMenu = document.getElementById('mobile-menu')
-
-// Scroll shadow
-window.addEventListener('scroll', () => {
-  navbar?.classList.toggle('scrolled', window.scrollY > 10)
-}, { passive: true })
-
-// Mobile toggle
-hamburger?.addEventListener('click', () => {
-  const open = mobileMenu?.classList.toggle('open')
-  hamburger.classList.toggle('open', open)
-  hamburger.setAttribute('aria-expanded', String(open))
-  mobileMenu?.setAttribute('aria-hidden', String(!open))
-})
-</script>
