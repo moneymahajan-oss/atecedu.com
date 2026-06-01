@@ -5,13 +5,13 @@ import { supabase } from '../../lib/supabase'
 
 export async function getStaticPaths() {
   try {
-    const { data: posts } = await supabase
+    const { data } = await supabase
       .from('blog_posts')
       .select('slug')
       .eq('is_published', true)
-    return (posts ?? []).map((p: { slug: string }) => ({ params: { slug: p.slug } }))
+    return (data ?? []).map((p: { slug: string }) => ({ params: { slug: p.slug } }))
   } catch (e) {
-    return [] // table doesn't exist yet — no blog pages built
+    return []
   }
 }
 
@@ -64,7 +64,7 @@ const jsonLd = {
   "dateModified": post.updated_at ?? post.published_at,
   "mainEntityOfPage": { "@type": "WebPage", "@id": `https://atecedu.com/blog/${slug}` }
 }
-
+---
 
 <BaseLayout
   title={post.meta_title ?? `${post.title} | ATEC Blog`}
