@@ -75,10 +75,23 @@ function Mgr() {
         h('div',{style:{gridColumn:'1/-1'}}, lbl('Sub Heading'),
           h('textarea',{value:hero.subheading||'',onChange:e=>setHero(p=>({...p,subheading:e.target.value})),rows:2,style:{...s,height:'auto',resize:'vertical'},placeholder:'Online, hybrid & classroom courses...'})
         ),
-        h('div',{style:{gridColumn:'1/-1'}}, lbl('YouTube Video ID for Hero (optional — leave blank for placeholder card)'),
-          h('input',{type:'text',value:hero.youtube_video_id||'',onChange:e=>setHero(p=>({...p,youtube_video_id:e.target.value})),style:s,placeholder:'e.g. dQw4w9WgXcQ (from youtube.com/watch?v=ID)'}),
-          hero.youtube_video_id && h('div',{style:{marginTop:'8px',fontSize:'12px',color:'#64748b'}},
-            `Preview: https://img.youtube.com/vi/${hero.youtube_video_id}/hqdefault.jpg`
+        h('div',{style:{gridColumn:'1/-1'}}, lbl('YouTube Video ID or URL for Hero (paste full URL or just the ID)'),
+          h('input',{type:'text',value:hero.youtube_video_id||'',
+            onChange:e=>{
+              // Auto-extract video ID from any YouTube URL format
+              let val = e.target.value.trim()
+              // youtu.be/ID
+              const short = val.match(/youtu\.be\/([a-zA-Z0-9_-]{11})/)
+              // youtube.com/watch?v=ID or /embed/ID or /shorts/ID
+              const long  = val.match(/(?:v=|\/embed\/|\/shorts\/|\/v\/)([a-zA-Z0-9_-]{11})/)
+              if (short) val = short[1]
+              else if (long) val = long[1]
+              setHero(p=>({...p,youtube_video_id:val}))
+            },
+            style:s,placeholder:'Paste YouTube URL or just the video ID'}),
+          hero.youtube_video_id && h('div',{style:{marginTop:'8px',display:'flex',gap:'12px',alignItems:'center'}},
+            h('img',{src:`https://img.youtube.com/vi/${hero.youtube_video_id}/mqdefault.jpg`,alt:'Thumbnail preview',style:{width:'120px',borderRadius:'6px',border:'1px solid #e2e8f0'}}),
+            h('div',{style:{fontSize:'12px',color:'#166534',fontWeight:'600'}},`✅ Video ID: ${hero.youtube_video_id}`)
           )
         )
       ),

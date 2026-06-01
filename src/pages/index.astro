@@ -196,11 +196,18 @@ import HomepageDynamic from '../components/home/HomepageDynamic'
       }
       // Swap placeholder for YouTube embed if video ID set
       if (v.youtube_video_id) {
+        // Extract ID if a full URL was accidentally saved
+        let ytId = v.youtube_video_id.trim()
+        const short = ytId.match(/youtu\.be\/([a-zA-Z0-9_-]{11})/)
+        const long  = ytId.match(/(?:v=|\/embed\/|\/shorts\/|\/v\/)([a-zA-Z0-9_-]{11})/)
+        if (short) ytId = short[1]
+        else if (long) ytId = long[1]
+
         const placeholder = document.getElementById('hero-placeholder')
-        if (placeholder) {
+        if (placeholder && ytId.length === 11) {
           const wrap = document.createElement('div')
           wrap.className = 'hero-video-wrap'
-          wrap.innerHTML = `<div class="video-embed"><iframe src="https://www.youtube.com/embed/${v.youtube_video_id}?autoplay=1&mute=1&loop=1&playlist=${v.youtube_video_id}&controls=0&modestbranding=1" allow="autoplay; encrypted-media" allowfullscreen loading="lazy"></iframe></div>`
+          wrap.innerHTML = `<div class="video-embed"><iframe src="https://www.youtube.com/embed/${ytId}?autoplay=1&mute=1&loop=1&playlist=${ytId}&controls=0&modestbranding=1" allow="autoplay; encrypted-media" allowfullscreen loading="lazy"></iframe></div>`
           placeholder.replaceWith(wrap)
         }
       }
