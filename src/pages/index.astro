@@ -261,10 +261,19 @@ import HomepageDynamic from '../components/home/HomepageDynamic'
 
         const visual = document.getElementById('hero-visual')
         if (visual && ytId.length === 11) {
+          // Use inline styles — Astro's scoped CSS won't apply to JS-inserted elements
           visual.innerHTML = `
-            <div class="video-frame">
-              <iframe src="https://www.youtube.com/embed/${ytId}?autoplay=1&mute=1&loop=1&playlist=${ytId}&controls=0&modestbranding=1&rel=0&showinfo=0&playsinline=1" allow="autoplay; encrypted-media" allowfullscreen loading="lazy" frameborder="0"></iframe>
-            </div>`
+            <iframe
+              src="https://www.youtube.com/embed/${ytId}?autoplay=1&mute=1&loop=1&playlist=${ytId}&controls=0&modestbranding=1&rel=0&showinfo=0&playsinline=1&iv_load_policy=3"
+              allow="autoplay; encrypted-media; picture-in-picture"
+              allowfullscreen
+              loading="lazy"
+              frameborder="0"
+              style="position:absolute;top:0;left:0;width:100%;height:100%;border:none;border-radius:24px"
+            ></iframe>`
+          // Make sure the card is positioned for absolute child
+          visual.style.position = 'relative'
+          visual.style.overflow = 'hidden'
         }
       }
     })
@@ -436,7 +445,8 @@ import HomepageDynamic from '../components/home/HomepageDynamic'
 /* Visual card */
 .hero-visual-card {
   position: relative;
-  aspect-ratio: 4 / 3;
+  aspect-ratio: 16 / 10;
+  min-height: 360px;
   background: linear-gradient(135deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 100%);
   border: 1px solid rgba(255,255,255,0.1);
   border-radius: 24px;
