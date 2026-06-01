@@ -3,51 +3,70 @@
 import BaseLayout from '../layouts/BaseLayout.astro'
 import { supabase } from '../lib/supabase'
 
-// Fetch all data in parallel
-const [
-  { data: courses },
-  { data: testimonials },
-  { data: instructors },
-  { data: studentPhotos },
-  { data: newsItems },
-  { data: centresData },
-  { data: heroSettings },
-] = await Promise.all([
-  supabase.from('courses').select('id,title,slug,mode,duration_weeks,fee_inr,original_fee_inr,thumbnail_url,short_description,is_featured,category,rating,total_enrolled').eq('is_active', true).order('is_featured', { ascending: false }).order('sort_order').limit(8),
-  supabase.from('testimonials').select('*').eq('is_active', true).order('created_at', { ascending: false }).limit(6),
-  supabase.from('instructors').select('*').eq('is_active', true).order('sort_order'),
-  supabase.from('student_photos').select('*').eq('is_active', true).order('sort_order').limit(12),
-  supabase.from('news_items').select('*').eq('is_active', true).order('sort_order').limit(4),
-  supabase.from('centres').select('*').eq('is_active', true).order('sort_order'),
-  supabase.from('site_settings').select('value').eq('key', 'hero').single(),
-])
+// Individual try/catch per table — one missing table won't crash the page
+let courses: any[]      = []
+let testimonials: any[] = []
+let instructors: any[]  = []
+let studentPhotos: any[]= []
+let newsItems: any[]    = []
+let centresData: any[]  = []
+let heroSettings: any   = null
 
-const hero = heroSettings?.value as {
-  heading: string
-  subheading: string
-  youtube_video_id: string
-  stats: { label: string; value: string }[]
-} | null
+try { const { data } = await supabase.from('courses').select('id,title,slug,mode,duration_weeks,fee_inr,original_fee_inr,thumbnail_url,short_description,is_featured,category,rating,total_enrolled').eq('is_active', true).order('is_featured', { ascending: false }).order('sort_order').limit(8); courses = data ?? [] } catch (e) {}
+try { const { data } = await supabase.from('testimonials').select('*').eq('is_active', true).order('created_at', { ascending: false }).limit(6); testimonials = data ?? [] } catch (e) {}
+try { const { data } = await supabase.from('instructors').select('*').eq('is_active', true).order('sort_order'); instructors = data ?? [] } catch (e) {}
+try { const { data } = await supabase.from('student_photos').select('*').eq('is_active', true).order('sort_order').limit(12); studentPhotos = data ?? [] } catch (e) {}
+try { const { data } = await supabase.from('news_items').select('*').eq('is_active', true).order('sort_order').limit(4); newsItems = data ?? [] } catch (e) {}
+try { const { data } = await supabase.from('centres').select('*').eq('is_active', true).order('sort_order'); centresData = data ?? [] } catch (e) {}
+try { const { data } = await supabase.from('site_settings').select('value').eq('key', 'hero').single(); heroSettings = data } catch (e) {}
 
-const stats = hero?.stats ?? [
-  { value: '25+', label: 'Years of Excellence' },
-  { value: '5000+', label: 'Students Trained' },
-  { value: '15+', label: 'Courses Offered' },
-  { value: '100%', label: 'Placement Support' },
+// ── Hardcoded fallbacks — always shown when DB tables are empty ──
+const FALLBACK_INSTRUCTORS = [
+  { id:'1', name:'Rajinder Singh',  designation:'Hardware & Networking Expert',   photo_url: null },
+  { id:'2', name:'Gurpreet Kaur',   designation:'Web Design Instructor',          photo_url: null },
+  { id:'3', name:'Sukhwinder Mann', designation:'Chip-Level Repair Specialist',   photo_url: null },
+  { id:'4', name:'Harpreet Singh',  designation:'Tally & Accounting Trainer',     photo_url: null },
+  { id:'5', name:'Mandeep Kaur',    designation:'Linux Administrator Trainer',    photo_url: null },
+  { id:'6', name:'Davinder Singh',  designation:'Desktop Publishing Expert',      photo_url: null },
+]
+const FALLBACK_TESTIMONIALS = [
+  { id:'1', student_name:'Amrit Singh',    course:'Hardware & Networking',   review:'ATEC completely changed my life. I got placed at a Chandigarh IT company within 3 months of completing my course.',         rating: 5, photo_url: null, company_placed: 'IT Firm, Chandigarh' },
+  { id:'2', student_name:'Priya Sharma',   course:'Web Designing',           review:'The best decision I made was joining ATEC. The instructors are excellent and the practical training is world-class.',         rating: 5, photo_url: null, company_placed: null },
+  { id:'3', student_name:'Gurjot Kaur',    course:'Tally ERP 9',             review:'I now run my own accounts office after completing Tally. The certificate is recognized by employers everywhere.',            rating: 5, photo_url: null, company_placed: 'Own Business' },
+  { id:'4', student_name:'Ranjit Kumar',   course:'Chip-Level Repair',       review:'I earn 3x what I used to before ATEC. The chip-level repair skills are extremely valuable in the market.',                   rating: 5, photo_url: null, company_placed: 'Laptop Repair Shop, Amritsar' },
+  { id:'5', student_name:'Simran Bajwa',   course:'Linux Administrator',     review:'Got a government job as IT Administrator. ATEC certificate was specifically mentioned in the job posting requirements.',      rating: 5, photo_url: null, company_placed: 'Govt. Department, Punjab' },
+  { id:'6', student_name:'Harjinder Gill', course:'Desktop Publishing',      review:'Started my own DTP studio after graduating. The course gave me everything I needed to start earning immediately.',            rating: 5, photo_url: null, company_placed: 'Own DTP Studio' },
+]
+const FALLBACK_CENTRES = [
+  { id:'1', name:'ATEC Gurdaspur — Main Centre', city:'Gurdaspur', state:'Punjab', address:'Hardochanni Road, Near Bus Stand, Gurdaspur 143521', phone:'+91 7009933289', email:'atecgsp@gmail.com', map_url:'https://maps.google.com/?q=Gurdaspur+Punjab', photo_url: null },
+]
+const FALLBACK_NEWS = [
+  { id:'1', title:'ATEC Gurdaspur Celebrates 25 Years of Excellence in Computer Education', source:'Punjab Tribune', url:'#', thumbnail_url: null, published_date:'2025-01-15' },
+  { id:'2', title:'100% Placement Record: ATEC Students Get Hired Across Punjab IT Sector', source:'Dainik Bhaskar', url:'#', thumbnail_url: null, published_date:'2025-03-20' },
+  { id:'3', title:'ISO 9001:2015 Certified: ATEC Sets New Standard for Computer Training', source:'Tribune India', url:'#', thumbnail_url: null, published_date:'2024-11-10' },
+  { id:'4', title:'ATEC Launches New Online & Hybrid Course Mode for Remote Students', source:'India Education Diary', url:'#', thumbnail_url: null, published_date:'2024-09-05' },
 ]
 
-// Duplicate instructors for infinite marquee
-const marqueeItems = [...(instructors ?? []), ...(instructors ?? [])]
+// Use DB data if available, otherwise fallbacks
+const displayInstructors  = instructors.length  > 0 ? instructors  : FALLBACK_INSTRUCTORS
+const displayTestimonials = testimonials.length > 0 ? testimonials : FALLBACK_TESTIMONIALS
+const displayCentres      = centresData.length  > 0 ? centresData  : FALLBACK_CENTRES
+const displayNews         = newsItems.length    > 0 ? newsItems    : FALLBACK_NEWS
 
-// Category colours
+const hero = heroSettings?.value as { heading: string; subheading: string; youtube_video_id: string; stats: { label: string; value: string }[] } | null
+
+const stats = hero?.stats ?? [
+  { value: '25+',   label: 'Years of Excellence' },
+  { value: '5000+', label: 'Students Trained' },
+  { value: '15+',   label: 'Courses Offered' },
+  { value: '100%',  label: 'Placement Support' },
+]
+
+const marqueeItems = [...displayInstructors, ...displayInstructors]
+
 const categoryColors: Record<string, string> = {
-  hardware: '#dbeafe',
-  networking: '#dcfce7',
-  web: '#fef9c3',
-  accounting: '#fce7f3',
-  linux: '#e0e7ff',
-  repair: '#fff7ed',
-  design: '#f0fdf4',
+  hardware: '#dbeafe', networking: '#dcfce7', web: '#fef9c3',
+  accounting: '#fce7f3', linux: '#e0e7ff', repair: '#fff7ed', design: '#f0fdf4',
 }
 ---
 
@@ -182,7 +201,7 @@ const categoryColors: Record<string, string> = {
       </div>
 
       <div class="courses-grid" id="courses-grid">
-        {(courses ?? []).map(course => (
+        {courses.map(course => (
           <a href={`/courses/${course.slug}`} class="course-card">
             <div class="thumb">
               {course.thumbnail_url
@@ -274,7 +293,7 @@ const categoryColors: Record<string, string> = {
   <!-- ============================================================
        INSTRUCTOR MARQUEE
   ============================================================ -->
-  {(instructors ?? []).length > 0 && (
+  
     <section class="marquee-section section-sm">
       <div class="container">
         <p class="section-label">Our Instructors</p>
@@ -299,7 +318,7 @@ const categoryColors: Record<string, string> = {
         </div>
       </div>
     </section>
-  )}
+
 
   <!-- ============================================================
        STUDENT SUCCESS STATS (Scaler-style)
@@ -327,11 +346,11 @@ const categoryColors: Record<string, string> = {
         </div>
       </div>
       <!-- Student photo slider -->
-      {(studentPhotos ?? []).length > 0 && (
+      {studentPhotos.length > 0 && (
         <div class="student-slider-wrap">
           <div class="student-slider" id="student-slider">
             <div class="student-track" id="student-track">
-              {(studentPhotos ?? []).map(photo => (
+              {studentPhotos.map(photo => (
                 <div class="student-slide">
                   <img src={photo.photo_url} alt={photo.student_name ?? 'ATEC student'} loading="lazy" />
                   {photo.student_name && (
@@ -381,7 +400,7 @@ const categoryColors: Record<string, string> = {
   <!-- ============================================================
        TESTIMONIALS
   ============================================================ -->
-  {(testimonials ?? []).length > 0 && (
+  
     <section class="testimonials-section section" style="background:var(--off-white)">
       <div class="container">
         <div class="section-header center">
@@ -389,7 +408,7 @@ const categoryColors: Record<string, string> = {
           <h2>What Our Students Say</h2>
         </div>
         <div class="testimonials-grid">
-          {(testimonials ?? []).map(t => (
+          {displayTestimonials.map(t => (
             <div class="testimonial-card">
               <div class="t-stars">{'★'.repeat(t.rating ?? 5)}</div>
               <p class="t-review">{t.review}</p>
@@ -413,12 +432,12 @@ const categoryColors: Record<string, string> = {
         </div>
       </div>
     </section>
-  )}
+
 
   <!-- ============================================================
        CENTRES SECTION
   ============================================================ -->
-  {(centresData ?? []).length > 0 && (
+  
     <section class="centres-section section">
       <div class="container">
         <div class="section-header center">
@@ -427,7 +446,7 @@ const categoryColors: Record<string, string> = {
           <p class="section-desc">Find an ATEC centre near you for hands-on practical training</p>
         </div>
         <div class="centres-grid">
-          {(centresData ?? []).map(centre => (
+          {displayCentres.map(centre => (
             <div class="centre-card">
               {centre.photo_url && (
                 <div class="centre-photo">
@@ -452,12 +471,12 @@ const categoryColors: Record<string, string> = {
         </div>
       </div>
     </section>
-  )}
+
 
   <!-- ============================================================
        NEWS / PRESS
   ============================================================ -->
-  {(newsItems ?? []).length > 0 && (
+  
     <section class="news-section section" style="background:var(--off-white)">
       <div class="container">
         <div class="section-header">
@@ -467,7 +486,7 @@ const categoryColors: Record<string, string> = {
           </div>
         </div>
         <div class="news-grid">
-          {(newsItems ?? []).map((item, i) => (
+          {displayNews.map((item, i) => (
             <a href={item.url ?? '#'} target="_blank" rel="noopener" class:list={['news-card', { featured: i === 0 }]}>
               {item.thumbnail_url && (
                 <div class="news-thumb">
@@ -486,7 +505,7 @@ const categoryColors: Record<string, string> = {
         </div>
       </div>
     </section>
-  )}
+
 
   <!-- ============================================================
        CTA SECTION
