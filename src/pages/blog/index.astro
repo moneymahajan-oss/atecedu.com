@@ -1,10 +1,10 @@
 ---
 // src/pages/blog/index.astro
-// FIXED: try/catch around all Supabase queries so missing tables don't break build
 import BaseLayout from '../../layouts/BaseLayout.astro'
 import { supabase } from '../../lib/supabase'
 
-// Wrap every query in try/catch — if tables don't exist yet, page still builds
+// ── Fetch from Supabase, fall back to hardcoded data if empty ──
+
 let posts: any[] = []
 let youtubeVideos: any[] = []
 let podcasts: any[] = []
@@ -15,8 +15,8 @@ try {
     .select('id,title,slug,excerpt,thumbnail_url,author,published_at,category,read_time_mins,tags')
     .eq('is_published', true)
     .order('published_at', { ascending: false })
-  posts = data ?? []
-} catch (e) { /* table may not exist yet */ }
+  if (data && data.length > 0) posts = data
+} catch (e) {}
 
 try {
   const { data } = await supabase
@@ -26,8 +26,8 @@ try {
     .eq('is_featured', true)
     .order('sort_order')
     .limit(4)
-  youtubeVideos = data ?? []
-} catch (e) { /* table may not exist yet */ }
+  if (data && data.length > 0) youtubeVideos = data
+} catch (e) {}
 
 try {
   const { data } = await supabase
@@ -36,11 +36,95 @@ try {
     .eq('is_published', true)
     .order('sort_order')
     .limit(3)
-  podcasts = data ?? []
-} catch (e) { /* table may not exist yet */ }
+  if (data && data.length > 0) podcasts = data
+} catch (e) {}
 
-// Get unique categories from posts
-const categories = ['All', ...new Set(posts.map((p: any) => p.category).filter(Boolean))]
+// ── Hardcoded fallbacks — shown when Supabase has no data yet ──
+
+const FALLBACK_POSTS = [
+  {
+    id: '1', slug: 'career-hardware-networking-2026',
+    title: 'How to Start a Career in Hardware & Networking in 2026',
+    excerpt: 'The hardware and networking industry is booming in India. Here is your complete roadmap to get job-ready in 6 months from ATEC Gurdaspur.',
+    thumbnail_url: null, author: 'ATEC Team',
+    published_at: new Date(Date.now() - 5 * 86400000).toISOString(),
+    category: 'Career Guide', read_time_mins: 6, tags: ['hardware', 'networking', 'career'],
+  },
+  {
+    id: '2', slug: 'chip-level-laptop-repair-2026',
+    title: 'Chip-Level Laptop Repair: Is It Worth Learning in 2026?',
+    excerpt: 'Chip-level repair is one of the most in-demand and highest-paying skills in electronics. Find out if this course is right for you.',
+    thumbnail_url: null, author: 'ATEC Team',
+    published_at: new Date(Date.now() - 12 * 86400000).toISOString(),
+    category: 'Course Guide', read_time_mins: 7, tags: ['chip-level', 'hardware', 'career'],
+  },
+  {
+    id: '3', slug: 'web-designing-vs-web-development',
+    title: 'Web Designing vs Web Development: Which Career is Right for You?',
+    excerpt: 'Confused between web designing and web development? This guide breaks down the difference, job prospects, and salary for each.',
+    thumbnail_url: null, author: 'ATEC Team',
+    published_at: new Date(Date.now() - 20 * 86400000).toISOString(),
+    category: 'Career Guide', read_time_mins: 5, tags: ['web-design', 'career'],
+  },
+]
+
+const FALLBACK_VIDEOS = [
+  {
+    id: '1', video_id: 'ATEC_VID_001',
+    title: 'Hardware & Networking Demo Class — Free Preview',
+    description: 'Watch a complete demo class from our Hardware & Networking course. See the syllabus, teaching style, and what you will learn.',
+    category: 'course-demo', thumbnail_url: null, duration: null, view_count: null, channel_name: 'ATEC Educational Society',
+  },
+  {
+    id: '2', video_id: 'ATEC_VID_002',
+    title: 'Chip-Level Motherboard Repair — Beginner Tutorial',
+    description: 'Step-by-step chip-level motherboard repair tutorial. Learn board diagnosis and basic soldering techniques.',
+    category: 'tutorial', thumbnail_url: null, duration: null, view_count: null, channel_name: 'ATEC Educational Society',
+  },
+  {
+    id: '3', video_id: 'ATEC_VID_003',
+    title: 'ATEC Student Success Stories — Placement Drive 2025',
+    description: '96% of our students were placed within 3 months. Watch our placement drive highlights.',
+    category: 'event', thumbnail_url: null, duration: null, view_count: null, channel_name: 'ATEC Educational Society',
+  },
+]
+
+const FALLBACK_PODCASTS = [
+  {
+    id: '1', slug: 'zero-to-network-engineer-story',
+    title: 'From Zero to Network Engineer: A Student Journey',
+    excerpt: 'How an ATEC student with no tech background landed a Network Engineer role within 8 months.',
+    thumbnail_url: null, duration: '38 min', episode_number: 1,
+    guest_name: 'ATEC Alumni', guest_designation: 'Network Engineer, Chandigarh',
+    published_at: new Date(Date.now() - 7 * 86400000).toISOString(),
+    youtube_url: null, spotify_url: null, anchor_url: null,
+  },
+  {
+    id: '2', slug: 'chip-level-repair-best-skill-2026',
+    title: 'Why Chip-Level Repair is the Best Skill for 2026',
+    excerpt: 'A successful laptop repair business owner explains why chip-level repair is recession-proof.',
+    thumbnail_url: null, duration: '42 min', episode_number: 2,
+    guest_name: 'Business Owner', guest_designation: 'Laptop Repair, Amritsar',
+    published_at: new Date(Date.now() - 14 * 86400000).toISOString(),
+    youtube_url: null, spotify_url: null, anchor_url: null,
+  },
+  {
+    id: '3', slug: 'online-vs-classroom-technical-courses',
+    title: 'Online vs Classroom: What Works for Technical Courses?',
+    excerpt: 'Can you really learn hardware repair online? Our team discusses all three learning modes at ATEC.',
+    thumbnail_url: null, duration: '28 min', episode_number: 3,
+    guest_name: null, guest_designation: null,
+    published_at: new Date(Date.now() - 21 * 86400000).toISOString(),
+    youtube_url: null, spotify_url: null, anchor_url: null,
+  },
+]
+
+// Use DB data if available, otherwise show fallback
+const displayPosts    = posts.length    > 0 ? posts    : FALLBACK_POSTS
+const displayVideos   = youtubeVideos.length > 0 ? youtubeVideos : FALLBACK_VIDEOS
+const displayPodcasts = podcasts.length > 0 ? podcasts : FALLBACK_PODCASTS
+
+const categories = ['All', ...new Set(displayPosts.map((p: any) => p.category).filter(Boolean))]
 
 const jsonLd = {
   "@context": "https://schema.org",
@@ -48,11 +132,7 @@ const jsonLd = {
   "name": "ATEC Blog — Computer Courses & Career Tips",
   "description": "Career guides, course tips, and student success stories from ATEC Educational Society, Gurdaspur.",
   "url": "https://atecedu.com/blog",
-  "publisher": {
-    "@type": "EducationalOrganization",
-    "name": "ATEC Educational Society",
-    "url": "https://atecedu.com"
-  }
+  "publisher": { "@type": "EducationalOrganization", "name": "ATEC Educational Society", "url": "https://atecedu.com" }
 }
 ---
 
@@ -74,191 +154,165 @@ const jsonLd = {
   <!-- BLOG POSTS -->
   <section class="section">
     <div class="container">
-
-      {(posts ?? []).length === 0 ? (
-        <div class="empty-state">
-          <div class="empty-icon">✍️</div>
-          <h2>Coming Soon</h2>
-          <p>We are working on helpful articles for you. Check back soon!</p>
-          <a href="/courses" class="btn btn-primary">Browse Our Courses</a>
-        </div>
-      ) : (
-        <>
-          <!-- Category filter -->
-          <div class="cat-filters" id="cat-filters">
-            {categories.map(cat => (
-              <button class:list={['cat-btn', { active: cat === 'All' }]} data-cat={cat}>
-                {cat}
-              </button>
-            ))}
-          </div>
-
-          <!-- Posts grid -->
-          <div class="posts-grid" id="posts-grid">
-            {(posts ?? []).map((post, i) => (
-              <a href={`/blog/${post.slug}`} class:list={['post-card', { featured: i === 0 }]}>
-                <div class="post-thumb">
-                  {post.thumbnail_url
-                    ? <img src={post.thumbnail_url} alt={post.title} loading="lazy" />
-                    : (
-                      <div class="post-thumb-placeholder">
-                        <span>✍️</span>
-                      </div>
-                    )
-                  }
-                  {post.category && <span class="post-cat-badge">{post.category}</span>}
-                </div>
-                <div class="post-body">
-                  <h2 class="post-title">{post.title}</h2>
-                  {post.excerpt && <p class="post-excerpt">{post.excerpt}</p>}
-                  <div class="post-meta">
-                    <span>✍ {post.author ?? 'ATEC Team'}</span>
-                    {post.published_at && (
-                      <span>{new Date(post.published_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
-                    )}
-                    {post.read_time_mins && <span>⏱ {post.read_time_mins} min read</span>}
-                  </div>
-                  <span class="read-link">Read Article →</span>
-                </div>
-              </a>
-            ))}
-          </div>
-        </>
-      )}
+      <div class="cat-filters" id="cat-filters">
+        {categories.map((cat: string) => (
+          <button class:list={['cat-btn', { active: cat === 'All' }]} data-cat={cat}>{cat}</button>
+        ))}
+      </div>
+      <div class="posts-grid" id="posts-grid">
+        {displayPosts.map((post: any, i: number) => (
+          <a href={`/blog/${post.slug}`} class:list={['post-card', { featured: i === 0 }]}>
+            <div class="post-thumb">
+              {post.thumbnail_url
+                ? <img src={post.thumbnail_url} alt={post.title} loading="lazy" />
+                : <div class="post-thumb-placeholder"><span>✍️</span></div>
+              }
+              {post.category && <span class="post-cat-badge">{post.category}</span>}
+            </div>
+            <div class="post-body">
+              <h2 class="post-title">{post.title}</h2>
+              {post.excerpt && <p class="post-excerpt">{post.excerpt}</p>}
+              <div class="post-meta">
+                <span>✍ {post.author ?? 'ATEC Team'}</span>
+                {post.published_at && (
+                  <span>{new Date(post.published_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+                )}
+                {post.read_time_mins && <span>⏱ {post.read_time_mins} min read</span>}
+              </div>
+              <span class="read-link">Read Article →</span>
+            </div>
+          </a>
+        ))}
+      </div>
     </div>
   </section>
 
-  <!-- YOUTUBE VIDEOS SECTION -->
-  {(youtubeVideos ?? []).length > 0 && (
-    <section class="section" style="background:var(--off-white)">
-      <div class="container">
-        <div class="section-header-row">
-          <div>
-            <p class="section-label">YouTube</p>
-            <h2>Watch & Learn</h2>
-            <p class="section-desc">Free demo classes, tutorials and student stories on our YouTube channel</p>
-          </div>
-          <a href="https://www.youtube.com/@ATECGurdaspur" target="_blank" rel="noopener" class="btn btn-outline btn-sm">
-            Subscribe on YouTube →
-          </a>
+  <!-- YOUTUBE VIDEOS -->
+  <section class="section" style="background:var(--off-white)">
+    <div class="container">
+      <div class="section-header-row">
+        <div>
+          <p class="section-label">YouTube</p>
+          <h2>Watch & Learn</h2>
+          <p class="section-desc">Free demo classes, tutorials and student stories on our YouTube channel</p>
         </div>
-        <div class="videos-grid">
-          {(youtubeVideos ?? []).map((v, i) => (
-            <a
-              href={`https://www.youtube.com/watch?v=${v.video_id}`}
-              target="_blank" rel="noopener"
-              class:list={['video-card', { featured: i === 0 }]}
-            >
-              <div class="video-thumb">
-                <img
-                  src={v.thumbnail_url ?? `https://img.youtube.com/vi/${v.video_id}/hqdefault.jpg`}
-                  alt={v.title}
-                  loading="lazy"
-                />
-                <div class="play-btn" aria-hidden="true">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-                </div>
-                {v.duration && <span class="video-duration">{v.duration}</span>}
-                {v.category && <span class="video-cat-badge">{v.category.replace('-', ' ')}</span>}
+        <a href="https://www.youtube.com/@ATECGurdaspur" target="_blank" rel="noopener" class="btn btn-outline btn-sm">Subscribe on YouTube →</a>
+      </div>
+      <div class="videos-grid">
+        {displayVideos.map((v: any, i: number) => (
+          <a
+            href={v.video_id && !v.video_id.startsWith('ATEC_VID')
+              ? `https://www.youtube.com/watch?v=${v.video_id}`
+              : 'https://www.youtube.com/@ATECGurdaspur'
+            }
+            target="_blank" rel="noopener"
+            class:list={['video-card', { featured: i === 0 }]}
+          >
+            <div class="video-thumb">
+              <img
+                src={v.thumbnail_url
+                  ?? (v.video_id && !v.video_id.startsWith('ATEC_VID')
+                    ? `https://img.youtube.com/vi/${v.video_id}/hqdefault.jpg`
+                    : 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="480" height="270" viewBox="0 0 480 270"><rect width="480" height="270" fill="%23111827"/><text x="240" y="135" text-anchor="middle" fill="%23374151" font-size="48">▶</text></svg>'
+                  )
+                }
+                alt={v.title}
+                loading="lazy"
+              />
+              <div class="play-btn" aria-hidden="true">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
               </div>
-              <div class="video-body">
-                <h3 class="video-title">{v.title}</h3>
-                {v.description && <p class="video-desc">{v.description}</p>}
-                <div class="video-meta">
-                  <span>📺 {v.channel_name}</span>
-                  {v.view_count && <span>👁 {v.view_count} views</span>}
-                </div>
+              {v.duration && <span class="video-duration">{v.duration}</span>}
+              {v.category && <span class="video-cat-badge">{v.category.replace('-', ' ')}</span>}
+            </div>
+            <div class="video-body">
+              <h3 class="video-title">{v.title}</h3>
+              {v.description && <p class="video-desc">{v.description}</p>}
+              <div class="video-meta">
+                <span>📺 {v.channel_name ?? 'ATEC Educational Society'}</span>
+                {v.view_count && <span>👁 {v.view_count} views</span>}
               </div>
-            </a>
-          ))}
+            </div>
+          </a>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- PODCAST -->
+  <section class="section">
+    <div class="container">
+      <div class="section-header-row">
+        <div>
+          <p class="section-label">ATEC Podcast</p>
+          <h2>Student Stories & Career Talks</h2>
+          <p class="section-desc">Real conversations with ATEC students, alumni, and industry experts</p>
         </div>
       </div>
-    </section>
-  )}
-
-  <!-- PODCAST SECTION -->
-  {(podcasts ?? []).length > 0 && (
-    <section class="section">
-      <div class="container">
-        <div class="section-header-row">
-          <div>
-            <p class="section-label">ATEC Podcast</p>
-            <h2>Student Stories & Career Talks</h2>
-            <p class="section-desc">Real conversations with ATEC students, alumni, and industry experts</p>
-          </div>
-        </div>
-        <div class="podcast-list">
-          {(podcasts ?? []).map(ep => (
-            <div class="podcast-card">
-              <div class="podcast-ep-num">EP {ep.episode_number ?? '—'}</div>
-              <div class="podcast-thumb">
-                {ep.thumbnail_url
-                  ? <img src={ep.thumbnail_url} alt={ep.title} loading="lazy" />
-                  : <div class="podcast-thumb-placeholder">🎙️</div>
-                }
-              </div>
-              <div class="podcast-body">
-                <h3 class="podcast-title">{ep.title}</h3>
-                {ep.guest_name && (
-                  <p class="podcast-guest">
-                    <strong>{ep.guest_name}</strong>
-                    {ep.guest_designation && ` — ${ep.guest_designation}`}
-                  </p>
+      <div class="podcast-list">
+        {displayPodcasts.map((ep: any) => (
+          <div class="podcast-card">
+            <div class="podcast-ep-num">EP {ep.episode_number ?? '—'}</div>
+            <div class="podcast-thumb">
+              {ep.thumbnail_url
+                ? <img src={ep.thumbnail_url} alt={ep.title} loading="lazy" />
+                : <div class="podcast-thumb-placeholder">🎙️</div>
+              }
+            </div>
+            <div class="podcast-body">
+              <h3 class="podcast-title">{ep.title}</h3>
+              {ep.guest_name && (
+                <p class="podcast-guest">
+                  <strong>{ep.guest_name}</strong>
+                  {ep.guest_designation && ` — ${ep.guest_designation}`}
+                </p>
+              )}
+              {ep.excerpt && <p class="podcast-excerpt">{ep.excerpt}</p>}
+              <div class="podcast-meta">
+                {ep.duration && <span>⏱ {ep.duration}</span>}
+                {ep.published_at && (
+                  <span>{new Date(ep.published_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
                 )}
-                {ep.excerpt && <p class="podcast-excerpt">{ep.excerpt}</p>}
-                <div class="podcast-meta">
-                  {ep.duration && <span>⏱ {ep.duration}</span>}
-                  {ep.published_at && (
-                    <span>{new Date(ep.published_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
-                  )}
-                </div>
-                <div class="podcast-links">
-                  {ep.youtube_url && (
-                    <a href={`https://youtube.com/watch?v=${ep.youtube_url}`} target="_blank" rel="noopener" class="podcast-link youtube">
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 00-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 00.502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 002.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 002.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
-                      YouTube
-                    </a>
-                  )}
-                  {ep.spotify_url && (
-                    <a href={ep.spotify_url} target="_blank" rel="noopener" class="podcast-link spotify">
-                      🎵 Spotify
-                    </a>
-                  )}
-                  {ep.anchor_url && (
-                    <a href={ep.anchor_url} target="_blank" rel="noopener" class="podcast-link anchor">
-                      🎙️ Listen
-                    </a>
-                  )}
-                  {ep.audio_url && !ep.youtube_url && !ep.spotify_url && !ep.anchor_url && (
-                    <a href={ep.audio_url} target="_blank" rel="noopener" class="podcast-link anchor">
-                      ▶ Play Episode
-                    </a>
-                  )}
-                </div>
               </div>
+              <div class="podcast-links">
+                {ep.youtube_url && (
+                  <a href={`https://youtube.com/watch?v=${ep.youtube_url}`} target="_blank" rel="noopener" class="podcast-link youtube">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 00-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 00.502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 002.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 002.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+                    YouTube
+                  </a>
+                )}
+                {ep.spotify_url && (
+                  <a href={ep.spotify_url} target="_blank" rel="noopener" class="podcast-link spotify">🎵 Spotify</a>
+                )}
+                {ep.anchor_url && (
+                  <a href={ep.anchor_url} target="_blank" rel="noopener" class="podcast-link anchor">🎙️ Listen</a>
+                )}
+                {!ep.youtube_url && !ep.spotify_url && !ep.anchor_url && (
+                  <a href="https://www.youtube.com/@ATECGurdaspur" target="_blank" rel="noopener" class="podcast-link anchor">▶ Listen Now</a>
+                )}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div class="podcast-platforms">
+        <p>Listen on:</p>
+        <div class="platforms-row">
+          {[
+            { name: 'YouTube', icon: '▶', color: '#ff0000' },
+            { name: 'Spotify', icon: '🎵', color: '#1db954' },
+            { name: 'Apple Podcasts', icon: '🎙️', color: '#9333ea' },
+            { name: 'Google Podcasts', icon: '🎧', color: '#4285f4' },
+          ].map((p: any) => (
+            <div class="platform-badge" style={`color:${p.color};border-color:${p.color}22;background:${p.color}11`}>
+              <span>{p.icon}</span> {p.name}
             </div>
           ))}
         </div>
-
-        <!-- Platform badges -->
-        <div class="podcast-platforms">
-          <p>Listen on:</p>
-          <div class="platforms-row">
-            {[
-              { name: 'YouTube', icon: '▶', color: '#ff0000' },
-              { name: 'Spotify', icon: '🎵', color: '#1db954' },
-              { name: 'Apple Podcasts', icon: '🎙️', color: '#9333ea' },
-              { name: 'Google Podcasts', icon: '🎧', color: '#4285f4' },
-            ].map(p => (
-              <div class="platform-badge" style={`color:${p.color};border-color:${p.color}22;background:${p.color}11`}>
-                <span>{p.icon}</span> {p.name}
-              </div>
-            ))}
-          </div>
-        </div>
       </div>
-    </section>
-  )}
+    </div>
+  </section>
 
   <!-- CTA -->
   <section class="section" style="background:var(--navy)">
@@ -276,252 +330,97 @@ const jsonLd = {
     </div>
   </section>
 
-  <!-- JSON-LD -->
   <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
 
 </BaseLayout>
 
 <style>
-/* Hero */
-.blog-hero {
-  background: linear-gradient(135deg, #0b1f3f 0%, #1c3d7a 100%);
-  padding: 64px 0 48px;
-  text-align: center;
-}
-.blog-hero h1 {
-  font-size: clamp(2rem, 4vw, 3rem);
-  font-weight: 800;
-  color: #fff;
-  margin: 8px 0 16px;
-}
-.hero-sub { font-size: 16px; color: rgba(255,255,255,0.7); max-width: 560px; margin: 0 auto; }
-
-/* Section header row */
-.section-header-row {
-  display: flex; justify-content: space-between;
-  align-items: flex-start; gap: 16px;
-  margin-bottom: 40px; flex-wrap: wrap;
-}
-.section-header-row h2 { margin: 4px 0 8px; }
-.section-desc { font-size: 15px; color: var(--text-secondary); }
-
-/* Category filters */
-.cat-filters { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 32px; }
-.cat-btn {
-  padding: 7px 18px; border-radius: 24px;
-  border: 1.5px solid var(--gray-200);
-  font-size: 13px; font-weight: 500; color: var(--text-secondary);
-  background: var(--white); cursor: pointer; transition: all 0.2s;
-}
-.cat-btn:hover, .cat-btn.active {
-  background: var(--navy); color: #fff; border-color: var(--navy);
-}
-
-/* Posts grid */
-.posts-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: 28px;
-}
-.post-card {
-  background: var(--white);
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--gray-200);
-  overflow: hidden;
-  text-decoration: none; color: inherit;
-  transition: all 0.2s;
-  display: flex; flex-direction: column;
-}
-.post-card:hover { box-shadow: var(--shadow-md); transform: translateY(-3px); }
-.post-card.featured {
-  grid-column: 1 / -1;
-  flex-direction: row;
-}
-@media (max-width: 768px) { .post-card.featured { flex-direction: column; } }
-
-.post-thumb {
-  height: 200px; overflow: hidden; position: relative; flex-shrink: 0;
-  background: var(--gray-100);
-}
-.post-card.featured .post-thumb { width: 420px; height: auto; min-height: 260px; }
-@media (max-width: 768px) { .post-card.featured .post-thumb { width: 100%; height: 200px; } }
-.post-thumb img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s; }
-.post-card:hover .post-thumb img { transform: scale(1.04); }
-.post-thumb-placeholder {
-  width: 100%; height: 100%;
-  display: flex; align-items: center; justify-content: center;
-  background: linear-gradient(135deg, #dbeafe, #ede9fe);
-  font-size: 48px;
-}
-.post-cat-badge {
-  position: absolute; top: 12px; left: 12px;
-  background: var(--navy); color: #fff;
-  font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 20px;
-}
-
-.post-body { padding: 24px; display: flex; flex-direction: column; flex: 1; }
-.post-title {
-  font-family: var(--font-display); font-size: 18px; font-weight: 700;
-  color: var(--text-primary); line-height: 1.3; margin-bottom: 10px;
-}
-.post-card.featured .post-title { font-size: 22px; }
-.post-excerpt { font-size: 14px; color: var(--text-secondary); line-height: 1.7; margin-bottom: 16px; flex: 1; }
-.post-meta { display: flex; gap: 14px; flex-wrap: wrap; font-size: 12px; color: var(--text-muted); margin-bottom: 14px; }
-.read-link { font-size: 13px; font-weight: 700; color: var(--navy); margin-top: auto; }
-
-/* YouTube videos */
-.videos-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 24px;
-}
-.video-card {
-  background: var(--white);
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--gray-200);
-  overflow: hidden;
-  text-decoration: none; color: inherit;
-  transition: all 0.2s;
-}
-.video-card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
-.video-card.featured { grid-column: span 2; }
-@media (max-width: 700px) { .video-card.featured { grid-column: span 1; } }
-
-.video-thumb {
-  position: relative; overflow: hidden;
-  background: #000;
-}
-.video-card.featured .video-thumb { height: 260px; }
-.video-thumb img { width: 100%; height: 180px; object-fit: cover; transition: opacity 0.2s; }
-.video-card.featured .video-thumb img { height: 260px; }
-.video-card:hover .video-thumb img { opacity: 0.85; }
-.play-btn {
-  position: absolute; top: 50%; left: 50%;
-  transform: translate(-50%, -50%);
-  width: 52px; height: 52px;
-  background: rgba(0,0,0,0.75); border-radius: 50%;
-  display: flex; align-items: center; justify-content: center;
-  color: #fff; transition: all 0.2s;
-}
-.video-card:hover .play-btn { background: #ff0000; transform: translate(-50%, -50%) scale(1.1); }
-.video-duration {
-  position: absolute; bottom: 8px; right: 8px;
-  background: rgba(0,0,0,0.8); color: #fff;
-  font-size: 11px; font-weight: 700; padding: 2px 6px; border-radius: 4px;
-}
-.video-cat-badge {
-  position: absolute; top: 8px; left: 8px;
-  background: var(--lemon); color: var(--navy-dark);
-  font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 4px;
-  text-transform: capitalize;
-}
-.video-body { padding: 16px; }
-.video-title { font-family: var(--font-display); font-size: 14px; font-weight: 700; line-height: 1.4; margin-bottom: 8px; }
-.video-card.featured .video-title { font-size: 17px; }
-.video-desc { font-size: 12px; color: var(--text-secondary); line-height: 1.5; margin-bottom: 10px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-.video-meta { display: flex; gap: 12px; font-size: 12px; color: var(--text-muted); }
-
-/* Podcast */
-.podcast-list { display: flex; flex-direction: column; gap: 20px; }
-.podcast-card {
-  background: var(--white);
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--gray-200);
-  padding: 24px;
-  display: flex; gap: 20px; align-items: flex-start;
-  transition: all 0.2s;
-}
-.podcast-card:hover { box-shadow: var(--shadow-md); border-color: var(--navy); }
-.podcast-ep-num {
-  flex-shrink: 0;
-  width: 48px; height: 48px;
-  background: var(--navy); color: #fff;
-  border-radius: 12px;
-  display: flex; align-items: center; justify-content: center;
-  font-family: var(--font-display); font-weight: 800; font-size: 11px;
-  text-align: center; line-height: 1.2;
-}
-.podcast-thumb {
-  flex-shrink: 0; width: 80px; height: 80px;
-  border-radius: 12px; overflow: hidden;
-}
-.podcast-thumb img { width: 100%; height: 100%; object-fit: cover; }
-.podcast-thumb-placeholder {
-  width: 100%; height: 100%;
-  background: linear-gradient(135deg, #1c3d7a, #2d5cc6);
-  display: flex; align-items: center; justify-content: center;
-  font-size: 28px;
-}
-.podcast-body { flex: 1; min-width: 0; }
-.podcast-title { font-family: var(--font-display); font-size: 16px; font-weight: 700; line-height: 1.3; margin-bottom: 6px; }
-.podcast-guest { font-size: 13px; color: var(--navy); margin-bottom: 8px; }
-.podcast-excerpt { font-size: 13px; color: var(--text-secondary); line-height: 1.6; margin-bottom: 12px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-.podcast-meta { display: flex; gap: 14px; font-size: 12px; color: var(--text-muted); margin-bottom: 12px; }
-.podcast-links { display: flex; gap: 8px; flex-wrap: wrap; }
-.podcast-link {
-  display: inline-flex; align-items: center; gap: 5px;
-  padding: 5px 14px; border-radius: 20px;
-  font-size: 12px; font-weight: 600; text-decoration: none;
-  transition: all 0.2s;
-}
-.podcast-link.youtube { background: #fee2e2; color: #991b1b; }
-.podcast-link.youtube:hover { background: #ff0000; color: #fff; }
-.podcast-link.spotify { background: #dcfce7; color: #166534; }
-.podcast-link.spotify:hover { background: #1db954; color: #fff; }
-.podcast-link.anchor { background: #eff6ff; color: #1e40af; }
-.podcast-link.anchor:hover { background: var(--navy); color: #fff; }
-
-.podcast-platforms {
-  margin-top: 32px; padding: 24px;
-  background: var(--off-white); border-radius: var(--radius-lg);
-  display: flex; align-items: center; gap: 20px; flex-wrap: wrap;
-}
-.podcast-platforms p { font-size: 13px; font-weight: 600; color: var(--text-muted); }
-.platforms-row { display: flex; gap: 10px; flex-wrap: wrap; }
-.platform-badge {
-  display: inline-flex; align-items: center; gap: 6px;
-  padding: 6px 14px; border-radius: 24px;
-  font-size: 12px; font-weight: 600;
-  border: 1px solid;
-}
-
-/* Empty state */
-.empty-state {
-  text-align: center; padding: 80px 20px;
-}
-.empty-icon { font-size: 56px; margin-bottom: 16px; }
-.empty-state h2 { font-family: var(--font-display); font-size: 1.5rem; font-weight: 800; margin-bottom: 12px; }
-.empty-state p { font-size: 15px; color: var(--text-secondary); margin-bottom: 28px; }
-
-/* CTA */
-.blog-cta {
-  display: flex; align-items: center; justify-content: space-between;
-  gap: 32px; flex-wrap: wrap;
-}
-.cta-btns { display: flex; gap: 12px; flex-wrap: wrap; flex-shrink: 0; }
-
-@media (max-width: 640px) {
-  .podcast-card { flex-direction: column; }
-  .podcast-thumb { width: 60px; height: 60px; }
-}
+.blog-hero{background:linear-gradient(135deg,#0b1f3f 0%,#1c3d7a 100%);padding:64px 0 48px;text-align:center}
+.blog-hero h1{font-size:clamp(2rem,4vw,3rem);font-weight:800;color:#fff;margin:8px 0 16px}
+.hero-sub{font-size:16px;color:rgba(255,255,255,0.7);max-width:560px;margin:0 auto}
+.section-header-row{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:40px;flex-wrap:wrap}
+.section-header-row h2{margin:4px 0 8px}
+.section-desc{font-size:15px;color:var(--text-secondary)}
+.cat-filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:32px}
+.cat-btn{padding:7px 18px;border-radius:24px;border:1.5px solid var(--gray-200);font-size:13px;font-weight:500;color:var(--text-secondary);background:var(--white);cursor:pointer;transition:all 0.2s}
+.cat-btn:hover,.cat-btn.active{background:var(--navy);color:#fff;border-color:var(--navy)}
+.posts-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:28px}
+.post-card{background:var(--white);border-radius:var(--radius-lg);border:1px solid var(--gray-200);overflow:hidden;text-decoration:none;color:inherit;transition:all 0.2s;display:flex;flex-direction:column}
+.post-card:hover{box-shadow:var(--shadow-md);transform:translateY(-3px)}
+.post-card.featured{grid-column:1 / -1;flex-direction:row}
+@media(max-width:768px){.post-card.featured{flex-direction:column}}
+.post-thumb{height:200px;overflow:hidden;position:relative;flex-shrink:0;background:var(--gray-100)}
+.post-card.featured .post-thumb{width:420px;height:auto;min-height:260px}
+@media(max-width:768px){.post-card.featured .post-thumb{width:100%;height:200px}}
+.post-thumb img{width:100%;height:100%;object-fit:cover;transition:transform 0.3s}
+.post-card:hover .post-thumb img{transform:scale(1.04)}
+.post-thumb-placeholder{width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#dbeafe,#ede9fe);font-size:48px}
+.post-cat-badge{position:absolute;top:12px;left:12px;background:var(--navy);color:#fff;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px}
+.post-body{padding:24px;display:flex;flex-direction:column;flex:1}
+.post-title{font-family:var(--font-display);font-size:18px;font-weight:700;color:var(--text-primary);line-height:1.3;margin-bottom:10px}
+.post-card.featured .post-title{font-size:22px}
+.post-excerpt{font-size:14px;color:var(--text-secondary);line-height:1.7;margin-bottom:16px;flex:1}
+.post-meta{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--text-muted);margin-bottom:14px}
+.read-link{font-size:13px;font-weight:700;color:var(--navy);margin-top:auto}
+.videos-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:24px}
+.video-card{background:var(--white);border-radius:var(--radius-lg);border:1px solid var(--gray-200);overflow:hidden;text-decoration:none;color:inherit;transition:all 0.2s}
+.video-card:hover{box-shadow:var(--shadow-md);transform:translateY(-2px)}
+.video-card.featured{grid-column:span 2}
+@media(max-width:700px){.video-card.featured{grid-column:span 1}}
+.video-thumb{position:relative;overflow:hidden;background:#000}
+.video-thumb img{width:100%;height:180px;object-fit:cover;transition:opacity 0.2s}
+.video-card.featured .video-thumb img{height:260px}
+.video-card:hover .video-thumb img{opacity:0.85}
+.play-btn{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:52px;height:52px;background:rgba(0,0,0,0.75);border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;transition:all 0.2s}
+.video-card:hover .play-btn{background:#ff0000;transform:translate(-50%,-50%) scale(1.1)}
+.video-duration{position:absolute;bottom:8px;right:8px;background:rgba(0,0,0,0.8);color:#fff;font-size:11px;font-weight:700;padding:2px 6px;border-radius:4px}
+.video-cat-badge{position:absolute;top:8px;left:8px;background:var(--lemon);color:var(--navy-dark);font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px;text-transform:capitalize}
+.video-body{padding:16px}
+.video-title{font-family:var(--font-display);font-size:14px;font-weight:700;line-height:1.4;margin-bottom:8px}
+.video-card.featured .video-title{font-size:17px}
+.video-desc{font-size:12px;color:var(--text-secondary);line-height:1.5;margin-bottom:10px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.video-meta{display:flex;gap:12px;font-size:12px;color:var(--text-muted)}
+.podcast-list{display:flex;flex-direction:column;gap:20px}
+.podcast-card{background:var(--white);border-radius:var(--radius-lg);border:1px solid var(--gray-200);padding:24px;display:flex;gap:20px;align-items:flex-start;transition:all 0.2s}
+.podcast-card:hover{box-shadow:var(--shadow-md);border-color:var(--navy)}
+.podcast-ep-num{flex-shrink:0;width:48px;height:48px;background:var(--navy);color:#fff;border-radius:12px;display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-weight:800;font-size:11px;text-align:center;line-height:1.2}
+.podcast-thumb{flex-shrink:0;width:80px;height:80px;border-radius:12px;overflow:hidden}
+.podcast-thumb img{width:100%;height:100%;object-fit:cover}
+.podcast-thumb-placeholder{width:100%;height:100%;background:linear-gradient(135deg,#1c3d7a,#2d5cc6);display:flex;align-items:center;justify-content:center;font-size:28px}
+.podcast-body{flex:1;min-width:0}
+.podcast-title{font-family:var(--font-display);font-size:16px;font-weight:700;line-height:1.3;margin-bottom:6px}
+.podcast-guest{font-size:13px;color:var(--navy);margin-bottom:8px}
+.podcast-excerpt{font-size:13px;color:var(--text-secondary);line-height:1.6;margin-bottom:12px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.podcast-meta{display:flex;gap:14px;font-size:12px;color:var(--text-muted);margin-bottom:12px}
+.podcast-links{display:flex;gap:8px;flex-wrap:wrap}
+.podcast-link{display:inline-flex;align-items:center;gap:5px;padding:5px 14px;border-radius:20px;font-size:12px;font-weight:600;text-decoration:none;transition:all 0.2s}
+.podcast-link.youtube{background:#fee2e2;color:#991b1b}
+.podcast-link.youtube:hover{background:#ff0000;color:#fff}
+.podcast-link.spotify{background:#dcfce7;color:#166534}
+.podcast-link.spotify:hover{background:#1db954;color:#fff}
+.podcast-link.anchor{background:#eff6ff;color:#1e40af}
+.podcast-link.anchor:hover{background:var(--navy);color:#fff}
+.podcast-platforms{margin-top:32px;padding:24px;background:var(--off-white);border-radius:var(--radius-lg);display:flex;align-items:center;gap:20px;flex-wrap:wrap}
+.podcast-platforms p{font-size:13px;font-weight:600;color:var(--text-muted)}
+.platforms-row{display:flex;gap:10px;flex-wrap:wrap}
+.platform-badge{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:24px;font-size:12px;font-weight:600;border:1px solid}
+.blog-cta{display:flex;align-items:center;justify-content:space-between;gap:32px;flex-wrap:wrap}
+.cta-btns{display:flex;gap:12px;flex-wrap:wrap;flex-shrink:0}
+@media(max-width:640px){.podcast-card{flex-direction:column}.podcast-thumb{width:60px;height:60px}}
 </style>
 
 <script>
-// Category filter
 const catBtns = document.querySelectorAll('.cat-btn')
 const postCards = document.querySelectorAll('#posts-grid .post-card')
-
 catBtns.forEach(btn => {
   btn.addEventListener('click', () => {
     const cat = (btn as HTMLElement).dataset.cat ?? 'All'
     catBtns.forEach(b => b.classList.remove('active'))
     btn.classList.add('active')
-
     postCards.forEach(card => {
       const badge = card.querySelector('.post-cat-badge')
       const cardCat = badge?.textContent?.trim() ?? ''
-      const el = card as HTMLElement
-      el.style.display = (cat === 'All' || cardCat === cat) ? '' : 'none'
+      ;(card as HTMLElement).style.display = (cat === 'All' || cardCat === cat) ? '' : 'none'
     })
   })
 })
