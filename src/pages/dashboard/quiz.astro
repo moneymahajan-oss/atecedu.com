@@ -1,0 +1,8 @@
+---
+// src/pages/dashboard/quiz.astro
+import BaseLayout from '../../layouts/BaseLayout.astro'
+import QuizEngine from '../../components/quiz/QuizEngine'
+---
+<BaseLayout title="Quiz — ATEC" noIndex={true}>
+  <QuizEngine client:load />
+</BaseLayout>

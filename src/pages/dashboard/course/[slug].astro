@@ -1,0 +1,28 @@
+---
+// src/pages/dashboard/course/[slug].astro
+// Full LMS course player page — only for enrolled students
+import BaseLayout from '../../../layouts/BaseLayout.astro'
+import CoursePlayer from '../../../components/lms/CoursePlayer'
+import { supabase } from '../../../lib/supabase'
+
+export async function getStaticPaths() {
+  const { data } = await supabase.from('courses').select('slug').eq('is_active', true)
+  return (data ?? []).map(c => ({ params: { slug: c.slug } }))
+}
+
+const { slug } = Astro.params
+const { data: course } = await supabase
+  .from('courses')
+  .select('id,title,thumbnail_url,mode')
+  .eq('slug', slug)
+  .single()
+
+if (!course) return Astro.redirect('/dashboard/my-courses', 302)
+---
+
+<BaseLayout
+  title={`${course.title} — ATEC Learning`}
+  noIndex={true}
+>
+  <CoursePlayer client:load courseId={course.id} courseTitle={course.title} courseSlug={slug} />
+</BaseLayout>

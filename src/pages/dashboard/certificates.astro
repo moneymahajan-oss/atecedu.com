@@ -1,0 +1,12 @@
+---
+// src/pages/dashboard/certificates.astro
+import BaseLayout from '../../layouts/BaseLayout.astro'
+import CertificatesPage from '../../components/certificate/CertificatesPage'
+---
+<BaseLayout title="My Certificates — ATEC" noIndex={true}>
+  <div style="padding:40px 0 80px;background:var(--gray-50);min-height:80vh">
+    <div class="container">
+      <CertificatesPage client:load />
+    </div>
+  </div>
+</BaseLayout>
