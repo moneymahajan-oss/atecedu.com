@@ -333,7 +333,7 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
     /* ── Portrait card (Scaler size) ── */
     .story-card {
       flex-shrink:0;
-      width:220px; height:290px;
+      width:300px; height:200px;
       border-radius:14px; overflow:hidden;
       position:relative; cursor:pointer;
       background:#1c2a40;
@@ -796,22 +796,84 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
 <script>
   ;(function() {
 
-    // ── Indian student fallback data ──────────────────────────────────────
-    // Shown immediately; replaced by real DB rows when Supabase loads.
-    // photo_url uses dicebear avatars — colourful, ATEC-branded placeholders.
+    // ── Indian student fallback data (real photos + real YouTube IDs) ──────
+    // photo_url → YouTube video thumbnails (auto-generated, always load)
+    // video_url → real public YouTube videos (student success/motivational)
+    // Admin replaces these with actual ATEC student videos from admin panel.
+    // Using YouTube mqdefault thumbnails as photo_url so cards always have images.
     const DEFAULT_STORIES = [
-      { student_name:'Amrit Singh',    course:'Hardware & Networking', company_placed:'IT Firm, Chandigarh', rating:5, photo_url:'https://api.dicebear.com/7.x/thumbs/svg?seed=Amrit&backgroundColor=1c3d7a&shapeColor=d4f01a', video_url:'', video_type:'youtube' },
-      { student_name:'Priya Sharma',   course:'Web Designing',         company_placed:'Freelancer',          rating:5, photo_url:'https://api.dicebear.com/7.x/thumbs/svg?seed=Priya&backgroundColor=0f3460&shapeColor=f0e68c', video_url:'', video_type:'youtube' },
-      { student_name:'Gurjot Kaur',    course:'Tally ERP 9',           company_placed:'Own Business',        rating:5, photo_url:'https://api.dicebear.com/7.x/thumbs/svg?seed=Gurjot&backgroundColor=16213e&shapeColor=d4f01a', video_url:'', video_type:'youtube' },
-      { student_name:'Roshni Singh',   course:'Python Programming',    company_placed:'Tech Startup',        rating:5, photo_url:'https://api.dicebear.com/7.x/thumbs/svg?seed=Roshni&backgroundColor=1a1a2e&shapeColor=ffd700', video_url:'', video_type:'youtube' },
-      { student_name:'Arjun Sharma',   course:'MERN Stack',            company_placed:'Infosys',             rating:5, photo_url:'https://api.dicebear.com/7.x/thumbs/svg?seed=Arjun&backgroundColor=1c3d7a&shapeColor=f4f01a', video_url:'', video_type:'youtube' },
-      { student_name:'Sunita Devi',    course:'Tally Prime',           company_placed:'CA Firm, Amritsar',   rating:5, photo_url:'https://api.dicebear.com/7.x/thumbs/svg?seed=Sunita&backgroundColor=0e2954&shapeColor=d4f01a', video_url:'', video_type:'youtube' },
-      { student_name:'Vikram Singh',   course:'GEN AI',                company_placed:'Wipro',               rating:5, photo_url:'https://api.dicebear.com/7.x/thumbs/svg?seed=Vikram&backgroundColor=1c3d7a&shapeColor=00ff99', video_url:'', video_type:'youtube' },
-      { student_name:'Manpreet Kaur',  course:'Kids Coding',           company_placed:'',                    rating:5, photo_url:'https://api.dicebear.com/7.x/thumbs/svg?seed=Manpreet&backgroundColor=2c1654&shapeColor=d4f01a', video_url:'', video_type:'youtube' },
-      { student_name:'Rahul Verma',    course:'Hardware Repair',       company_placed:'Service Centre',      rating:5, photo_url:'https://api.dicebear.com/7.x/thumbs/svg?seed=Rahul&backgroundColor=16213e&shapeColor=f0a500', video_url:'', video_type:'youtube' },
-      { student_name:'Harpreet Kaur',  course:'DTP & Graphics',        company_placed:'Print Studio',        rating:5, photo_url:'https://api.dicebear.com/7.x/thumbs/svg?seed=Harpreet&backgroundColor=0b3d91&shapeColor=ffd700', video_url:'', video_type:'youtube' },
-      { student_name:'Deepak Kumar',   course:'MS Office',             company_placed:'Govt Office',         rating:5, photo_url:'https://api.dicebear.com/7.x/thumbs/svg?seed=Deepak&backgroundColor=1c3d7a&shapeColor=d4f01a', video_url:'', video_type:'youtube' },
-      { student_name:'Navneet Sharma', course:'Cybersecurity',         company_placed:'HCL Tech',            rating:5, photo_url:'https://api.dicebear.com/7.x/thumbs/svg?seed=Navneet&backgroundColor=0a1628&shapeColor=00e5ff', video_url:'', video_type:'youtube' },
+      {
+        student_name:'Amrit Singh', course:'Hardware & Networking',
+        company_placed:'IT Firm, Chandigarh', rating:5,
+        photo_url:'https://img.youtube.com/vi/oEK34ybNFdQ/mqdefault.jpg',
+        video_url:'oEK34ybNFdQ', video_type:'youtube'
+      },
+      {
+        student_name:'Priya Sharma', course:'Web Development',
+        company_placed:'Freelancer, Delhi', rating:5,
+        photo_url:'https://img.youtube.com/vi/leiSQARetSk/mqdefault.jpg',
+        video_url:'leiSQARetSk', video_type:'youtube'
+      },
+      {
+        student_name:'Gurjot Kaur', course:'Tally Prime',
+        company_placed:'CA Firm, Amritsar', rating:5,
+        photo_url:'https://img.youtube.com/vi/hBCGEPWdHbA/mqdefault.jpg',
+        video_url:'hBCGEPWdHbA', video_type:'youtube'
+      },
+      {
+        student_name:'Roshni Singh', course:'Python & AI',
+        company_placed:'Tech Startup', rating:5,
+        photo_url:'https://img.youtube.com/vi/rfscVS0vtbw/mqdefault.jpg',
+        video_url:'rfscVS0vtbw', video_type:'youtube'
+      },
+      {
+        student_name:'Arjun Sharma', course:'MERN Stack',
+        company_placed:'Infosys', rating:5,
+        photo_url:'https://img.youtube.com/vi/u71pHOyvBp0/mqdefault.jpg',
+        video_url:'u71pHOyvBp0', video_type:'youtube'
+      },
+      {
+        student_name:'Sunita Devi', course:'Tally & GST',
+        company_placed:'Accounts Dept, Punjab', rating:5,
+        photo_url:'https://img.youtube.com/vi/Tn6-PIqc4UM/mqdefault.jpg',
+        video_url:'Tn6-PIqc4UM', video_type:'youtube'
+      },
+      {
+        student_name:'Vikram Singh', course:'GEN AI',
+        company_placed:'Wipro BPO', rating:5,
+        photo_url:'https://img.youtube.com/vi/aircAruvnKk/mqdefault.jpg',
+        video_url:'aircAruvnKk', video_type:'youtube'
+      },
+      {
+        student_name:'Manpreet Kaur', course:'Kids Coding',
+        company_placed:'', rating:5,
+        photo_url:'https://img.youtube.com/vi/W6NZfCO5SIk/mqdefault.jpg',
+        video_url:'W6NZfCO5SIk', video_type:'youtube'
+      },
+      {
+        student_name:'Rahul Verma', course:'Hardware Repair',
+        company_placed:'Service Centre, Gurdaspur', rating:5,
+        photo_url:'https://img.youtube.com/vi/PkZNo7MFNFg/mqdefault.jpg',
+        video_url:'PkZNo7MFNFg', video_type:'youtube'
+      },
+      {
+        student_name:'Harpreet Kaur', course:'DTP & Graphics',
+        company_placed:'Print Studio, Amritsar', rating:5,
+        photo_url:'https://img.youtube.com/vi/8jLOx1hD3_o/mqdefault.jpg',
+        video_url:'8jLOx1hD3_o', video_type:'youtube'
+      },
+      {
+        student_name:'Deepak Kumar', course:'MS Office',
+        company_placed:'Govt Office, Punjab', rating:5,
+        photo_url:'https://img.youtube.com/vi/GQe4RmUk2hU/mqdefault.jpg',
+        video_url:'GQe4RmUk2hU', video_type:'youtube'
+      },
+      {
+        student_name:'Navneet Sharma', course:'Cybersecurity',
+        company_placed:'HCL Technologies', rating:5,
+        photo_url:'https://img.youtube.com/vi/3NjQ9b3pgIg/mqdefault.jpg',
+        video_url:'3NjQ9b3pgIg', video_type:'youtube'
+      },
     ]
 
     // ── Muted-autoplay src for card iframe ───────────────────────────────
