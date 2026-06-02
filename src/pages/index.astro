@@ -227,7 +227,7 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
     style="
       position:fixed;
       inset:0;
-      z-index:9999;
+      z-index:10000;
       display:flex;
       flex-direction:column;
       background:#111;
@@ -248,7 +248,7 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
     ></div>
 
     <!-- Top bar — sits above backdrop -->
-    <div id="video-top-bar" style={`position:relative;z-index:1;background:${videoBarBg};padding:10px 20px;display:flex;align-items:center;gap:12px;flex-shrink:0;`}>
+    <div id="video-top-bar" style={`position:relative;z-index:1;background:${videoBarBg};padding:10px 20px;display:flex;align-items:center;gap:12px;flex-shrink:0;padding-top:12px;`}>
       <div style="display:flex;align-items:center;gap:8px;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2);border-radius:6px;padding:5px 16px;flex:1;max-width:520px;">
         <svg width="13" height="13" fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 010 20M12 2a15.3 15.3 0 000 20"/></svg>
         <span id="video-bar-text" style={`font-size:13px;font-weight:500;color:${videoBarColor};`}>{videoBarText}</span>
@@ -615,6 +615,12 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
       const hint = document.getElementById('unmute-hint') as HTMLElement
       if (hint) hint.style.display = 'inline-flex'
 
+      // FIX B: show bottom CTA bar only now (video is playing full-screen)
+      if (localStorage.getItem('atec_bar_v2') !== 'dismissed') {
+        const bar = document.getElementById('bottom-cta-bar') as HTMLElement
+        if (bar) bar.style.transform = 'translateY(0)'
+      }
+
       // Zoom-in animation
       ov.style.pointerEvents = 'all'
       requestAnimationFrame(() => {
@@ -636,6 +642,7 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
       const ov   = document.getElementById('video-overlay') as HTMLElement
       const hc   = document.getElementById('hero-content')  as HTMLElement
       const hint = document.getElementById('unmute-hint')   as HTMLElement
+      const bar  = document.getElementById('bottom-cta-bar') as HTMLElement
 
       ov.style.transition    = 'transform 0.5s ease, opacity 0.4s ease, border-radius 0.5s ease'
       ov.style.transform     = 'scale(0.07)'
@@ -644,6 +651,8 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
       ov.style.pointerEvents = 'none'
       if (hint) hint.style.display = 'none'
       if (hc)  { hc.style.opacity = '1'; hc.style.pointerEvents = 'all' }
+      // FIX B: hide bottom bar when video closes
+      if (bar) bar.style.transform = 'translateY(100%)'
 
       setTimeout(() => {
         const wrap = document.getElementById('video-iframe-wrap') as HTMLElement
@@ -759,7 +768,7 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
       // Preload the same video in background for smooth zoom-in
       startPreload(FALLBACK_YT)
       startTick()       // 3s countdown
-      showBottomBar()
+      // NOTE: showBottomBar() removed from boot — bottom bar shows ONLY when video zooms in
       loadSettings()    // parallel — updates colours/text/video source
     }
 
