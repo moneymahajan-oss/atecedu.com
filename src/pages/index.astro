@@ -477,6 +477,71 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
   </section>
 
   <!-- ══════════════════════════════════════════════════════════════
+       YOUTUBE VIDEOS SECTION — runtime loaded from youtube_videos table
+  ══════════════════════════════════════════════════════════════ -->
+  <section id="yt-section" style="padding:72px 32px;background:#fff;display:none;">
+    <div style="max-width:1200px;margin:0 auto;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:36px;flex-wrap:wrap;gap:16px;">
+        <div>
+          <p style="font-size:13px;font-weight:700;color:#d4f01a;text-transform:uppercase;letter-spacing:0.08em;margin:0 0 6px;background:#1c3d7a;display:inline-block;padding:3px 10px;border-radius:4px;">Our Channel</p>
+          <h2 style="font-family:'Sora',sans-serif;font-size:clamp(1.6rem,3vw,2.2rem);font-weight:800;color:#1c1c1c;margin:0;">Watch &amp; Learn</h2>
+        </div>
+        <a href="https://www.youtube.com/@ATECEducationalSociety" target="_blank" rel="noopener"
+           style="color:#ff0000;font-weight:700;font-size:14px;text-decoration:none;border:2px solid #ff0000;padding:8px 18px;border-radius:8px;display:flex;align-items:center;gap:6px;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="#ff0000"><path d="M23.5 6.2a3 3 0 00-2.1-2.1C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.4.6A3 3 0 00.5 6.2C0 8.1 0 12 0 12s0 3.9.5 5.8a3 3 0 002.1 2.1C4.5 20.5 12 20.5 12 20.5s7.5 0 9.4-.6a3 3 0 002.1-2.1C24 15.9 24 12 24 12s0-3.9-.5-5.8zM9.7 15.5V8.5l6.3 3.5-6.3 3.5z"/></svg>
+          YouTube Channel →
+        </a>
+      </div>
+      <div id="yt-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:20px;"></div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════════════
+       BLOG SECTION — runtime loaded from blog_posts table
+  ══════════════════════════════════════════════════════════════ -->
+  <section id="blog-section" style="padding:72px 32px;background:#f8f4ef;display:none;">
+    <div style="max-width:1200px;margin:0 auto;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:36px;flex-wrap:wrap;gap:16px;">
+        <div>
+          <p style="font-size:13px;font-weight:700;color:#d4f01a;text-transform:uppercase;letter-spacing:0.08em;margin:0 0 6px;background:#1c3d7a;display:inline-block;padding:3px 10px;border-radius:4px;">Knowledge Hub</p>
+          <h2 style="font-family:'Sora',sans-serif;font-size:clamp(1.6rem,3vw,2.2rem);font-weight:800;color:#1c1c1c;margin:0;">Latest from Our Blog</h2>
+        </div>
+        <a href="/blog" style="color:#1c3d7a;font-weight:700;font-size:14px;text-decoration:none;border:2px solid #1c3d7a;padding:8px 18px;border-radius:8px;">All Articles →</a>
+      </div>
+      <div id="blog-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:24px;"></div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════════════
+       PODCAST SECTION — runtime loaded from podcast_episodes table
+  ══════════════════════════════════════════════════════════════ -->
+  <section id="podcast-section" style="padding:72px 32px;background:#0b1525;display:none;">
+    <div style="max-width:1200px;margin:0 auto;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:36px;flex-wrap:wrap;gap:16px;">
+        <div>
+          <p style="font-size:13px;font-weight:700;color:#d4f01a;text-transform:uppercase;letter-spacing:0.08em;margin:0 0 6px;">🎙️ Podcast</p>
+          <h2 style="font-family:'Sora',sans-serif;font-size:clamp(1.6rem,3vw,2.2rem);font-weight:800;color:#fff;margin:0;">ATEC Talks</h2>
+          <p style="color:rgba(255,255,255,0.5);font-size:14px;margin:6px 0 0;">Career conversations, tech trends, student stories.</p>
+        </div>
+      </div>
+      <div id="podcast-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:20px;"></div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════════════
+       NEWS / UPDATES SECTION — runtime loaded from news_items table
+  ══════════════════════════════════════════════════════════════ -->
+  <section id="news-section" style="padding:72px 32px;background:#fff;display:none;">
+    <div style="max-width:1200px;margin:0 auto;">
+      <div style="margin-bottom:36px;">
+        <p style="font-size:13px;font-weight:700;color:#d4f01a;text-transform:uppercase;letter-spacing:0.08em;margin:0 0 6px;background:#1c3d7a;display:inline-block;padding:3px 10px;border-radius:4px;">Latest Updates</p>
+        <h2 style="font-family:'Sora',sans-serif;font-size:clamp(1.6rem,3vw,2.2rem);font-weight:800;color:#1c1c1c;margin:8px 0 0;">News &amp; Announcements</h2>
+      </div>
+      <div id="news-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:20px;"></div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════════════
        CTA SECTION
   ══════════════════════════════════════════════════════════════ -->
   <section style="padding:72px 32px;background:#f8f4ef;">
@@ -518,6 +583,257 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
       title="Dismiss"
     >✕</button>
   </div>
+
+<!-- ══════════════════════════════════════════════════════════════
+     YOUTUBE / BLOG / PODCAST / NEWS — runtime loaders
+     Each section: hidden by default, shown only when DB has data.
+     No rebuild needed — content updates instantly from admin panel.
+══════════════════════════════════════════════════════════════ -->
+<script>
+;(function() {
+
+  // ── Shared helpers ────────────────────────────────────────────────────────
+
+  function waitForSB(cb: () => void) {
+    if ((window as any).__SB_URL) { cb(); return }
+    let n = 0
+    const t = setInterval(() => {
+      n++
+      if ((window as any).__SB_URL || n > 40) { clearInterval(t); cb() }
+    }, 50)
+  }
+
+  function show(id: string) {
+    const el = document.getElementById(id)
+    if (el) el.style.display = ''
+  }
+
+  function ytThumb(id: string) {
+    return `https://img.youtube.com/vi/${id}/mqdefault.jpg`
+  }
+
+  // ── YOUTUBE VIDEOS ────────────────────────────────────────────────────────
+  async function loadYouTube() {
+    const SB_URL = (window as any).__SB_URL as string
+    const SB_KEY = (window as any).__SB_KEY as string
+    if (!SB_URL || !SB_KEY) return
+    try {
+      const res = await fetch(
+        `${SB_URL}/rest/v1/youtube_videos?is_active=eq.true&order=sort_order.asc.nullslast,created_at.desc&limit=6&select=*`,
+        { headers: { apikey: SB_KEY, Authorization: `Bearer ${SB_KEY}` } }
+      )
+      if (!res.ok) return
+      const rows = await res.json()
+      if (!Array.isArray(rows) || rows.length === 0) return
+
+      const grid = document.getElementById('yt-grid')
+      if (!grid) return
+      grid.innerHTML = ''
+
+      rows.forEach((v: any) => {
+        const videoId = v.video_id || ''
+        const thumb   = v.thumbnail_url || (videoId ? ytThumb(videoId) : '')
+        const card    = document.createElement('a')
+        card.href     = videoId ? `https://www.youtube.com/watch?v=${videoId}` : '#'
+        card.target   = '_blank'
+        card.rel      = 'noopener'
+        card.style.cssText = 'display:block;text-decoration:none;background:#fff;border:1px solid #e8ecf0;border-radius:14px;overflow:hidden;transition:box-shadow 0.2s,transform 0.2s;box-shadow:0 2px 8px rgba(0,0,0,0.06);'
+        card.onmouseover = () => { card.style.boxShadow='0 8px 28px rgba(0,0,0,0.12)'; card.style.transform='translateY(-3px)' }
+        card.onmouseout  = () => { card.style.boxShadow='0 2px 8px rgba(0,0,0,0.06)'; card.style.transform='translateY(0)' }
+
+        card.innerHTML = `
+          <div style="position:relative;aspect-ratio:16/9;background:#111;overflow:hidden;">
+            ${thumb ? `<img src="${thumb}" alt="${v.title}" style="width:100%;height:100%;object-fit:cover;" loading="lazy">` : '<div style="width:100%;height:100%;background:#1c3d7a;display:flex;align-items:center;justify-content:center;"><svg width="40" height="40" viewBox="0 0 24 24" fill="#d4f01a"><polygon points="8,5 20,12 8,19"/></svg></div>'}
+            <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.2);opacity:0;transition:opacity 0.2s;" class="yt-play-hover">
+              <div style="width:52px;height:52px;background:#ff0000;border-radius:50%;display:flex;align-items:center;justify-content:center;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="#fff" style="margin-left:3px"><polygon points="8,5 20,12 8,19"/></svg>
+              </div>
+            </div>
+            ${v.duration ? `<span style="position:absolute;bottom:8px;right:8px;background:rgba(0,0,0,0.8);color:#fff;font-size:11px;font-weight:700;padding:2px 7px;border-radius:4px;">${v.duration}</span>` : ''}
+          </div>
+          <div style="padding:14px 16px;">
+            <h3 style="font-family:'Sora',sans-serif;font-size:14px;font-weight:700;color:#1c1c1c;margin:0 0 6px;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">${v.title}</h3>
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+              <span style="font-size:12px;color:#64748b;">${v.channel_name || 'ATEC'}</span>
+              ${v.view_count ? `<span style="font-size:11px;color:#94a3b8;">${v.view_count} views</span>` : ''}
+            </div>
+          </div>`
+
+        // Hover play overlay
+        card.onmouseover = () => {
+          card.style.boxShadow = '0 8px 28px rgba(0,0,0,0.12)'
+          card.style.transform = 'translateY(-3px)'
+          const ph = card.querySelector('.yt-play-hover') as HTMLElement
+          if (ph) ph.style.opacity = '1'
+        }
+        card.onmouseout = () => {
+          card.style.boxShadow = '0 2px 8px rgba(0,0,0,0.06)'
+          card.style.transform = 'translateY(0)'
+          const ph = card.querySelector('.yt-play-hover') as HTMLElement
+          if (ph) ph.style.opacity = '0'
+        }
+
+        grid.appendChild(card)
+      })
+
+      show('yt-section')
+    } catch(e) { console.warn('[ATEC YT]', e) }
+  }
+
+  // ── BLOG POSTS ────────────────────────────────────────────────────────────
+  async function loadBlog() {
+    const SB_URL = (window as any).__SB_URL as string
+    const SB_KEY = (window as any).__SB_KEY as string
+    if (!SB_URL || !SB_KEY) return
+    try {
+      const res = await fetch(
+        `${SB_URL}/rest/v1/blog_posts?is_published=eq.true&order=published_at.desc&limit=3&select=title,slug,excerpt,thumbnail_url,author,published_at,category,read_time_mins`,
+        { headers: { apikey: SB_KEY, Authorization: `Bearer ${SB_KEY}` } }
+      )
+      if (!res.ok) return
+      const rows = await res.json()
+      if (!Array.isArray(rows) || rows.length === 0) return
+
+      const grid = document.getElementById('blog-grid')
+      if (!grid) return
+      grid.innerHTML = ''
+
+      rows.forEach((p: any) => {
+        const date = p.published_at ? new Date(p.published_at).toLocaleDateString('en-IN', {day:'numeric',month:'short',year:'numeric'}) : ''
+        const card = document.createElement('a')
+        card.href  = `/blog/${p.slug}`
+        card.style.cssText = 'display:block;text-decoration:none;background:#fff;border:1px solid #e8ecf0;border-radius:16px;overflow:hidden;transition:box-shadow 0.2s,transform 0.2s;box-shadow:0 2px 8px rgba(0,0,0,0.06);'
+        card.onmouseover = () => { card.style.boxShadow='0 8px 28px rgba(0,0,0,0.12)'; card.style.transform='translateY(-3px)' }
+        card.onmouseout  = () => { card.style.boxShadow='0 2px 8px rgba(0,0,0,0.06)'; card.style.transform='translateY(0)' }
+
+        card.innerHTML = `
+          <div style="aspect-ratio:16/9;background:#1c3d7a;overflow:hidden;display:flex;align-items:center;justify-content:center;position:relative;">
+            ${p.thumbnail_url
+              ? `<img src="${p.thumbnail_url}" alt="${p.title}" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0;" loading="lazy">`
+              : `<span style="font-family:'Sora',sans-serif;font-size:3rem;color:#d4f01a;opacity:0.6;">📝</span>`}
+            ${p.category ? `<span style="position:absolute;top:10px;left:10px;background:#d4f01a;color:#1a1a1a;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;">${p.category}</span>` : ''}
+          </div>
+          <div style="padding:18px;">
+            <h3 style="font-family:'Sora',sans-serif;font-size:16px;font-weight:700;color:#1c1c1c;margin:0 0 8px;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">${p.title}</h3>
+            <p style="font-size:13px;color:#64748b;margin:0 0 14px;line-height:1.55;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">${p.excerpt || ''}</p>
+            <div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;color:#94a3b8;">
+              <span>${p.author || 'ATEC Team'}</span>
+              <span>${date}${p.read_time_mins ? ` · ${p.read_time_mins} min read` : ''}</span>
+            </div>
+          </div>`
+
+        grid.appendChild(card)
+      })
+
+      show('blog-section')
+    } catch(e) { console.warn('[ATEC Blog]', e) }
+  }
+
+  // ── PODCAST EPISODES ──────────────────────────────────────────────────────
+  async function loadPodcast() {
+    const SB_URL = (window as any).__SB_URL as string
+    const SB_KEY = (window as any).__SB_KEY as string
+    if (!SB_URL || !SB_KEY) return
+    try {
+      const res = await fetch(
+        `${SB_URL}/rest/v1/podcast_episodes?is_published=eq.true&order=sort_order.asc.nullslast,published_at.desc&limit=4&select=*`,
+        { headers: { apikey: SB_KEY, Authorization: `Bearer ${SB_KEY}` } }
+      )
+      if (!res.ok) return
+      const rows = await res.json()
+      if (!Array.isArray(rows) || rows.length === 0) return
+
+      const grid = document.getElementById('podcast-grid')
+      if (!grid) return
+      grid.innerHTML = ''
+
+      rows.forEach((ep: any) => {
+        const ytId  = ep.youtube_url?.match(/(?:v=|youtu\.be\/)([A-Za-z0-9_-]{11})/)?.[1] || ''
+        const thumb = ep.thumbnail_url || (ytId ? ytThumb(ytId) : '')
+        const card  = document.createElement('div')
+        card.style.cssText = 'background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:14px;overflow:hidden;display:flex;gap:0;flex-direction:column;'
+
+        card.innerHTML = `
+          <div style="display:flex;gap:14px;padding:16px;align-items:flex-start;">
+            <div style="flex-shrink:0;width:72px;height:72px;border-radius:10px;overflow:hidden;background:#1c3d7a;">
+              ${thumb ? `<img src="${thumb}" alt="${ep.title}" style="width:100%;height:100%;object-fit:cover;" loading="lazy">` : '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:2rem;">🎙️</div>'}
+            </div>
+            <div style="flex:1;min-width:0;">
+              ${ep.episode_number ? `<span style="font-size:11px;color:#d4f01a;font-weight:700;">EP ${ep.episode_number}${ep.season_number > 1 ? ' · S'+ep.season_number : ''}</span>` : ''}
+              <h3 style="font-family:'Sora',sans-serif;font-weight:700;font-size:14px;color:#fff;margin:3px 0 4px;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">${ep.title}</h3>
+              ${ep.guest_name ? `<p style="font-size:12px;color:rgba(255,255,255,0.5);margin:0;">with ${ep.guest_name}${ep.guest_designation ? ', '+ep.guest_designation : ''}</p>` : ''}
+              ${ep.duration ? `<p style="font-size:11px;color:rgba(255,255,255,0.4);margin:4px 0 0;">⏱ ${ep.duration}</p>` : ''}
+            </div>
+          </div>
+          <div style="display:flex;gap:8px;padding:0 16px 14px;flex-wrap:wrap;">
+            ${ytId ? `<a href="https://www.youtube.com/watch?v=${ytId}" target="_blank" rel="noopener" style="font-size:12px;font-weight:700;color:#fff;background:#ff0000;padding:5px 12px;border-radius:6px;text-decoration:none;display:flex;align-items:center;gap:4px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="#fff"><polygon points="8,5 20,12 8,19"/></svg>Watch</a>` : ''}
+            ${ep.spotify_url ? `<a href="${ep.spotify_url}" target="_blank" rel="noopener" style="font-size:12px;font-weight:700;color:#fff;background:#1DB954;padding:5px 12px;border-radius:6px;text-decoration:none;">🎵 Spotify</a>` : ''}
+            ${ep.audio_url ? `<a href="${ep.audio_url}" target="_blank" rel="noopener" style="font-size:12px;font-weight:700;color:#d4f01a;background:rgba(212,240,26,0.15);border:1px solid rgba(212,240,26,0.3);padding:5px 12px;border-radius:6px;text-decoration:none;">▶ Listen</a>` : ''}
+          </div>`
+
+        grid.appendChild(card)
+      })
+
+      show('podcast-section')
+    } catch(e) { console.warn('[ATEC Podcast]', e) }
+  }
+
+  // ── NEWS ITEMS ────────────────────────────────────────────────────────────
+  async function loadNews() {
+    const SB_URL = (window as any).__SB_URL as string
+    const SB_KEY = (window as any).__SB_KEY as string
+    if (!SB_URL || !SB_KEY) return
+    try {
+      const res = await fetch(
+        `${SB_URL}/rest/v1/news_items?is_active=eq.true&order=sort_order.asc.nullslast,created_at.desc&limit=4&select=*`,
+        { headers: { apikey: SB_KEY, Authorization: `Bearer ${SB_KEY}` } }
+      )
+      if (!res.ok) return
+      const rows = await res.json()
+      if (!Array.isArray(rows) || rows.length === 0) return
+
+      const grid = document.getElementById('news-grid')
+      if (!grid) return
+      grid.innerHTML = ''
+
+      rows.forEach((n: any) => {
+        const date = n.published_at || n.created_at
+          ? new Date(n.published_at || n.created_at).toLocaleDateString('en-IN', {day:'numeric',month:'short',year:'numeric'})
+          : ''
+        const card = document.createElement('div')
+        card.style.cssText = 'background:#fff;border:1px solid #e8ecf0;border-radius:14px;padding:20px;display:flex;flex-direction:column;gap:10px;box-shadow:0 2px 8px rgba(0,0,0,0.05);'
+
+        card.innerHTML = `
+          ${n.category ? `<span style="font-size:11px;font-weight:700;color:#1c3d7a;background:#eff6ff;padding:2px 10px;border-radius:20px;display:inline-block;width:fit-content;">${n.category}</span>` : ''}
+          <h3 style="font-family:'Sora',sans-serif;font-weight:700;font-size:15px;color:#1c1c1c;margin:0;line-height:1.4;">${n.title || ''}</h3>
+          ${n.description || n.excerpt ? `<p style="font-size:13px;color:#64748b;margin:0;line-height:1.55;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;">${n.description || n.excerpt}</p>` : ''}
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-top:auto;">
+            ${date ? `<span style="font-size:12px;color:#94a3b8;">${date}</span>` : '<span></span>'}
+            ${n.link || n.url ? `<a href="${n.link || n.url}" target="_blank" rel="noopener" style="font-size:12px;font-weight:700;color:#1c3d7a;text-decoration:none;">Read more →</a>` : ''}
+          </div>`
+
+        grid.appendChild(card)
+      })
+
+      show('news-section')
+    } catch(e) { console.warn('[ATEC News]', e) }
+  }
+
+  // ── Boot all loaders ──────────────────────────────────────────────────────
+  function bootAll() {
+    waitForSB(() => {
+      loadYouTube()
+      loadBlog()
+      loadPodcast()
+      loadNews()
+    })
+  }
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bootAll)
+  else bootAll()
+
+})()
+</script>
 
 </BaseLayout>
 
