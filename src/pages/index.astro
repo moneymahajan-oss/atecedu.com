@@ -557,15 +557,10 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
       doReveal()
     })
 
-    // ── Load settings from Supabase (parallel to countdown) ──────────────
+    // ── Load settings from Supabase (colours/text/custom video ID only) ────
+    // startPreload + startTick are called from boot() — NOT here.
+    // This function only patches colours and optionally swaps the video.
     async function loadSettings() {
-      // These run immediately — no waiting for network
-      setThumb(FALLBACK)
-      startPreload(FALLBACK)   // video starts buffering/playing now
-      startTick()              // 3s countdown starts now
-
-      // Supabase fetch is purely for colours/text/custom video ID
-      // If it fails or keys are missing, fallback video still plays
       if (!SB_URL || !SB_KEY) return
 
       try {
@@ -631,12 +626,35 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
     }
 
     // ── Boot ─────────────────────────────────────────────────────────────
-    // Wait for DOM to be fully ready
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', () => { loadSettings(); showBottomBar() })
-    } else {
-      loadSettings()
+    // Strategy: start preload + countdown immediately (never wait for SB).
+    // SB fetch runs in parallel for colours/text — failure doesn't stop video.
+    function boot() {
+      setThumb(FALLBACK)
+      startPreload(FALLBACK)   // video loads in 4×4px background immediately
+      startTick()              // 3s countdown
       showBottomBar()
+      loadSettings()           // parallel — only affects colours/text/custom ID
+    }
+
+    // Guard against __SB_URL not yet defined (script order race in BaseLayout)
+    // Poll every 50ms for up to 2s, then boot with fallback
+    function waitAndBoot() {
+      const sbUrl = (window as any).__SB_URL
+      if (sbUrl) { boot(); return }
+      let attempts = 0
+      const poll = setInterval(() => {
+        attempts++
+        if ((window as any).__SB_URL || attempts >= 40) {
+          clearInterval(poll)
+          boot()
+        }
+      }, 50)
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', waitAndBoot)
+    } else {
+      waitAndBoot()
     }
   })()
 </script>
