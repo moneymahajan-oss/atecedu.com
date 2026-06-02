@@ -358,7 +358,7 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
       bottom:0;
       left:0;
       right:0;
-      z-index:8888;
+      z-index:10001;
       background:${bottomBarBg};
       padding:14px 24px;
       display:flex;
@@ -385,7 +385,7 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
     >{bottomBarCTA} ↗</a>
     <!-- Dismiss button -->
     <button
-      onclick="document.getElementById('bottom-cta-bar').style.transform='translateY(100%)';localStorage.setItem('atec_bar_dismissed','1');"
+      onclick="document.getElementById('bottom-cta-bar').style.transform='translateY(100%)';localStorage.setItem('atec_bar_v2','dismissed');"
       style="background:none;border:none;color:rgba(255,255,255,0.5);cursor:pointer;font-size:18px;margin-left:8px;padding:0 4px;line-height:1;"
       title="Dismiss"
     >✕</button>
@@ -618,7 +618,7 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
 
     // ── Bottom bar slide-up after 2s ─────────────────────────────────────
     function showBottomBar() {
-      if (localStorage.getItem('atec_bar_dismissed') === '1') return
+      if (localStorage.getItem('atec_bar_v2') === 'dismissed') return
       setTimeout(() => {
         const bar = document.getElementById('bottom-cta-bar') as HTMLElement
         if (bar) bar.style.transform = 'translateY(0)'
