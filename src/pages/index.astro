@@ -343,134 +343,122 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
   </section>
 
   <!-- ══════════════════════════════════════════════════════════════
-       STUDENT STORIES — Scaler-style photo+video grid
-       Each card: full photo background, name+role overlay, play button.
-       Click → full-screen video overlay (same zoom system as hero).
-       Videos autoplay muted on card. Admin-controlled via testimonials table.
+       STUDENT STORIES — Scaler-style horizontal marquee loop
+       Cards move right-to-left continuously like Scaler's People section.
+       Each card: full photo bg, name+role+company overlay, muted autoplay video.
+       Click → fullscreen zoom overlay with audio.
   ══════════════════════════════════════════════════════════════ -->
   <style is:global>
-    /* Stories grid */
-    .stories-section { padding:72px 32px; background:#0f1724; }
-    .stories-inner   { max-width:1280px; margin:0 auto; }
-    .stories-header  { margin-bottom:48px; }
-    .stories-label   { font-size:12px; font-weight:800; color:#d4f01a; text-transform:uppercase; letter-spacing:0.12em; margin:0 0 10px; }
-    .stories-title   { font-family:'Sora',sans-serif; font-size:clamp(1.8rem,3.5vw,2.6rem); font-weight:900; color:#fff; margin:0; line-height:1.1; }
-    .stories-sub     { font-size:15px; color:rgba(255,255,255,0.5); margin:10px 0 0; }
-
-    /* Masonry-style grid: big card + 2 tall + 2 wide */
-    .stories-grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      grid-template-rows: 280px 280px;
-      gap: 12px;
-    }
-    @media(max-width:900px) {
-      .stories-grid { grid-template-columns:1fr 1fr; grid-template-rows:auto; }
-      .story-card-featured { grid-column:span 2 !important; grid-row:span 1 !important; }
-    }
-    @media(max-width:560px) {
-      .stories-grid { grid-template-columns:1fr; }
-      .story-card-featured { grid-column:span 1 !important; }
-    }
-
-    /* Individual card */
-    .story-card {
-      position: relative;
-      border-radius: 16px;
+    .stories-section {
+      padding: 64px 0 72px;
+      background: #0b1525;
       overflow: hidden;
+    }
+    .stories-inner { max-width: 1280px; margin: 0 auto; padding: 0 40px 40px; }
+    .stories-label { font-size: 12px; font-weight: 800; color: #d4f01a; text-transform: uppercase; letter-spacing: 0.12em; margin: 0 0 10px; }
+    .stories-title { font-family:'Sora',sans-serif; font-size: clamp(1.8rem,3.5vw,2.6rem); font-weight: 900; color: #fff; margin: 0; line-height: 1.1; }
+    .stories-sub   { font-size: 15px; color: rgba(255,255,255,0.45); margin: 10px 0 0; }
+
+    /* ── Marquee track ── */
+    .stories-marquee-wrap {
+      width: 100%;
+      overflow: hidden;
+      /* fade edges */
+      -webkit-mask-image: linear-gradient(to right, transparent 0%, black 6%, black 94%, transparent 100%);
+              mask-image: linear-gradient(to right, transparent 0%, black 6%, black 94%, transparent 100%);
+    }
+    @keyframes st-marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+    .stories-track {
+      display: flex;
+      width: max-content;
+      gap: 14px;
+      animation: st-marquee 36s linear infinite;
+      will-change: transform;
+    }
+    .stories-track:hover { animation-play-state: paused; }
+
+    /* ── Individual card ── */
+    .story-card {
+      flex-shrink: 0;
+      width: 260px;
+      height: 340px;
+      border-radius: 18px;
+      overflow: hidden;
+      position: relative;
       cursor: pointer;
       background: #1c2a40;
     }
-    .story-card-featured { grid-column: span 2; grid-row: span 2; border-radius:20px; }
+    /* Tall featured card (first one, slightly bigger) */
+    .story-card.story-featured {
+      width: 300px;
+      height: 380px;
+    }
+    .story-card.no-video { cursor: default; }
 
-    /* Photo fill */
+    /* Full-fill photo */
     .story-photo {
       position: absolute; inset: 0;
       width: 100%; height: 100%;
       object-fit: cover;
-      transition: transform 0.5s ease;
+      transition: transform 0.6s ease;
     }
-    .story-card:hover .story-photo { transform: scale(1.04); }
+    .story-card:hover .story-photo { transform: scale(1.05); }
 
-    /* Gradient overlay — bottom-up dark */
+    /* Gradient overlay */
     .story-grad {
       position: absolute; inset: 0;
-      background: linear-gradient(to top, rgba(0,0,0,0.88) 0%, rgba(0,0,0,0.3) 45%, transparent 100%);
+      background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.25) 50%, transparent 100%);
       transition: background 0.3s;
     }
     .story-card:hover .story-grad {
-      background: linear-gradient(to top, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.45) 55%, rgba(0,0,0,0.1) 100%);
+      background: linear-gradient(to top, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.4) 55%, rgba(0,0,0,0.08) 100%);
     }
 
-    /* Initials avatar (when no photo) */
-    .story-avatar {
+    /* Initials when no photo */
+    .story-initial {
       position: absolute; inset: 0;
       display: flex; align-items: center; justify-content: center;
       font-family: 'Sora',sans-serif; font-weight: 900;
-      color: #d4f01a;
+      font-size: 4rem; color: #d4f01a; opacity: 0.7;
     }
 
-    /* Play button */
+    /* Play button — centred, only if video */
     .story-play {
-      position: absolute;
-      top: 50%; left: 50%;
-      transform: translate(-50%, -50%) scale(0.85);
+      position: absolute; top: 50%; left: 50%;
+      transform: translate(-50%, -50%) scale(0.82);
       width: 52px; height: 52px;
-      background: rgba(255,255,255,0.15);
-      backdrop-filter: blur(8px);
-      border: 2px solid rgba(255,255,255,0.3);
+      background: rgba(255,255,255,0.14);
+      backdrop-filter: blur(6px);
+      border: 2px solid rgba(255,255,255,0.28);
       border-radius: 50%;
       display: flex; align-items: center; justify-content: center;
-      transition: all 0.25s ease;
+      transition: all 0.22s ease;
       pointer-events: none;
     }
-    .story-card-featured .story-play { width: 68px; height: 68px; }
     .story-card:hover .story-play {
       transform: translate(-50%, -50%) scale(1);
-      background: rgba(212,240,26,0.25);
+      background: rgba(212,240,26,0.22);
       border-color: #d4f01a;
     }
-
-    /* No-video cards: hide play button */
     .story-card.no-video .story-play { display: none; }
-    .story-card.no-video { cursor: default; }
 
-    /* Text overlay */
+    /* Text info — bottom overlay */
     .story-info {
-      position: absolute;
-      bottom: 0; left: 0; right: 0;
+      position: absolute; bottom: 0; left: 0; right: 0;
       padding: 16px 18px;
     }
-    .story-card-featured .story-info { padding: 24px 26px; }
-    .story-name {
-      font-family: 'Sora',sans-serif;
-      font-weight: 800; font-size: 15px; color: #fff;
-      margin: 0 0 3px; line-height: 1.2;
-    }
-    .story-card-featured .story-name { font-size: 20px; margin-bottom: 5px; }
-    .story-role {
-      font-size: 12px; color: rgba(255,255,255,0.7);
-      margin: 0 0 6px;
-    }
-    .story-card-featured .story-role { font-size: 14px; }
-    .story-company-badge {
+    .story-stars   { font-size: 11px; color: #d4f01a; margin-bottom: 4px; }
+    .story-name    { font-family:'Sora',sans-serif; font-weight: 800; font-size: 15px; color: #fff; margin: 0 0 3px; line-height: 1.2; }
+    .story-role    { font-size: 12px; color: rgba(255,255,255,0.65); margin: 0 0 7px; }
+    .story-company {
       display: inline-flex; align-items: center; gap: 5px;
-      background: rgba(255,255,255,0.12);
-      border: 1px solid rgba(255,255,255,0.2);
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.18);
       border-radius: 20px; padding: 3px 10px;
       font-size: 11px; font-weight: 700; color: #d4f01a;
     }
-    .story-quote {
-      font-size: 12px; color: rgba(255,255,255,0.65);
-      margin: 8px 0 0; line-height: 1.5;
-      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
-    }
-    .story-card-featured .story-quote { -webkit-line-clamp: 3; font-size: 13px; }
 
-    /* Stars */
-    .story-stars { font-size: 11px; color: #d4f01a; margin-bottom: 4px; }
-
-    /* Full-screen story overlay — same pattern as hero video overlay */
+    /* ── Full-screen story overlay ── */
     #story-overlay {
       position: fixed; inset: 0; z-index: 10000;
       display: flex; flex-direction: column;
@@ -482,46 +470,46 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
       will-change: transform,opacity;
     }
     #story-top-bar {
-      background: #0f1724;
+      background: #0b1525;
       padding: 10px 20px;
       display: flex; align-items: center; gap: 12px;
       flex-shrink: 0; position: relative; z-index: 1;
     }
-    #story-student-info { flex: 1; display: flex; align-items: center; gap: 12px; min-width: 0; }
+    #story-student-info { flex:1; display:flex; align-items:center; gap:12px; min-width:0; }
     #story-avatar-sm {
-      width: 36px; height: 36px; border-radius: 50%;
-      background: #1c3d7a; flex-shrink: 0;
-      display: flex; align-items: center; justify-content: center;
-      font-family: 'Sora',sans-serif; font-weight: 800; font-size: 14px; color: #d4f01a;
-      overflow: hidden;
+      width:36px; height:36px; border-radius:50%;
+      background:#1c3d7a; flex-shrink:0;
+      display:flex; align-items:center; justify-content:center;
+      font-family:'Sora',sans-serif; font-weight:800; font-size:14px; color:#d4f01a;
+      overflow:hidden;
     }
-    #story-name-sm  { font-weight: 700; font-size: 14px; color: #fff; }
-    #story-role-sm  { font-size: 12px; color: rgba(255,255,255,0.55); margin-top:1px; }
+    #story-name-sm { font-weight:700; font-size:14px; color:#fff; }
+    #story-role-sm { font-size:12px; color:rgba(255,255,255,0.55); margin-top:1px; }
     #story-close-btn {
-      background: rgba(255,255,255,0.12);
-      border: 1.5px solid rgba(255,255,255,0.25);
-      border-radius: 8px; color: #fff; cursor: pointer;
-      padding: 7px 18px; font-size: 14px; font-weight: 800;
-      transition: background 0.15s; flex-shrink: 0;
+      background:rgba(255,255,255,0.12);
+      border:1.5px solid rgba(255,255,255,0.25);
+      border-radius:8px; color:#fff; cursor:pointer;
+      padding:7px 18px; font-size:14px; font-weight:800;
+      transition:background 0.15s; flex-shrink:0;
     }
-    #story-close-btn:hover { background: rgba(255,60,60,0.55); }
-    #story-video-wrap { flex: 1; position: relative; z-index: 1; min-height: 0; background: #000; }
-    #story-backdrop  { position: absolute; inset: 0; z-index: 0; cursor: pointer; }
+    #story-close-btn:hover { background:rgba(255,60,60,0.55); }
+    #story-video-wrap { flex:1; position:relative; z-index:1; min-height:0; background:#000; }
+    #story-backdrop  { position:absolute; inset:0; z-index:0; cursor:pointer; }
   </style>
 
   <section class="stories-section" id="stories-section">
     <div class="stories-inner">
-      <div class="stories-header">
-        <p class="stories-label">Student Stories</p>
-        <h2 class="stories-title">Stories That Speak<br/>Louder Than Ads</h2>
-        <p class="stories-sub">Real students. Real transformations. Straight from ATEC.</p>
-      </div>
+      <p class="stories-label">Student Stories</p>
+      <h2 class="stories-title">Stories That Speak<br/>Louder Than Ads</h2>
+      <p class="stories-sub">Real students. Real transformations. Straight from ATEC.</p>
+    </div>
 
-      <!-- Grid: cards rendered from DB; JS injects muted autoplay iframes -->
-      <div class="stories-grid" id="stories-grid">
-        {fallbackTestimonials.map((t: any, i: number) => (
+    <!-- Marquee: JS duplicates cards for seamless loop -->
+    <div class="stories-marquee-wrap">
+      <div class="stories-track" id="stories-track">
+        {[...fallbackTestimonials, ...fallbackTestimonials].map((t: any, i: number) => (
           <div
-            class={`story-card${i === 0 ? ' story-card-featured' : ''}${!t.video_url ? ' no-video' : ''}`}
+            class={`story-card${i === 0 || i === fallbackTestimonials.length ? ' story-featured' : ''}${!t.video_url ? ' no-video' : ''}`}
             data-video-url={t.video_url || ''}
             data-video-type={t.video_type || 'youtube'}
             data-name={t.student_name}
@@ -532,27 +520,19 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
           >
             {t.photo_url
               ? <img class="story-photo" src={t.photo_url} alt={t.student_name} loading="lazy" />
-              : <div class="story-avatar" style={`font-size:${i===0?'3.5rem':'2.2rem'};`}>{t.student_name?.charAt(0)}</div>
+              : <div class="story-initial">{t.student_name?.charAt(0)}</div>
             }
             <div class="story-grad"></div>
-
-            {/* Play button — shown only if video_url exists */}
             {t.video_url && (
               <div class="story-play">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="#fff" style="margin-left:3px;"><polygon points="8,5 20,12 8,19"/></svg>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="#fff" style="margin-left:3px;"><polygon points="8,5 20,12 8,19"/></svg>
               </div>
             )}
-
             <div class="story-info">
-              {(t.rating || 5) > 0 && <div class="story-stars">{'★'.repeat(t.rating || 5)}</div>}
+              <div class="story-stars">{'★'.repeat(t.rating || 5)}</div>
               <div class="story-name">{t.student_name}</div>
               <div class="story-role">{t.course}</div>
-              {t.company_placed && (
-                <span class="story-company-badge">🏢 {t.company_placed}</span>
-              )}
-              {i === 0 && t.review && (
-                <p class="story-quote">"{t.review}"</p>
-              )}
+              {t.company_placed && <span class="story-company">🏢 {t.company_placed}</span>}
             </div>
           </div>
         ))}
@@ -560,7 +540,7 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
     </div>
   </section>
 
-  <!-- Story full-screen overlay -->
+  <!-- Story fullscreen overlay -->
   <div id="story-overlay">
     <div id="story-backdrop"></div>
     <div id="story-top-bar">
@@ -1080,20 +1060,16 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
     function initCards() {
       const cards = document.querySelectorAll<HTMLElement>('.story-card:not(.no-video)')
       cards.forEach(card => {
+        // Skip if iframe already injected
+        if (card.querySelector('iframe,video')) return
         const url  = card.dataset.videoUrl  || ''
         const type = card.dataset.videoType || 'youtube'
         if (!url) return
 
         const isDirect = /\.(mp4|webm|ogg|mov)(\?.*)?$/i.test(url)
-
         if (isDirect) {
-          // Use <video> tag for direct files
           const v = document.createElement('video')
-          v.src    = url
-          v.muted  = true
-          v.loop   = true
-          v.autoplay = true
-          v.playsInline = true
+          v.src = url; v.muted = true; v.loop = true; v.autoplay = true; v.playsInline = true
           v.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;object-fit:cover;pointer-events:none;'
           card.insertBefore(v, card.firstChild)
         } else {
@@ -1116,7 +1092,6 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
     function openStory(card: HTMLElement) {
       if (storyOpen) return
       storyOpen = true
-
       const url     = card.dataset.videoUrl  || ''
       const type    = card.dataset.videoType || 'youtube'
       const name    = card.dataset.name    || ''
@@ -1124,7 +1099,6 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
       const company = card.dataset.company || ''
       const photo   = card.dataset.photo   || ''
 
-      // Populate top bar
       const avatarEl = document.getElementById('story-avatar-sm') as HTMLElement
       const nameEl   = document.getElementById('story-name-sm')   as HTMLElement
       const roleEl   = document.getElementById('story-role-sm')   as HTMLElement
@@ -1136,13 +1110,13 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
       nameEl.textContent = name
       roleEl.textContent = company ? `${role} · ${company}` : role
 
-      // Inject video into overlay
       const wrap = document.getElementById('story-video-wrap') as HTMLElement
       wrap.innerHTML = ''
       const isDirect = /\.(mp4|webm|ogg|mov)(\?.*)?$/i.test(url)
       if (isDirect) {
         const v = document.createElement('video')
-        v.src = url; v.controls = true; v.autoplay = true; v.style.cssText = 'width:100%;height:100%;object-fit:contain;'
+        v.src = url; v.controls = true; v.autoplay = true
+        v.style.cssText = 'width:100%;height:100%;object-fit:contain;'
         wrap.appendChild(v)
       } else {
         const src = buildFullSrc(url, type)
@@ -1156,7 +1130,6 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
         }
       }
 
-      // Zoom in
       const ov = document.getElementById('story-overlay') as HTMLElement
       ov.style.pointerEvents = 'all'
       requestAnimationFrame(() => {
@@ -1168,7 +1141,7 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
     }
 
     function closeStory() {
-      const ov   = document.getElementById('story-overlay')   as HTMLElement
+      const ov   = document.getElementById('story-overlay')    as HTMLElement
       const wrap = document.getElementById('story-video-wrap') as HTMLElement
       ov.style.transition    = 'transform 0.45s ease, opacity 0.35s ease, border-radius 0.45s ease'
       ov.style.transform     = 'scale(0.06)'
@@ -1178,16 +1151,53 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
       setTimeout(() => { wrap.innerHTML = ''; ov.style.transition = 'none'; storyOpen = false }, 460)
     }
 
-    // ── Wire clicks ───────────────────────────────────────────────────────
+    // ── Wire clicks — use event delegation on track (handles duplicated cards) ──
     function wireCards() {
-      document.querySelectorAll<HTMLElement>('.story-card:not(.no-video)').forEach(card => {
-        card.addEventListener('click', () => openStory(card))
+      const track = document.getElementById('stories-track') as HTMLElement
+      if (!track) return
+      // Remove old listener to avoid double-firing
+      track.replaceWith(track.cloneNode(true))
+      const freshTrack = document.getElementById('stories-track') as HTMLElement
+      if (!freshTrack) return
+      freshTrack.addEventListener('click', (e) => {
+        const card = (e.target as HTMLElement).closest<HTMLElement>('.story-card:not(.no-video)')
+        if (card) openStory(card)
       })
       document.getElementById('story-close-btn')?.addEventListener('click', closeStory)
       document.getElementById('story-backdrop')?.addEventListener('click', closeStory)
     }
 
-    // ── Load stories from Supabase live (replaces fallback cards) ─────────
+    // ── Build a card element ──────────────────────────────────────────────
+    function makeCard(t: any, featured: boolean): HTMLElement {
+      const hasVideo = !!(t.video_url)
+      const card = document.createElement('div')
+      card.className = `story-card${featured?' story-featured':''}${!hasVideo?' no-video':''}`
+      card.dataset.videoUrl  = t.video_url  || ''
+      card.dataset.videoType = t.video_type || 'youtube'
+      card.dataset.name    = t.student_name || ''
+      card.dataset.role    = t.course       || ''
+      card.dataset.company = t.company_placed || ''
+      card.dataset.photo   = t.photo_url    || ''
+      card.style.background = t.photo_url ? '#000' : '#1c2a40'
+      const initial = (t.student_name||'?').charAt(0)
+      const stars   = '★'.repeat(Math.min(t.rating||5, 5))
+      card.innerHTML = `
+        ${t.photo_url
+          ? `<img class="story-photo" src="${t.photo_url}" alt="${t.student_name}" loading="lazy">`
+          : `<div class="story-initial">${initial}</div>`
+        }
+        <div class="story-grad"></div>
+        ${hasVideo ? `<div class="story-play"><svg width="18" height="18" viewBox="0 0 24 24" fill="#fff" style="margin-left:3px;"><polygon points="8,5 20,12 8,19"/></svg></div>` : ''}
+        <div class="story-info">
+          <div class="story-stars">${stars}</div>
+          <div class="story-name">${t.student_name||''}</div>
+          <div class="story-role">${t.course||''}</div>
+          ${t.company_placed ? `<span class="story-company">🏢 ${t.company_placed}</span>` : ''}
+        </div>`
+      return card
+    }
+
+    // ── Load stories from Supabase — replaces track with real data ────────
     async function loadStories() {
       const SB_URL = (window as any).__SB_URL as string
       const SB_KEY = (window as any).__SB_KEY as string
@@ -1195,54 +1205,25 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
 
       try {
         const res  = await fetch(
-          `${SB_URL}/rest/v1/testimonials?is_active=eq.true&order=sort_order.asc.nullslast&limit=8&select=*`,
+          `${SB_URL}/rest/v1/testimonials?is_active=eq.true&order=sort_order.asc.nullslast&limit=10&select=*`,
           { headers: { apikey: SB_KEY, Authorization: `Bearer ${SB_KEY}` } }
         )
         const rows: any[] = await res.json()
         if (!rows?.length) return
 
-        const grid = document.getElementById('stories-grid') as HTMLElement
-        if (!grid) return
+        const track = document.getElementById('stories-track') as HTMLElement
+        if (!track) return
 
-        grid.innerHTML = ''
-        rows.forEach((t: any, i: number) => {
-          const hasVideo = !!(t.video_url)
-          const card = document.createElement('div')
-          card.className = `story-card${i===0?' story-card-featured':''}${!hasVideo?' no-video':''}`
-          card.dataset.videoUrl  = t.video_url  || ''
-          card.dataset.videoType = t.video_type || 'youtube'
-          card.dataset.name    = t.student_name || ''
-          card.dataset.role    = t.course       || ''
-          card.dataset.company = t.company_placed || ''
-          card.dataset.photo   = t.photo_url    || ''
-          card.style.background = t.photo_url ? '#000' : '#1c2a40'
-
-          const initial = (t.student_name||'?').charAt(0)
-          const stars   = '★'.repeat(Math.min(t.rating||5, 5))
-
-          card.innerHTML = `
-            ${t.photo_url
-              ? `<img class="story-photo" src="${t.photo_url}" alt="${t.student_name}" loading="lazy">`
-              : `<div class="story-avatar" style="font-size:${i===0?'3.5':'2.2'}rem;">${initial}</div>`
-            }
-            <div class="story-grad"></div>
-            ${hasVideo ? `<div class="story-play"><svg width="20" height="20" viewBox="0 0 24 24" fill="#fff" style="margin-left:3px;"><polygon points="8,5 20,12 8,19"/></svg></div>` : ''}
-            <div class="story-info">
-              <div class="story-stars">${stars}</div>
-              <div class="story-name">${t.student_name||''}</div>
-              <div class="story-role">${t.course||''}</div>
-              ${t.company_placed ? `<span class="story-company-badge">🏢 ${t.company_placed}</span>` : ''}
-              ${(i===0 && t.review) ? `<p class="story-quote">"${t.review}"</p>` : ''}
-            </div>`
-
-          grid.appendChild(card)
+        // Build cards × 2 for seamless loop
+        track.innerHTML = ''
+        ;[...rows, ...rows].forEach((t, i) => {
+          track.appendChild(makeCard(t, i === 0 || i === rows.length))
         })
 
-        // Re-init cards with fresh DOM
         initCards()
         wireCards()
       } catch(e) {
-        console.warn('[ATEC Stories] Supabase fetch failed, using fallback:', e)
+        console.warn('[ATEC Stories] fetch failed, using fallback:', e)
       }
     }
 
@@ -1250,7 +1231,7 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
     function bootStories() {
       initCards()
       wireCards()
-      loadStories()  // runs in parallel, replaces cards if DB has data
+      loadStories()
     }
 
     if (document.readyState === 'loading') {
