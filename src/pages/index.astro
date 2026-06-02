@@ -452,7 +452,7 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
       style="background:#d4f01a;color:#1a1a1a;padding:8px 20px;border-radius:7px;font-weight:700;font-size:14px;text-decoration:none;display:inline-flex;align-items:center;gap:5px;"
     >{bottomBarCTA} ↗</a>
     <button
-      onclick="document.getElementById('bottom-cta-bar').style.transform='translateY(100%)';localStorage.setItem('atec_bar_v2','dismissed');"
+      onclick="document.getElementById('bottom-cta-bar').style.transform='translateY(100%)';"
       style="background:none;border:none;color:rgba(255,255,255,0.5);cursor:pointer;font-size:18px;margin-left:8px;padding:0 4px;line-height:1;"
       title="Dismiss"
     >✕</button>
@@ -615,11 +615,10 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
       const hint = document.getElementById('unmute-hint') as HTMLElement
       if (hint) hint.style.display = 'inline-flex'
 
-      // FIX B: show bottom CTA bar only now (video is playing full-screen)
-      if (localStorage.getItem('atec_bar_v2') !== 'dismissed') {
-        const bar = document.getElementById('bottom-cta-bar') as HTMLElement
-        if (bar) bar.style.transform = 'translateY(0)'
-      }
+      // FIX B: show bottom CTA bar when video zooms in — ALWAYS show during video
+      // (dismissed state only applies to the page-load auto-popup, not the video bar)
+      const bar = document.getElementById('bottom-cta-bar') as HTMLElement
+      if (bar) bar.style.transform = 'translateY(0)'
 
       // Zoom-in animation
       ov.style.pointerEvents = 'all'
