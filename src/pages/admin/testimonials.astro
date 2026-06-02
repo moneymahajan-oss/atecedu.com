@@ -1,8 +1,5 @@
 ---
 // src/pages/admin/testimonials.astro
-// COMPLETE REWRITE — all fields now save correctly:
-// student_name, course, company_placed, review, rating,
-// photo_url, video_url, video_type, sort_order, is_active
 import AdminLayout from '../../layouts/AdminLayout.astro'
 ---
 <AdminLayout title="Student Stories / Testimonials" activeSection="testimonials">
@@ -14,132 +11,159 @@ import { createClient } from '@supabase/supabase-js'
 import { createElement as h, useState, useEffect, useCallback } from 'react'
 import { createRoot } from 'react-dom/client'
 
-const sb = createClient((window as any).__SB_URL, (window as any).__SB_KEY)
-
-// ── ALL fields — nothing missing ──────────────────────────────────────────
-const EMPTY = {
-  student_name:   '',
-  course:         '',
-  company_placed: '',
-  review:         '',
-  rating:         5,
-  photo_url:      '',
-  video_url:      '',
-  video_type:     'youtube',
-  sort_order:     0,
-  is_active:      true,
+// ── Wait for __SB_URL to be injected by BaseLayout ────────────────────────
+function getClient() {
+  const url = (window as any).__SB_URL
+  const key = (window as any).__SB_KEY
+  if (!url || !key) return null
+  return createClient(url, key)
 }
 
-// ── Detect video type from URL ────────────────────────────────────────────
 function detectVideoType(url: string): string {
   if (!url) return 'youtube'
   const u = url.trim().toLowerCase()
-  if (u.includes('instagram.com'))  return 'instagram'
-  if (u.includes('facebook.com'))   return 'facebook'
-  if (u.includes('vimeo.com'))      return 'vimeo'
+  if (u.includes('instagram.com'))    return 'instagram'
+  if (u.includes('facebook.com'))     return 'facebook'
+  if (u.includes('vimeo.com'))        return 'vimeo'
   if (/\.(mp4|webm|ogg|mov)/.test(u)) return 'direct'
   return 'youtube'
 }
 
-// ── Extract YouTube thumbnail from URL/ID ─────────────────────────────────
 function ytThumb(url: string): string {
   if (!url) return ''
-  const m = url.match(/youtu\.be\/([A-Za-z0-9_-]{11})/) ||
-            url.match(/(?:v=|\/embed\/|\/shorts\/|\/v\/)([A-Za-z0-9_-]{11})/) ||
-            ((/^[A-Za-z0-9_-]{11}$/).test(url.trim()) ? [null, url.trim()] : null)
+  const u = url.trim()
+  const m = u.match(/youtu\.be\/([A-Za-z0-9_-]{11})/) ||
+            u.match(/(?:v=|\/embed\/|\/shorts\/|\/v\/)([A-Za-z0-9_-]{11})/) ||
+            (/^[A-Za-z0-9_-]{11}$/.test(u) ? [null, u] : null)
   return m ? `https://img.youtube.com/vi/${m[1]}/mqdefault.jpg` : ''
 }
 
-function Mgr() {
-  const [rows,    setRows]    = useState<any[]>([])
-  const [form,    setForm]    = useState<any>({...EMPTY})
-  const [editId,  setEditId]  = useState<string|null>(null)
-  const [show,    setShow]    = useState(false)
-  const [saving,  setSaving]  = useState(false)
-  const [msg,     setMsg]     = useState('')
-  const [delId,   setDelId]   = useState<string|null>(null)
+const EMPTY: any = {
+  student_name:'', course:'', company_placed:'', review:'',
+  rating:5, photo_url:'', video_url:'', video_type:'youtube',
+  sort_order:0, is_active:true,
+}
 
-  useEffect(() => { load() }, [])
+const labelStyle: any = { display:'block', fontSize:13, fontWeight:600, color:'#374151', marginBottom:5 }
+const inputStyle: any = {
+  width:'100%', boxSizing:'border-box', padding:'9px 12px',
+  border:'1px solid #d1d5db', borderRadius:8, fontSize:14,
+  color:'#111827', outline:'none', fontFamily:'inherit',
+}
+
+function Mgr() {
+  const [rows,   setRows]   = useState<any[]>([])
+  const [form,   setForm]   = useState<any>({...EMPTY})
+  const [editId, setEditId] = useState<string|null>(null)
+  const [show,   setShow]   = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [msg,    setMsg]    = useState('')
+  const [delId,  setDelId]  = useState<string|null>(null)
+  const [sbReady, setSbReady] = useState(false)
+
+  // ── Wait for Supabase credentials before doing anything ─────────────────
+  useEffect(() => {
+    let tries = 0
+    const t = setInterval(() => {
+      tries++
+      if ((window as any).__SB_URL && (window as any).__SB_KEY) {
+        clearInterval(t)
+        setSbReady(true)
+      } else if (tries > 60) {
+        clearInterval(t)
+        setMsg('❌ Cannot connect to database — reload the page')
+      }
+    }, 100)
+    return () => clearInterval(t)
+  }, [])
+
+  useEffect(() => { if (sbReady) load() }, [sbReady])
 
   async function load() {
+    const sb = getClient()
+    if (!sb) { setMsg('❌ DB not ready'); return }
     const { data, error } = await sb
       .from('testimonials')
       .select('*')
       .order('sort_order', { ascending: true })
-    if (error) { setMsg('❌ Load failed: ' + error.message); return }
+    if (error) { setMsg('❌ Load error: ' + error.message); return }
     setRows(data ?? [])
+    setMsg('')
   }
 
   const upd = useCallback((k: string, v: any) => {
     setForm((p: any) => {
-      const next = { ...p, [k]: v }
-      // Auto-detect video_type when video_url changes
+      const next = {...p, [k]: v}
       if (k === 'video_url') next.video_type = detectVideoType(v)
       return next
     })
   }, [])
 
-  function openAdd() {
-    setForm({ ...EMPTY })
-    setEditId(null)
-    setShow(true)
-    window.scrollTo({ top: 0, behavior: 'smooth' })
-  }
-
-  function openEdit(r: any) {
-    setForm({ ...EMPTY, ...r })
-    setEditId(r.id)
-    setShow(true)
-    window.scrollTo({ top: 0, behavior: 'smooth' })
-  }
-
-  function cancel() {
-    setShow(false)
-    setEditId(null)
-    setForm({ ...EMPTY })
-  }
+  function openAdd()  { setForm({...EMPTY}); setEditId(null); setShow(true); window.scrollTo({top:0,behavior:'smooth'}) }
+  function openEdit(r: any) { setForm({...EMPTY,...r}); setEditId(r.id); setShow(true); window.scrollTo({top:0,behavior:'smooth'}) }
+  function cancel()   { setShow(false); setEditId(null); setForm({...EMPTY}) }
 
   async function save() {
-    if (!form.student_name.trim()) { setMsg('❌ Student name is required'); return }
+    if (!form.student_name?.trim()) { setMsg('❌ Student name is required'); return }
+
+    const sb = getClient()
+    if (!sb) { setMsg('❌ DB not ready — reload the page'); return }
+
     setSaving(true)
-    setMsg('')
+    setMsg('💾 Saving...')
 
-    // ── COMPLETE payload — every field included ──────────────────────────
-    const payload = {
-      student_name:   form.student_name.trim(),
-      course:         form.course.trim(),
-      company_placed: form.company_placed.trim(),
-      review:         form.review.trim(),
-      rating:         parseInt(form.rating) || 5,
-      photo_url:      form.photo_url.trim(),
-      video_url:      form.video_url.trim(),
-      video_type:     form.video_type || detectVideoType(form.video_url),
+    const payload: any = {
+      student_name:   (form.student_name   || '').trim(),
+      course:         (form.course         || '').trim(),
+      company_placed: (form.company_placed || '').trim(),
+      review:         (form.review         || '').trim(),
+      rating:         parseInt(form.rating)  || 5,
+      photo_url:      (form.photo_url      || '').trim(),
+      video_url:      (form.video_url      || '').trim(),
+      video_type:     form.video_type      || detectVideoType(form.video_url || ''),
       sort_order:     parseInt(form.sort_order) || 0,
-      is_active:      form.is_active,
+      is_active:      !!form.is_active,
     }
 
-    let error: any = null
-    if (editId) {
-      const res = await sb.from('testimonials').update(payload).eq('id', editId)
-      error = res.error
-    } else {
-      const res = await sb.from('testimonials').insert(payload)
-      error = res.error
-    }
+    try {
+      let error: any = null
 
-    setSaving(false)
-    if (error) {
-      setMsg('❌ Save failed: ' + error.message)
-    } else {
-      setMsg(editId ? '✅ Updated successfully' : '✅ Added successfully')
-      setShow(false)
-      setEditId(null)
-      setForm({ ...EMPTY })
-      load()
+      if (editId) {
+        // UPDATE existing row
+        const res = await sb.from('testimonials').update(payload).eq('id', editId).select()
+        error = res.error
+        if (!error) console.log('[ATEC] Updated:', res.data)
+      } else {
+        // INSERT new row
+        const res = await sb.from('testimonials').insert(payload).select()
+        error = res.error
+        if (!error) console.log('[ATEC] Inserted:', res.data)
+      }
+
+      if (error) {
+        // Show the FULL Supabase error so we can diagnose
+        const detail = error.message || JSON.stringify(error)
+        setMsg('❌ ' + detail)
+        console.error('[ATEC] Save error:', error)
+      } else {
+        setMsg(editId ? '✅ Story updated!' : '✅ Story added!')
+        setShow(false)
+        setEditId(null)
+        setForm({...EMPTY})
+        load()
+      }
+    } catch (e: any) {
+      setMsg('❌ Network error: ' + (e?.message || String(e)))
+      console.error('[ATEC] Caught exception:', e)
+    } finally {
+      // ALWAYS unset saving — button never stays stuck
+      setSaving(false)
     }
   }
 
   async function confirmDelete(id: string) {
+    const sb = getClient()
+    if (!sb) return
     const { error } = await sb.from('testimonials').delete().eq('id', id)
     setDelId(null)
     if (error) setMsg('❌ Delete failed: ' + error.message)
@@ -147,320 +171,217 @@ function Mgr() {
   }
 
   async function toggle(id: string, cur: boolean) {
-    await sb.from('testimonials').update({ is_active: !cur }).eq('id', id)
-    setRows((p: any[]) => p.map(r => r.id === id ? { ...r, is_active: !cur } : r))
+    const sb = getClient()
+    if (!sb) return
+    const { error } = await sb.from('testimonials').update({is_active: !cur}).eq('id', id)
+    if (error) { setMsg('❌ ' + error.message); return }
+    setRows((p: any[]) => p.map(r => r.id === id ? {...r, is_active: !cur} : r))
   }
 
-  // ── Video preview helper ──────────────────────────────────────────────
+  const stars = (n: number) => '★'.repeat(Math.max(0, Math.min(5, n || 5))) + '☆'.repeat(5 - Math.max(0, Math.min(5, n || 5)))
+
   const videoPreview = (url: string, type: string) => {
     if (!url) return null
     const thumb = type === 'youtube' ? ytThumb(url) : null
-    return h('div', { style: { marginTop: 8 } },
+    return h('div', {style:{marginTop:8}},
       thumb
-        ? h('img', {
-            src: thumb,
-            alt: 'Video thumbnail',
-            style: { width: '100%', maxWidth: 280, borderRadius: 8, border: '2px solid #e2e8f0' }
-          })
-        : h('div', {
-            style: {
-              padding: '8px 12px',
-              background: '#f0fdf4',
-              border: '1px solid #86efac',
-              borderRadius: 6,
-              fontSize: 12,
-              color: '#166534',
-              display: 'flex',
-              alignItems: 'center',
-              gap: 6
-            }
-          },
-          h('span', null, type === 'instagram' ? '📸' : type === 'vimeo' ? '🎬' : type === 'direct' ? '📁' : '🔗'),
-          h('span', null, `${type.toUpperCase()} video detected`)
-        )
+        ? h('img', {src:thumb, alt:'thumb', style:{width:'100%',maxWidth:240,borderRadius:8,border:'2px solid #e2e8f0'}})
+        : h('div', {style:{padding:'6px 12px',background:'#f0fdf4',border:'1px solid #86efac',borderRadius:6,fontSize:12,color:'#166534'}},
+            `✅ ${type.toUpperCase()} video URL detected`)
     )
   }
 
-  // ── Stars display ────────────────────────────────────────────────────
-  const stars = (n: number) => '★'.repeat(n) + '☆'.repeat(5 - n)
+  if (!sbReady) return h('div', {style:{padding:40,textAlign:'center',color:'#64748b',fontSize:15}},
+    '⏳ Connecting to database...'
+  )
 
-  return h('div', { style: { fontFamily: 'system-ui,sans-serif', maxWidth: 1100, margin: '0 auto', padding: '24px 20px' } },
+  return h('div', {style:{fontFamily:'system-ui,sans-serif',maxWidth:1100,margin:'0 auto',padding:'24px 20px'}},
 
-    // Header
-    h('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 } },
+    // ── Header ─────────────────────────────────────────────────────────────
+    h('div', {style:{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:20}},
       h('div', null,
-        h('h1', { style: { fontSize: 24, fontWeight: 800, color: '#0f172a', margin: 0 } }, '🎓 Student Stories'),
-        h('p', { style: { color: '#64748b', fontSize: 14, margin: '4px 0 0' } },
-          'Manage testimonials · photo_url and video_url save to Supabase')
+        h('h1', {style:{fontSize:24,fontWeight:800,color:'#0f172a',margin:0}}, '🎓 Student Stories'),
+        h('p',  {style:{color:'#64748b',fontSize:14,margin:'4px 0 0'}},
+          `${rows.length} stories · photo_url & video_url save to Supabase`)
       ),
       h('button', {
         onClick: openAdd,
-        style: { background: '#1c3d7a', color: '#d4f01a', border: 'none', borderRadius: 8, padding: '10px 22px', fontWeight: 700, fontSize: 14, cursor: 'pointer' }
+        style:{background:'#1c3d7a',color:'#d4f01a',border:'none',borderRadius:8,padding:'10px 22px',fontWeight:700,fontSize:14,cursor:'pointer'}
       }, '+ Add Story')
     ),
 
-    // Status message
-    msg ? h('div', {
-      style: {
-        marginBottom: 16, padding: '10px 16px', borderRadius: 8,
-        background: msg.startsWith('❌') ? '#fef2f2' : '#f0fdf4',
-        border: `1px solid ${msg.startsWith('❌') ? '#fca5a5' : '#86efac'}`,
-        color: msg.startsWith('❌') ? '#991b1b' : '#166534',
-        fontSize: 14, fontWeight: 600
-      }
-    }, msg) : null,
+    // ── Status message ─────────────────────────────────────────────────────
+    msg ? h('div', {style:{
+      marginBottom:16, padding:'10px 16px', borderRadius:8,
+      background: msg.startsWith('❌') ? '#fef2f2' : msg.startsWith('✅') ? '#f0fdf4' : '#eff6ff',
+      border:`1px solid ${msg.startsWith('❌') ? '#fca5a5' : msg.startsWith('✅') ? '#86efac' : '#93c5fd'}`,
+      color: msg.startsWith('❌') ? '#991b1b' : msg.startsWith('✅') ? '#166534' : '#1d4ed8',
+      fontSize:14, fontWeight:600, wordBreak:'break-word'
+    }}, msg) : null,
 
-    // ── ADD / EDIT FORM ────────────────────────────────────────────────
-    show ? h('div', {
-      style: {
-        background: '#fff', border: '1px solid #e2e8f0',
-        borderRadius: 12, padding: 28, marginBottom: 28,
-        boxShadow: '0 4px 24px rgba(0,0,0,0.08)'
-      }
-    },
-      h('h2', { style: { fontSize: 18, fontWeight: 700, margin: '0 0 20px', color: '#0f172a' } },
+    // ── FORM ───────────────────────────────────────────────────────────────
+    show ? h('div', {style:{background:'#fff',border:'1px solid #e2e8f0',borderRadius:12,padding:28,marginBottom:28,boxShadow:'0 4px 24px rgba(0,0,0,0.08)'}},
+
+      h('h2', {style:{fontSize:18,fontWeight:700,margin:'0 0 20px',color:'#0f172a'}},
         editId ? '✏️ Edit Story' : '➕ Add New Story'),
 
-      // Row 1: Name + Course
-      h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 } },
+      // Name + Course
+      h('div', {style:{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16,marginBottom:16}},
         h('div', null,
-          h('label', { style: labelStyle }, 'Student Name *'),
-          h('input', {
-            value: form.student_name,
-            onChange: (e: any) => upd('student_name', e.target.value),
-            placeholder: 'e.g. Amrit Singh',
-            style: inputStyle
-          })
+          h('label', {style:labelStyle}, 'Student Name *'),
+          h('input', {value:form.student_name, onChange:(e:any)=>upd('student_name',e.target.value), placeholder:'e.g. Amrit Singh', style:inputStyle})
         ),
         h('div', null,
-          h('label', { style: labelStyle }, 'Course'),
-          h('input', {
-            value: form.course,
-            onChange: (e: any) => upd('course', e.target.value),
-            placeholder: 'e.g. MERN Stack',
-            style: inputStyle
-          })
+          h('label', {style:labelStyle}, 'Course'),
+          h('input', {value:form.course, onChange:(e:any)=>upd('course',e.target.value), placeholder:'e.g. MERN Stack', style:inputStyle})
         )
       ),
 
-      // Row 2: Company + Rating
-      h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 } },
+      // Company + Rating
+      h('div', {style:{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16,marginBottom:16}},
         h('div', null,
-          h('label', { style: labelStyle }, 'Company / Placed At'),
-          h('input', {
-            value: form.company_placed,
-            onChange: (e: any) => upd('company_placed', e.target.value),
-            placeholder: 'e.g. Infosys, Chandigarh',
-            style: inputStyle
-          })
+          h('label', {style:labelStyle}, 'Company / Placed At'),
+          h('input', {value:form.company_placed, onChange:(e:any)=>upd('company_placed',e.target.value), placeholder:'e.g. Infosys, Chandigarh', style:inputStyle})
         ),
         h('div', null,
-          h('label', { style: labelStyle }, `Rating: ${stars(parseInt(form.rating)||5)}`),
-          h('select', {
-            value: form.rating,
-            onChange: (e: any) => upd('rating', parseInt(e.target.value)),
-            style: inputStyle
-          },
-            [5,4,3,2,1].map(n => h('option', { key: n, value: n }, `${n} Stars ${stars(n)}`))
+          h('label', {style:labelStyle}, `Rating: ${stars(parseInt(form.rating)||5)}`),
+          h('select', {value:form.rating, onChange:(e:any)=>upd('rating',parseInt(e.target.value)), style:inputStyle},
+            [5,4,3,2,1].map(n => h('option', {key:n,value:n}, `${n} Stars ${stars(n)}`))
           )
         )
       ),
 
-      // Row 3: Photo URL
-      h('div', { style: { marginBottom: 16 } },
-        h('label', { style: labelStyle }, '📸 Photo URL (student thumbnail — shown as card background)'),
+      // Photo URL
+      h('div', {style:{marginBottom:16}},
+        h('label', {style:labelStyle}, '📸 Photo URL — shown as card background in marquee'),
         h('input', {
-          value: form.photo_url,
-          onChange: (e: any) => upd('photo_url', e.target.value),
-          placeholder: 'https://... (direct image link or Supabase Storage URL)',
-          style: inputStyle
+          value:form.photo_url,
+          onChange:(e:any)=>upd('photo_url',e.target.value),
+          placeholder:'https://... paste direct image URL or Supabase Storage URL',
+          style:inputStyle
         }),
-        form.photo_url ? h('div', { style: { marginTop: 8, display: 'flex', alignItems: 'center', gap: 12 } },
-          h('img', {
-            src: form.photo_url,
-            alt: 'Preview',
-            style: { width: 120, height: 80, objectFit: 'cover', borderRadius: 8, border: '2px solid #e2e8f0' },
-            onError: (e: any) => { e.target.style.display = 'none' }
-          }),
-          h('span', { style: { fontSize: 12, color: '#64748b' } }, '← Photo preview (card background)')
+        form.photo_url ? h('div', {style:{marginTop:8,display:'flex',alignItems:'center',gap:12}},
+          h('img', {src:form.photo_url, alt:'preview', style:{width:120,height:72,objectFit:'cover',borderRadius:8,border:'2px solid #e2e8f0'}, onError:(e:any)=>{e.target.style.display='none'}}),
+          h('span', {style:{fontSize:12,color:'#64748b'}}, '← thumbnail preview')
         ) : null
       ),
 
-      // Row 4: Video URL
-      h('div', { style: { marginBottom: 16 } },
-        h('label', { style: labelStyle }, '🎥 Video URL (YouTube / Instagram / Vimeo / .mp4)'),
+      // Video URL
+      h('div', {style:{marginBottom:16}},
+        h('label', {style:labelStyle}, '🎥 Video URL — autoplays muted in card, fullscreen on click'),
         h('input', {
-          value: form.video_url,
-          onChange: (e: any) => upd('video_url', e.target.value),
-          placeholder: 'https://youtu.be/... or https://www.instagram.com/reel/...',
-          style: inputStyle
+          value:form.video_url,
+          onChange:(e:any)=>upd('video_url',e.target.value),
+          placeholder:'https://youtu.be/... or https://www.instagram.com/reel/...',
+          style:inputStyle
         }),
-        h('div', { style: { marginTop: 4, display: 'flex', alignItems: 'center', gap: 8 } },
-          h('span', { style: { fontSize: 12, color: '#64748b' } }, 'Auto-detected type:'),
-          h('span', {
-            style: {
-              fontSize: 11, fontWeight: 700, padding: '2px 8px',
-              background: form.video_type === 'youtube'    ? '#dbeafe' :
-                          form.video_type === 'instagram'  ? '#fce7f3' :
-                          form.video_type === 'vimeo'      ? '#e0e7ff' :
-                          form.video_type === 'direct'     ? '#dcfce7' : '#f1f5f9',
-              color: form.video_type === 'youtube'    ? '#1d4ed8' :
-                     form.video_type === 'instagram'  ? '#9d174d' :
-                     form.video_type === 'vimeo'      ? '#3730a3' :
-                     form.video_type === 'direct'     ? '#166534' : '#475569',
-              borderRadius: 20
-            }
-          }, form.video_type.toUpperCase())
+        h('div', {style:{marginTop:5,display:'flex',alignItems:'center',gap:8}},
+          h('span', {style:{fontSize:12,color:'#64748b'}}, 'Auto-detected:'),
+          h('span', {style:{
+            fontSize:11,fontWeight:700,padding:'2px 9px',borderRadius:20,
+            background: form.video_type==='youtube'   ? '#dbeafe' :
+                        form.video_type==='instagram' ? '#fce7f3' :
+                        form.video_type==='vimeo'     ? '#e0e7ff' :
+                        form.video_type==='direct'    ? '#dcfce7' : '#f1f5f9',
+            color:      form.video_type==='youtube'   ? '#1d4ed8' :
+                        form.video_type==='instagram' ? '#9d174d' :
+                        form.video_type==='vimeo'     ? '#3730a3' :
+                        form.video_type==='direct'    ? '#166534' : '#475569',
+          }}, form.video_type.toUpperCase())
         ),
         videoPreview(form.video_url, form.video_type)
       ),
 
-      // Row 5: Review
-      h('div', { style: { marginBottom: 16 } },
-        h('label', { style: labelStyle }, 'Review / Quote'),
+      // Review
+      h('div', {style:{marginBottom:16}},
+        h('label', {style:labelStyle}, 'Review / Quote'),
         h('textarea', {
-          value: form.review,
-          onChange: (e: any) => upd('review', e.target.value),
-          placeholder: 'What did the student say about ATEC?',
-          rows: 3,
-          style: { ...inputStyle, resize: 'vertical', minHeight: 80 }
+          value:form.review,
+          onChange:(e:any)=>upd('review',e.target.value),
+          placeholder:'What did the student say?',
+          rows:3,
+          style:{...inputStyle, resize:'vertical', minHeight:80}
         })
       ),
 
-      // Row 6: Sort order + Active toggle
-      h('div', { style: { display: 'grid', gridTemplateColumns: '160px 1fr', gap: 16, marginBottom: 24 } },
+      // Sort order + Active
+      h('div', {style:{display:'grid',gridTemplateColumns:'160px 1fr',gap:16,marginBottom:24}},
         h('div', null,
-          h('label', { style: labelStyle }, 'Sort Order'),
-          h('input', {
-            type: 'number',
-            value: form.sort_order,
-            onChange: (e: any) => upd('sort_order', e.target.value),
-            min: 0,
-            style: inputStyle
-          })
+          h('label', {style:labelStyle}, 'Sort Order'),
+          h('input', {type:'number',value:form.sort_order,onChange:(e:any)=>upd('sort_order',e.target.value),min:0,style:inputStyle})
         ),
-        h('div', { style: { display: 'flex', alignItems: 'flex-end', paddingBottom: 2 } },
-          h('label', { style: { display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' } },
-            h('input', {
-              type: 'checkbox',
-              checked: form.is_active,
-              onChange: (e: any) => upd('is_active', e.target.checked),
-              style: { width: 18, height: 18, cursor: 'pointer', accentColor: '#1c3d7a' }
-            }),
-            h('span', { style: { fontWeight: 600, color: '#0f172a', fontSize: 14 } }, 'Show on website (Live)')
+        h('div', {style:{display:'flex',alignItems:'flex-end',paddingBottom:2}},
+          h('label', {style:{display:'flex',alignItems:'center',gap:10,cursor:'pointer'}},
+            h('input', {type:'checkbox',checked:form.is_active,onChange:(e:any)=>upd('is_active',e.target.checked), style:{width:18,height:18,cursor:'pointer',accentColor:'#1c3d7a'}}),
+            h('span', {style:{fontWeight:600,color:'#0f172a',fontSize:14}}, 'Show on website (Live)')
           )
         )
       ),
 
-      // Action buttons
-      h('div', { style: { display: 'flex', gap: 12 } },
+      // Buttons
+      h('div', {style:{display:'flex',gap:12,alignItems:'center'}},
         h('button', {
           onClick: save,
           disabled: saving,
-          style: {
-            background: saving ? '#94a3b8' : '#1c3d7a',
-            color: '#d4f01a', border: 'none', borderRadius: 8,
-            padding: '11px 28px', fontWeight: 700, fontSize: 14,
-            cursor: saving ? 'not-allowed' : 'pointer'
-          }
-        }, saving ? '💾 Saving...' : (editId ? '💾 Save Changes' : '➕ Add Story')),
-        h('button', {
-          onClick: cancel,
-          style: { background: '#f1f5f9', color: '#475569', border: '1px solid #e2e8f0', borderRadius: 8, padding: '11px 22px', fontWeight: 600, fontSize: 14, cursor: 'pointer' }
-        }, 'Cancel')
+          style:{background:saving?'#94a3b8':'#1c3d7a',color:'#d4f01a',border:'none',borderRadius:8,padding:'11px 28px',fontWeight:700,fontSize:14,cursor:saving?'not-allowed':'pointer'}
+        }, saving ? '⏳ Saving...' : (editId ? '💾 Save Changes' : '➕ Add Story')),
+        h('button', {onClick:cancel, style:{background:'#f1f5f9',color:'#475569',border:'1px solid #e2e8f0',borderRadius:8,padding:'11px 22px',fontWeight:600,fontSize:14,cursor:'pointer'}}, 'Cancel'),
+        saving ? h('span', {style:{fontSize:13,color:'#64748b'}}, 'Writing to Supabase...') : null
       )
     ) : null,
 
-    // ── STORIES TABLE ─────────────────────────────────────────────────────
-    h('div', { style: { background: '#fff', borderRadius: 12, border: '1px solid #e2e8f0', overflow: 'hidden' } },
-      h('div', { style: { padding: '16px 20px', borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' } },
-        h('span', { style: { fontWeight: 700, color: '#0f172a', fontSize: 15 } },
-          `${rows.length} stor${rows.length === 1 ? 'y' : 'ies'}`),
-        h('span', { style: { fontSize: 12, color: '#94a3b8' } }, 'Sorted by sort_order ascending')
+    // ── TABLE ──────────────────────────────────────────────────────────────
+    h('div', {style:{background:'#fff',borderRadius:12,border:'1px solid #e2e8f0',overflow:'hidden'}},
+      h('div', {style:{padding:'16px 20px',borderBottom:'1px solid #e2e8f0',display:'flex',justifyContent:'space-between',alignItems:'center'}},
+        h('span', {style:{fontWeight:700,color:'#0f172a',fontSize:15}}, `${rows.length} stor${rows.length===1?'y':'ies'}`),
+        h('span', {style:{fontSize:12,color:'#94a3b8'}}, 'sorted by sort_order')
       ),
       rows.length === 0
-        ? h('div', { style: { padding: 48, textAlign: 'center', color: '#94a3b8' } },
-            h('div', { style: { fontSize: 48, marginBottom: 12 } }, '🎓'),
-            h('p', { style: { fontSize: 16, fontWeight: 600, margin: '0 0 8px' } }, 'No stories yet'),
-            h('p', { style: { fontSize: 13, margin: 0 } }, 'Click "+ Add Story" to add your first student testimonial')
+        ? h('div', {style:{padding:48,textAlign:'center',color:'#94a3b8'}},
+            h('div', {style:{fontSize:48,marginBottom:12}}, '🎓'),
+            h('p',   {style:{fontSize:16,fontWeight:600,margin:'0 0 8px'}}, 'No stories yet'),
+            h('p',   {style:{fontSize:13,margin:0}}, 'Click "+ Add Story" above')
           )
-        : h('div', null,
-            rows.map((r: any) =>
-              h('div', {
-                key: r.id,
-                style: {
-                  display: 'grid',
-                  gridTemplateColumns: '80px 1fr auto',
-                  gap: 16, padding: '14px 20px',
-                  borderBottom: '1px solid #f1f5f9',
-                  alignItems: 'center',
-                  background: r.is_active ? '#fff' : '#fafafa',
-                  opacity: r.is_active ? 1 : 0.65
-                }
-              },
+        : rows.map((r:any) =>
+            h('div', {key:r.id, style:{display:'grid',gridTemplateColumns:'80px 1fr auto',gap:16,padding:'14px 20px',borderBottom:'1px solid #f1f5f9',alignItems:'center',background:r.is_active?'#fff':'#fafafa',opacity:r.is_active?1:0.6}},
 
-              // Thumbnail
-              h('div', { style: { width: 80, height: 54, borderRadius: 8, overflow: 'hidden', background: '#1c3d7a', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 } },
+              // Thumb
+              h('div', {style:{width:80,height:54,borderRadius:8,overflow:'hidden',background:'#1c3d7a',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}},
                 r.photo_url
-                  ? h('img', { src: r.photo_url, alt: r.student_name, style: { width: '100%', height: '100%', objectFit: 'cover' }, onError: (e: any) => { e.target.style.display='none' } })
-                  : (r.video_url && r.video_type === 'youtube' && ytThumb(r.video_url)
-                      ? h('img', { src: ytThumb(r.video_url), alt: r.student_name, style: { width: '100%', height: '100%', objectFit: 'cover' } })
-                      : h('span', { style: { color: '#d4f01a', fontWeight: 900, fontSize: 22 } }, r.student_name?.charAt(0).toUpperCase())
+                  ? h('img', {src:r.photo_url, alt:r.student_name, style:{width:'100%',height:'100%',objectFit:'cover'}, onError:(e:any)=>{e.target.style.display='none'}})
+                  : (r.video_url && r.video_type==='youtube'
+                      ? h('img', {src:ytThumb(r.video_url), alt:r.student_name, style:{width:'100%',height:'100%',objectFit:'cover'}})
+                      : h('span', {style:{color:'#d4f01a',fontWeight:900,fontSize:22}}, (r.student_name||'?').charAt(0).toUpperCase())
                     )
               ),
 
               // Info
               h('div', null,
-                h('div', { style: { display: 'flex', alignItems: 'center', gap: 8, marginBottom: 2 } },
-                  h('span', { style: { fontWeight: 700, fontSize: 15, color: '#0f172a' } }, r.student_name || '—'),
-                  h('span', { style: { background: r.is_active ? '#dcfce7' : '#f1f5f9', color: r.is_active ? '#166534' : '#94a3b8', fontSize: 11, fontWeight: 700, padding: '1px 7px', borderRadius: 20 } },
-                    r.is_active ? 'LIVE' : 'HIDDEN'),
-                  r.video_url ? h('span', { style: { background: '#dbeafe', color: '#1d4ed8', fontSize: 11, fontWeight: 700, padding: '1px 7px', borderRadius: 20 } },
-                    `▶ ${(r.video_type || 'youtube').toUpperCase()}`) : null,
-                  r.photo_url ? h('span', { style: { background: '#fce7f3', color: '#9d174d', fontSize: 11, fontWeight: 700, padding: '1px 7px', borderRadius: 20 } }, '📸 PHOTO') : null
+                h('div', {style:{display:'flex',alignItems:'center',gap:6,flexWrap:'wrap',marginBottom:3}},
+                  h('span', {style:{fontWeight:700,fontSize:15,color:'#0f172a'}}, r.student_name||'—'),
+                  h('span', {style:{background:r.is_active?'#dcfce7':'#f1f5f9',color:r.is_active?'#166534':'#94a3b8',fontSize:11,fontWeight:700,padding:'1px 7px',borderRadius:20}}, r.is_active?'LIVE':'HIDDEN'),
+                  r.video_url ? h('span', {style:{background:'#dbeafe',color:'#1d4ed8',fontSize:11,fontWeight:700,padding:'1px 7px',borderRadius:20}}, `▶ ${(r.video_type||'YT').toUpperCase()}`) : null,
+                  r.photo_url ? h('span', {style:{background:'#fce7f3',color:'#9d174d',fontSize:11,fontWeight:700,padding:'1px 7px',borderRadius:20}}, '📸 PHOTO') : null
                 ),
-                h('div', { style: { fontSize: 13, color: '#64748b' } },
-                  [r.course, r.company_placed].filter(Boolean).join(' · ') || '—'
-                ),
-                h('div', { style: { fontSize: 12, color: '#d4f01a', background: '#1c3d7a', display: 'inline-block', padding: '0 6px', borderRadius: 4, marginTop: 2 } },
-                  stars(r.rating || 5)
-                )
+                h('div', {style:{fontSize:13,color:'#64748b'}}, [r.course,r.company_placed].filter(Boolean).join(' · ')||'—'),
+                h('div', {style:{fontSize:11,color:'#d4f01a',background:'#1c3d7a',display:'inline-block',padding:'0 6px',borderRadius:4,marginTop:2}}, stars(r.rating||5))
               ),
 
               // Actions
-              h('div', { style: { display: 'flex', gap: 6, flexShrink: 0 } },
-                h('button', {
-                  onClick: () => openEdit(r),
-                  style: { background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 6, padding: '5px 12px', fontSize: 12, fontWeight: 600, color: '#475569', cursor: 'pointer' }
-                }, '✏️ Edit'),
-                h('button', {
-                  onClick: () => toggle(r.id, r.is_active),
-                  style: { background: r.is_active ? '#fef2f2' : '#f0fdf4', border: `1px solid ${r.is_active ? '#fca5a5' : '#86efac'}`, borderRadius: 6, padding: '5px 12px', fontSize: 12, fontWeight: 700, color: r.is_active ? '#991b1b' : '#166534', cursor: 'pointer' }
-                }, r.is_active ? '⭕ Hide' : '✅ Show'),
-                delId === r.id
-                  ? h('div', { style: { display: 'flex', gap: 4 } },
-                      h('button', { onClick: () => confirmDelete(r.id), style: { background: '#dc2626', color: '#fff', border: 'none', borderRadius: 6, padding: '5px 10px', fontSize: 12, fontWeight: 700, cursor: 'pointer' } }, 'Confirm'),
-                      h('button', { onClick: () => setDelId(null), style: { background: '#e2e8f0', color: '#475569', border: 'none', borderRadius: 6, padding: '5px 10px', fontSize: 12, fontWeight: 600, cursor: 'pointer' } }, 'No')
+              h('div', {style:{display:'flex',gap:6,flexShrink:0}},
+                h('button', {onClick:()=>openEdit(r), style:{background:'#f8fafc',border:'1px solid #e2e8f0',borderRadius:6,padding:'5px 12px',fontSize:12,fontWeight:600,color:'#475569',cursor:'pointer'}}, '✏️ Edit'),
+                h('button', {onClick:()=>toggle(r.id,r.is_active), style:{background:r.is_active?'#fef2f2':'#f0fdf4',border:`1px solid ${r.is_active?'#fca5a5':'#86efac'}`,borderRadius:6,padding:'5px 12px',fontSize:12,fontWeight:700,color:r.is_active?'#991b1b':'#166534',cursor:'pointer'}}, r.is_active?'⭕ Hide':'✅ Show'),
+                delId===r.id
+                  ? h('div', {style:{display:'flex',gap:4}},
+                      h('button', {onClick:()=>confirmDelete(r.id), style:{background:'#dc2626',color:'#fff',border:'none',borderRadius:6,padding:'5px 10px',fontSize:12,fontWeight:700,cursor:'pointer'}}, 'Confirm'),
+                      h('button', {onClick:()=>setDelId(null),       style:{background:'#e2e8f0',color:'#475569',border:'none',borderRadius:6,padding:'5px 10px',fontSize:12,fontWeight:600,cursor:'pointer'}}, 'No')
                     )
-                  : h('button', {
-                      onClick: () => setDelId(r.id),
-                      style: { background: '#fef2f2', border: '1px solid #fca5a5', borderRadius: 6, padding: '5px 12px', fontSize: 12, fontWeight: 700, color: '#dc2626', cursor: 'pointer' }
-                    }, '🗑️')
+                  : h('button', {onClick:()=>setDelId(r.id), style:{background:'#fef2f2',border:'1px solid #fca5a5',borderRadius:6,padding:'5px 12px',fontSize:12,fontWeight:700,color:'#dc2626',cursor:'pointer'}}, '🗑️')
               )
-            ))
+            )
           )
     )
   )
-}
-
-// Shared styles
-const labelStyle: any = { display: 'block', fontSize: 13, fontWeight: 600, color: '#374151', marginBottom: 5 }
-const inputStyle: any = {
-  width: '100%', boxSizing: 'border-box',
-  padding: '9px 12px', border: '1px solid #d1d5db',
-  borderRadius: 8, fontSize: 14, color: '#111827',
-  outline: 'none', fontFamily: 'inherit',
-  transition: 'border-color 0.15s',
 }
 
 createRoot(document.getElementById('root')!).render(h(Mgr, null))
