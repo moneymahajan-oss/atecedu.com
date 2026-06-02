@@ -124,7 +124,7 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
 
   <!-- ══════════════════════════════════════════════════════════════
        FULL-VIEWPORT VIDEO OVERLAY — position:fixed, zooms in at 3s
-       Covers entire screen including navbar area like Scaler
+       Starts display:none to prevent black flash before animation
   ══════════════════════════════════════════════════════════════ -->
   <div
     id="video-overlay"
@@ -132,7 +132,7 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
       position:fixed;
       inset:0;
       z-index:9999;
-      display:flex;
+      display:none;
       flex-direction:column;
       background:#000;
       transform:scale(0.06);
@@ -382,110 +382,146 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
   const SB_URL: string = window.__SB_URL
   const SB_KEY: string = window.__SB_KEY
 
+  // ── Fallback YouTube ID (ATEC student story video) ─────────────────────
+  // This plays even before admin sets a video. Replace with any YT video ID.
+  const FALLBACK_YT_ID = 'oEK34ybNFdQ'
+
   // ── Utilities ─────────────────────────────────────────────────────────────
   function extractYtId(raw: string): string {
-    if (!raw) return ''
-    const s = raw.match(/youtu\.be\/([a-zA-Z0-9_-]{11})/)
-    if (s) return s[1]
-    const l = raw.match(/[?&]v=([a-zA-Z0-9_-]{11})/)
-    if (l) return l[1]
-    const e = raw.match(/embed\/([a-zA-Z0-9_-]{11})/)
-    if (e) return e[1]
-    if (/^[a-zA-Z0-9_-]{11}$/.test(raw.trim())) return raw.trim()
+    if (!raw?.trim()) return ''
+    raw = raw.trim()
+    let m
+    if ((m = raw.match(/youtu\.be\/([a-zA-Z0-9_-]{11})/)))      return m[1]
+    if ((m = raw.match(/[?&]v=([a-zA-Z0-9_-]{11})/)))           return m[1]
+    if ((m = raw.match(/\/embed\/([a-zA-Z0-9_-]{11})/)))         return m[1]
+    if ((m = raw.match(/\/shorts\/([a-zA-Z0-9_-]{11})/)))        return m[1]
+    if (/^[a-zA-Z0-9_-]{11}$/.test(raw))                        return raw
     return ''
+  }
+
+  // ── Shared state ──────────────────────────────────────────────────────────
+  let activeYtId = FALLBACK_YT_ID
+  let revealScheduled = false
+
+  // ── Inject iframe into overlay (only at reveal time so autoplay works) ────
+  function injectIframe(ytId: string) {
+    const wrap = document.getElementById('video-iframe-wrap') as HTMLElement
+    wrap.innerHTML = `
+      <iframe
+        src="https://www.youtube.com/embed/${ytId}?autoplay=1&mute=0&loop=1&playlist=${ytId}&controls=1&modestbranding=1&rel=0&enablejsapi=1"
+        allow="autoplay; encrypted-media; fullscreen"
+        allowfullscreen
+        style="position:absolute;inset:0;width:100%;height:100%;border:none;"
+      ></iframe>
+    `
   }
 
   // ── 1. Pull live hero settings ────────────────────────────────────────────
   async function applyLiveSettings() {
-    if (!SB_URL || !SB_KEY) return
+    // Apply fallback YT thumbnail immediately while Supabase loads
+    applyYtThumbnail(FALLBACK_YT_ID)
+
+    if (!SB_URL || !SB_KEY) {
+      // No Supabase — use fallback video
+      scheduleReveal(FALLBACK_YT_ID)
+      return
+    }
+
     try {
       const res = await fetch(
         `${SB_URL}/rest/v1/site_settings?key=eq.hero&select=value`,
         { headers: { apikey: SB_KEY, Authorization: `Bearer ${SB_KEY}` } }
       )
       const rows = await res.json()
-      if (!rows?.length) return
-      const v = rows[0].value
+      const v = rows?.[0]?.value || {}
 
       // Hero background & text
       const section = document.getElementById('hero-section') as HTMLElement
       if (v.hero_bg_color) section.style.background = v.hero_bg_color
-
       const heading = document.getElementById('hero-heading') as HTMLElement
-      if (v.heading) heading.innerHTML = v.heading
+      if (v.heading)       heading.innerHTML = v.heading
       if (v.hero_text_color) heading.style.color = v.hero_text_color
-
       const sub = document.getElementById('hero-sub') as HTMLElement
-      if (v.subheading) sub.textContent = v.subheading
+      if (v.subheading)    sub.textContent = v.subheading
       if (v.hero_sub_color) sub.style.color = v.hero_sub_color
 
-      // Video overlay bar
-      const barEl = document.getElementById('video-bar-text') as HTMLElement
+      // Video overlay bar colours
+      const barEl  = document.getElementById('video-bar-text') as HTMLElement
       const topBar = document.getElementById('video-top-bar') as HTMLElement
-      if (v.video_bar_text) barEl.textContent = v.video_bar_text
-      if (v.video_bar_bg) topBar.style.background = v.video_bar_bg
-      if (v.video_bar_text_color) barEl.style.color = v.video_bar_text_color
+      if (v.video_bar_text)       barEl.textContent    = v.video_bar_text
+      if (v.video_bar_bg)         topBar.style.background = v.video_bar_bg
+      if (v.video_bar_text_color) barEl.style.color    = v.video_bar_text_color
 
       // Bottom CTA bar
-      const btText  = document.getElementById('bottom-bar-text') as HTMLElement
+      const btText  = document.getElementById('bottom-bar-text')  as HTMLElement
       const btPhone = document.getElementById('bottom-bar-phone') as HTMLAnchorElement
-      const btCTA   = document.getElementById('bottom-bar-cta') as HTMLAnchorElement
-      const btBar   = document.getElementById('bottom-cta-bar') as HTMLElement
+      const btCTA   = document.getElementById('bottom-bar-cta')   as HTMLAnchorElement
+      const btBar   = document.getElementById('bottom-cta-bar')   as HTMLElement
       if (v.bottom_bar_text  && btText)  btText.textContent = v.bottom_bar_text
       if (v.bottom_bar_phone && btPhone) { btPhone.textContent = v.bottom_bar_phone; btPhone.href = `tel:${v.bottom_bar_phone.replace(/\s/g,'')}` }
       if (v.bottom_bar_cta   && btCTA)   btCTA.textContent = v.bottom_bar_cta + ' ↗'
       if (v.bottom_bar_link  && btCTA)   btCTA.href = v.bottom_bar_link
       if (v.bottom_bar_bg    && btBar)   btBar.style.background = v.bottom_bar_bg
 
-      // ── 2. YouTube thumbnail + 3s zoom-in reveal ───────────────────────
-      const ytId = extractYtId(v.youtube_video_id || '')
-      if (ytId) {
-        // Show YouTube thumbnail in placeholder immediately
-        const thumb = document.getElementById('hero-yt-thumb') as HTMLImageElement
-        thumb.src = `https://img.youtube.com/vi/${ytId}/maxresdefault.jpg`
-        thumb.onload = () => { thumb.style.opacity = '1' }
-        thumb.onerror = () => { thumb.src = `https://img.youtube.com/vi/${ytId}/hqdefault.jpg` }
+      // Resolve video ID: use admin-saved ID if valid, else fallback
+      const savedId = extractYtId(v.youtube_video_id || '')
+      const ytId    = savedId || FALLBACK_YT_ID
 
-        // Pre-inject iframe
-        const iframeWrap = document.getElementById('video-iframe-wrap') as HTMLElement
-        iframeWrap.innerHTML = `
-          <iframe
-            src="https://www.youtube.com/embed/${ytId}?autoplay=1&mute=0&loop=1&playlist=${ytId}&controls=1&modestbranding=1&rel=0"
-            allow="autoplay; encrypted-media"
-            allowfullscreen
-            style="position:absolute;inset:0;width:100%;height:100%;border:none;"
-          ></iframe>
-        `
+      // Update thumbnail if admin set a different video
+      if (savedId && savedId !== FALLBACK_YT_ID) applyYtThumbnail(savedId)
 
-        // Schedule zoom-in
-        setTimeout(triggerVideoReveal, 3000)
-      }
+      scheduleReveal(ytId)
 
     } catch(e) {
-      console.warn('Hero settings error:', e)
+      console.warn('Hero settings error — using fallback video:', e)
+      scheduleReveal(FALLBACK_YT_ID)
     }
   }
 
-  // ── 3. Zoom-in: scale(0.06) → scale(1), covers entire viewport ───────────
-  function triggerVideoReveal() {
+  // ── 2. Show YouTube thumbnail in placeholder ───────────────────────────────
+  function applyYtThumbnail(ytId: string) {
+    const thumb = document.getElementById('hero-yt-thumb') as HTMLImageElement
+    if (!thumb) return
+    thumb.src = `https://img.youtube.com/vi/${ytId}/maxresdefault.jpg`
+    thumb.onload  = () => { thumb.style.opacity = '1' }
+    thumb.onerror = () => { thumb.src = `https://img.youtube.com/vi/${ytId}/hqdefault.jpg` }
+  }
+
+  // ── 3. Schedule 3s zoom-in (only once) ────────────────────────────────────
+  function scheduleReveal(ytId: string) {
+    if (revealScheduled) return
+    revealScheduled = true
+    activeYtId = ytId
+    setTimeout(() => triggerVideoReveal(ytId), 3000)
+  }
+
+  // ── 4. Zoom-in: display:none → display:flex → scale(1) ────────────────────
+  function triggerVideoReveal(ytId: string) {
     const overlay     = document.getElementById('video-overlay') as HTMLElement
     const heroContent = document.getElementById('hero-content') as HTMLElement
 
-    overlay.style.pointerEvents = 'all'
-    overlay.style.transition    = 'transform 0.95s cubic-bezier(0.22,1,0.36,1), opacity 0.55s ease, border-radius 0.95s ease'
+    // Step 1: make element display:flex (but still opacity:0, scale:0.06)
+    overlay.style.display = 'flex'
 
+    // Step 2: inject iframe NOW (element is visible to browser, autoplay works)
+    injectIframe(ytId)
+
+    // Step 3: small delay so browser paints the display:flex before transition
     requestAnimationFrame(() => requestAnimationFrame(() => {
-      overlay.style.transform    = 'scale(1)'
-      overlay.style.opacity      = '1'
-      overlay.style.borderRadius = '0'
+      overlay.style.pointerEvents = 'all'
+      overlay.style.transition    = 'transform 0.95s cubic-bezier(0.22,1,0.36,1), opacity 0.55s ease, border-radius 0.95s ease'
+      overlay.style.transform     = 'scale(1)'
+      overlay.style.opacity       = '1'
+      overlay.style.borderRadius  = '0'
     }))
 
-    heroContent.style.transition  = 'opacity 0.5s ease'
-    heroContent.style.opacity     = '0.1'
+    // Fade hero content behind
+    heroContent.style.transition    = 'opacity 0.5s ease'
+    heroContent.style.opacity       = '0.1'
     heroContent.style.pointerEvents = 'none'
   }
 
-  // ── 4. Close button ───────────────────────────────────────────────────────
+  // ── 5. Close button ───────────────────────────────────────────────────────
   document.getElementById('video-close-btn')?.addEventListener('click', () => {
     const overlay     = document.getElementById('video-overlay') as HTMLElement
     const heroContent = document.getElementById('hero-content') as HTMLElement
@@ -496,25 +532,38 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
     overlay.style.borderRadius  = '28px'
     overlay.style.pointerEvents = 'none'
 
-    heroContent.style.opacity      = '1'
+    heroContent.style.opacity       = '1'
     heroContent.style.pointerEvents = 'all'
 
-    // Clear iframe to stop video audio
+    // After zoom-out finishes: hide + clear iframe (stops audio)
     setTimeout(() => {
+      overlay.style.display = 'none'
       const wrap = document.getElementById('video-iframe-wrap') as HTMLElement
       wrap.innerHTML = ''
-    }, 500)
+      // Reset so it can be reopened by thumbnail click
+      overlay.style.transform    = 'scale(0.06)'
+      overlay.style.opacity      = '0'
+      overlay.style.borderRadius = '28px'
+      overlay.style.transition   = 'none'
+    }, 520)
   })
 
-  // Clicking the thumbnail also triggers reveal immediately
-  document.getElementById('hero-thumb')?.addEventListener('click', triggerVideoReveal)
+  // ── 6. Thumbnail click → immediate reveal ────────────────────────────────
+  document.getElementById('hero-thumb')?.addEventListener('click', () => {
+    const overlay = document.getElementById('video-overlay') as HTMLElement
+    // If already shown, do nothing
+    if (overlay.style.opacity === '1') return
+    // Cancel pending timeout and show immediately
+    revealScheduled = true
+    triggerVideoReveal(activeYtId)
+  })
 
-  // ── 5. Bottom CTA bar: slide up after 2s (if not dismissed) ──────────────
+  // ── 7. Bottom CTA bar: slide up after 2s (if not dismissed) ──────────────
   function showBottomBar() {
     if (localStorage.getItem('atec_bar_dismissed') === '1') return
     setTimeout(() => {
       const bar = document.getElementById('bottom-cta-bar') as HTMLElement
-      bar.style.transform = 'translateY(0)'
+      if (bar) bar.style.transform = 'translateY(0)'
     }, 2000)
   }
 
