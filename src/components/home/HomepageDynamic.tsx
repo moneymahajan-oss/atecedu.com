@@ -88,20 +88,6 @@ export default function HomepageDynamic() {
 
   return (
     <>
-      {/* ── STATS BAR ───────────────────────────────────────── */}
-      <div className="stats-bar-section">
-        <div className="container">
-          <div className="stats-bar">
-            {stats.map((s: any, i: number) => (
-              <div key={i} className="stats-item">
-                <span className="stats-num">{s.value}</span>
-                <span className="stats-label">{s.label}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
       {/* ── HERO DYNAMIC CONTENT ────────────────────────────── */}
       {hero && (
         <div id="hero-dynamic" style={{display:'none'}} data-heading={hero.heading} data-sub={hero.subheading} data-ytid={hero.youtube_video_id||''} />

@@ -1,6 +1,6 @@
 ---
 // src/pages/index.astro
-// Enchanting hero — no badges, no trust avatars. All admin-controlled.
+// Clean enchanting hero — eyebrow + feature pills removed, tighter spacing
 import BaseLayout from '../layouts/BaseLayout.astro'
 import HomepageDynamic from '../components/home/HomepageDynamic'
 ---
@@ -11,11 +11,8 @@ import HomepageDynamic from '../components/home/HomepageDynamic'
   pageSlug="homepage"
 >
 
-  <!-- ============================================================
-       ENCHANTING HERO
-  ============================================================ -->
+  <!-- ENCHANTING HERO -->
   <section class="hero-enchant">
-    <!-- Animated gradient orbs -->
     <div class="orb orb-1"></div>
     <div class="orb orb-2"></div>
     <div class="orb orb-3"></div>
@@ -24,11 +21,6 @@ import HomepageDynamic from '../components/home/HomepageDynamic'
     <div class="container">
       <div class="hero-grid">
         <div class="hero-left">
-          <div class="hero-eyebrow">
-            <span class="eyebrow-pulse"></span>
-            <span id="hero-eyebrow-text">Trusted Since 2000 · Gurdaspur</span>
-          </div>
-
           <h1 class="hero-title" id="hero-heading">
             <span class="title-line">Turning Students Into</span>
             <span class="title-line gradient-text">Professionals</span>
@@ -50,38 +42,15 @@ import HomepageDynamic from '../components/home/HomepageDynamic'
               <span class="cta-label" id="hero-cta2-label">Chat on WhatsApp</span>
             </a>
           </div>
-
-          <div class="hero-feature-pills">
-            <span class="feature-pill">⚡ Live Zoom Classes</span>
-            <span class="feature-pill">🎓 Verified Certificate</span>
-            <span class="feature-pill">💼 100% Placement Support</span>
-          </div>
         </div>
 
         <div class="hero-right">
           <div class="hero-visual-card" id="hero-visual">
-            <!-- Placeholder visual until admin sets YouTube ID -->
             <div class="visual-content">
               <div class="visual-shimmer"></div>
               <div class="visual-logo">A</div>
               <div class="visual-title">ATEC</div>
               <div class="visual-sub">Educational Society</div>
-              <div class="visual-divider"></div>
-              <div class="visual-stats">
-                <div class="vs-item">
-                  <div class="vs-num">25+</div>
-                  <div class="vs-lbl">Years</div>
-                </div>
-                <div class="vs-item">
-                  <div class="vs-num">5000+</div>
-                  <div class="vs-lbl">Students</div>
-                </div>
-                <div class="vs-item">
-                  <div class="vs-num">15+</div>
-                  <div class="vs-lbl">Courses</div>
-                </div>
-              </div>
-              <div class="visual-badge">ISO 9001:2015 ✓</div>
             </div>
           </div>
         </div>
@@ -89,9 +58,7 @@ import HomepageDynamic from '../components/home/HomepageDynamic'
     </div>
   </section>
 
-  <!-- ============================================================
-       WHY ATEC — Static
-  ============================================================ -->
+  <!-- WHY ATEC -->
   <section class="why-section section">
     <div class="container">
       <div class="section-header center">
@@ -117,14 +84,10 @@ import HomepageDynamic from '../components/home/HomepageDynamic'
     </div>
   </section>
 
-  <!-- ============================================================
-       DYNAMIC CONTENT — courses, instructors, testimonials, etc.
-  ============================================================ -->
+  <!-- DYNAMIC CONTENT — courses, instructors, testimonials, etc. -->
   <HomepageDynamic client:load />
 
-  <!-- ============================================================
-       BLOG TEASER
-  ============================================================ -->
+  <!-- BLOG TEASER -->
   <section class="section" style="background:var(--off-white)">
     <div class="container">
       <div class="blog-teaser-header">
@@ -167,9 +130,7 @@ import HomepageDynamic from '../components/home/HomepageDynamic'
     </div>
   </section>
 
-  <!-- ============================================================
-       CTA
-  ============================================================ -->
+  <!-- CTA -->
   <section class="cta-section">
     <div class="container">
       <div class="cta-inner">
@@ -190,7 +151,6 @@ import HomepageDynamic from '../components/home/HomepageDynamic'
 
 </BaseLayout>
 
-<!-- ── LIVE UPDATE FROM ADMIN — no rebuild ────────────────────── -->
 <script>
   import { createClient } from '@supabase/supabase-js'
 
@@ -203,18 +163,17 @@ import HomepageDynamic from '../components/home/HomepageDynamic'
       if (!data?.value) return
       const v = data.value
 
-      // Heading — supports <em> for highlight
       if (v.heading) {
         const el = document.getElementById('hero-heading')
         if (el) {
-          // Render heading: if contains <em>, use it. Else render plain.
-          if (v.heading.includes('<') || v.heading.includes('|')) {
-            // Pipe-split format: "Line 1|Highlight|Line 3" gradient on middle
+          if (v.heading.includes('|')) {
             const parts = v.heading.split('|').map((s: string) => s.trim()).filter(Boolean)
             if (parts.length === 3) {
               el.innerHTML = `<span class="title-line">${parts[0]}</span><span class="title-line gradient-text">${parts[1]}</span><span class="title-line">${parts[2]}</span>`
+            } else if (parts.length === 2) {
+              el.innerHTML = `<span class="title-line">${parts[0]}</span><span class="title-line gradient-text">${parts[1]}</span>`
             } else {
-              el.innerHTML = v.heading
+              el.innerHTML = `<span class="title-line gradient-text">${v.heading.replace(/\|/g,' ')}</span>`
             }
           } else {
             el.innerHTML = `<span class="title-line gradient-text">${v.heading}</span>`
@@ -222,19 +181,16 @@ import HomepageDynamic from '../components/home/HomepageDynamic'
         }
       }
 
-      // Subheading
       if (v.subheading) {
         const el = document.getElementById('hero-sub')
         if (el) el.textContent = v.subheading
       }
 
-      // Heading font size
       if (v.heading_font_size) {
         const el = document.getElementById('hero-heading') as HTMLElement
         if (el) el.style.fontSize = `clamp(2rem, ${v.heading_font_size}vw, ${v.heading_font_size}rem)`
       }
 
-      // CTA 1 (primary)
       const cta1 = document.getElementById('hero-cta1') as HTMLAnchorElement
       if (cta1) {
         if (v.cta_link) cta1.href = v.cta_link
@@ -243,7 +199,6 @@ import HomepageDynamic from '../components/home/HomepageDynamic'
         if ((v.cta_link||'').startsWith('http')) { cta1.target='_blank'; cta1.rel='noopener' }
       }
 
-      // CTA 2 (WhatsApp)
       const cta2 = document.getElementById('hero-cta2') as HTMLAnchorElement
       if (cta2) {
         if (v.cta2_link) cta2.href = v.cta2_link
@@ -251,7 +206,6 @@ import HomepageDynamic from '../components/home/HomepageDynamic'
         if (lbl && v.cta2_text) lbl.textContent = v.cta2_text
       }
 
-      // Swap visual to YouTube embed if video ID provided
       if (v.youtube_video_id) {
         let ytId = (v.youtube_video_id || '').trim()
         const short = ytId.match(/youtu\.be\/([a-zA-Z0-9_-]{11})/)
@@ -261,17 +215,13 @@ import HomepageDynamic from '../components/home/HomepageDynamic'
 
         const visual = document.getElementById('hero-visual')
         if (visual && ytId.length === 11) {
-          // Use inline styles — Astro's scoped CSS won't apply to JS-inserted elements
           visual.innerHTML = `
             <iframe
               src="https://www.youtube.com/embed/${ytId}?autoplay=1&mute=1&loop=1&playlist=${ytId}&controls=0&modestbranding=1&rel=0&showinfo=0&playsinline=1&iv_load_policy=3"
               allow="autoplay; encrypted-media; picture-in-picture"
-              allowfullscreen
-              loading="lazy"
-              frameborder="0"
+              allowfullscreen loading="lazy" frameborder="0"
               style="position:absolute;top:0;left:0;width:100%;height:100%;border:none;border-radius:24px"
             ></iframe>`
-          // Make sure the card is positioned for absolute child
           visual.style.position = 'relative'
           visual.style.overflow = 'hidden'
         }
@@ -279,8 +229,7 @@ import HomepageDynamic from '../components/home/HomepageDynamic'
     })
   }
 
-  // Mouse-tracking glow on Enroll button
-  document.querySelectorAll('.btn-enchant, .cta-primary').forEach((btn) => {
+  document.querySelectorAll('.cta-primary').forEach((btn) => {
     btn.addEventListener('mousemove', (e: any) => {
       const r = btn.getBoundingClientRect()
       ;(btn as HTMLElement).style.setProperty('--mx', ((e.clientX - r.left) / r.width * 100) + '%')
@@ -290,39 +239,34 @@ import HomepageDynamic from '../components/home/HomepageDynamic'
 </script>
 
 <style>
-/* ═══════════════════════════════════════════════════════════
-   ENCHANTING HERO
-   ═══════════════════════════════════════════════════════════ */
+/* ═══ ENCHANTING HERO — Lighter, tighter ═══ */
 .hero-enchant {
   position: relative;
-  background: radial-gradient(ellipse at top left, #1e4694 0%, #0b1f3f 60%, #050d1e 100%);
-  padding: 80px 0 96px;
+  background: linear-gradient(135deg, #2d5cc6 0%, #1c3d7a 40%, #1e4694 100%);
+  padding: 56px 0 64px;
   overflow: hidden;
-  min-height: 640px;
   color: #fff;
 }
 
-/* Animated orbs */
 .orb {
   position: absolute; border-radius: 50%; filter: blur(80px);
   pointer-events: none; mix-blend-mode: screen;
   animation: float 14s ease-in-out infinite;
 }
-.orb-1 { width: 520px; height: 520px; background: rgba(212, 240, 26, 0.18); top: -180px; right: -100px; }
-.orb-2 { width: 420px; height: 420px; background: rgba(78, 164, 255, 0.22); bottom: -150px; left: 10%; animation-delay: -5s; }
-.orb-3 { width: 300px; height: 300px; background: rgba(255, 107, 157, 0.15); top: 40%; right: 30%; animation-delay: -10s; }
+.orb-1 { width: 460px; height: 460px; background: rgba(212, 240, 26, 0.22); top: -160px; right: -80px; }
+.orb-2 { width: 380px; height: 380px; background: rgba(78, 164, 255, 0.28); bottom: -120px; left: 8%; animation-delay: -5s; }
+.orb-3 { width: 260px; height: 260px; background: rgba(255, 107, 157, 0.18); top: 40%; right: 30%; animation-delay: -10s; }
 @keyframes float {
   0%, 100% { transform: translate(0, 0) scale(1); }
   33%      { transform: translate(40px, -30px) scale(1.1); }
   66%      { transform: translate(-30px, 40px) scale(0.95); }
 }
 
-/* Grid overlay */
 .grid-overlay {
   position: absolute; inset: 0;
   background-image:
-    linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+    linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px);
   background-size: 60px 60px;
   pointer-events: none;
   mask-image: radial-gradient(ellipse at center, black 30%, transparent 70%);
@@ -331,35 +275,16 @@ import HomepageDynamic from '../components/home/HomepageDynamic'
 .hero-grid {
   position: relative; z-index: 2;
   display: grid; grid-template-columns: 1.1fr 1fr;
-  gap: 60px; align-items: center;
+  gap: 56px; align-items: center;
 }
-@media (max-width: 900px) { .hero-grid { grid-template-columns: 1fr; gap: 40px; } }
+@media (max-width: 900px) { .hero-grid { grid-template-columns: 1fr; gap: 32px; } }
 
-/* Eyebrow */
-.hero-eyebrow {
-  display: inline-flex; align-items: center; gap: 8px;
-  background: rgba(212, 240, 26, 0.1);
-  border: 1px solid rgba(212, 240, 26, 0.25);
-  color: var(--lemon, #d4f01a);
-  padding: 6px 14px; border-radius: 24px;
-  font-size: 12px; font-weight: 700;
-  text-transform: uppercase; letter-spacing: 1px;
-  margin-bottom: 24px;
-}
-.eyebrow-pulse {
-  width: 7px; height: 7px; border-radius: 50%;
-  background: #4ade80; box-shadow: 0 0 10px #4ade80;
-  animation: pulse-dot 1.5s infinite;
-}
-@keyframes pulse-dot { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(1.4); } }
-
-/* Title */
 .hero-title {
   font-family: var(--font-display, 'Sora', sans-serif);
-  font-size: clamp(2rem, 5vw, 4rem);
+  font-size: clamp(1.9rem, 4.5vw, 3.6rem);
   font-weight: 900; line-height: 1.05;
   letter-spacing: -0.02em;
-  margin-bottom: 24px;
+  margin-bottom: 18px;
   color: #fff;
 }
 .title-line { display: block; }
@@ -375,21 +300,20 @@ import HomepageDynamic from '../components/home/HomepageDynamic'
 @keyframes gradient-shift { 0%, 100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
 
 .hero-tagline {
-  font-size: 17px;
-  color: rgba(255,255,255,0.78);
-  line-height: 1.65; max-width: 540px;
-  margin-bottom: 36px;
+  font-size: 16px;
+  color: rgba(255,255,255,0.82);
+  line-height: 1.6; max-width: 540px;
+  margin-bottom: 28px;
 }
 
-/* CTAs */
 .hero-actions {
-  display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 36px;
+  display: flex; gap: 12px; flex-wrap: wrap;
 }
 
 .cta-primary {
   position: relative; overflow: hidden;
   display: inline-flex; align-items: center; gap: 10px;
-  padding: 14px 28px;
+  padding: 14px 26px;
   background: linear-gradient(135deg, #d4f01a 0%, #a8e000 50%, #d4f01a 100%);
   background-size: 200% 200%;
   color: #0f2347;
@@ -400,10 +324,7 @@ import HomepageDynamic from '../components/home/HomepageDynamic'
   transition: all 0.3s ease;
   animation: enchant-shimmer 3s ease infinite;
 }
-.cta-primary:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 16px 48px rgba(212, 240, 26, 0.6);
-}
+.cta-primary:hover { transform: translateY(-3px); box-shadow: 0 16px 48px rgba(212, 240, 26, 0.6); }
 .cta-shimmer {
   position: absolute; inset: 0;
   background: radial-gradient(circle at var(--mx, 50%) var(--my, 50%), rgba(255,255,255,0.5), transparent 60%);
@@ -414,7 +335,7 @@ import HomepageDynamic from '../components/home/HomepageDynamic'
 
 .cta-whatsapp {
   display: inline-flex; align-items: center; gap: 10px;
-  padding: 14px 28px;
+  padding: 14px 26px;
   background: linear-gradient(135deg, #25d366 0%, #128c7e 100%);
   color: #fff;
   font-family: var(--font-display, 'Sora', sans-serif);
@@ -423,37 +344,19 @@ import HomepageDynamic from '../components/home/HomepageDynamic'
   box-shadow: 0 8px 24px rgba(37, 211, 102, 0.35);
   transition: all 0.25s ease;
 }
-.cta-whatsapp:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 12px 36px rgba(37, 211, 102, 0.55);
-}
-
-/* Feature pills */
-.hero-feature-pills {
-  display: flex; gap: 10px; flex-wrap: wrap;
-}
-.feature-pill {
-  display: inline-flex; align-items: center; gap: 6px;
-  background: rgba(255,255,255,0.06);
-  border: 1px solid rgba(255,255,255,0.12);
-  color: rgba(255,255,255,0.85);
-  padding: 7px 14px; border-radius: 24px;
-  font-size: 12.5px; font-weight: 500;
-  backdrop-filter: blur(10px);
-}
+.cta-whatsapp:hover { transform: translateY(-3px); box-shadow: 0 12px 36px rgba(37, 211, 102, 0.55); }
 
 /* Visual card */
 .hero-visual-card {
   position: relative;
   aspect-ratio: 16 / 10;
-  min-height: 360px;
-  background: linear-gradient(135deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 100%);
-  border: 1px solid rgba(255,255,255,0.1);
-  border-radius: 24px;
+  min-height: 280px;
+  max-height: 380px;
+  background: linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.03) 100%);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 20px;
   overflow: hidden;
-  box-shadow:
-    0 32px 80px rgba(0,0,0,0.4),
-    inset 0 1px 0 rgba(255,255,255,0.08);
+  box-shadow: 0 24px 60px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.1);
   backdrop-filter: blur(20px);
 }
 
@@ -461,8 +364,7 @@ import HomepageDynamic from '../components/home/HomepageDynamic'
   position: absolute; inset: 0;
   display: flex; flex-direction: column;
   align-items: center; justify-content: center;
-  padding: 32px;
-  text-align: center;
+  padding: 24px; text-align: center;
 }
 .visual-shimmer {
   position: absolute; inset: 0;
@@ -470,91 +372,30 @@ import HomepageDynamic from '../components/home/HomepageDynamic'
   transform: translateX(-100%);
   animation: visual-shimmer 4s ease-in-out infinite;
 }
-@keyframes visual-shimmer {
-  0% { transform: translateX(-100%); }
-  50%, 100% { transform: translateX(100%); }
-}
+@keyframes visual-shimmer { 0% { transform: translateX(-100%); } 50%, 100% { transform: translateX(100%); } }
 
 .visual-logo {
-  width: 80px; height: 80px;
+  width: 64px; height: 64px;
   background: linear-gradient(135deg, #d4f01a, #a8e000);
   color: #0f2347;
-  border-radius: 20px;
+  border-radius: 16px;
   display: flex; align-items: center; justify-content: center;
   font-family: var(--font-display, 'Sora', sans-serif);
-  font-weight: 900; font-size: 40px;
-  margin-bottom: 16px;
+  font-weight: 900; font-size: 32px;
+  margin-bottom: 12px;
   box-shadow: 0 12px 32px rgba(212, 240, 26, 0.4);
   position: relative; z-index: 1;
 }
-.visual-title {
-  font-family: var(--font-display); font-size: 32px; font-weight: 900;
-  color: #fff; margin-bottom: 4px; letter-spacing: -0.5px;
-  position: relative; z-index: 1;
-}
-.visual-sub {
-  font-size: 13px; color: rgba(255,255,255,0.6);
-  position: relative; z-index: 1; margin-bottom: 20px;
-}
-.visual-divider {
-  width: 60px; height: 2px;
-  background: linear-gradient(90deg, transparent, var(--lemon, #d4f01a), transparent);
-  margin-bottom: 20px;
-  position: relative; z-index: 1;
-}
-.visual-stats {
-  display: flex; gap: 28px;
-  position: relative; z-index: 1;
-}
-.vs-item { text-align: center; }
-.vs-num {
-  font-family: var(--font-display); font-weight: 800; font-size: 22px;
-  color: var(--lemon, #d4f01a);
-}
-.vs-lbl { font-size: 11px; color: rgba(255,255,255,0.55); margin-top: 2px; }
-.visual-badge {
-  position: absolute; top: 16px; right: 16px;
-  background: rgba(74, 222, 128, 0.15);
-  border: 1px solid rgba(74, 222, 128, 0.3);
-  color: #4ade80;
-  font-size: 11px; font-weight: 700; padding: 4px 10px;
-  border-radius: 20px;
-  position: relative; z-index: 1;
-}
+.visual-title { font-family: var(--font-display); font-size: 26px; font-weight: 900; color: #fff; margin-bottom: 4px; position: relative; z-index: 1; }
+.visual-sub { font-size: 12px; color: rgba(255,255,255,0.6); position: relative; z-index: 1; }
 
-/* YouTube embed slot when video ID is set */
-.video-frame {
-  position: absolute; inset: 0;
-  border-radius: 24px; overflow: hidden;
-}
-.video-frame iframe {
-  width: 100%; height: 100%; border: none;
-}
+@keyframes enchant-shimmer { 0%, 100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
 
-@keyframes enchant-shimmer {
-  0%, 100% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-}
-
-/* Why section */
-.why-section { padding: 96px 0; }
-.why-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 24px; margin-top: 48px;
-}
-.why-card {
-  background: var(--white);
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--gray-200);
-  padding: 32px;
-  transition: all 0.25s;
-}
-.why-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 16px 40px rgba(28, 61, 122, 0.12);
-  border-color: var(--navy);
-}
+/* Why */
+.why-section { padding: 80px 0; }
+.why-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 24px; margin-top: 48px; }
+.why-card { background: var(--white); border-radius: var(--radius-lg); border: 1px solid var(--gray-200); padding: 32px; transition: all 0.25s; }
+.why-card:hover { transform: translateY(-4px); box-shadow: 0 16px 40px rgba(28, 61, 122, 0.12); border-color: var(--navy); }
 .why-icon { font-size: 36px; margin-bottom: 16px; }
 .why-title { font-family: var(--font-display); font-size: 17px; font-weight: 700; margin-bottom: 12px; }
 .why-desc { font-size: 14px; color: var(--text-secondary); line-height: 1.65; }
@@ -580,7 +421,6 @@ import HomepageDynamic from '../components/home/HomepageDynamic'
 .cta-text p { color: rgba(255,255,255,0.7); max-width: 480px; }
 .cta-btns { display: flex; gap: 12px; flex-wrap: wrap; flex-shrink: 0; }
 
-/* Section header */
 .section-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; margin-bottom: 40px; flex-wrap: wrap; }
 .section-header.center { flex-direction: column; align-items: center; text-align: center; }
 .section-header h2 { margin-top: 4px; }

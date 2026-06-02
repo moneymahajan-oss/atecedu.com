@@ -129,13 +129,33 @@ const defaultLinks = [
         }
       }
       if (text) {
-        if (b.show_text === false) {
+        const mode = b.display_mode || 'name'
+        const nameEl = text.querySelector('.logo-name') as HTMLElement | null
+        const subEl  = text.querySelector('.logo-sub')  as HTMLElement | null
+
+        if (mode === 'none') {
           text.style.display = 'none'
+        } else if (mode === 'name') {
+          text.style.display = 'flex'
+          if (nameEl) {
+            nameEl.style.display = 'block'
+            nameEl.textContent = b.brand_name || 'ATEC'
+          }
+          if (subEl) subEl.style.display = 'none'
+        } else if (mode === 'tagline') {
+          text.style.display = 'flex'
+          if (nameEl) nameEl.style.display = 'none'
+          if (subEl) {
+            subEl.style.display = 'block'
+            subEl.textContent = b.brand_tagline || 'Educational Society'
+            // Make tagline bigger when shown alone
+            subEl.style.fontSize = '16px'
+            subEl.style.fontWeight = '600'
+            subEl.style.color = 'var(--navy)'
+          }
         } else {
-          const nameEl = text.querySelector('.logo-name')
-          const subEl  = text.querySelector('.logo-sub')
-          if (nameEl && b.brand_name)    nameEl.textContent = b.brand_name
-          if (subEl && b.brand_tagline)  subEl.textContent  = b.brand_tagline
+          // Fallback: legacy show_text false → hide
+          if (b.show_text === false) text.style.display = 'none'
         }
       }
     })
