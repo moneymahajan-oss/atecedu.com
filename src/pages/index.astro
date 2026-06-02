@@ -176,9 +176,17 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
         onmouseover="this.style.background='rgba(255,255,255,0.28)'" onmouseout="this.style.background='rgba(255,255,255,0.15)'"
       >✕ Close</button>
     </div>
-    <!-- iframe injected here at reveal time -->
+    <!-- iframe moved here from preloader at reveal time -->
     <div id="video-iframe-wrap" style="flex:1;position:relative;min-height:0;background:#000;"></div>
   </div>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       PRELOAD IFRAME — 1×1px at opacity:0.01 so browser grants
+       autoplay. Moved into overlay at reveal time.
+  ═══════════════════════════════════════════════════════════ -->
+  <div id="video-preloader"
+    style="position:fixed;bottom:0;right:0;width:1px;height:1px;z-index:1;overflow:hidden;opacity:0.01;pointer-events:none;"
+  ></div>
 
   <!-- ══════════════════════════════════════════════════════════════
        STATS BAR
@@ -395,16 +403,16 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
 ══════════════════════════════════════════════════════════════ -->
 <script>
   declare const window: any
-  const SB_URL: string  = window.__SB_URL
-  const SB_KEY: string  = window.__SB_KEY
-  const FALLBACK_ID     = 'oEK34ybNFdQ'
+  const SB_URL: string = window.__SB_URL
+  const SB_KEY: string = window.__SB_KEY
+  const FALLBACK_ID    = 'oEK34ybNFdQ'
 
-  let activeYtId   = FALLBACK_ID
-  let revealDone   = false
-  let closedOnce   = false
-  let tickInterval: ReturnType<typeof setInterval> | null = null
+  let activeYtId  = FALLBACK_ID
+  let revealDone  = false
+  let tickTimer: ReturnType<typeof setInterval> | null = null
+  let preloadIframe: HTMLIFrameElement | null = null
 
-  // ── Extract YT 11-char ID from any URL format ────────────────────────────
+  // ── Extract YouTube 11-char ID ────────────────────────────────────────────
   function extractId(raw: string): string {
     if (!raw?.trim()) return ''
     raw = raw.trim()
@@ -417,7 +425,7 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
     return ''
   }
 
-  // ── Set YouTube thumbnail on hero card ───────────────────────────────────
+  // ── Set thumbnail image on hero card ─────────────────────────────────────
   function setThumb(id: string) {
     const img = document.getElementById('hero-yt-thumb') as HTMLImageElement
     if (!img) return
@@ -426,38 +434,43 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
     img.onerror = () => { img.src = `https://img.youtube.com/vi/${id}/hqdefault.jpg`; img.style.opacity = '1' }
   }
 
-  // ── Build iframe src string ───────────────────────────────────────────────
-  // mute=1 is MANDATORY for autoplay — all browsers enforce this.
-  // User unmutes via the volume icon inside the YouTube player.
-  function iframeSrc(id: string): string {
-    return `https://www.youtube.com/embed/${id}?autoplay=1&mute=1&loop=1&playlist=${id}&controls=1&modestbranding=1&rel=0&enablejsapi=0`
-  }
-
-  // ── Inject iframe into wrap ───────────────────────────────────────────────
-  function injectIframe(id: string) {
-    const wrap = document.getElementById('video-iframe-wrap') as HTMLElement
-    if (!wrap) return
-    // Clear first to avoid double-inject
-    wrap.innerHTML = ''
+  // ── Build a fresh iframe element ─────────────────────────────────────────
+  // mute=1 is MANDATORY — browsers block unmuted autoplay without user click.
+  // User unmutes via the volume icon inside the YouTube player controls.
+  function buildIframe(id: string): HTMLIFrameElement {
     const f = document.createElement('iframe')
-    f.src    = iframeSrc(id)
+    f.src   = `https://www.youtube.com/embed/${id}?autoplay=1&mute=1&loop=1&playlist=${id}&controls=1&modestbranding=1&rel=0`
     f.setAttribute('allow', 'autoplay; encrypted-media; fullscreen; picture-in-picture')
     f.setAttribute('allowfullscreen', '')
     f.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;border:none;'
-    wrap.appendChild(f)
+    return f
   }
 
-  // ── Countdown badge ───────────────────────────────────────────────────────
+  // ── STEP 1: Pre-load iframe in 1×1px visible div immediately ─────────────
+  // opacity:0.01 (NOT 0) makes it "visible" to the browser autoplay policy.
+  // This is the only reliable cross-browser way to get muted autoplay to work
+  // on a hidden element — the browser activates autoplay, video starts playing.
+  function startPreload(id: string) {
+    const preloader = document.getElementById('video-preloader') as HTMLElement
+    if (!preloader) return
+    preloader.innerHTML = ''
+    const f = buildIframe(id)
+    f.style.cssText = 'width:1px;height:1px;border:none;position:absolute;'
+    preloader.appendChild(f)
+    preloadIframe = f
+  }
+
+  // ── STEP 2: Countdown ticker (starts immediately, parallel to fetch) ──────
   let secs = 3
   const cdEl = document.getElementById('reveal-countdown') as HTMLElement
 
   function startTick() {
-    if (tickInterval) return
-    tickInterval = setInterval(() => {
+    if (tickTimer) return
+    tickTimer = setInterval(() => {
       secs--
       if (cdEl) cdEl.textContent = String(Math.max(secs, 0))
       if (secs <= 0) {
-        clearInterval(tickInterval!); tickInterval = null
+        clearInterval(tickTimer!); tickTimer = null
         const hint = document.getElementById('reveal-hint')
         if (hint) hint.style.display = 'none'
         doReveal()
@@ -465,29 +478,42 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
     }, 1000)
   }
 
-  // ── Reveal: inject iframe then zoom in ───────────────────────────────────
+  // ── STEP 3: Reveal — move preload iframe into overlay, then zoom in ───────
   function doReveal() {
     if (revealDone) return
     revealDone = true
 
-    const ov = document.getElementById('video-overlay') as HTMLElement
-    const hc = document.getElementById('hero-content')  as HTMLElement
+    const ov   = document.getElementById('video-overlay')    as HTMLElement
+    const wrap = document.getElementById('video-iframe-wrap') as HTMLElement
+    const hc   = document.getElementById('hero-content')     as HTMLElement
 
-    // Inject iframe NOW — overlay is already in DOM with opacity:0
-    // This is the user-gesture-free path: mute=1 is required
-    injectIframe(activeYtId)
+    // Move the already-playing iframe from preloader into the overlay wrap
+    if (preloadIframe && wrap) {
+      preloadIframe.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;border:none;'
+      wrap.innerHTML = ''
+      wrap.appendChild(preloadIframe)
+      preloadIframe = null
+    } else {
+      // Fallback: inject fresh if preloader somehow failed
+      const f = buildIframe(activeYtId)
+      if (wrap) { wrap.innerHTML = ''; wrap.appendChild(f) }
+    }
+
+    // Clear preloader
+    const preloader = document.getElementById('video-preloader') as HTMLElement
+    if (preloader) preloader.innerHTML = ''
 
     // Show unmute hint
-    const hint = document.getElementById('unmute-hint') as HTMLElement
-    if (hint) hint.style.display = 'inline-flex'
+    const unmuteHint = document.getElementById('unmute-hint') as HTMLElement
+    if (unmuteHint) unmuteHint.style.display = 'inline-flex'
 
-    // Single rAF so browser registers the iframe before transition
+    // Animate overlay in
+    ov.style.pointerEvents = 'all'
     requestAnimationFrame(() => {
-      ov.style.transition    = 'transform 1s cubic-bezier(0.16,1,0.3,1), opacity 0.6s ease, border-radius 1s ease'
-      ov.style.transform     = 'scale(1)'
-      ov.style.opacity       = '1'
-      ov.style.borderRadius  = '0'
-      ov.style.pointerEvents = 'all'
+      ov.style.transition   = 'transform 1s cubic-bezier(0.16,1,0.3,1), opacity 0.6s ease, border-radius 1s ease'
+      ov.style.transform    = 'scale(1)'
+      ov.style.opacity      = '1'
+      ov.style.borderRadius = '0'
     })
 
     if (hc) {
@@ -497,46 +523,46 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
     }
   }
 
-  // ── Close: zoom out, clear iframe ───────────────────────────────────────
+  // ── STEP 4: Close ────────────────────────────────────────────────────────
   document.getElementById('video-close-btn')?.addEventListener('click', () => {
-    const ov = document.getElementById('video-overlay') as HTMLElement
-    const hc = document.getElementById('hero-content')  as HTMLElement
+    const ov   = document.getElementById('video-overlay') as HTMLElement
+    const hc   = document.getElementById('hero-content')  as HTMLElement
+    const hint = document.getElementById('unmute-hint')   as HTMLElement
 
     ov.style.transition    = 'transform 0.5s ease, opacity 0.4s ease, border-radius 0.5s ease'
     ov.style.transform     = 'scale(0.07)'
     ov.style.opacity       = '0'
     ov.style.borderRadius  = '24px'
     ov.style.pointerEvents = 'none'
-
-    if (hc) { hc.style.opacity = '1'; hc.style.pointerEvents = 'all' }
-
-    const hint = document.getElementById('unmute-hint') as HTMLElement
     if (hint) hint.style.display = 'none'
+    if (hc)  { hc.style.opacity = '1'; hc.style.pointerEvents = 'all' }
 
     setTimeout(() => {
-      // Kill audio by clearing iframe
+      // Kill audio + clear overlay
       const wrap = document.getElementById('video-iframe-wrap') as HTMLElement
       if (wrap) wrap.innerHTML = ''
       ov.style.transition = 'none'
-      closedOnce  = true
-      revealDone  = false   // allow re-open
+      revealDone = false   // allow re-open via thumbnail click
+      // Restart preload for re-open
+      startPreload(activeYtId)
     }, 520)
   })
 
-  // ── Thumbnail click: skip countdown, open immediately ───────────────────
+  // ── STEP 5: Thumbnail click → skip countdown, open immediately ───────────
   document.getElementById('hero-thumb')?.addEventListener('click', () => {
     if (revealDone) return
-    if (tickInterval) { clearInterval(tickInterval); tickInterval = null }
+    if (tickTimer) { clearInterval(tickTimer); tickTimer = null }
     secs = 0
     const hint = document.getElementById('reveal-hint')
     if (hint) hint.style.display = 'none'
     doReveal()
   })
 
-  // ── Fetch Supabase settings (runs parallel to countdown) ────────────────
+  // ── STEP 6: Load Supabase settings (parallel to countdown) ───────────────
   async function loadSettings() {
     setThumb(FALLBACK_ID)
-    startTick()              // countdown starts immediately — no waiting for Supabase
+    startPreload(FALLBACK_ID)   // start playing immediately in background
+    startTick()                  // 3s countdown starts now
 
     if (!SB_URL || !SB_KEY) return
 
@@ -547,7 +573,7 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
       const rows = await res.json()
       const v    = rows?.[0]?.value || {}
 
-      // Colors / text
+      // Hero colors / text
       const sec = document.getElementById('hero-section') as HTMLElement
       if (v.hero_bg_color)    sec.style.background = v.hero_bg_color
       const h = document.getElementById('hero-heading') as HTMLElement
@@ -557,7 +583,7 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
       if (v.subheading)        s.textContent = v.subheading
       if (v.hero_sub_color)    s.style.color = v.hero_sub_color
 
-      // Video bar
+      // Video bar colours
       const barEl  = document.getElementById('video-bar-text') as HTMLElement
       const topBar = document.getElementById('video-top-bar')  as HTMLElement
       if (v.video_bar_text)       barEl.textContent       = v.video_bar_text
@@ -575,21 +601,25 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
       if (v.bottom_bar_link  && btCTA)   btCTA.href         = v.bottom_bar_link
       if (v.bottom_bar_bg    && btBar)   btBar.style.background = v.bottom_bar_bg
 
-      // Video ID from admin
+      // Admin video ID — swap preloader if different and reveal not yet done
       const adminId = extractId(v.youtube_video_id || '')
       if (adminId && adminId !== activeYtId) {
         activeYtId = adminId
         setThumb(adminId)
-        // If reveal already fired (countdown won the race), update to correct video
-        if (revealDone) injectIframe(adminId)
+        if (!revealDone) {
+          // Swap preloader to correct video
+          const preloader = document.getElementById('video-preloader') as HTMLElement
+          if (preloader) preloader.innerHTML = ''
+          startPreload(adminId)
+        }
       }
 
     } catch(e) {
-      console.warn('Settings error, using fallback:', e)
+      console.warn('Settings load failed, using fallback:', e)
     }
   }
 
-  // ── Bottom bar ────────────────────────────────────────────────────────────
+  // ── Bottom bar slide-up after 2s ─────────────────────────────────────────
   function showBottomBar() {
     if (localStorage.getItem('atec_bar_dismissed') === '1') return
     setTimeout(() => {
