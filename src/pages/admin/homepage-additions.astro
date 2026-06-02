@@ -1,0 +1,506 @@
+---
+// src/pages/admin/homepage.astro
+// ══════════════════════════════════════════════════════
+// ADDITIONS ONLY — New sections added at the END of the
+// existing homepage admin. Do NOT remove any existing code.
+// 
+// NEW CONTROLS ADDED:
+//   1. Hero Background & Text Colors
+//   2. Announcement Strip Box Colors
+//   3. Video Card Address Bar
+// ══════════════════════════════════════════════════════
+
+// ── Copy your EXISTING full admin/homepage.astro content above this line ──
+// ── Then append the following <script> block additions at the end ──────────
+
+---
+
+<!-- ═══════════════════════════════════════════════════════
+     PASTE YOUR EXISTING admin/homepage.astro FULL CONTENT
+     FIRST. Then add these new manager sections below.
+═══════════════════════════════════════════════════════ -->
+
+<style>
+  /* Shared manager card style — matches existing admin UI */
+  .new-mgr-card {
+    background: #fff;
+    border-radius: 14px;
+    border: 1px solid #e2e8f0;
+    padding: 24px;
+    margin: 0 0 24px;
+  }
+  .new-mgr-card h3 {
+    font-family: 'Sora', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    color: #1e293b;
+    margin: 0 0 6px;
+  }
+  .new-mgr-card .mgr-desc {
+    font-size: 13px;
+    color: #94a3b8;
+    margin: 0 0 18px;
+  }
+  .color-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 14px;
+    flex-wrap: wrap;
+  }
+  .color-row label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #475569;
+    min-width: 180px;
+  }
+  .color-row input[type="color"] {
+    width: 44px;
+    height: 36px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    cursor: pointer;
+    padding: 2px;
+    background: #fff;
+  }
+  .color-row input[type="text"] {
+    width: 100px;
+    padding: 6px 10px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 13px;
+    font-family: monospace;
+    color: #334155;
+  }
+  .text-input-row {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 14px;
+  }
+  .text-input-row label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #475569;
+  }
+  .text-input-row input[type="text"] {
+    width: 100%;
+    max-width: 480px;
+    padding: 9px 12px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 14px;
+    color: #334155;
+  }
+  .save-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: #1c3d7a;
+    color: #fff;
+    border: none;
+    border-radius: 9px;
+    padding: 10px 22px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.2s;
+    margin-top: 8px;
+  }
+  .save-btn:hover { background: #163264; }
+  .save-btn:disabled { background: #94a3b8; cursor: not-allowed; }
+  .preview-swatch {
+    display: inline-block;
+    width: 80px;
+    height: 32px;
+    border-radius: 6px;
+    border: 1px solid #e2e8f0;
+    vertical-align: middle;
+    margin-left: 8px;
+  }
+  .status-msg {
+    font-size: 13px;
+    font-weight: 600;
+    padding: 8px 14px;
+    border-radius: 8px;
+    display: inline-block;
+    margin-top: 10px;
+  }
+  .status-ok  { background: #dcfce7; color: #166534; }
+  .status-err { background: #fee2e2; color: #991b1b; }
+</style>
+
+<!-- Container injected into admin page root -->
+<div id="new-admin-additions-root" style="max-width:860px;margin:32px auto 0;padding:0 16px 60px;">
+
+  <h2 style="font-family:'Sora',sans-serif;font-size:20px;font-weight:800;color:#1e293b;margin:0 0 6px;">
+    ⚙️ Hero & Strip Appearance
+  </h2>
+  <p style="font-size:14px;color:#94a3b8;margin:0 0 24px;">
+    Control background colors, text colors, and the video card address bar. Changes apply instantly — no rebuild needed.
+  </p>
+
+  <!-- ─── 1. HERO BACKGROUND & TEXT COLORS ──────────────────────────────── -->
+  <div class="new-mgr-card" id="hero-colors-card">
+    <h3>🎨 Hero Background & Text Colors</h3>
+    <p class="mgr-desc">Controls the cream-white hero section. Pick any background and text color.</p>
+
+    <div class="color-row">
+      <label>Hero Background Color</label>
+      <input type="color" id="hero_bg_color" value="#f8f4ef">
+      <input type="text" id="hero_bg_color_hex" value="#f8f4ef" placeholder="#f8f4ef">
+      <span class="preview-swatch" id="hero_bg_preview" style="background:#f8f4ef;"></span>
+    </div>
+
+    <div class="color-row">
+      <label>Heading Text Color</label>
+      <input type="color" id="hero_text_color" value="#1c1c1c">
+      <input type="text" id="hero_text_color_hex" value="#1c1c1c" placeholder="#1c1c1c">
+      <span class="preview-swatch" id="hero_text_preview" style="background:#1c1c1c;border-color:#ccc;"></span>
+    </div>
+
+    <div class="color-row">
+      <label>Sub-heading Text Color</label>
+      <input type="color" id="hero_sub_color" value="#444444">
+      <input type="text" id="hero_sub_color_hex" value="#444444" placeholder="#444444">
+      <span class="preview-swatch" id="hero_sub_preview" style="background:#444444;border-color:#ccc;"></span>
+    </div>
+
+    <!-- Live mini-preview -->
+    <div id="hero-colors-preview" style="
+      margin:14px 0;
+      border-radius:12px;
+      border:1px solid #e2e8f0;
+      padding:28px 24px;
+      background:#f8f4ef;
+      transition:background 0.3s;
+    ">
+      <div id="prev-heading" style="font-family:'Sora',sans-serif;font-size:26px;font-weight:900;color:#1c1c1c;margin-bottom:8px;">
+        Learn <span style="color:#d4f01a">ONLINE</span>
+      </div>
+      <div id="prev-sub" style="font-size:15px;color:#444444;font-weight:500;">
+        GEN AI | MERN STACK | TALLY | KIDS PROGRAMS
+      </div>
+    </div>
+
+    <button class="save-btn" id="save-hero-colors-btn">💾 Save Hero Colors</button>
+    <div id="hero-colors-status" style="display:none;" class="status-msg"></div>
+  </div>
+
+  <!-- ─── 2. ANNOUNCEMENT STRIP BOX COLORS ──────────────────────────────── -->
+  <div class="new-mgr-card" id="strip-box-card">
+    <h3>📢 Announcement Strip — Box & Link Colors</h3>
+    <p class="mgr-desc">Controls the styled box around the offline course link. The main strip background/text color is in your existing Strip Manager above.</p>
+
+    <div class="color-row">
+      <label>Link Box Background</label>
+      <input type="color" id="box_bg_color" value="#ffffff26">
+      <input type="text" id="box_bg_color_hex" value="rgba(255,255,255,0.15)" placeholder="rgba or #hex">
+    </div>
+
+    <div class="color-row">
+      <label>Link Box Text Color</label>
+      <input type="color" id="box_text_color" value="#d4f01a">
+      <input type="text" id="box_text_color_hex" value="#d4f01a" placeholder="#d4f01a">
+      <span class="preview-swatch" id="box_text_preview" style="background:#d4f01a;"></span>
+    </div>
+
+    <div class="color-row">
+      <label>Link Box Border Color</label>
+      <input type="color" id="box_border_color" value="#ffffff4d">
+      <input type="text" id="box_border_color_hex" value="rgba(255,255,255,0.3)" placeholder="rgba or #hex">
+    </div>
+
+    <!-- Preview -->
+    <div style="margin:14px 0;padding:14px 20px;border-radius:10px;background:#1c3d7a;display:inline-flex;align-items:center;gap:12px;">
+      <span style="color:#fff;font-size:13px;font-weight:600;">🔥 New Batch Starting June 2026</span>
+      <span id="box-preview-pill" style="
+        display:inline-flex;align-items:center;gap:5px;
+        background:rgba(255,255,255,0.15);
+        border:1px solid rgba(255,255,255,0.3);
+        border-radius:5px;
+        padding:3px 12px;
+        font-size:12px;
+        font-weight:700;
+        color:#d4f01a;
+      ">For OFFLINE COURSES : www.ateceducation.in</span>
+    </div>
+
+    <br>
+    <button class="save-btn" id="save-strip-box-btn">💾 Save Strip Box Colors</button>
+    <div id="strip-box-status" style="display:none;" class="status-msg"></div>
+  </div>
+
+  <!-- ─── 3. VIDEO CARD ADDRESS BAR ─────────────────────────────────────── -->
+  <div class="new-mgr-card" id="video-bar-card">
+    <h3>🎬 Video Card — Address Bar Text & Colors</h3>
+    <p class="mgr-desc">This bar appears at the top of the full-screen video card that zooms in after 3 seconds on the homepage.</p>
+
+    <div class="text-input-row">
+      <label>Bar Text</label>
+      <input type="text" id="video_bar_text" value="For OFFLINE COURSES : www.ateceducation.in" placeholder="e.g. For OFFLINE COURSES : www.ateceducation.in">
+    </div>
+
+    <div class="color-row">
+      <label>Bar Background Color</label>
+      <input type="color" id="video_bar_bg" value="#1c3d7a">
+      <input type="text" id="video_bar_bg_hex" value="#1c3d7a" placeholder="#1c3d7a">
+      <span class="preview-swatch" id="video_bar_bg_preview" style="background:#1c3d7a;border-color:#ccc;"></span>
+    </div>
+
+    <div class="color-row">
+      <label>Bar Text Color</label>
+      <input type="color" id="video_bar_text_color" value="#ffffff">
+      <input type="text" id="video_bar_text_color_hex" value="#ffffff" placeholder="#ffffff">
+      <span class="preview-swatch" id="video_bar_text_preview" style="background:#ffffff;border-color:#ccc;"></span>
+    </div>
+
+    <!-- Live preview -->
+    <div id="video-bar-preview" style="
+      margin:14px 0;
+      border-radius:10px;
+      overflow:hidden;
+      border:1px solid #e2e8f0;
+    ">
+      <div id="prev-bar" style="
+        background:#1c3d7a;
+        padding:10px 18px;
+        display:flex;
+        align-items:center;
+        gap:10px;
+      ">
+        <div style="
+          background:rgba(255,255,255,0.12);
+          border:1px solid rgba(255,255,255,0.2);
+          border-radius:6px;
+          padding:5px 14px;
+        ">
+          <span id="prev-bar-text" style="font-size:13px;color:#fff;font-weight:500;">For OFFLINE COURSES : www.ateceducation.in</span>
+        </div>
+        <span style="margin-left:auto;background:rgba(255,255,255,0.15);border-radius:6px;padding:4px 10px;color:#fff;font-size:12px;">✕ Close</span>
+      </div>
+      <div style="height:80px;background:#000;display:flex;align-items:center;justify-content:center;color:#555;font-size:13px;">▶ YouTube video fills here</div>
+    </div>
+
+    <button class="save-btn" id="save-video-bar-btn">💾 Save Video Bar</button>
+    <div id="video-bar-status" style="display:none;" class="status-msg"></div>
+  </div>
+
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     JS — Saves each section to Supabase site_settings.hero
+     Reads existing hero row, merges new keys, upserts back.
+═══════════════════════════════════════════════════════ -->
+<script>
+  declare const window: any
+  const SB_URL: string = window.__SB_URL
+  const SB_KEY: string = window.__SB_KEY
+
+  // ── helpers ───────────────────────────────────────────────────────────────
+  function hex(id: string) {
+    return (document.getElementById(id) as HTMLInputElement)?.value || ''
+  }
+  function syncColorPair(colorId: string, hexId: string, previewId: string | null) {
+    const colorEl = document.getElementById(colorId) as HTMLInputElement
+    const hexEl   = document.getElementById(hexId)   as HTMLInputElement
+    const prevEl  = previewId ? document.getElementById(previewId) as HTMLElement : null
+
+    if (colorEl) colorEl.addEventListener('input', () => {
+      if (hexEl)  hexEl.value = colorEl.value
+      if (prevEl) prevEl.style.background = colorEl.value
+    })
+    if (hexEl) hexEl.addEventListener('input', () => {
+      if (colorEl && /^#[0-9a-f]{6}$/i.test(hexEl.value)) colorEl.value = hexEl.value
+      if (prevEl) prevEl.style.background = hexEl.value
+    })
+  }
+
+  function showStatus(elId: string, ok: boolean, msg: string) {
+    const el = document.getElementById(elId)!
+    el.style.display = 'inline-block'
+    el.className = 'status-msg ' + (ok ? 'status-ok' : 'status-err')
+    el.textContent = msg
+    if (ok) setTimeout(() => { el.style.display = 'none' }, 3000)
+  }
+
+  async function getHeroRow(): Promise<any> {
+    const res = await fetch(
+      `${SB_URL}/rest/v1/site_settings?key=eq.hero&select=value`,
+      { headers: { apikey: SB_KEY, Authorization: `Bearer ${SB_KEY}` } }
+    )
+    const rows = await res.json()
+    return rows?.[0]?.value || {}
+  }
+
+  async function upsertHeroKey(patch: Record<string, string>) {
+    const existing = await getHeroRow()
+    const merged = { ...existing, ...patch }
+    const res = await fetch(
+      `${SB_URL}/rest/v1/site_settings`,
+      {
+        method: 'POST',
+        headers: {
+          apikey: SB_KEY,
+          Authorization: `Bearer ${SB_KEY}`,
+          'Content-Type': 'application/json',
+          Prefer: 'resolution=merge-duplicates',
+        },
+        body: JSON.stringify({ key: 'hero', value: merged })
+      }
+    )
+    if (!res.ok) throw new Error(await res.text())
+  }
+
+  // ── Load existing values on page load ────────────────────────────────────
+  async function preloadValues() {
+    if (!SB_URL || !SB_KEY) return
+    try {
+      const v = await getHeroRow()
+      const setVal = (id: string, val: string) => {
+        const el = document.getElementById(id) as HTMLInputElement
+        if (el && val) el.value = val
+      }
+      setVal('hero_bg_color',        v.hero_bg_color || '#f8f4ef')
+      setVal('hero_bg_color_hex',    v.hero_bg_color || '#f8f4ef')
+      setVal('hero_text_color',      v.hero_text_color || '#1c1c1c')
+      setVal('hero_text_color_hex',  v.hero_text_color || '#1c1c1c')
+      setVal('hero_sub_color',       v.hero_sub_color || '#444444')
+      setVal('hero_sub_color_hex',   v.hero_sub_color || '#444444')
+
+      setVal('box_text_color',       v.box_text_color || '#d4f01a')
+      setVal('box_text_color_hex',   v.box_text_color || '#d4f01a')
+      setVal('box_border_color',     v.box_border_color || '#ffffff4d')
+      setVal('box_border_color_hex', v.box_border_color || 'rgba(255,255,255,0.3)')
+
+      setVal('video_bar_text',           v.video_bar_text || 'For OFFLINE COURSES : www.ateceducation.in')
+      setVal('video_bar_bg',             v.video_bar_bg || '#1c3d7a')
+      setVal('video_bar_bg_hex',         v.video_bar_bg || '#1c3d7a')
+      setVal('video_bar_text_color',     v.video_bar_text_color || '#ffffff')
+      setVal('video_bar_text_color_hex', v.video_bar_text_color || '#ffffff')
+
+      // Sync previews
+      const heroPreview = document.getElementById('hero-colors-preview')!
+      if (v.hero_bg_color) heroPreview.style.background = v.hero_bg_color
+      const ph = document.getElementById('prev-heading')!
+      const ps = document.getElementById('prev-sub')!
+      if (v.hero_text_color && ph) ph.style.color = v.hero_text_color
+      if (v.hero_sub_color && ps) ps.style.color = v.hero_sub_color
+
+      const prevBar = document.getElementById('prev-bar')!
+      if (v.video_bar_bg && prevBar) prevBar.style.background = v.video_bar_bg
+      const prevBarText = document.getElementById('prev-bar-text')!
+      if (v.video_bar_text && prevBarText) prevBarText.textContent = v.video_bar_text
+      if (v.video_bar_text_color && prevBarText) prevBarText.style.color = v.video_bar_text_color
+    } catch(e) { console.warn('Preload failed', e) }
+  }
+
+  // ── Wire up color pair sync + live previews ───────────────────────────────
+  syncColorPair('hero_bg_color', 'hero_bg_color_hex', 'hero_bg_preview')
+  syncColorPair('hero_text_color', 'hero_text_color_hex', 'hero_text_preview')
+  syncColorPair('hero_sub_color', 'hero_sub_color_hex', 'hero_sub_preview')
+  syncColorPair('video_bar_bg', 'video_bar_bg_hex', 'video_bar_bg_preview')
+  syncColorPair('video_bar_text_color', 'video_bar_text_color_hex', 'video_bar_text_preview')
+
+  // Live preview updates
+  document.getElementById('hero_bg_color')?.addEventListener('input', (e: any) => {
+    const p = document.getElementById('hero-colors-preview')!
+    if (p) p.style.background = e.target.value
+  })
+  document.getElementById('hero_text_color')?.addEventListener('input', (e: any) => {
+    const p = document.getElementById('prev-heading')!
+    if (p) p.style.color = e.target.value
+  })
+  document.getElementById('hero_sub_color')?.addEventListener('input', (e: any) => {
+    const p = document.getElementById('prev-sub')!
+    if (p) p.style.color = e.target.value
+  })
+  document.getElementById('video_bar_bg')?.addEventListener('input', (e: any) => {
+    const p = document.getElementById('prev-bar')!
+    if (p) p.style.background = e.target.value
+  })
+  document.getElementById('video_bar_text_color')?.addEventListener('input', (e: any) => {
+    const p = document.getElementById('prev-bar-text')!
+    if (p) p.style.color = e.target.value
+  })
+  document.getElementById('video_bar_text')?.addEventListener('input', (e: any) => {
+    const p = document.getElementById('prev-bar-text')!
+    if (p) p.textContent = e.target.value
+  })
+
+  // ── Save: Hero Colors ─────────────────────────────────────────────────────
+  document.getElementById('save-hero-colors-btn')?.addEventListener('click', async () => {
+    const btn = document.getElementById('save-hero-colors-btn') as HTMLButtonElement
+    btn.disabled = true; btn.textContent = 'Saving...'
+    try {
+      await upsertHeroKey({
+        hero_bg_color:   hex('hero_bg_color_hex'),
+        hero_text_color: hex('hero_text_color_hex'),
+        hero_sub_color:  hex('hero_sub_color_hex'),
+      })
+      showStatus('hero-colors-status', true, '✅ Hero colors saved!')
+    } catch(e) {
+      showStatus('hero-colors-status', false, '❌ Save failed — check console')
+    } finally {
+      btn.disabled = false; btn.textContent = '💾 Save Hero Colors'
+    }
+  })
+
+  // ── Save: Strip Box Colors ───────────────────────────────────────────────
+  document.getElementById('save-strip-box-btn')?.addEventListener('click', async () => {
+    const btn = document.getElementById('save-strip-box-btn') as HTMLButtonElement
+    btn.disabled = true; btn.textContent = 'Saving...'
+    try {
+      // Also update announcement_strip row for box colors
+      const stripRes = await fetch(
+        `${SB_URL}/rest/v1/site_settings?key=eq.announcement_strip&select=value`,
+        { headers: { apikey: SB_KEY, Authorization: `Bearer ${SB_KEY}` } }
+      )
+      const stripRows = await stripRes.json()
+      const existing = stripRows?.[0]?.value || {}
+      const merged = {
+        ...existing,
+        box_bg_color:     hex('box_bg_color_hex') || (document.getElementById('box_bg_color_hex') as HTMLInputElement).value,
+        box_text_color:   hex('box_text_color_hex'),
+        box_border_color: hex('box_border_color_hex') || (document.getElementById('box_border_color_hex') as HTMLInputElement).value,
+      }
+      const res = await fetch(`${SB_URL}/rest/v1/site_settings`, {
+        method: 'POST',
+        headers: {
+          apikey: SB_KEY, Authorization: `Bearer ${SB_KEY}`,
+          'Content-Type': 'application/json',
+          Prefer: 'resolution=merge-duplicates',
+        },
+        body: JSON.stringify({ key: 'announcement_strip', value: merged })
+      })
+      if (!res.ok) throw new Error(await res.text())
+      showStatus('strip-box-status', true, '✅ Strip box colors saved!')
+    } catch(e) {
+      showStatus('strip-box-status', false, '❌ Save failed — check console')
+    } finally {
+      btn.disabled = false; btn.textContent = '💾 Save Strip Box Colors'
+    }
+  })
+
+  // ── Save: Video Bar ───────────────────────────────────────────────────────
+  document.getElementById('save-video-bar-btn')?.addEventListener('click', async () => {
+    const btn = document.getElementById('save-video-bar-btn') as HTMLButtonElement
+    btn.disabled = true; btn.textContent = 'Saving...'
+    try {
+      const textEl = document.getElementById('video_bar_text') as HTMLInputElement
+      await upsertHeroKey({
+        video_bar_text:       textEl?.value || '',
+        video_bar_bg:         hex('video_bar_bg_hex'),
+        video_bar_text_color: hex('video_bar_text_color_hex'),
+      })
+      showStatus('video-bar-status', true, '✅ Video bar saved!')
+    } catch(e) {
+      showStatus('video-bar-status', false, '❌ Save failed — check console')
+    } finally {
+      btn.disabled = false; btn.textContent = '💾 Save Video Bar'
+    }
+  })
+
+  // ── Init ──────────────────────────────────────────────────────────────────
+  preloadValues()
+</script>
