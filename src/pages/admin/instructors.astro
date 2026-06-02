@@ -5,102 +5,286 @@ import AdminLayout from '../../layouts/AdminLayout.astro'
 <AdminLayout title="Instructors" activeSection="instructors">
   <div id="root"></div>
 </AdminLayout>
+
 <script>
 import { createClient } from '@supabase/supabase-js'
-import { createElement as h, useState, useEffect } from 'react'
+import { createElement as h, useState, useEffect, useCallback } from 'react'
 import { createRoot } from 'react-dom/client'
-const sb = createClient(window.__SB_URL, window.__SB_KEY)
 
-const EMPTY = { name:'', designation:'', bio:'', photo_url:'', sort_order:0, is_active:true }
+// Single shared client — avoids GoTrueClient warning
+let _sb: any = null
+function getSb() {
+  if (_sb) return _sb
+  const url = (window as any).__SB_URL
+  const key = (window as any).__SB_KEY
+  if (!url || !key) return null
+  _sb = createClient(url, key)
+  return _sb
+}
+
+const EMPTY: any = {
+  name: '', specialization: '', designation: '',
+  bio: '', photo_url: '', sort_order: 0, is_active: true,
+}
+
+const s: any = {
+  width:'100%', padding:'9px 12px', border:'1px solid #e2e8f0',
+  borderRadius:'8px', fontSize:'13px', outline:'none', boxSizing:'border-box',
+}
+const lbl = (t: string) => h('label', {
+  style:{ fontSize:'12px', fontWeight:'600', color:'#475569', display:'block', marginBottom:'5px' }
+}, t)
 
 function Mgr() {
-  const [rows, setRows] = useState([])
-  const [form, setForm] = useState({...EMPTY})
-  const [editId, setEditId] = useState(null)
-  const [show, setShow] = useState(false)
+  const [rows,   setRows]   = useState<any[]>([])
+  const [form,   setForm]   = useState<any>({...EMPTY})
+  const [editId, setEditId] = useState<string|null>(null)
+  const [show,   setShow]   = useState(false)
   const [saving, setSaving] = useState(false)
+  const [msg,    setMsg]    = useState('')
+  const [ready,  setReady]  = useState(false)
 
-  useEffect(() => { load() }, [])
+  // Wait for Supabase credentials
+  useEffect(() => {
+    let n = 0
+    const t = setInterval(() => {
+      n++
+      if (getSb()) { clearInterval(t); setReady(true) }
+      else if (n > 80) { clearInterval(t); setMsg('❌ DB not available — reload') }
+    }, 100)
+    return () => clearInterval(t)
+  }, [])
+
+  useEffect(() => { if (ready) load() }, [ready])
+
   async function load() {
-    const { data } = await sb.from('instructors').select('*').order('sort_order')
+    const sb = getSb(); if (!sb) return
+    const { data, error } = await sb
+      .from('instructors')
+      .select('*')
+      .order('sort_order', { ascending: true })
+    if (error) { setMsg('❌ Load failed: ' + error.message); return }
     setRows(data ?? [])
+    setMsg('')
   }
-  const upd = (k, v) => setForm(p => ({...p, [k]: v}))
-  function openAdd() { setForm({...EMPTY}); setEditId(null); setShow(true); window.scrollTo({top:0}) }
-  function openEdit(r) { setForm({...EMPTY, ...r}); setEditId(r.id); setShow(true); window.scrollTo({top:0}) }
+
+  const upd = useCallback((k: string, v: any) => setForm((p:any) => ({...p, [k]: v})), [])
+
+  function openAdd()       { setForm({...EMPTY}); setEditId(null); setShow(true); window.scrollTo({top:0, behavior:'smooth'}) }
+  function openEdit(r:any) { setForm({...EMPTY, ...r}); setEditId(r.id); setShow(true); window.scrollTo({top:0, behavior:'smooth'}) }
+  function cancel()        { setShow(false); setEditId(null); setForm({...EMPTY}); setMsg('') }
+
   async function save() {
+    if (!(form.name||'').trim()) { setMsg('❌ Name is required'); return }
+    const sb = getSb()
+    if (!sb) { setMsg('❌ DB not ready — reload the page'); return }
+
     setSaving(true)
-    const payload = {...form, sort_order: parseInt(form.sort_order)||0}
-    if (editId) await sb.from('instructors').update(payload).eq('id', editId)
-    else await sb.from('instructors').insert(payload)
-    setSaving(false); setShow(false); load()
-  }
-  async function toggle(id, cur) {
-    await sb.from('instructors').update({is_active: !cur}).eq('id', id)
-    setRows(p => p.map(r => r.id===id ? {...r, is_active: !cur} : r))
+    setMsg('⏳ Saving...')
+
+    // specialization = designation (both saved so both columns work)
+    const spec = (form.specialization || form.designation || '').trim()
+    const payload: any = {
+      name:           (form.name    || '').trim(),
+      specialization: spec,
+      designation:    spec,
+      bio:            (form.bio      || '').trim(),
+      photo_url:      (form.photo_url|| '').trim(),
+      sort_order:     parseInt(form.sort_order) || 0,
+      is_active:      !!form.is_active,
+    }
+
+    console.log('[ATEC Instructors] Saving payload:', JSON.stringify(payload))
+    console.log('[ATEC Instructors] editId:', editId)
+
+    try {
+      if (editId) {
+        // Try UPDATE first
+        const res = await sb
+          .from('instructors')
+          .update(payload)
+          .eq('id', editId)
+          .select('id, name, photo_url, specialization')
+
+        console.log('[ATEC Instructors] Update result:', JSON.stringify(res))
+
+        if (res.error) {
+          setMsg('❌ Update error: ' + res.error.message)
+        } else if (!res.data || res.data.length === 0) {
+          // RLS blocked update — try upsert with id
+          console.log('[ATEC Instructors] Update matched 0 rows — trying upsert')
+          const res2 = await sb
+            .from('instructors')
+            .upsert({ ...payload, id: editId }, { onConflict: 'id' })
+            .select('id, name, photo_url, specialization')
+
+          console.log('[ATEC Instructors] Upsert result:', JSON.stringify(res2))
+
+          if (res2.error) setMsg('❌ Upsert error: ' + res2.error.message)
+          else { setMsg('✅ Saved! ' + JSON.stringify(res2.data?.[0])); done() }
+        } else {
+          setMsg('✅ Updated! photo_url: ' + (res.data[0]?.photo_url || '(empty)'))
+          done()
+        }
+      } else {
+        const res = await sb
+          .from('instructors')
+          .insert(payload)
+          .select('id, name, photo_url, specialization')
+
+        console.log('[ATEC Instructors] Insert result:', JSON.stringify(res))
+
+        if (res.error) setMsg('❌ Insert error: ' + res.error.message)
+        else { setMsg('✅ Added! ' + (res.data?.[0]?.name || '')); done() }
+      }
+    } catch (e: any) {
+      setMsg('❌ Exception: ' + (e?.message || String(e)))
+      console.error('[ATEC Instructors] Exception:', e)
+    } finally {
+      setSaving(false)
+    }
   }
 
-  const s = {width:'100%',padding:'9px 12px',border:'1px solid #e2e8f0',borderRadius:'8px',fontSize:'13px',outline:'none',boxSizing:'border-box'}
-  const lbl = t => h('label',{style:{fontSize:'12px',fontWeight:'600',color:'#475569',display:'block',marginBottom:'5px'}},t)
+  function done() { setShow(false); setEditId(null); setForm({...EMPTY}); load() }
 
-  return h('div',{style:{display:'flex',flexDirection:'column',gap:'20px'}},
-    h('div',{style:{display:'flex',justifyContent:'space-between',alignItems:'center',flexWrap:'wrap',gap:'12px'}},
-      h('h1',{style:{fontFamily:'Sora,sans-serif',fontSize:'1.5rem',fontWeight:'800'}},'👨‍🏫 Instructors'),
-      h('button',{onClick:openAdd,style:{padding:'10px 22px',background:'#1c3d7a',color:'#fff',border:'none',borderRadius:'10px',fontWeight:'700',fontSize:'14px',cursor:'pointer'}},'+ Add Instructor')
-    ),
-    show && h('div',{style:{background:'#fff',borderRadius:'16px',border:'2px solid #1c3d7a',padding:'28px'}},
-      h('div',{style:{display:'flex',justifyContent:'space-between',marginBottom:'20px'}},
-        h('h2',{style:{fontFamily:'Sora,sans-serif',fontWeight:'700',fontSize:'16px'}}, editId ? '✏️ Edit' : '➕ Add Instructor'),
-        h('button',{onClick:()=>setShow(false),style:{background:'none',border:'none',fontSize:'20px',cursor:'pointer',color:'#94a3b8'}},'✕')
+  async function toggle(id: string, cur: boolean) {
+    const sb = getSb(); if (!sb) return
+    const { error } = await sb.from('instructors').update({is_active: !cur}).eq('id', id)
+    if (error) { setMsg('❌ ' + error.message); return }
+    setRows((p:any[]) => p.map(r => r.id===id ? {...r, is_active:!cur} : r))
+  }
+
+  async function del(id: string) {
+    const sb = getSb(); if (!sb) return
+    const { error } = await sb.from('instructors').delete().eq('id', id)
+    if (error) { setMsg('❌ ' + error.message); return }
+    setMsg('✅ Deleted'); load()
+  }
+
+  if (!ready) return h('div', {style:{padding:40,textAlign:'center',color:'#64748b',fontSize:15}}, '⏳ Connecting to database...')
+
+  return h('div', {style:{fontFamily:'system-ui,sans-serif',maxWidth:1100,margin:'0 auto',padding:'24px 20px'}},
+
+    // Header
+    h('div', {style:{display:'flex',justifyContent:'space-between',alignItems:'center',flexWrap:'wrap',gap:'12px',marginBottom:20}},
+      h('div', null,
+        h('h1', {style:{fontFamily:'Sora,sans-serif',fontSize:'1.5rem',fontWeight:'800',margin:0}}, '👨‍🏫 Instructors'),
+        h('p',  {style:{color:'#64748b',fontSize:13,margin:'4px 0 0'}}, `${rows.length} instructors · photo_url saves to Supabase`)
       ),
-      h('div',{style:{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'14px'}},
-        ...[
-          {l:'Name *',k:'name'},{l:'Designation',k:'designation'},
-          {l:'Photo URL',k:'photo_url'},{l:'Sort Order',k:'sort_order',type:'number'},
-          {l:'Bio',k:'bio',span:2},
-        ].map(({l,k,type,span})=>
-          h('div',{key:k,style:{gridColumn:span===2?'1/-1':'auto'}}, lbl(l),
-            k==='bio'
-              ? h('textarea',{value:form[k]??'',onChange:e=>upd(k,e.target.value),rows:3,style:{...s,height:'auto',resize:'vertical'}})
-              : h('input',{type:type||'text',value:form[k]??'',onChange:e=>upd(k,e.target.value),style:s})
-          )
+      h('button', {
+        onClick: openAdd,
+        style:{padding:'10px 22px',background:'#1c3d7a',color:'#d4f01a',border:'none',borderRadius:'10px',fontWeight:'700',fontSize:'14px',cursor:'pointer'}
+      }, '+ Add Instructor')
+    ),
+
+    // Message
+    msg ? h('div', {style:{
+      marginBottom:16, padding:'10px 16px', borderRadius:8, wordBreak:'break-word',
+      background: msg.startsWith('❌')?'#fef2f2': msg.startsWith('✅')?'#f0fdf4':'#eff6ff',
+      border:`1px solid ${msg.startsWith('❌')?'#fca5a5':msg.startsWith('✅')?'#86efac':'#93c5fd'}`,
+      color: msg.startsWith('❌')?'#991b1b':msg.startsWith('✅')?'#166534':'#1d4ed8',
+      fontSize:13, fontWeight:600,
+    }}, msg) : null,
+
+    // Form
+    show ? h('div', {style:{background:'#fff',borderRadius:'16px',border:'2px solid #1c3d7a',padding:'28px',marginBottom:24}},
+      h('div', {style:{display:'flex',justifyContent:'space-between',marginBottom:'20px'}},
+        h('div', null,
+          h('h2', {style:{fontFamily:'Sora,sans-serif',fontWeight:'700',fontSize:'16px',margin:0}}, editId ? '✏️ Edit Instructor' : '➕ Add Instructor'),
+          editId ? h('p',{style:{fontSize:11,color:'#94a3b8',fontFamily:'monospace',margin:'3px 0 0'}},'ID: '+editId) : null
         ),
-        h('div',{style:{display:'flex',alignItems:'center',gap:'10px'}},
-          h('input',{type:'checkbox',checked:!!form.is_active,onChange:e=>upd('is_active',e.target.checked),style:{width:'16px',height:'16px',accentColor:'#1c3d7a'}}),
-          lbl('Active (shown on website)')
+        h('button', {onClick:cancel, style:{background:'none',border:'none',fontSize:'22px',cursor:'pointer',color:'#94a3b8'}}, '✕')
+      ),
+
+      // Name + Specialization
+      h('div', {style:{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'14px',marginBottom:14}},
+        h('div', null, lbl('Name *'),
+          h('input', {value:form.name,onChange:(e:any)=>upd('name',e.target.value),placeholder:'e.g. Er. Rajesh Kumar',style:s})
         ),
-        form.photo_url && h('div',{style:{gridColumn:'1/-1'}},
-          lbl('Photo Preview'),
-          h('img',{src:form.photo_url,alt:'Preview',style:{width:'80px',height:'80px',borderRadius:'50%',objectFit:'cover',border:'2px solid #e2e8f0'}})
+        h('div', null, lbl('Specialization / Designation'),
+          h('input', {value:form.specialization||form.designation||'',onChange:(e:any)=>upd('specialization',e.target.value),placeholder:'e.g. Hardware & Networking Expert',style:s})
         )
       ),
-      h('div',{style:{display:'flex',gap:'10px',marginTop:'20px'}},
-        h('button',{onClick:save,disabled:saving,style:{flex:1,padding:'12px',background:saving?'#94a3b8':'#1c3d7a',color:'#fff',border:'none',borderRadius:'10px',fontWeight:'700',cursor:saving?'not-allowed':'pointer'}},
-          saving?'Saving...':editId?'✅ Update':'✅ Add'
+
+      // Photo URL — full width with live preview
+      h('div', {style:{marginBottom:14}},
+        lbl('📸 Photo URL — paste direct image link (shown in marquee on homepage)'),
+        h('input', {
+          value: form.photo_url,
+          onChange: (e:any) => upd('photo_url', e.target.value),
+          placeholder: 'https://... paste any direct image URL',
+          style: s,
+        }),
+        form.photo_url ? h('div', {style:{marginTop:8,display:'flex',alignItems:'center',gap:12}},
+          h('img', {
+            src: form.photo_url, alt:'preview',
+            style:{width:80,height:80,borderRadius:'50%',objectFit:'cover',border:'3px solid #1c3d7a'},
+            onError:(e:any)=>{ e.target.style.display='none' }
+          }),
+          h('span', {style:{fontSize:12,color:'#64748b'}}, '← photo preview (circular crop)')
+        ) : h('p', {style:{fontSize:12,color:'#94a3b8',margin:'6px 0 0'}}, 'Paste a URL above to see preview')
+      ),
+
+      // Bio
+      h('div', {style:{marginBottom:14}},
+        lbl('Bio (optional)'),
+        h('textarea', {value:form.bio,onChange:(e:any)=>upd('bio',e.target.value),rows:2,placeholder:'Short bio...',style:{...s,height:'auto',resize:'vertical'}})
+      ),
+
+      // Sort + Active
+      h('div', {style:{display:'grid',gridTemplateColumns:'160px 1fr',gap:14,marginBottom:24}},
+        h('div', null, lbl('Sort Order'),
+          h('input', {type:'number',value:form.sort_order,onChange:(e:any)=>upd('sort_order',e.target.value),min:0,style:s})
         ),
-        h('button',{onClick:()=>setShow(false),style:{padding:'12px 20px',border:'1px solid #e2e8f0',borderRadius:'10px',background:'#fff',fontWeight:'600',cursor:'pointer'}},'Cancel')
+        h('div', {style:{display:'flex',alignItems:'flex-end',paddingBottom:2}},
+          h('label', {style:{display:'flex',alignItems:'center',gap:10,cursor:'pointer'}},
+            h('input', {type:'checkbox',checked:!!form.is_active,onChange:(e:any)=>upd('is_active',e.target.checked),style:{width:18,height:18,accentColor:'#1c3d7a',cursor:'pointer'}}),
+            h('span', {style:{fontWeight:600,color:'#0f172a',fontSize:14}}, 'Active — shown on website')
+          )
+        )
+      ),
+
+      // Buttons
+      h('div', {style:{display:'flex',gap:'10px'}},
+        h('button', {
+          onClick:save, disabled:saving,
+          style:{flex:1,padding:'12px',background:saving?'#94a3b8':'#1c3d7a',color:'#d4f01a',border:'none',borderRadius:'10px',fontWeight:'700',cursor:saving?'not-allowed':'pointer'}
+        }, saving ? '⏳ Saving...' : (editId ? '💾 Save Changes' : '✅ Add Instructor')),
+        h('button', {onClick:cancel, style:{padding:'12px 20px',border:'1px solid #e2e8f0',borderRadius:'10px',background:'#fff',fontWeight:'600',cursor:'pointer'}}, 'Cancel')
       )
-    ),
-    h('div',{style:{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(260px,1fr))',gap:'16px'}},
-      rows.length===0
-        ? h('div',{style:{gridColumn:'1/-1',padding:'40px',textAlign:'center',color:'#94a3b8',background:'#fff',borderRadius:'14px',border:'1px solid #e2e8f0'}},'No instructors yet.')
-        : rows.map(r => h('div',{key:r.id,style:{background:'#fff',borderRadius:'12px',border:'1px solid #e2e8f0',padding:'20px',textAlign:'center'}},
-            h('div',{style:{width:'64px',height:'64px',borderRadius:'50%',margin:'0 auto 12px',overflow:'hidden',background:'#1c3d7a',display:'flex',alignItems:'center',justifyContent:'center'}},
+    ) : null,
+
+    // Grid of instructor cards
+    h('div', {style:{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(260px,1fr))',gap:'16px'}},
+      rows.length === 0
+        ? h('div', {style:{gridColumn:'1/-1',padding:'40px',textAlign:'center',color:'#94a3b8',background:'#fff',borderRadius:'14px',border:'1px solid #e2e8f0'}},
+            h('div', {style:{fontSize:48,marginBottom:12}}, '👨‍🏫'),
+            h('p',   {style:{fontSize:16,fontWeight:600,margin:0}}, 'No instructors yet'),
+          )
+        : rows.map((r:any) =>
+            h('div', {key:r.id, style:{background:'#fff',borderRadius:'12px',border:'1px solid #e2e8f0',padding:'20px',textAlign:'center',opacity:r.is_active?1:0.55}},
+              // Avatar
+              h('div', {style:{width:'72px',height:'72px',borderRadius:'50%',margin:'0 auto 12px',overflow:'hidden',background:'#1c3d7a',display:'flex',alignItems:'center',justifyContent:'center',border:'3px solid #e2e8f0'}},
+                r.photo_url
+                  ? h('img', {src:r.photo_url, alt:r.name, style:{width:'100%',height:'100%',objectFit:'cover'}, onError:(e:any)=>{e.target.style.display='none'}})
+                  : h('span', {style:{color:'#d4f01a',fontWeight:'800',fontSize:'22px'}}, (r.name||'?')[0].toUpperCase())
+              ),
+              h('div', {style:{fontWeight:'700',fontSize:'14px',marginBottom:'2px'}}, r.name),
+              h('div', {style:{fontSize:'12px',color:'#64748b',marginBottom:'4px'}}, r.specialization || r.designation || ''),
+              // Photo badge
               r.photo_url
-                ? h('img',{src:r.photo_url,alt:r.name,style:{width:'100%',height:'100%',objectFit:'cover'}})
-                : h('span',{style:{color:'#d4f01a',fontWeight:'800',fontSize:'22px'}},r.name?.[0]||'?')
-            ),
-            h('div',{style:{fontWeight:'700',fontSize:'14px',marginBottom:'3px'}},r.name),
-            h('div',{style:{fontSize:'12px',color:'#64748b',marginBottom:'12px'}},r.designation),
-            h('div',{style:{display:'flex',gap:'6px',justifyContent:'center'}},
-              h('button',{onClick:()=>openEdit(r),style:{padding:'5px 12px',background:'#eff6ff',color:'#1c3d7a',border:'none',borderRadius:'6px',fontSize:'12px',fontWeight:'600',cursor:'pointer'}},'✏️ Edit'),
-              h('button',{onClick:()=>toggle(r.id,r.is_active),style:{padding:'5px 12px',background:r.is_active?'#fee2e2':'#dcfce7',color:r.is_active?'#991b1b':'#166534',border:'none',borderRadius:'6px',fontSize:'12px',fontWeight:'600',cursor:'pointer'}},
-                r.is_active?'Hide':'Show'
+                ? h('div', {style:{fontSize:11,color:'#9d174d',background:'#fce7f3',padding:'2px 8px',borderRadius:20,display:'inline-block',marginBottom:8}}, '📸 Photo saved')
+                : h('div', {style:{fontSize:11,color:'#94a3b8',marginBottom:8}}, 'No photo'),
+              h('div', {style:{display:'flex',gap:'6px',justifyContent:'center'}},
+                h('button', {onClick:()=>openEdit(r), style:{padding:'5px 12px',background:'#eff6ff',color:'#1c3d7a',border:'1px solid #bfdbfe',borderRadius:'6px',fontSize:'12px',fontWeight:'600',cursor:'pointer'}}, '✏️ Edit'),
+                h('button', {onClick:()=>toggle(r.id,r.is_active), style:{padding:'5px 12px',background:r.is_active?'#fee2e2':'#dcfce7',color:r.is_active?'#991b1b':'#166534',border:'none',borderRadius:'6px',fontSize:'12px',fontWeight:'600',cursor:'pointer'}}, r.is_active?'Hide':'Show'),
+                h('button', {onClick:()=>{ if(confirm('Delete '+r.name+'?')) del(r.id) }, style:{padding:'5px 8px',background:'#fef2f2',color:'#dc2626',border:'1px solid #fca5a5',borderRadius:'6px',fontSize:'12px',cursor:'pointer'}}, '🗑️')
               )
             )
-          ))
+          )
     )
   )
 }
-createRoot(document.getElementById('root')).render(h(Mgr,null))
+
+createRoot(document.getElementById('root')!).render(h(Mgr, null))
 </script>
