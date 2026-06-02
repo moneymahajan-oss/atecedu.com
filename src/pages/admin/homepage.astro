@@ -13,6 +13,7 @@ import { createRoot } from 'react-dom/client'
 
 const sb = createClient(window.__SB_URL, window.__SB_KEY)
 
+// ── OLD: only YouTube. NEW: detects YouTube / Instagram / Facebook / Vimeo / direct MP4
 function extractYTId(input: string): string {
   let v = (input||'').trim()
   const short = v.match(/youtu\.be\/([a-zA-Z0-9_-]{11})/)
@@ -22,43 +23,95 @@ function extractYTId(input: string): string {
   return v
 }
 
+// ── Detect video type from any URL ──────────────────────────────────────────
+// Returns { type, embedUrl, displayId, platform }
+function detectVideo(raw: string): {
+  type: 'youtube' | 'instagram' | 'facebook' | 'vimeo' | 'direct' | 'unknown'
+  embedUrl: string
+  displayId: string
+  platform: string
+  error?: string
+} {
+  const url = (raw || '').trim()
+  if (!url) return { type: 'unknown', embedUrl: '', displayId: '', platform: '' }
+
+  // ── YouTube ──────────────────────────────────────────────────────────────
+  const ytShort = url.match(/youtu\.be\/([A-Za-z0-9_-]{11})/)
+  const ytLong  = url.match(/(?:v=|\/embed\/|\/shorts\/|\/v\/)([A-Za-z0-9_-]{11})/)
+  const ytId    = ytShort?.[1] || ytLong?.[1] || (/^[A-Za-z0-9_-]{11}$/.test(url) ? url : '')
+  if (ytId) return {
+    type: 'youtube',
+    embedUrl: `https://www.youtube.com/embed/${ytId}?autoplay=1&mute=1&loop=1&playlist=${ytId}&controls=1&rel=0&modestbranding=1`,
+    displayId: ytId,
+    platform: 'YouTube',
+  }
+
+  // ── Instagram Reel / Post ────────────────────────────────────────────────
+  const igMatch = url.match(/instagram\.com\/(?:reel|p)\/([A-Za-z0-9_-]+)/)
+  if (igMatch) return {
+    type: 'instagram',
+    embedUrl: `https://www.instagram.com/reel/${igMatch[1]}/embed/`,
+    displayId: igMatch[1],
+    platform: 'Instagram Reel',
+  }
+
+  // ── Facebook Video ───────────────────────────────────────────────────────
+  const fbMatch = url.match(/facebook\.com\/.*\/videos\/(\d+)/) ||
+                  url.match(/fb\.watch\/([A-Za-z0-9_-]+)/)
+  if (fbMatch || url.includes('facebook.com/watch') || url.includes('fb.watch')) {
+    const encoded = encodeURIComponent(url)
+    return {
+      type: 'facebook',
+      embedUrl: `https://www.facebook.com/plugins/video.php?href=${encoded}&show_text=false&autoplay=true`,
+      displayId: fbMatch?.[1] || 'Facebook Video',
+      platform: 'Facebook Video',
+    }
+  }
+
+  // ── Vimeo ────────────────────────────────────────────────────────────────
+  const vimeoMatch = url.match(/vimeo\.com\/(\d+)/)
+  if (vimeoMatch) return {
+    type: 'vimeo',
+    embedUrl: `https://player.vimeo.com/video/${vimeoMatch[1]}?autoplay=1&muted=1&loop=1`,
+    displayId: vimeoMatch[1],
+    platform: 'Vimeo',
+  }
+
+  // ── Direct MP4 / WebM ────────────────────────────────────────────────────
+  if (/\.(mp4|webm|ogg|mov)(\?.*)?$/i.test(url)) return {
+    type: 'direct',
+    embedUrl: url,
+    displayId: url.split('/').pop()?.split('?')[0] || 'video file',
+    platform: 'Direct Video File',
+  }
+
+  // ── Unknown ──────────────────────────────────────────────────────────────
+  return {
+    type: 'unknown',
+    embedUrl: '',
+    displayId: '',
+    platform: '',
+    error: 'Paste a YouTube, Instagram Reel, Facebook, Vimeo URL — or a direct .mp4 link',
+  }
+}
+
 // Check if URL is a direct image (not a page on Imgur/PostImg/etc)
 function isDirectImageUrl(url: string): { ok: boolean; error?: string; fix?: string } {
-  if (!url || !url.trim()) return { ok: true } // empty is fine
+  if (!url || !url.trim()) return { ok: true }
   const u = url.trim()
-
-  // Common page-URL patterns that are NOT direct images
   if (u.match(/^https?:\/\/postimg\.cc\/[a-zA-Z0-9]+\/?$/)) {
-    return {
-      ok: false,
-      error: '❌ This is a PostImg page link, not the image itself',
-      fix: 'Go to that page → right-click the image → "Copy image address" → it should look like https://i.postimg.cc/xxx/image.jpg'
-    }
+    return { ok: false, error: '❌ This is a PostImg page link, not the image itself', fix: 'Go to that page → right-click the image → "Copy image address" → it should look like https://i.postimg.cc/xxx/image.jpg' }
   }
   if (u.match(/^https?:\/\/imgur\.com\/[a-zA-Z0-9]+\/?$/) || u.match(/^https?:\/\/imgur\.com\/a\//)) {
-    return {
-      ok: false,
-      error: '❌ This is an Imgur page link, not the image itself',
-      fix: 'Right-click the image on Imgur → "Copy image address" → it should look like https://i.imgur.com/xxx.jpg'
-    }
+    return { ok: false, error: '❌ This is an Imgur page link, not the image itself', fix: 'Right-click the image on Imgur → "Copy image address" → it should look like https://i.imgur.com/xxx.jpg' }
   }
   if (u.match(/^https?:\/\/drive\.google\.com\//)) {
-    return {
-      ok: false,
-      error: '❌ Google Drive links don\'t work directly as images',
-      fix: 'Use a public CDN like PostImg, Imgur, or your Supabase Storage instead'
-    }
+    return { ok: false, error: '❌ Google Drive links don\'t work directly as images', fix: 'Use a public CDN like PostImg, Imgur, or your Supabase Storage instead' }
   }
-  // Looks like a direct image if it ends with an image extension OR is on a known direct CDN
   const isImage = /\.(jpg|jpeg|png|gif|webp|svg|avif)(\?.*)?$/i.test(u)
   const isDirectCDN = /^https?:\/\/(i\.postimg\.cc|i\.imgur\.com|.*\.supabase\.co\/storage|res\.cloudinary\.com|.*\.cloudfront\.net)\//i.test(u)
-
   if (!isImage && !isDirectCDN) {
-    return {
-      ok: false,
-      error: '⚠️ This URL doesn\'t look like a direct image link',
-      fix: 'Make sure your URL ends with .jpg, .png, .webp etc. — or comes from a direct image CDN'
-    }
+    return { ok: false, error: '⚠️ This URL doesn\'t look like a direct image link', fix: 'Make sure your URL ends with .jpg, .png, .webp etc.' }
   }
   return { ok: true }
 }
@@ -68,7 +121,9 @@ function Mgr() {
   const [hero, setHero] = useState<any>({
     heading: 'Turning Students Into Professionals Since 2000',
     subheading: 'Online, hybrid & classroom courses in hardware, networking, web design and more.',
-    youtube_video_id: '',
+    youtube_video_id: '',   // kept for backward compat when reading old saved data
+    video_url: '',          // NEW: universal video URL field
+    video_type: 'youtube',  // NEW: detected automatically
     heading_font_size: '4',
     cta_text: 'Explore Courses',
     cta_link: '/courses',
@@ -85,8 +140,18 @@ function Mgr() {
   useEffect(() => { load() }, [])
   async function load() {
     const { data } = await sb.from('site_settings').select('key,value').in('key', ['hero','announcement_strip','branding','navigation','theme'])
-    data?.forEach(d => {
-      if (d.key==='hero')               setHero((p:any) => ({...p, ...d.value}))
+    data?.forEach((d: any) => {
+      if (d.key==='hero') {
+        setHero((p: any) => {
+          const merged = { ...p, ...d.value }
+          // Back-compat: if old data only has youtube_video_id, populate video_url from it
+          if (!merged.video_url && merged.youtube_video_id) {
+            merged.video_url = merged.youtube_video_id
+            merged.video_type = 'youtube'
+          }
+          return merged
+        })
+      }
       if (d.key==='announcement_strip') setStrip((p:any) => ({...p, ...d.value}))
       if (d.key==='branding')           setBranding((p:any) => ({...p, ...d.value}))
       if (d.key==='navigation')         setNav((p:any) => ({...p, ...d.value, links: d.value?.links ?? p.links}))
@@ -109,7 +174,7 @@ function Mgr() {
     h('div', {style:{background:'#fff',borderRadius:'16px',border:'1px solid #e2e8f0',padding:'28px',marginBottom:'20px'}},
       h('div', {style:{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'20px',borderBottom:'1px solid #f1f5f9',paddingBottom:'14px'}},
         h('h2', {style:{fontFamily:'Sora,sans-serif',fontWeight:'700',fontSize:'17px'}}, `${emoji} ${title}`),
-        h('button', {onClick:onSave,disabled:saving===saveKeyName,
+        h('button', {onClick:onSave, disabled:saving===saveKeyName,
           style:{padding:'9px 22px',background:saved===saveKeyName?'#166534':saving===saveKeyName?'#94a3b8':'#1c3d7a',color:'#fff',border:'none',borderRadius:'8px',fontWeight:'700',fontSize:'13px',cursor:saving===saveKeyName?'not-allowed':'pointer'}},
           saved===saveKeyName?'✅ Saved!':saving===saveKeyName?'Saving...':'💾 Save'
         )
@@ -125,6 +190,145 @@ function Mgr() {
         transition: 'all 0.15s'}
     }, `${icon} ${label}`)
 
+  // ── Video picker component (replaces the old youtube_video_id field) ────
+  const VideoPicker = () => {
+    const rawUrl   = hero.video_url || hero.youtube_video_id || ''
+    const detected = detectVideo(rawUrl)
+
+    const platformColors: Record<string, string> = {
+      youtube:   '#ff0000',
+      instagram: '#e1306c',
+      facebook:  '#1877f2',
+      vimeo:     '#1ab7ea',
+      direct:    '#16a34a',
+      unknown:   '#94a3b8',
+    }
+    const platformIcons: Record<string, string> = {
+      youtube:   '▶️',
+      instagram: '📸',
+      facebook:  '👥',
+      vimeo:     '🎬',
+      direct:    '📁',
+      unknown:   '❓',
+    }
+
+    return h('div', {style:{gridColumn:'1/-1'}},
+      lbl('Hero Video (YouTube, Instagram Reel, Facebook, Vimeo, or direct .mp4 URL)'),
+
+      // Input field
+      h('input', {
+        type: 'text',
+        value: rawUrl,
+        onChange: (e: any) => {
+          const val = e.target.value
+          const d = detectVideo(val)
+          setHero((p: any) => ({
+            ...p,
+            video_url:  val,
+            video_type: d.type === 'unknown' ? 'youtube' : d.type,
+            // keep youtube_video_id in sync for backward compat
+            youtube_video_id: d.type === 'youtube' ? d.displayId : p.youtube_video_id,
+          }))
+        },
+        style: { ...s, marginBottom: '10px' },
+        placeholder: 'Paste any video URL — YouTube, Instagram, Facebook, Vimeo, .mp4...',
+      }),
+
+      // Detection result badge
+      rawUrl && h('div', {style:{
+        display: 'flex', alignItems: 'flex-start', gap: '10px',
+        padding: '12px 14px',
+        background: detected.error ? '#fef2f2' : '#f0fdf4',
+        border: `1px solid ${detected.error ? '#fecaca' : '#bbf7d0'}`,
+        borderRadius: '10px',
+        marginBottom: '10px',
+      }},
+        // Platform badge
+        !detected.error && h('span', {style:{
+          padding: '2px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: '800',
+          background: platformColors[detected.type] || '#94a3b8',
+          color: '#fff', flexShrink: 0, marginTop: '1px',
+        }}, `${platformIcons[detected.type]} ${detected.platform}`),
+
+        detected.error
+          ? h('div', {},
+              h('div', {style:{color:'#991b1b',fontWeight:'700',fontSize:'13px'}}, '❌ Unrecognised URL'),
+              h('div', {style:{color:'#7f1d1d',fontSize:'12px',marginTop:'4px'}}, detected.error)
+            )
+          : h('div', {},
+              h('div', {style:{color:'#166534',fontWeight:'700',fontSize:'13px'}}, '✅ Video detected'),
+              h('div', {style:{color:'#15803d',fontSize:'11px',fontFamily:'monospace',marginTop:'2px',wordBreak:'break-all'}},
+                `ID / Code: ${detected.displayId}`
+              )
+            )
+      ),
+
+      // Supported sources info box
+      !rawUrl && h('div', {style:{
+        padding: '12px 14px',
+        background: '#f8fafc',
+        border: '1px solid #e2e8f0',
+        borderRadius: '10px',
+        fontSize: '12px',
+        color: '#64748b',
+      }},
+        h('div', {style:{fontWeight:'700',marginBottom:'8px',color:'#1c3d7a'}}, '📹 Supported video sources:'),
+        h('div', {style:{display:'flex',flexDirection:'column',gap:'5px'}},
+          ...([
+            ['▶️ YouTube',       'https://youtu.be/VIDEO_ID  or  youtube.com/watch?v=VIDEO_ID'],
+            ['📸 Instagram Reel','https://www.instagram.com/reel/CODE/'],
+            ['👥 Facebook Video','https://www.facebook.com/watch?v=VIDEO_ID'],
+            ['🎬 Vimeo',         'https://vimeo.com/VIDEO_ID'],
+            ['📁 Direct MP4',    'https://yoursite.com/video.mp4'],
+          ] as [string, string][]).map(([icon, example]) =>
+            h('div', {key:icon, style:{display:'flex',gap:'8px',alignItems:'flex-start'}},
+              h('span', {style:{fontWeight:'700',minWidth:'130px',flexShrink:0}}, icon),
+              h('span', {style:{color:'#94a3b8',fontFamily:'monospace',fontSize:'11px',wordBreak:'break-all'}}, example)
+            )
+          )
+        )
+      ),
+
+      // Live mini preview (YouTube only — others can't be embedded cross-origin in small iframes)
+      detected.type === 'youtube' && detected.displayId && h('div', {style:{marginTop:'10px'}},
+        h('div', {style:{fontSize:'11px',fontWeight:'700',color:'#94a3b8',marginBottom:'6px',textTransform:'uppercase'}}, 'Thumbnail Preview'),
+        h('img', {
+          src: `https://img.youtube.com/vi/${detected.displayId}/maxresdefault.jpg`,
+          onError: (e: any) => { e.target.src = `https://img.youtube.com/vi/${detected.displayId}/hqdefault.jpg` },
+          alt: 'YouTube thumbnail',
+          style: { width: '100%', maxWidth: '320px', borderRadius: '8px', border: '2px solid #e2e8f0', display: 'block' },
+        })
+      ),
+
+      // Instagram: show a note that preview can't be shown but it will work
+      detected.type === 'instagram' && h('div', {style:{
+        marginTop:'8px', padding:'10px 12px',
+        background:'#fdf4ff', border:'1px solid #e9d5ff', borderRadius:'8px',
+        fontSize:'12px', color:'#7c3aed',
+      }},
+        '📸 Instagram Reel detected. No thumbnail preview here, but it will play correctly in the hero video card on the website.'
+      ),
+
+      // Facebook note
+      detected.type === 'facebook' && h('div', {style:{
+        marginTop:'8px', padding:'10px 12px',
+        background:'#eff6ff', border:'1px solid #bfdbfe', borderRadius:'8px',
+        fontSize:'12px', color:'#1d4ed8',
+      }},
+        '👥 Facebook Video detected. Make sure the video is Public — private/friends-only videos will not play on the website.'
+      ),
+
+      // Direct MP4 note
+      detected.type === 'direct' && h('div', {style:{
+        marginTop:'8px', padding:'10px 12px',
+        background:'#f0fdf4', border:'1px solid #bbf7d0', borderRadius:'8px',
+        fontSize:'12px', color:'#15803d',
+      }},
+        '📁 Direct video file detected. Make sure it is publicly accessible and hosted on a server that allows cross-origin (CORS) access.'
+      ),
+    )
+  }
+
   return h('div', {style:{display:'flex',flexDirection:'column',gap:'20px'}},
     // Header
     h('div', {},
@@ -134,11 +338,11 @@ function Mgr() {
 
     // Tabs
     h('div', {style:{display:'flex',gap:'4px',background:'#f1f5f9',padding:'4px',borderRadius:'12px',flexWrap:'wrap'}},
-      h(TabBtn, {id:'hero', label:'Hero Section', icon:'🦸'}),
-      h(TabBtn, {id:'branding', label:'Logo & Branding', icon:'🎨'}),
-      h(TabBtn, {id:'nav', label:'Navigation', icon:'🧭'}),
-      h(TabBtn, {id:'theme', label:'Theme Colors', icon:'🌈'}),
-      h(TabBtn, {id:'strip', label:'Announcement Strip', icon:'📢'}),
+      h(TabBtn, {id:'hero',     label:'Hero Section',      icon:'🦸'}),
+      h(TabBtn, {id:'branding', label:'Logo & Branding',   icon:'🎨'}),
+      h(TabBtn, {id:'nav',      label:'Navigation',        icon:'🧭'}),
+      h(TabBtn, {id:'theme',    label:'Theme Colors',      icon:'🌈'}),
+      h(TabBtn, {id:'strip',    label:'Announcement Strip', icon:'📢'}),
     ),
 
     // ─ HERO TAB ────────────────────────────────────────
@@ -162,13 +366,9 @@ function Mgr() {
               onChange:(e:any)=>setHero((p:any)=>({...p,heading_font_size:e.target.value})),
               style:{...s,padding:'0',height:'8px'}})
           ),
-          h('div', {},
-            lbl('YouTube Video ID or URL (for hero visual)'),
-            h('input', {type:'text',value:hero.youtube_video_id||'',
-              onChange:(e:any)=>setHero((p:any)=>({...p,youtube_video_id:extractYTId(e.target.value)})),
-              style:s,placeholder:'Paste any YouTube URL'}),
-            hero.youtube_video_id && h('div', {style:{marginTop:'6px',fontSize:'11px',color:'#166534'}}, `✅ ID: ${hero.youtube_video_id}`)
-          ),
+          // ── NEW VIDEO PICKER — replaces old youtube_video_id field ──────
+          h(VideoPicker, {}),
+          // ────────────────────────────────────────────────────────────────
           h('div', {style:{gridColumn:'1/-1',marginTop:'8px',padding:'14px',background:'#f8fafc',borderRadius:'10px',border:'1px solid #e2e8f0'}},
             h('div', {style:{fontSize:'13px',fontWeight:'700',marginBottom:'12px',color:'#1c3d7a'}}, '🎯 Primary Call-to-Action Button'),
             h('div', {style:{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'12px'}},
@@ -230,9 +430,9 @@ function Mgr() {
             lbl('Display Mode (what shows next to the logo)'),
             h('div', {style:{display:'flex',gap:'8px',flexWrap:'wrap'}},
               ...[
-                {id:'name',    label:'📝 Name Only',      desc:'Show only brand name'},
-                {id:'tagline', label:'💬 Tagline Only',   desc:'Show only tagline'},
-                {id:'none',    label:'🚫 Logo Only',      desc:'No text, just logo'},
+                {id:'name',    label:'📝 Name Only',    desc:'Show only brand name'},
+                {id:'tagline', label:'💬 Tagline Only', desc:'Show only tagline'},
+                {id:'none',    label:'🚫 Logo Only',    desc:'No text, just logo'},
               ].map((m: any) =>
                 h('button', {key:m.id, type:'button',
                   onClick:()=>setBranding((p:any)=>({...p,display_mode:m.id})),
@@ -255,7 +455,6 @@ function Mgr() {
             lbl('Tagline'),
             h('input', {type:'text',value:branding.brand_tagline||'',onChange:(e:any)=>setBranding((p:any)=>({...p,brand_tagline:e.target.value})),style:s,placeholder:'Educational Society'})
           ),
-          // Preview — centered
           h('div', {style:{gridColumn:'1/-1',padding:'28px 20px',background:'#f8fafc',borderRadius:'10px',border:'1px solid #e2e8f0'}},
             h('div', {style:{fontSize:'11px',fontWeight:'700',color:'#94a3b8',marginBottom:'14px',textTransform:'uppercase',textAlign:'center'}}, 'Preview'),
             h('div', {style:{display:'flex',alignItems:'center',gap:'12px',justifyContent:'center'}},
@@ -289,12 +488,9 @@ function Mgr() {
               h('input', {type:'text',placeholder:'/courses',value:link.href||'',
                 onChange:(e:any)=>{const ns=[...nav.links]; ns[i]={...ns[i],href:e.target.value}; setNav((p:any)=>({...p,links:ns}))},
                 style:{...s,flex:1}}),
-              h('button', {onClick:()=>{const ns=[...nav.links]; if(i>0){[ns[i-1],ns[i]]=[ns[i],ns[i-1]]; setNav((p:any)=>({...p,links:ns}))}},
-                style:{padding:'6px 10px',background:'#fff',border:'1px solid #e2e8f0',borderRadius:'6px',cursor:'pointer',fontSize:'12px'}}, '↑'),
-              h('button', {onClick:()=>{const ns=[...nav.links]; if(i<ns.length-1){[ns[i+1],ns[i]]=[ns[i],ns[i+1]]; setNav((p:any)=>({...p,links:ns}))}},
-                style:{padding:'6px 10px',background:'#fff',border:'1px solid #e2e8f0',borderRadius:'6px',cursor:'pointer',fontSize:'12px'}}, '↓'),
-              h('button', {onClick:()=>{const ns=nav.links.filter((_:any,idx:number)=>idx!==i); setNav((p:any)=>({...p,links:ns}))},
-                style:{padding:'6px 10px',background:'#fee2e2',border:'1px solid #fecaca',borderRadius:'6px',color:'#991b1b',cursor:'pointer',fontSize:'12px',fontWeight:'600'}}, '✕')
+              h('button', {onClick:()=>{const ns=[...nav.links]; if(i>0){[ns[i-1],ns[i]]=[ns[i],ns[i-1]]; setNav((p:any)=>({...p,links:ns}))}}, style:{padding:'6px 10px',background:'#fff',border:'1px solid #e2e8f0',borderRadius:'6px',cursor:'pointer',fontSize:'12px'}}, '↑'),
+              h('button', {onClick:()=>{const ns=[...nav.links]; if(i<ns.length-1){[ns[i+1],ns[i]]=[ns[i],ns[i+1]]; setNav((p:any)=>({...p,links:ns}))}}, style:{padding:'6px 10px',background:'#fff',border:'1px solid #e2e8f0',borderRadius:'6px',cursor:'pointer',fontSize:'12px'}}, '↓'),
+              h('button', {onClick:()=>{const ns=nav.links.filter((_:any,idx:number)=>idx!==i); setNav((p:any)=>({...p,links:ns}))}, style:{padding:'6px 10px',background:'#fee2e2',border:'1px solid #fecaca',borderRadius:'6px',color:'#991b1b',cursor:'pointer',fontSize:'12px',fontWeight:'600'}}, '✕')
             )
           ),
           h('button', {onClick:()=>setNav((p:any)=>({...p,links:[...(p.links||[]),{label:'New Link',href:'/'}]})),
@@ -305,14 +501,8 @@ function Mgr() {
         h('div', {style:{borderTop:'1px solid #e2e8f0',paddingTop:'20px'}},
           h('div', {style:{fontSize:'13px',fontWeight:'700',color:'#475569',marginBottom:'12px'}}, 'Enroll Now Button (Top Right)'),
           h('div', {style:{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'12px',marginBottom:'12px'}},
-            h('div', {},
-              lbl('Button Text'),
-              h('input', {type:'text',value:nav.cta_text||'',onChange:(e:any)=>setNav((p:any)=>({...p,cta_text:e.target.value})),style:s,placeholder:'Enroll Now'})
-            ),
-            h('div', {},
-              lbl('Button Link (WhatsApp recommended)'),
-              h('input', {type:'text',value:nav.cta_link||'',onChange:(e:any)=>setNav((p:any)=>({...p,cta_link:e.target.value})),style:s,placeholder:'https://wa.me/917009933289'})
-            )
+            h('div', {}, lbl('Button Text'), h('input', {type:'text',value:nav.cta_text||'',onChange:(e:any)=>setNav((p:any)=>({...p,cta_text:e.target.value})),style:s,placeholder:'Enroll Now'})),
+            h('div', {}, lbl('Button Link (WhatsApp recommended)'), h('input', {type:'text',value:nav.cta_link||'',onChange:(e:any)=>setNav((p:any)=>({...p,cta_link:e.target.value})),style:s,placeholder:'https://wa.me/917009933289'}))
           ),
           h('div', {style:{marginBottom:'12px'}},
             lbl('Button Color Style'),
@@ -323,9 +513,9 @@ function Mgr() {
                 {id:'orange', label:'🔥 Orange',           bg:'linear-gradient(135deg, #ffa726, #fb8c00)'},
                 {id:'blue',   label:'💙 Blue',             bg:'linear-gradient(135deg, #4ea4ff, #1c3d7a)'},
                 {id:'green',  label:'💚 Green (WhatsApp)', bg:'linear-gradient(135deg, #25d366, #128c7e)'},
-              ].map(c =>
+              ].map((c: any) =>
                 h('button', {key:c.id,onClick:()=>setNav((p:any)=>({...p,cta_style:c.id})),
-                  style:{padding:'10px 16px',background:c.bg,color: c.id==='lemon'?'#0f2347':'#fff',border:nav.cta_style===c.id?'3px solid #0f2347':'3px solid transparent',borderRadius:'10px',fontSize:'12px',fontWeight:'700',cursor:'pointer'}
+                  style:{padding:'10px 16px',background:c.bg,color:c.id==='lemon'?'#0f2347':'#fff',border:nav.cta_style===c.id?'3px solid #0f2347':'3px solid transparent',borderRadius:'10px',fontSize:'12px',fontWeight:'700',cursor:'pointer'}
                 }, c.label)
               )
             )
@@ -348,42 +538,25 @@ function Mgr() {
         ),
         h('div', {style:{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'20px'}},
           ...[
-            {k:'primary',   l:'Primary (Brand color)',  desc:'Main brand color — buttons, headings, navbar', palette: ['#1c3d7a','#0f2347','#1e40af','#2563eb','#3b82f6','#0891b2','#0e7490','#155e75','#0f766e','#15803d','#16a34a','#65a30d','#ca8a04','#d97706','#dc2626','#b91c1c','#991b1b','#7c3aed','#6d28d9','#a21caf','#be185d']},
-            {k:'accent',    l:'Accent (Highlight color)', desc:'Highlights, badges, primary CTA', palette: ['#d4f01a','#facc15','#fbbf24','#fb923c','#f97316','#ef4444','#ec4899','#a855f7','#8b5cf6','#3b82f6','#06b6d4','#14b8a6','#10b981','#22c55e','#84cc16','#eab308','#fde047','#fef08a','#bef264','#fed7aa']},
-            {k:'navy_dark', l:'Dark Background',        desc:'Hero background, footer', palette: ['#0f2347','#0b1f3f','#050d1e','#1e293b','#0f172a','#000000','#1c1917','#18181b','#27272a','#171717','#3f3f46','#404040','#525252','#7c1d6f','#581c87','#3b0764','#1e3a8a','#172554','#082f49','#164e63']},
-            {k:'off_white', l:'Off-White Background',   desc:'Section backgrounds', palette: ['#f8fafc','#f1f5f9','#f9fafb','#f3f4f6','#fafaf9','#f5f5f4','#fef3c7','#fefce8','#fef9c3','#ecfdf5','#f0fdf4','#dbeafe','#eff6ff','#f0f9ff','#faf5ff','#fdf4ff','#fdf2f8','#fff7ed','#fffbeb','#ffffff']},
+            {k:'primary',   l:'Primary (Brand color)',    desc:'Main brand color — buttons, headings, navbar', palette:['#1c3d7a','#0f2347','#1e40af','#2563eb','#3b82f6','#0891b2','#0e7490','#155e75','#0f766e','#15803d','#16a34a','#65a30d','#ca8a04','#d97706','#dc2626','#b91c1c','#991b1b','#7c3aed','#6d28d9','#a21caf','#be185d']},
+            {k:'accent',    l:'Accent (Highlight color)',  desc:'Highlights, badges, primary CTA', palette:['#d4f01a','#facc15','#fbbf24','#fb923c','#f97316','#ef4444','#ec4899','#a855f7','#8b5cf6','#3b82f6','#06b6d4','#14b8a6','#10b981','#22c55e','#84cc16','#eab308','#fde047','#fef08a','#bef264','#fed7aa']},
+            {k:'navy_dark', l:'Dark Background',           desc:'Hero background, footer', palette:['#0f2347','#0b1f3f','#050d1e','#1e293b','#0f172a','#000000','#1c1917','#18181b','#27272a','#171717','#3f3f46','#404040','#525252','#7c1d6f','#581c87','#3b0764','#1e3a8a','#172554','#082f49','#164e63']},
+            {k:'off_white', l:'Off-White Background',      desc:'Section backgrounds', palette:['#f8fafc','#f1f5f9','#f9fafb','#f3f4f6','#fafaf9','#f5f5f4','#fef3c7','#fefce8','#fef9c3','#ecfdf5','#f0fdf4','#dbeafe','#eff6ff','#f0f9ff','#faf5ff','#fdf4ff','#fdf2f8','#fff7ed','#fffbeb','#ffffff']},
           ].map(({k,l,desc,palette}: any) =>
             h('div', {key:k,style:{padding:'16px',background:'#f8fafc',borderRadius:'10px',border:'1px solid #e2e8f0'}},
               lbl(l),
-              // Current color preview + hex input
               h('div', {style:{display:'flex',gap:'10px',alignItems:'center',marginBottom:'12px'}},
                 h('div', {style:{width:'44px',height:'44px',background:theme[k]||'#000',border:'2px solid #e2e8f0',borderRadius:'8px',flexShrink:0}}),
                 h('input', {type:'text',value:theme[k]||'',
-                  onChange:(e:any)=>{
-                    let val = e.target.value.toLowerCase().trim()
-                    if (val && !val.startsWith('#')) val = '#' + val
-                    setTheme((p:any)=>({...p,[k]:val}))
-                  },
+                  onChange:(e:any)=>{ let val=e.target.value.toLowerCase().trim(); if(val&&!val.startsWith('#'))val='#'+val; setTheme((p:any)=>({...p,[k]:val})) },
                   style:{...s,fontFamily:'monospace',fontWeight:'600'},placeholder:'#1c3d7a'})
               ),
-              // Color palette grid
               h('div', {style:{display:'grid',gridTemplateColumns:'repeat(10, 1fr)',gap:'4px',marginBottom:'8px'}},
                 ...palette.map((color: string) =>
-                  h('button', {key:color, type:'button',
-                    onClick:()=>setTheme((p:any)=>({...p,[k]:color})),
-                    title:color,
-                    style:{
-                      width:'100%',
-                      aspectRatio:'1',
-                      background:color,
-                      border: (theme[k]||'').toLowerCase()===color.toLowerCase() ? '3px solid #1c3d7a' : '1px solid #e2e8f0',
-                      borderRadius:'6px',
-                      cursor:'pointer',
-                      padding:'0',
-                      transition:'transform 0.1s'
-                    },
-                    onMouseEnter:(e:any)=>{ e.currentTarget.style.transform = 'scale(1.15)' },
-                    onMouseLeave:(e:any)=>{ e.currentTarget.style.transform = 'scale(1)' }
+                  h('button', {key:color,type:'button',onClick:()=>setTheme((p:any)=>({...p,[k]:color})),title:color,
+                    style:{width:'100%',aspectRatio:'1',background:color,border:(theme[k]||'').toLowerCase()===color.toLowerCase()?'3px solid #1c3d7a':'1px solid #e2e8f0',borderRadius:'6px',cursor:'pointer',padding:'0',transition:'transform 0.1s'},
+                    onMouseEnter:(e:any)=>{e.currentTarget.style.transform='scale(1.15)'},
+                    onMouseLeave:(e:any)=>{e.currentTarget.style.transform='scale(1)'}
                   })
                 )
               ),
@@ -391,21 +564,20 @@ function Mgr() {
             )
           )
         ),
-        // Preset themes
         h('div', {style:{marginTop:'20px',padding:'16px',background:'#fefce8',border:'1px solid #fde047',borderRadius:'10px'}},
           h('div', {style:{fontSize:'13px',fontWeight:'700',marginBottom:'12px',color:'#713f12'}}, '🎨 Quick Theme Presets'),
           h('div', {style:{display:'flex',gap:'8px',flexWrap:'wrap'}},
             ...[
-              {n:'ATEC Default', c:{primary:'#1c3d7a',accent:'#d4f01a',navy_dark:'#0f2347',off_white:'#f8fafc'}},
-              {n:'Vibrant Purple', c:{primary:'#7c3aed',accent:'#fbbf24',navy_dark:'#2e1065',off_white:'#faf5ff'}},
-              {n:'Tech Cyan', c:{primary:'#0891b2',accent:'#fbbf24',navy_dark:'#164e63',off_white:'#f0fdfa'}},
-              {n:'Bold Red', c:{primary:'#dc2626',accent:'#fef08a',navy_dark:'#7f1d1d',off_white:'#fef2f2'}},
-              {n:'Forest Green', c:{primary:'#15803d',accent:'#fef08a',navy_dark:'#14532d',off_white:'#f0fdf4'}},
+              {n:'ATEC Default',  c:{primary:'#1c3d7a',accent:'#d4f01a',navy_dark:'#0f2347',off_white:'#f8fafc'}},
+              {n:'Vibrant Purple',c:{primary:'#7c3aed',accent:'#fbbf24',navy_dark:'#2e1065',off_white:'#faf5ff'}},
+              {n:'Tech Cyan',     c:{primary:'#0891b2',accent:'#fbbf24',navy_dark:'#164e63',off_white:'#f0fdfa'}},
+              {n:'Bold Red',      c:{primary:'#dc2626',accent:'#fef08a',navy_dark:'#7f1d1d',off_white:'#fef2f2'}},
+              {n:'Forest Green',  c:{primary:'#15803d',accent:'#fef08a',navy_dark:'#14532d',off_white:'#f0fdf4'}},
             ].map((p: any) =>
-              h('button', {key:p.n, type:'button', onClick:()=>setTheme(p.c),
+              h('button', {key:p.n,type:'button',onClick:()=>setTheme(p.c),
                 style:{padding:'8px 14px',background:'#fff',border:'1px solid #e2e8f0',borderRadius:'8px',fontSize:'12px',fontWeight:'600',cursor:'pointer',display:'inline-flex',alignItems:'center',gap:'8px'}},
-                h('span', {style:{width:'14px',height:'14px',background:p.c.primary,borderRadius:'4px'}}),
-                h('span', {style:{width:'14px',height:'14px',background:p.c.accent,borderRadius:'4px'}}),
+                h('span',{style:{width:'14px',height:'14px',background:p.c.primary,borderRadius:'4px'}}),
+                h('span',{style:{width:'14px',height:'14px',background:p.c.accent,borderRadius:'4px'}}),
                 p.n
               )
             )
@@ -423,36 +595,18 @@ function Mgr() {
           '✅ Strip updates live on the website after Save — no rebuild needed.'
         ),
         h('div', {style:{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'14px'}},
-          h('div', {style:{gridColumn:'1/-1'}},
-            lbl('Strip Text'),
-            h('input', {type:'text',value:strip.text||'',onChange:(e:any)=>setStrip((p:any)=>({...p,text:e.target.value})),style:s,placeholder:'🎓 New Batch Starting...'})
-          ),
-          h('div', {},
-            lbl('Link Text'),
-            h('input', {type:'text',value:strip.link_text||'',onChange:(e:any)=>setStrip((p:any)=>({...p,link_text:e.target.value})),style:s,placeholder:'Enroll Now'})
-          ),
-          h('div', {},
-            lbl('Link URL'),
-            h('input', {type:'text',value:strip.link||'',onChange:(e:any)=>setStrip((p:any)=>({...p,link:e.target.value})),style:s,placeholder:'/courses or https://wa.me/...'})
-          ),
+          h('div', {style:{gridColumn:'1/-1'}}, lbl('Strip Text'), h('input', {type:'text',value:strip.text||'',onChange:(e:any)=>setStrip((p:any)=>({...p,text:e.target.value})),style:s,placeholder:'🎓 New Batch Starting...'})),
+          h('div', {}, lbl('Link Text'), h('input', {type:'text',value:strip.link_text||'',onChange:(e:any)=>setStrip((p:any)=>({...p,link_text:e.target.value})),style:s,placeholder:'Enroll Now'})),
+          h('div', {}, lbl('Link URL'), h('input', {type:'text',value:strip.link||'',onChange:(e:any)=>setStrip((p:any)=>({...p,link:e.target.value})),style:s,placeholder:'/courses or https://wa.me/...'})),
           h('div', {},
             lbl('Background Color'),
             h('div', {style:{display:'flex',gap:'8px',alignItems:'center',marginBottom:'8px'}},
               h('div', {style:{width:'40px',height:'40px',background:strip.bg_color||'#0f2347',border:'2px solid #e2e8f0',borderRadius:'8px',flexShrink:0}}),
-              h('input', {type:'text',value:strip.bg_color||'',
-                onChange:(e:any)=>{
-                  let val = e.target.value.toLowerCase().trim()
-                  if (val && !val.startsWith('#')) val = '#' + val
-                  setStrip((p:any)=>({...p,bg_color:val}))
-                },
-                style:{...s,fontFamily:'monospace'},placeholder:'#0f2347'})
+              h('input', {type:'text',value:strip.bg_color||'',onChange:(e:any)=>{let val=e.target.value.toLowerCase().trim();if(val&&!val.startsWith('#'))val='#'+val;setStrip((p:any)=>({...p,bg_color:val}))},style:{...s,fontFamily:'monospace'},placeholder:'#0f2347'})
             ),
             h('div', {style:{display:'flex',gap:'4px',flexWrap:'wrap'}},
-              ...['#0f2347','#1c3d7a','#1e40af','#7c3aed','#dc2626','#ea580c','#ca8a04','#15803d','#0891b2','#000000','#1f2937','#7f1d1d'].map((color: string) =>
-                h('button', {key:color, type:'button',
-                  onClick:()=>setStrip((p:any)=>({...p,bg_color:color})),
-                  style:{width:'28px',height:'28px',background:color,border: (strip.bg_color||'').toLowerCase()===color.toLowerCase()?'3px solid #1c3d7a':'1px solid #e2e8f0',borderRadius:'6px',cursor:'pointer',padding:0}
-                })
+              ...['#0f2347','#1c3d7a','#1e40af','#7c3aed','#dc2626','#ea580c','#ca8a04','#15803d','#0891b2','#000000','#1f2937','#7f1d1d'].map((color:string) =>
+                h('button', {key:color,type:'button',onClick:()=>setStrip((p:any)=>({...p,bg_color:color})),style:{width:'28px',height:'28px',background:color,border:(strip.bg_color||'').toLowerCase()===color.toLowerCase()?'3px solid #1c3d7a':'1px solid #e2e8f0',borderRadius:'6px',cursor:'pointer',padding:0}})
               )
             )
           ),
@@ -460,20 +614,11 @@ function Mgr() {
             lbl('Text Color'),
             h('div', {style:{display:'flex',gap:'8px',alignItems:'center',marginBottom:'8px'}},
               h('div', {style:{width:'40px',height:'40px',background:strip.text_color||'#ffffff',border:'2px solid #e2e8f0',borderRadius:'8px',flexShrink:0}}),
-              h('input', {type:'text',value:strip.text_color||'',
-                onChange:(e:any)=>{
-                  let val = e.target.value.toLowerCase().trim()
-                  if (val && !val.startsWith('#')) val = '#' + val
-                  setStrip((p:any)=>({...p,text_color:val}))
-                },
-                style:{...s,fontFamily:'monospace'},placeholder:'#ffffff'})
+              h('input', {type:'text',value:strip.text_color||'',onChange:(e:any)=>{let val=e.target.value.toLowerCase().trim();if(val&&!val.startsWith('#'))val='#'+val;setStrip((p:any)=>({...p,text_color:val}))},style:{...s,fontFamily:'monospace'},placeholder:'#ffffff'})
             ),
             h('div', {style:{display:'flex',gap:'4px',flexWrap:'wrap'}},
-              ...['#ffffff','#d4f01a','#facc15','#fef08a','#bfdbfe','#a7f3d0','#fecaca','#000000','#94a3b8','#f0f9ff'].map((color: string) =>
-                h('button', {key:color, type:'button',
-                  onClick:()=>setStrip((p:any)=>({...p,text_color:color})),
-                  style:{width:'28px',height:'28px',background:color,border: (strip.text_color||'').toLowerCase()===color.toLowerCase()?'3px solid #1c3d7a':'1px solid #e2e8f0',borderRadius:'6px',cursor:'pointer',padding:0}
-                })
+              ...['#ffffff','#d4f01a','#facc15','#fef08a','#bfdbfe','#a7f3d0','#fecaca','#000000','#94a3b8','#f0f9ff'].map((color:string) =>
+                h('button', {key:color,type:'button',onClick:()=>setStrip((p:any)=>({...p,text_color:color})),style:{width:'28px',height:'28px',background:color,border:(strip.text_color||'').toLowerCase()===color.toLowerCase()?'3px solid #1c3d7a':'1px solid #e2e8f0',borderRadius:'6px',cursor:'pointer',padding:0}})
               )
             )
           ),
