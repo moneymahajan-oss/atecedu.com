@@ -137,7 +137,7 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
 
   <!-- ══════════════════════════════════════════════════════════════
        FULL-VIEWPORT VIDEO OVERLAY — position:fixed, zooms in at 3s
-       Starts display:none to prevent black flash before animation
+       display:flex + visibility:hidden — iframe pre-loaded, autoplay allowed, visually hidden
   ══════════════════════════════════════════════════════════════ -->
   <div
     id="video-overlay"
@@ -145,11 +145,12 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
       position:fixed;
       inset:0;
       z-index:9999;
-      display:none;
+      display:flex;
       flex-direction:column;
       background:#000;
       transform:scale(0.06);
       opacity:0;
+      visibility:hidden;
       transform-origin:center center;
       border-radius:28px;
       overflow:hidden;
@@ -461,40 +462,36 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
     `
   }
 
-  // ── STEP 3: Zoom-in reveal — display:none→flex first, then animate ────────
+  // ── STEP 3: Zoom-in reveal ────────────────────────────────────────────────
+  // Strategy: overlay is display:flex + visibility:hidden from the start.
+  // The iframe is pre-injected at page load so browser initialises it fully.
+  // At 3s we just un-hide + animate scale. Autoplay works because the iframe
+  // was never in a display:none context.
   function triggerVideoReveal(id: string) {
     if (revealDone) return
     revealDone = true
 
-    const overlay  = document.getElementById('video-overlay') as HTMLElement
+    const overlay     = document.getElementById('video-overlay') as HTMLElement
     const heroContent = document.getElementById('hero-content') as HTMLElement
 
-    // Make visible at scale(0.06) — browser can now process the iframe
-    overlay.style.display = 'flex'
-    overlay.style.transform = 'scale(0.06)'
-    overlay.style.opacity = '0'
-    overlay.style.borderRadius = '28px'
-    overlay.style.transition = 'none'
+    // Un-hide and animate in one step — iframe is already loaded
+    overlay.style.visibility    = 'visible'
+    overlay.style.pointerEvents = 'all'
 
-    // Inject iframe now that element is in viewport rendering pipeline
-    injectIframe(id)
-
-    // One rAF tick to let browser process display:flex + iframe injection
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
-        overlay.style.transition = 'transform 1s cubic-bezier(0.16,1,0.3,1), opacity 0.6s ease, border-radius 1s ease'
-        overlay.style.transform  = 'scale(1)'
-        overlay.style.opacity    = '1'
-        overlay.style.borderRadius = '0'
-        overlay.style.pointerEvents = 'all'
-
-        if (heroContent) {
-          heroContent.style.transition = 'opacity 0.6s ease'
-          heroContent.style.opacity = '0.08'
-          heroContent.style.pointerEvents = 'none'
-        }
+        overlay.style.transition    = 'transform 1s cubic-bezier(0.16,1,0.3,1), opacity 0.65s ease, border-radius 1s ease'
+        overlay.style.transform     = 'scale(1)'
+        overlay.style.opacity       = '1'
+        overlay.style.borderRadius  = '0'
       })
     })
+
+    if (heroContent) {
+      heroContent.style.transition    = 'opacity 0.6s ease'
+      heroContent.style.opacity       = '0.08'
+      heroContent.style.pointerEvents = 'none'
+    }
   }
 
   // ── STEP 4: Close button ──────────────────────────────────────────────────
@@ -513,12 +510,15 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
       heroContent.style.pointerEvents = 'all'
     }
 
-    // After animation: display:none + clear iframe (kills audio)
+    // After zoom-out: hide via visibility, pause video by removing src then restoring
     setTimeout(() => {
-      overlay.style.display = 'none'
+      overlay.style.visibility = 'hidden'
       overlay.style.transition = 'none'
-      const wrap = document.getElementById('video-iframe-wrap') as HTMLElement
-      if (wrap) wrap.innerHTML = ''
+      // Pause iframe by blanking src — keeps iframe in DOM so re-open works
+      const iframe = document.querySelector('#video-iframe-wrap iframe') as HTMLIFrameElement
+      if (iframe) { iframe.src = 'about:blank' }
+      // Allow re-open
+      revealDone = false
     }, 580)
   })
 
@@ -535,6 +535,9 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
 
   // ── STEP 6: Fetch Supabase settings (parallel to countdown) ──────────────
   async function loadSettings() {
+    // Pre-inject iframe immediately — keeps it in rendering pipeline so autoplay is allowed
+    // visibility:hidden means user never sees it until triggerVideoReveal()
+    injectIframe(FALLBACK_YT_ID)
     // Start thumbnail + countdown immediately with fallback
     setThumbnail(FALLBACK_YT_ID)
     startCountdown()
@@ -581,6 +584,15 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
       if (adminId) {
         activeYtId = adminId
         setThumbnail(adminId)
+        // If countdown hasn't fired yet, swap iframe src to admin video
+        if (!revealDone) {
+          const iframe = document.querySelector('#video-iframe-wrap iframe') as HTMLIFrameElement
+          if (iframe) {
+            iframe.src = `https://www.youtube.com/embed/${adminId}?autoplay=1&mute=1&loop=1&playlist=${adminId}&controls=1&modestbranding=1&rel=0`
+          } else {
+            injectIframe(adminId)
+          }
+        }
       }
 
     } catch(e) {
