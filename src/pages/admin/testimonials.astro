@@ -5,98 +5,335 @@ import AdminLayout from '../../layouts/AdminLayout.astro'
 <AdminLayout title="Testimonials" activeSection="testimonials">
   <div id="root"></div>
 </AdminLayout>
+
 <script>
 import { createClient } from '@supabase/supabase-js'
 import { createElement as h, useState, useEffect } from 'react'
 import { createRoot } from 'react-dom/client'
+
 const sb = createClient(window.__SB_URL, window.__SB_KEY)
 
-const EMPTY = { student_name:'', course:'', company_placed:'', review:'', rating:5, photo_url:'', is_active:true }
+const EMPTY: any = {
+  student_name: '',
+  course: '',
+  company_placed: '',
+  photo_url: '',
+  video_url: '',
+  video_type: 'youtube',
+  rating: 5,
+  review: '',
+  sort_order: 0,
+  is_active: true,
+}
+
+// ── Detect video type from any URL (same logic as homepage admin) ──────────
+function detectVideo(raw: string): { type: string; platform: string; displayId: string; embedUrl: string; error?: string } {
+  const url = (raw || '').trim()
+  if (!url) return { type: 'unknown', platform: '', displayId: '', embedUrl: '' }
+
+  const ytShort = url.match(/youtu\.be\/([A-Za-z0-9_-]{11})/)
+  const ytLong  = url.match(/(?:v=|\/embed\/|\/shorts\/|\/v\/)([A-Za-z0-9_-]{11})/)
+  const ytId    = ytShort?.[1] || ytLong?.[1] || (/^[A-Za-z0-9_-]{11}$/.test(url) ? url : '')
+  if (ytId) return { type:'youtube', platform:'YouTube', displayId:ytId, embedUrl:`https://www.youtube.com/embed/${ytId}` }
+
+  const igMatch = url.match(/instagram\.com\/(?:reel|p)\/([A-Za-z0-9_-]+)/)
+  if (igMatch) return { type:'instagram', platform:'Instagram Reel', displayId:igMatch[1], embedUrl:`https://www.instagram.com/reel/${igMatch[1]}/embed/` }
+
+  const fbMatch = url.match(/facebook\.com\/.*\/videos\/(\d+)/) || url.match(/fb\.watch\/([A-Za-z0-9_-]+)/)
+  if (fbMatch || url.includes('facebook.com/watch') || url.includes('fb.watch')) {
+    return { type:'facebook', platform:'Facebook Video', displayId:fbMatch?.[1]||'', embedUrl:`https://www.facebook.com/plugins/video.php?href=${encodeURIComponent(url)}&show_text=false` }
+  }
+
+  const vimeoMatch = url.match(/vimeo\.com\/(\d+)/)
+  if (vimeoMatch) return { type:'vimeo', platform:'Vimeo', displayId:vimeoMatch[1], embedUrl:`https://player.vimeo.com/video/${vimeoMatch[1]}` }
+
+  if (/\.(mp4|webm|ogg|mov)(\?.*)?$/i.test(url)) return { type:'direct', platform:'Direct Video (.mp4)', displayId:url.split('/').pop()?.split('?')[0]||'', embedUrl:url }
+
+  return { type:'unknown', platform:'', displayId:'', embedUrl:'', error:'Unrecognised URL. Paste YouTube, Instagram Reel, Facebook, Vimeo, or .mp4 link.' }
+}
+
+const platformColors: Record<string,string> = { youtube:'#ff0000', instagram:'#e1306c', facebook:'#1877f2', vimeo:'#1ab7ea', direct:'#16a34a', unknown:'#94a3b8' }
+const platformIcons:  Record<string,string> = { youtube:'▶️', instagram:'📸', facebook:'👥', vimeo:'🎬', direct:'📁', unknown:'❓' }
 
 function Mgr() {
-  const [rows, setRows] = useState([])
-  const [form, setForm] = useState({...EMPTY})
-  const [editId, setEditId] = useState(null)
-  const [show, setShow] = useState(false)
-  const [saving, setSaving] = useState(false)
+  const [rows, setRows]       = useState<any[]>([])
+  const [form, setForm]       = useState<any>({...EMPTY})
+  const [editId, setEditId]   = useState<string|null>(null)
+  const [show, setShow]       = useState(false)
+  const [saving, setSaving]   = useState(false)
+  const [msg, setMsg]         = useState('')
 
   useEffect(() => { load() }, [])
+
   async function load() {
-    const { data } = await sb.from('testimonials').select('*').order('created_at', { ascending: false })
+    const { data } = await sb.from('testimonials').select('*').order('sort_order', {ascending:true})
     setRows(data ?? [])
   }
-  const upd = (k, v) => setForm(p => ({...p, [k]: v}))
-  function openAdd() { setForm({...EMPTY}); setEditId(null); setShow(true); window.scrollTo({top:0}) }
-  function openEdit(r) { setForm({...EMPTY, ...r}); setEditId(r.id); setShow(true); window.scrollTo({top:0}) }
+
+  const upd = (k: string, v: any) => {
+    if (k === 'video_url') {
+      const d = detectVideo(v)
+      setForm((p: any) => ({ ...p, video_url: v, video_type: d.type === 'unknown' ? 'youtube' : d.type }))
+    } else {
+      setForm((p: any) => ({ ...p, [k]: v }))
+    }
+  }
+
+  function openAdd() {
+    setForm({...EMPTY}); setEditId(null); setShow(true); setMsg('')
+    window.scrollTo({top:0, behavior:'smooth'})
+  }
+  function openEdit(r: any) {
+    setForm({...EMPTY, ...r}); setEditId(r.id); setShow(true); setMsg('')
+    window.scrollTo({top:0, behavior:'smooth'})
+  }
+
   async function save() {
-    setSaving(true)
-    const payload = {...form, rating: parseInt(form.rating)||5}
-    if (editId) await sb.from('testimonials').update(payload).eq('id', editId)
-    else await sb.from('testimonials').insert(payload)
-    setSaving(false); setShow(false); load()
-  }
-  async function toggle(id, cur) {
-    await sb.from('testimonials').update({is_active: !cur}).eq('id', id)
-    setRows(p => p.map(r => r.id===id ? {...r, is_active: !cur} : r))
+    if (!form.student_name?.trim()) { setMsg('❌ Student Name is required'); return }
+    setSaving(true); setMsg('')
+    try {
+      const payload = { ...form, sort_order: parseInt(form.sort_order)||0, rating: parseInt(form.rating)||5 }
+      if (editId) await sb.from('testimonials').update(payload).eq('id', editId)
+      else        await sb.from('testimonials').insert(payload)
+      setShow(false); setForm({...EMPTY}); setEditId(null)
+      setMsg('✅ Saved successfully!')
+      setTimeout(() => setMsg(''), 3000)
+      load()
+    } catch(e: any) {
+      setMsg(`❌ Error: ${e.message}`)
+    }
+    setSaving(false)
   }
 
-  const s = {width:'100%',padding:'9px 12px',border:'1px solid #e2e8f0',borderRadius:'8px',fontSize:'13px',outline:'none',boxSizing:'border-box'}
-  const lbl = t => h('label',{style:{fontSize:'12px',fontWeight:'600',color:'#475569',display:'block',marginBottom:'5px'}},t)
+  async function toggleActive(id: string, cur: boolean) {
+    await sb.from('testimonials').update({ is_active: !cur }).eq('id', id)
+    load()
+  }
 
-  return h('div',{style:{display:'flex',flexDirection:'column',gap:'20px'}},
-    h('div',{style:{display:'flex',justifyContent:'space-between',alignItems:'center',flexWrap:'wrap',gap:'12px'}},
-      h('h1',{style:{fontFamily:'Sora,sans-serif',fontSize:'1.5rem',fontWeight:'800'}},'⭐ Testimonials'),
-      h('button',{onClick:openAdd,style:{padding:'10px 22px',background:'#1c3d7a',color:'#fff',border:'none',borderRadius:'10px',fontWeight:'700',fontSize:'14px',cursor:'pointer'}},'+ Add Testimonial')
-    ),
-    show && h('div',{style:{background:'#fff',borderRadius:'16px',border:'2px solid #1c3d7a',padding:'28px'}},
-      h('div',{style:{display:'flex',justifyContent:'space-between',marginBottom:'20px'}},
-        h('h2',{style:{fontFamily:'Sora,sans-serif',fontWeight:'700',fontSize:'16px'}}, editId ? '✏️ Edit' : '➕ Add Testimonial'),
-        h('button',{onClick:()=>setShow(false),style:{background:'none',border:'none',fontSize:'20px',cursor:'pointer',color:'#94a3b8'}},'✕')
+  async function deleteRow(id: string, name: string) {
+    if (!confirm(`Delete story for "${name}"? This cannot be undone.`)) return
+    await sb.from('testimonials').delete().eq('id', id)
+    load()
+  }
+
+  const s: any = { width:'100%', padding:'10px 14px', border:'1px solid #e2e8f0', borderRadius:'8px', fontSize:'13px', outline:'none', boxSizing:'border-box', fontFamily:'Inter,sans-serif' }
+  const lbl = (t: string, req?: boolean) => h('label', {style:{fontSize:'12px',fontWeight:'600',color:'#475569',display:'block',marginBottom:'6px'}}, req ? [t, h('span',{style:{color:'#ef4444',marginLeft:'3px'}},'*')] : t)
+
+  const detected = detectVideo(form.video_url || '')
+
+  return h('div', {style:{maxWidth:'1100px'}},
+
+    // Header
+    h('div', {style:{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:'24px',flexWrap:'wrap',gap:'12px'}},
+      h('div', {},
+        h('h1', {style:{fontFamily:'Sora,sans-serif',fontSize:'1.6rem',fontWeight:'800',margin:'0 0 4px'}}, '⭐ Testimonials'),
+        h('p', {style:{fontSize:'13px',color:'#64748b',margin:0}}, 'Manage student stories shown on the homepage. Sort order 0 = featured (large card).')
       ),
-      h('div',{style:{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'14px'}},
-        ...[
-          {l:'Student Name *',k:'student_name'},{l:'Course',k:'course'},{l:'Company Placed',k:'company_placed'},
-          {l:'Photo URL',k:'photo_url'},{l:'Rating (1-5)',k:'rating',type:'number'},
-        ].map(({l,k,type,span})=>
-          h('div',{key:k,style:{gridColumn:span===2?'1/-1':'auto'}}, lbl(l),
-            h('input',{type:type||'text',value:form[k]??'',onChange:e=>upd(k,e.target.value),style:s})
-          )
-        ),
-        h('div',{style:{gridColumn:'1/-1'}}, lbl('Review *'),
-          h('textarea',{value:form.review??'',onChange:e=>upd('review',e.target.value),rows:4,style:{...s,height:'auto',resize:'vertical'}})
-        ),
-        h('div',{style:{display:'flex',alignItems:'center',gap:'10px'}},
-          h('input',{type:'checkbox',checked:!!form.is_active,onChange:e=>upd('is_active',e.target.checked),style:{width:'16px',height:'16px',accentColor:'#1c3d7a'}}),
-          lbl('Active (shown on website)')
-        )
-      ),
-      h('div',{style:{display:'flex',gap:'10px',marginTop:'20px'}},
-        h('button',{onClick:save,disabled:saving,style:{flex:1,padding:'12px',background:saving?'#94a3b8':'#1c3d7a',color:'#fff',border:'none',borderRadius:'10px',fontWeight:'700',cursor:saving?'not-allowed':'pointer'}},
-          saving?'Saving...':editId?'✅ Update':'✅ Add'
-        ),
-        h('button',{onClick:()=>setShow(false),style:{padding:'12px 20px',border:'1px solid #e2e8f0',borderRadius:'10px',background:'#fff',fontWeight:'600',cursor:'pointer'}},'Cancel')
+      h('button', {onClick:openAdd, style:{padding:'11px 22px',background:'#1c3d7a',color:'#fff',border:'none',borderRadius:'10px',fontWeight:'700',fontSize:'13px',cursor:'pointer'}},
+        '+ Add Testimonial'
       )
     ),
-    h('div',{style:{display:'flex',flexDirection:'column',gap:'12px'}},
-      rows.length===0
-        ? h('div',{style:{padding:'40px',textAlign:'center',color:'#94a3b8',background:'#fff',borderRadius:'14px',border:'1px solid #e2e8f0'}},'No testimonials yet.')
-        : rows.map(r => h('div',{key:r.id,style:{background:'#fff',borderRadius:'12px',border:'1px solid #e2e8f0',padding:'20px',display:'flex',gap:'16px',alignItems:'flex-start'}},
-            h('div',{style:{width:'44px',height:'44px',borderRadius:'50%',background:'#1c3d7a',color:'#d4f01a',display:'flex',alignItems:'center',justifyContent:'center',fontWeight:'800',fontSize:'18px',flexShrink:0}}, r.student_name?.[0]||'?'),
-            h('div',{style:{flex:1,minWidth:0}},
-              h('div',{style:{fontWeight:'700',fontSize:'14px',marginBottom:'3px'}}, r.student_name),
-              h('div',{style:{fontSize:'12px',color:'#7c3aed',marginBottom:'6px',fontWeight:'600'}}, r.course + (r.company_placed ? ` · ${r.company_placed}` : '')),
-              h('p',{style:{fontSize:'13px',color:'#64748b',lineHeight:'1.5',marginBottom:'8px'}}, r.review?.substring(0,120) + (r.review?.length > 120 ? '...' : '')),
-              h('span',{style:{color:'#f59e0b',fontSize:'14px'}},'★'.repeat(r.rating||5))
-            ),
-            h('div',{style:{display:'flex',flexDirection:'column',gap:'6px',flexShrink:0}},
-              h('button',{onClick:()=>openEdit(r),style:{padding:'5px 12px',background:'#eff6ff',color:'#1c3d7a',border:'none',borderRadius:'6px',fontSize:'12px',fontWeight:'600',cursor:'pointer'}},'✏️ Edit'),
-              h('button',{onClick:()=>toggle(r.id,r.is_active),style:{padding:'5px 12px',background:r.is_active?'#fee2e2':'#dcfce7',color:r.is_active?'#991b1b':'#166534',border:'none',borderRadius:'6px',fontSize:'12px',fontWeight:'600',cursor:'pointer'}},
-                r.is_active?'⭕ Hide':'✅ Show'
-              )
+
+    // Success/error message (outside form)
+    !show && msg && h('div', {style:{padding:'12px 16px',background:msg.includes('✅')?'#dcfce7':'#fef2f2',border:`1px solid ${msg.includes('✅')?'#bbf7d0':'#fecaca'}`,borderRadius:'10px',marginBottom:'16px',fontSize:'13px',color:msg.includes('✅')?'#166534':'#991b1b'}}, msg),
+
+    // ── Add / Edit Form ─────────────────────────────────────────────────
+    show && h('div', {style:{background:'#fff',borderRadius:'16px',border:'2px solid #1c3d7a',padding:'28px',marginBottom:'24px',position:'relative'}},
+
+      // Form header
+      h('div', {style:{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'22px',borderBottom:'1px solid #f1f5f9',paddingBottom:'14px'}},
+        h('h2', {style:{fontFamily:'Sora,sans-serif',fontWeight:'700',fontSize:'17px',margin:0}},
+          editId ? '✏️ Edit Student Story' : '➕ New Student Story'
+        ),
+        h('button', {
+          onClick:()=>{ setShow(false); setForm({...EMPTY}); setEditId(null); setMsg('') },
+          style:{background:'none',border:'none',fontSize:'20px',cursor:'pointer',color:'#94a3b8',padding:'0 4px',lineHeight:1}
+        }, '✕')
+      ),
+
+      msg && h('div', {style:{padding:'10px 14px',background:msg.includes('✅')?'#dcfce7':'#fef2f2',border:`1px solid ${msg.includes('✅')?'#bbf7d0':'#fecaca'}`,borderRadius:'8px',marginBottom:'16px',fontSize:'13px',color:msg.includes('✅')?'#166534':'#991b1b'}}, msg),
+
+      h('div', {style:{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'16px'}},
+
+        // Student Name
+        h('div', {},
+          lbl('Student Name', true),
+          h('input', {type:'text', value:form.student_name||'', onChange:(e:any)=>upd('student_name',e.target.value), style:s, placeholder:'Roshni Singh'})
+        ),
+
+        // Course
+        h('div', {},
+          lbl('Course'),
+          h('input', {type:'text', value:form.course||'', onChange:(e:any)=>upd('course',e.target.value), style:s, placeholder:'MERN Stack, GEN AI, Tally Prime...'})
+        ),
+
+        // Company Placed
+        h('div', {},
+          lbl('Company Placed At'),
+          h('input', {type:'text', value:form.company_placed||'', onChange:(e:any)=>upd('company_placed',e.target.value), style:s, placeholder:'TCS, Infosys, IT Firm Chandigarh...'})
+        ),
+
+        // Photo URL
+        h('div', {},
+          lbl('Photo URL'),
+          h('input', {type:'text', value:form.photo_url||'', onChange:(e:any)=>upd('photo_url',e.target.value), style:s, placeholder:'https://i.postimg.cc/xxx/student.jpg'}),
+          form.photo_url && h('div', {style:{marginTop:'6px',display:'flex',alignItems:'center',gap:'8px'}},
+            h('img', {src:form.photo_url, alt:'', onError:(e:any)=>{e.target.style.display='none'},
+              style:{width:'44px',height:'44px',borderRadius:'50%',objectFit:'cover',border:'2px solid #e2e8f0'}}),
+            h('span', {style:{fontSize:'11px',color:'#64748b'}}, 'Photo preview')
+          )
+        ),
+
+        // Rating slider
+        h('div', {},
+          lbl(`Rating: ${'★'.repeat(parseInt(form.rating)||5)} (${form.rating||5}/5)`),
+          h('input', {type:'range', min:'1', max:'5', value:form.rating||5,
+            onChange:(e:any)=>upd('rating', e.target.value),
+            style:{...s, padding:'0', height:'8px', marginTop:'6px'}})
+        ),
+
+        // Sort order
+        h('div', {},
+          lbl('Sort Order (0 = featured large card, 1–7 = smaller cards)'),
+          h('input', {type:'number', min:'0', max:'99', value:form.sort_order||0,
+            onChange:(e:any)=>upd('sort_order', e.target.value), style:s})
+        ),
+
+        // ── VIDEO URL — full width, smart detection ────────────────────
+        h('div', {style:{gridColumn:'1/-1'}},
+          lbl('Student Video URL (YouTube, Instagram Reel, Facebook, Vimeo, or direct .mp4)'),
+
+          h('input', {
+            type:'text',
+            value: form.video_url||'',
+            onChange: (e:any) => upd('video_url', e.target.value),
+            style: s,
+            placeholder: 'Paste any video URL — YouTube, Instagram Reel, .mp4...',
+          }),
+
+          // Detection badge
+          form.video_url && h('div', {style:{marginTop:'8px',display:'flex',alignItems:'flex-start',gap:'10px',flexWrap:'wrap'}},
+            !detected.error
+              ? h('span', {style:{padding:'3px 10px',borderRadius:'20px',fontSize:'11px',fontWeight:'800',background:platformColors[detected.type]||'#94a3b8',color:'#fff',flexShrink:0}},
+                  `${platformIcons[detected.type]} ${detected.platform}`)
+              : h('span', {style:{fontSize:'12px',color:'#991b1b',fontWeight:'600'}}, `❌ ${detected.error}`),
+
+            !detected.error && detected.type==='youtube' && detected.displayId &&
+              h('img', {src:`https://img.youtube.com/vi/${detected.displayId}/mqdefault.jpg`, alt:'thumb',
+                style:{height:'42px',borderRadius:'6px',border:'1px solid #e2e8f0'}})
+          ),
+
+          // Supported formats hint (shown when empty)
+          !form.video_url && h('div', {style:{marginTop:'6px',padding:'10px 12px',background:'#f8fafc',border:'1px solid #e2e8f0',borderRadius:'8px',fontSize:'12px',color:'#64748b'}},
+            h('div', {style:{fontWeight:'700',color:'#1c3d7a',marginBottom:'6px'}}, '📹 Supported:'),
+            h('div', {style:{display:'flex',flexDirection:'column',gap:'3px'}},
+              ...(['▶️ YouTube — youtu.be/ID or youtube.com/watch?v=ID',
+                   '📸 Instagram Reel — instagram.com/reel/CODE/',
+                   '👥 Facebook — facebook.com/watch?v=ID',
+                   '🎬 Vimeo — vimeo.com/ID',
+                   '📁 Direct .mp4 — https://yoursite.com/video.mp4'
+              ]).map((line,i) => h('div', {key:i}, line))
             )
-          ))
-    )
+          ),
+
+          // Notes per platform
+          !detected.error && detected.type==='instagram' &&
+            h('div', {style:{marginTop:'6px',padding:'8px 12px',background:'#fdf4ff',border:'1px solid #e9d5ff',borderRadius:'8px',fontSize:'12px',color:'#7c3aed'}},
+              '📸 Instagram Reel detected. No preview here, but it will play on the homepage card.'),
+          !detected.error && detected.type==='facebook' &&
+            h('div', {style:{marginTop:'6px',padding:'8px 12px',background:'#eff6ff',border:'1px solid #bfdbfe',borderRadius:'8px',fontSize:'12px',color:'#1d4ed8'}},
+              '👥 Facebook Video detected. Make sure it is set to Public visibility.'),
+        ),
+
+        // Review
+        h('div', {style:{gridColumn:'1/-1'}},
+          lbl('Review / Quote'),
+          h('textarea', {
+            value: form.review||'',
+            onChange: (e:any) => upd('review', e.target.value),
+            rows: 3,
+            style: {...s, resize:'vertical'},
+            placeholder: '"ATEC changed my career completely..."'
+          })
+        ),
+
+        // Active toggle + Save
+        h('div', {style:{display:'flex',alignItems:'center',gap:'10px',paddingTop:'4px'}},
+          h('input', {type:'checkbox', checked:!!form.is_active, onChange:(e:any)=>upd('is_active',e.target.checked), style:{width:'16px',height:'16px',accentColor:'#1c3d7a'}}),
+          h('span', {style:{fontSize:'13px',fontWeight:'600',color:'#475569'}}, 'Show on website')
+        ),
+
+        h('div', {style:{gridColumn:'1/-1'}},
+          h('button', {onClick:save, disabled:saving,
+            style:{padding:'13px',background:saving?'#94a3b8':'#1c3d7a',color:'#fff',border:'none',borderRadius:'10px',fontWeight:'700',fontSize:'14px',cursor:saving?'not-allowed':'pointer',width:'100%'}},
+            saving ? 'Saving...' : editId ? '💾 Update Story' : '➕ Add Story'
+          )
+        )
+      )
+    ),
+
+    // ── Stories List ───────────────────────────────────────────────────
+    rows.length === 0
+      ? h('div', {style:{padding:'48px',textAlign:'center',background:'#fff',borderRadius:'16px',border:'1px solid #e2e8f0',color:'#94a3b8',fontSize:'14px'}},
+          'No testimonials yet. Click "+ Add Testimonial" to get started.'
+        )
+      : h('div', {style:{display:'flex',flexDirection:'column',gap:'10px'}},
+          ...rows.map((r: any) =>
+            h('div', {key:r.id, style:{
+              display:'flex', alignItems:'center', gap:'12px',
+              padding:'14px 16px',
+              background: r.is_active ? '#fff' : '#fef2f2',
+              border:`1px solid ${r.is_active?'#e2e8f0':'#fecaca'}`,
+              borderRadius:'12px',
+              flexWrap:'wrap',
+            }},
+
+              // Sort badge
+              h('div', {style:{width:'28px',height:'28px',borderRadius:'8px',background:'#f1f5f9',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'11px',fontWeight:'700',color:'#64748b',flexShrink:0}},
+                `#${r.sort_order??0}`
+              ),
+
+              // Avatar / photo
+              r.photo_url
+                ? h('img', {src:r.photo_url, alt:r.student_name, style:{width:'44px',height:'44px',borderRadius:'50%',objectFit:'cover',flexShrink:0}})
+                : h('div', {style:{width:'44px',height:'44px',borderRadius:'50%',background:'#1c3d7a',display:'flex',alignItems:'center',justifyContent:'center',color:'#d4f01a',fontWeight:'800',fontSize:'16px',flexShrink:0}},
+                    (r.student_name||'?').charAt(0)
+                  ),
+
+              // Info
+              h('div', {style:{flex:1,minWidth:'160px'}},
+                h('div', {style:{fontWeight:'700',fontSize:'14px',color:'#1c1c1c'}}, r.student_name),
+                h('div', {style:{fontSize:'12px',color:'#64748b',marginTop:'2px'}},
+                  [r.course, r.company_placed].filter(Boolean).join(' · ')
+                ),
+                r.video_url && h('div', {style:{marginTop:'3px',display:'inline-flex',alignItems:'center',gap:'5px',padding:'2px 8px',borderRadius:'12px',fontSize:'11px',fontWeight:'700',background:platformColors[r.video_type||'youtube']||'#94a3b8',color:'#fff'}},
+                  `${platformIcons[r.video_type||'youtube']} ${r.video_type||'youtube'} video`
+                )
+              ),
+
+              // Stars
+              h('span', {style:{color:'#d4f01a',fontSize:'13px',flexShrink:0}}, '★'.repeat(r.rating||5)),
+
+              // Active toggle
+              h('button', {
+                onClick:()=>toggleActive(r.id, r.is_active),
+                style:{padding:'6px 14px',background:r.is_active?'#dcfce7':'#fef2f2',border:`1px solid ${r.is_active?'#bbf7d0':'#fecaca'}`,borderRadius:'8px',fontSize:'12px',fontWeight:'700',color:r.is_active?'#166534':'#991b1b',cursor:'pointer',flexShrink:0}
+              }, r.is_active ? '✅ Live' : '❌ Hidden'),
+
+              // Edit
+              h('button', {onClick:()=>openEdit(r),
+                style:{padding:'6px 14px',background:'#eff6ff',border:'1px solid #bfdbfe',borderRadius:'8px',fontSize:'12px',fontWeight:'700',color:'#1d4ed8',cursor:'pointer',flexShrink:0}
+              }, '✏️ Edit'),
+
+              // Delete
+              h('button', {onClick:()=>deleteRow(r.id, r.student_name),
+                style:{padding:'6px 14px',background:'#fee2e2',border:'1px solid #fecaca',borderRadius:'8px',fontSize:'12px',fontWeight:'700',color:'#991b1b',cursor:'pointer',flexShrink:0}
+              }, '🗑️')
+            )
+          )
+        )
   )
 }
-createRoot(document.getElementById('root')).render(h(Mgr,null))
+
+createRoot(document.getElementById('root')).render(h(Mgr, null))
 </script>

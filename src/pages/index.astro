@@ -715,14 +715,22 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
       return ''
     }
 
+    // ── Active video state — covers all platforms ────────────────────────
+    // activeVideoUrl stores the raw admin URL for non-YouTube types
+    let activeVideoUrl = ''
+
     // ── Build the correct src for the iframe ────────────────────────────
-    // FIX 5: returns different URL depending on videoType
     function buildSrc(muted: boolean): string {
-      if (videoType === 'instagram') {
-        // Instagram embeds don't support autoplay params — they play on their own
-        return activeInstaUrl
+      if (videoType === 'instagram') return activeInstaUrl
+      if (videoType === 'facebook') {
+        return `https://www.facebook.com/plugins/video.php?href=${encodeURIComponent(activeVideoUrl)}&show_text=false&autoplay=true`
       }
-      // YouTube
+      if (videoType === 'vimeo') {
+        const vm = activeVideoUrl.match(/vimeo\.com\/(\d+)/)
+        return vm ? `https://player.vimeo.com/video/${vm[1]}?autoplay=1&muted=${muted?1:0}&loop=1` : ''
+      }
+      if (videoType === 'direct') return activeVideoUrl
+      // YouTube default
       const m = muted ? '&mute=1' : ''
       return `https://www.youtube.com/embed/${activeId}?autoplay=1${m}&loop=1&playlist=${activeId}&controls=1&rel=0&modestbranding=1`
     }
@@ -736,15 +744,24 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
       const old = document.getElementById('card-iframe')
       if (old) old.remove()
 
+      // For direct mp4 files use a <video> tag, not an iframe
+      if (type === 'direct' && activeVideoUrl) {
+        const v = document.createElement('video')
+        v.id = 'card-iframe'
+        v.src = activeVideoUrl
+        v.muted = true; v.loop = true; v.autoplay = true; v.playsInline = true
+        v.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:14px;pointer-events:none;'
+        card.insertBefore(v, card.firstChild)
+        return
+      }
+
       const f = document.createElement('iframe')
       f.id = 'card-iframe'
 
-      if (type === 'instagram') {
-        f.src = activeInstaUrl
-        // Instagram: no autoplay control, but it autoplays in embed mode
-      } else {
-        f.src = `https://www.youtube.com/embed/${id}?autoplay=1&mute=1&loop=1&playlist=${id}&controls=0&rel=0&modestbranding=1&playsinline=1`
-      }
+      // Use buildSrc for consistency — covers youtube/instagram/facebook/vimeo
+      const src = buildSrc(true)
+      if (!src) return
+      f.src = src
 
       f.setAttribute('allow', 'autoplay; encrypted-media; fullscreen; picture-in-picture')
       f.setAttribute('allowfullscreen', '')
@@ -756,9 +773,8 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
     }
 
     // ── Preload: attach tiny hidden iframe to body (YouTube only) ─────────
-    // Instagram doesn't need preloading — we skip it for Instagram
     function startPreload(id: string) {
-      if (videoType === 'instagram') return  // no preload needed for Instagram
+      if (videoType !== 'youtube') return  // preload only for YouTube
       if (preloadEl) { preloadEl.remove(); preloadEl = null }
       const f = document.createElement('iframe')
       f.id  = 'yt-preload-iframe'
@@ -800,6 +816,7 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
       const wrap = document.getElementById('video-iframe-wrap') as HTMLElement
       const hc   = document.getElementById('hero-content')     as HTMLElement
 
+      // FIX: only use preloadEl if we are STILL on YouTube (not switched to Instagram)
       if (videoType === 'youtube' && preloadEl && wrap) {
         // Resize the already-playing preload iframe to full size
         preloadEl.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;border:none;opacity:1;pointer-events:all;'
@@ -807,7 +824,8 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
         wrap.appendChild(preloadEl)
         preloadEl = null
       } else {
-        // Instagram or fallback: inject fresh iframe
+        // Instagram / Vimeo / Facebook / direct — always inject fresh
+        // Also used when preloadEl is missing for any reason
         const f = document.createElement('iframe')
         f.src = buildSrc(true)
         f.setAttribute('allow', 'autoplay; encrypted-media; fullscreen; picture-in-picture')
@@ -921,29 +939,32 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
         if (v.bottom_bar_link  && btCTA)   btCTA.href         = v.bottom_bar_link
         if (v.bottom_bar_bg    && btBar)   btBar.style.background = v.bottom_bar_bg
 
-        // ── FIX 5: video type detection ───────────────────────────────────
-        // Admin can set video_type = 'instagram' | 'youtube'
-        // and video_url = any YouTube or Instagram reel URL
+        // ── Video type detection — handles ALL platforms ──────────────────
         const adminType = (v.video_type || 'youtube').toLowerCase()
         const adminUrl  = (v.video_url || v.youtube_video_id || '').trim()
 
         if (adminType === 'instagram') {
           const embedUrl = instaEmbedUrl(adminUrl)
           if (embedUrl) {
-            // Switch to Instagram — completely replace card and preload
             videoType      = 'instagram'
             activeInstaUrl = embedUrl
-            // Kill YouTube preload — no longer needed
+            activeVideoUrl = adminUrl
             if (preloadEl) { preloadEl.remove(); preloadEl = null }
-            // Replace card iframe with Instagram embed
             if (!revealDone) injectCardIframe('', 'instagram')
           }
+        } else if (adminType === 'facebook' || adminType === 'vimeo' || adminType === 'direct') {
+          // Non-YouTube non-Instagram: kill preload, set type + url
+          videoType      = adminType
+          activeVideoUrl = adminUrl
+          if (preloadEl) { preloadEl.remove(); preloadEl = null }
+          if (!revealDone) injectCardIframe('', adminType)
         } else {
           // YouTube path
           const adminId = ytId(adminUrl)
           if (adminId && adminId !== activeId) {
-            videoType = 'youtube'
-            activeId  = adminId
+            videoType      = 'youtube'
+            activeId       = adminId
+            activeVideoUrl = adminUrl
             if (!revealDone) {
               injectCardIframe(adminId, 'youtube')
               startPreload(adminId)
