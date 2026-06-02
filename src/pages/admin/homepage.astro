@@ -131,6 +131,10 @@ function Mgr() {
     cta2_link: 'https://wa.me/917009933289',
   })
   const [strip, setStrip] = useState<any>({ text:'',link:'',link_text:'',is_active:true,bg_color:'#0f2347',text_color:'#ffffff',show_timer:false,ends_at:'' })
+  const [stories, setStories] = useState<any[]>([])
+  const [storyForm, setStoryForm] = useState<any>({ student_name:'', course:'', company_placed:'', review:'', rating:5, photo_url:'', video_url:'', video_type:'youtube', is_active:true, sort_order:0 })
+  const [editingStory, setEditingStory] = useState<string|null>(null)
+  const [storyMsg, setStoryMsg] = useState('')
   const [branding, setBranding] = useState<any>({ logo_url:'',logo_size:38,show_text:true,brand_name:'ATEC',brand_tagline:'Educational Society' })
   const [nav, setNav] = useState<any>({ links:[{label:'Home',href:'/'}], cta_text:'Enroll Now', cta_link:'https://wa.me/917009933289', cta_style:'lemon', show_login:true })
   const [theme, setTheme] = useState<any>({ primary:'#1c3d7a', accent:'#d4f01a', navy_dark:'#0f2347', off_white:'#f8fafc' })
@@ -157,6 +161,9 @@ function Mgr() {
       if (d.key==='navigation')         setNav((p:any) => ({...p, ...d.value, links: d.value?.links ?? p.links}))
       if (d.key==='theme')              setTheme((p:any) => ({...p, ...d.value}))
     })
+    // Load student stories
+    const { data: stData } = await sb.from('testimonials').select('*').order('sort_order', {ascending:true})
+    if (stData) setStories(stData)
   }
 
   async function saveKey(key: string, value: any) {
@@ -343,6 +350,7 @@ function Mgr() {
       h(TabBtn, {id:'nav',      label:'Navigation',        icon:'🧭'}),
       h(TabBtn, {id:'theme',    label:'Theme Colors',      icon:'🌈'}),
       h(TabBtn, {id:'strip',    label:'Announcement Strip', icon:'📢'}),
+      h(TabBtn, {id:'stories',  label:'Student Stories',   icon:'🎬'}),
     ),
 
     // ─ HERO TAB ────────────────────────────────────────
@@ -636,7 +644,195 @@ function Mgr() {
           )
         )
       ]
-    })
+    }),
+
+    // ─ STUDENT STORIES TAB ─────────────────────────────
+    tab==='stories' && h('div', {style:{display:'flex',flexDirection:'column',gap:'20px'}},
+
+      // Info banner
+      h('div', {style:{padding:'14px 16px',background:'#eff6ff',border:'1px solid #bfdbfe',borderRadius:'12px',fontSize:'13px',color:'#1e40af'}},
+        '🎬 Student Stories appear on the homepage as a Scaler-style photo+video grid. Each card shows the student\'s photo and plays their video muted. Click opens fullscreen with audio. Upload up to 8 stories — the first one gets the large featured slot.'
+      ),
+
+      // Add / Edit form
+      h('div', {style:{background:'#fff',borderRadius:'16px',border:'1px solid #e2e8f0',padding:'24px'}},
+        h('div', {style:{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'20px',borderBottom:'1px solid #f1f5f9',paddingBottom:'12px'}},
+          h('h2', {style:{fontFamily:'Sora,sans-serif',fontWeight:'700',fontSize:'16px',margin:0}},
+            editingStory ? '✏️ Edit Student Story' : '➕ Add New Student Story'
+          ),
+          editingStory && h('button', {
+            onClick:()=>{ setEditingStory(null); setStoryForm({student_name:'',course:'',company_placed:'',review:'',rating:5,photo_url:'',video_url:'',video_type:'youtube',is_active:true,sort_order:0}) },
+            style:{padding:'6px 14px',background:'#f1f5f9',border:'none',borderRadius:'8px',cursor:'pointer',fontSize:'13px',fontWeight:'600'}
+          }, '✕ Cancel Edit')
+        ),
+
+        storyMsg && h('div', {style:{padding:'10px 14px',background:storyMsg.includes('✅')?'#dcfce7':'#fef2f2',border:`1px solid ${storyMsg.includes('✅')?'#bbf7d0':'#fecaca'}`,borderRadius:'8px',marginBottom:'14px',fontSize:'13px',color:storyMsg.includes('✅')?'#166534':'#991b1b'}}, storyMsg),
+
+        h('div', {style:{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'14px'}},
+
+          // Student name
+          h('div', {},
+            lbl('Student Name *'),
+            h('input', {type:'text',value:storyForm.student_name,onChange:(e:any)=>setStoryForm((p:any)=>({...p,student_name:e.target.value})),style:s,placeholder:'Roshni Singh'})
+          ),
+
+          // Course
+          h('div', {},
+            lbl('Course'),
+            h('input', {type:'text',value:storyForm.course,onChange:(e:any)=>setStoryForm((p:any)=>({...p,course:e.target.value})),style:s,placeholder:'MERN Stack / GEN AI...'})
+          ),
+
+          // Company placed
+          h('div', {},
+            lbl('Company Placed At (optional)'),
+            h('input', {type:'text',value:storyForm.company_placed,onChange:(e:any)=>setStoryForm((p:any)=>({...p,company_placed:e.target.value})),style:s,placeholder:'TCS, Wipro, Infosys...'})
+          ),
+
+          // Rating
+          h('div', {},
+            lbl(`Rating: ${'★'.repeat(storyForm.rating||5)} (${storyForm.rating||5}/5)`),
+            h('input', {type:'range',min:'1',max:'5',value:storyForm.rating||5,onChange:(e:any)=>setStoryForm((p:any)=>({...p,rating:parseInt(e.target.value)})),style:{...s,padding:'0',height:'8px'}})
+          ),
+
+          // Photo URL
+          h('div', {style:{gridColumn:'1/-1'}},
+            lbl('Student Photo URL (direct image link — PostImg, Supabase Storage, etc.)'),
+            h('input', {type:'text',value:storyForm.photo_url,onChange:(e:any)=>setStoryForm((p:any)=>({...p,photo_url:e.target.value})),style:s,placeholder:'https://i.postimg.cc/xxx/student.jpg'}),
+            storyForm.photo_url && h('div', {style:{marginTop:'8px',display:'flex',gap:'10px',alignItems:'center'}},
+              h('img', {src:storyForm.photo_url,alt:'preview',onError:(e:any)=>{e.target.style.display='none'},style:{width:'56px',height:'56px',borderRadius:'50%',objectFit:'cover',border:'2px solid #e2e8f0'}}),
+              h('span', {style:{fontSize:'12px',color:'#166534'}}, '✅ Photo preview above')
+            )
+          ),
+
+          // Video URL — same smart field as hero
+          h('div', {style:{gridColumn:'1/-1'}},
+            lbl('Student Video URL (YouTube, Instagram Reel, Facebook, Vimeo, .mp4)'),
+            h('input', {type:'text',value:storyForm.video_url,
+              onChange:(e:any)=>{
+                const val = e.target.value
+                const d = detectVideo(val)
+                setStoryForm((p:any)=>({...p, video_url:val, video_type: d.type==='unknown'?'youtube':d.type }))
+              },
+              style:s,placeholder:'Paste any video URL — YouTube, Instagram Reel, .mp4...'}),
+            storyForm.video_url && (() => {
+              const d = detectVideo(storyForm.video_url)
+              const colors: Record<string,string> = {youtube:'#ff0000',instagram:'#e1306c',facebook:'#1877f2',vimeo:'#1ab7ea',direct:'#16a34a',unknown:'#94a3b8'}
+              const icons:  Record<string,string> = {youtube:'▶️',instagram:'📸',facebook:'👥',vimeo:'🎬',direct:'📁',unknown:'❓'}
+              return h('div', {style:{marginTop:'8px',display:'flex',alignItems:'center',gap:'10px',flexWrap:'wrap'}},
+                !d.error
+                  ? h('span', {style:{padding:'3px 10px',borderRadius:'20px',fontSize:'11px',fontWeight:'800',background:colors[d.type]||'#94a3b8',color:'#fff'}}, `${icons[d.type]} ${d.platform}`)
+                  : h('span', {style:{fontSize:'12px',color:'#991b1b'}}, '❌ Unrecognised URL'),
+                !d.error && d.type==='youtube' && d.displayId &&
+                  h('img', {src:`https://img.youtube.com/vi/${d.displayId}/mqdefault.jpg`,alt:'thumb',style:{height:'44px',borderRadius:'6px',border:'1px solid #e2e8f0'}})
+              )
+            })()
+          ),
+
+          // Review text
+          h('div', {style:{gridColumn:'1/-1'}},
+            lbl('Review / Quote (shown on featured card)'),
+            h('textarea', {value:storyForm.review,onChange:(e:any)=>setStoryForm((p:any)=>({...p,review:e.target.value})),rows:3,style:{...s,resize:'vertical'},placeholder:'"ATEC changed my career completely..."'})
+          ),
+
+          // Sort order + active
+          h('div', {},
+            lbl('Sort Order (lower = first; 0 = featured)'),
+            h('input', {type:'number',value:storyForm.sort_order||0,onChange:(e:any)=>setStoryForm((p:any)=>({...p,sort_order:parseInt(e.target.value)||0})),style:s,min:'0',max:'99'})
+          ),
+          h('div', {style:{display:'flex',alignItems:'center',gap:'10px',paddingTop:'20px'}},
+            h('input', {type:'checkbox',checked:!!storyForm.is_active,onChange:(e:any)=>setStoryForm((p:any)=>({...p,is_active:e.target.checked})),style:{width:'16px',height:'16px',accentColor:'#1c3d7a'}}),
+            lbl('Show on website')
+          ),
+
+          // Save button
+          h('div', {style:{gridColumn:'1/-1'}},
+            h('button', {
+              onClick: async () => {
+                if (!storyForm.student_name.trim()) { setStoryMsg('❌ Student Name is required'); return }
+                setStoryMsg('Saving...')
+                try {
+                  if (editingStory) {
+                    await sb.from('testimonials').update(storyForm).eq('id', editingStory)
+                  } else {
+                    await sb.from('testimonials').insert(storyForm)
+                  }
+                  setStoryMsg('✅ Saved! Story will appear live on homepage.')
+                  setEditingStory(null)
+                  setStoryForm({student_name:'',course:'',company_placed:'',review:'',rating:5,photo_url:'',video_url:'',video_type:'youtube',is_active:true,sort_order:0})
+                  // Reload list
+                  const { data } = await sb.from('testimonials').select('*').order('sort_order',{ascending:true})
+                  if (data) setStories(data)
+                  setTimeout(()=>setStoryMsg(''),3000)
+                } catch(e:any) {
+                  setStoryMsg(`❌ Error: ${e.message}`)
+                }
+              },
+              style:{padding:'12px 28px',background:'#1c3d7a',color:'#fff',border:'none',borderRadius:'10px',fontWeight:'700',fontSize:'14px',cursor:'pointer',width:'100%'}
+            }, editingStory ? '💾 Update Story' : '➕ Add Story')
+          )
+        )
+      ),
+
+      // Existing stories list
+      stories.length > 0 && h('div', {style:{background:'#fff',borderRadius:'16px',border:'1px solid #e2e8f0',padding:'24px'}},
+        h('h2', {style:{fontFamily:'Sora,sans-serif',fontWeight:'700',fontSize:'16px',marginBottom:'16px'}}, `📋 All Stories (${stories.length})`),
+        h('div', {style:{display:'flex',flexDirection:'column',gap:'10px'}},
+          ...stories.map((t:any) =>
+            h('div', {key:t.id,style:{
+              display:'flex',alignItems:'center',gap:'12px',
+              padding:'12px 16px',
+              background: t.is_active ? '#f8fafc' : '#fef2f2',
+              border:`1px solid ${t.is_active?'#e2e8f0':'#fecaca'}`,
+              borderRadius:'10px'
+            }},
+              // Avatar / photo
+              t.photo_url
+                ? h('img', {src:t.photo_url,alt:t.student_name,style:{width:'44px',height:'44px',borderRadius:'50%',objectFit:'cover',flexShrink:0}})
+                : h('div', {style:{width:'44px',height:'44px',borderRadius:'50%',background:'#1c3d7a',display:'flex',alignItems:'center',justifyContent:'center',color:'#d4f01a',fontWeight:'800',fontSize:'16px',flexShrink:0}}, (t.student_name||'?').charAt(0)),
+              // Info
+              h('div', {style:{flex:1,minWidth:0}},
+                h('div', {style:{fontWeight:'700',fontSize:'14px',color:'#1c1c1c'}}, t.student_name),
+                h('div', {style:{fontSize:'12px',color:'#64748b'}}, [t.course, t.company_placed].filter(Boolean).join(' · ')),
+                t.video_url && h('div', {style:{fontSize:'11px',color:'#1d4ed8',marginTop:'2px'}},
+                  `🎬 ${t.video_type||'youtube'} video attached`
+                )
+              ),
+              // Sort order badge
+              h('span', {style:{fontSize:'11px',color:'#94a3b8',background:'#f1f5f9',padding:'2px 8px',borderRadius:'8px',fontWeight:'600'}}, `#${t.sort_order??0}`),
+              // Active toggle
+              h('button', {
+                onClick: async () => {
+                  await sb.from('testimonials').update({is_active:!t.is_active}).eq('id',t.id)
+                  const { data } = await sb.from('testimonials').select('*').order('sort_order',{ascending:true})
+                  if (data) setStories(data)
+                },
+                style:{padding:'5px 12px',background:t.is_active?'#dcfce7':'#fef2f2',border:`1px solid ${t.is_active?'#bbf7d0':'#fecaca'}`,borderRadius:'6px',fontSize:'12px',fontWeight:'700',color:t.is_active?'#166534':'#991b1b',cursor:'pointer'}
+              }, t.is_active ? '✅ Live' : '❌ Hidden'),
+              // Edit button
+              h('button', {
+                onClick: () => {
+                  setEditingStory(t.id)
+                  setStoryForm({ student_name:t.student_name||'', course:t.course||'', company_placed:t.company_placed||'', review:t.review||'', rating:t.rating||5, photo_url:t.photo_url||'', video_url:t.video_url||'', video_type:t.video_type||'youtube', is_active:t.is_active!==false, sort_order:t.sort_order||0 })
+                  window.scrollTo({top:0,behavior:'smooth'})
+                  setStoryMsg('')
+                },
+                style:{padding:'5px 12px',background:'#eff6ff',border:'1px solid #bfdbfe',borderRadius:'6px',fontSize:'12px',fontWeight:'700',color:'#1d4ed8',cursor:'pointer'}
+              }, '✏️ Edit'),
+              // Delete button
+              h('button', {
+                onClick: async () => {
+                  if (!confirm(`Delete story for ${t.student_name}?`)) return
+                  await sb.from('testimonials').delete().eq('id',t.id)
+                  const { data } = await sb.from('testimonials').select('*').order('sort_order',{ascending:true})
+                  if (data) setStories(data)
+                },
+                style:{padding:'5px 12px',background:'#fee2e2',border:'1px solid #fecaca',borderRadius:'6px',fontSize:'12px',fontWeight:'700',color:'#991b1b',cursor:'pointer'}
+              }, '🗑️')
+            )
+          )
+        )
+      )
+    )
   )
 }
 
