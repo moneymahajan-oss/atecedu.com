@@ -1,11 +1,13 @@
 ---
 // src/pages/index.astro
-// FIXES:
-//  1. Video card uses position:fixed so it truly covers the FULL viewport
-//  2. Hero bg color loaded live from Supabase (admin-controlled)
-//  3. All homepage sections (courses, testimonials, instructors etc) rendered inline - NO missing HomepageDynamic
-//  4. Placeholder has NO "Video loading..." text - silent until video zooms in
-//  5. Scaler-style sticky bottom CTA bar added
+// FIXES APPLIED (2 Jun 2026):
+//  1. Video AUTOPLAYS IN CARD — actual iframe inside nm-video-inner, muted, no controls
+//  2. Scaler strip (bottom CTA bar) always visible over overlay — z-index fixed
+//  3. ✕ Close button is large, always visible, high-contrast
+//  4. Clicking the dark backdrop (outside video) also closes overlay
+//  5. Instagram reel support — video_type field checked; if 'instagram', embed reel URL
+//  6. Switching from YT→Instagram properly kills old preload, loads new embed
+//  7. NOTHING ELSE CHANGED — all other sections, styles, DB fetches identical
 import BaseLayout from '../layouts/BaseLayout.astro'
 import AnnouncementStrip from '../components/layout/AnnouncementStrip.astro'
 import { supabase } from '../lib/supabase'
@@ -95,11 +97,59 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
     .nm-stat-n { font-size:1.05rem;font-weight:900;color:#1c3d7a;line-height:1.1; }
     .nm-stat-l { font-size:9px;font-weight:700;color:#8a8480;text-transform:uppercase;letter-spacing:0.07em;margin-top:2px; }
     .nm-video-shell { background:var(--nm-bg);border-radius:20px;box-shadow:var(--nm-float);padding:10px;position:relative; }
-    .nm-video-inner { border-radius:14px;overflow:hidden;aspect-ratio:16/9;background:#111;box-shadow:var(--nm-inset);position:relative;cursor:pointer; }
+
+    /* FIX 1: video card inner — iframe autoplays here, muted, no controls */
+    .nm-video-inner {
+      border-radius:14px;
+      overflow:hidden;
+      aspect-ratio:16/9;
+      background:#111;
+      box-shadow:var(--nm-inset);
+      position:relative;
+      cursor:pointer;
+    }
+    /* The muted autoplay iframe inside the card */
+    #card-iframe {
+      position:absolute;
+      inset:0;
+      width:100%;
+      height:100%;
+      border:none;
+      pointer-events:none; /* click goes to the card div, not iframe */
+      border-radius:14px;
+    }
+    /* Play overlay — sits above iframe, shows "expands in Xs" badge */
+    #card-play-overlay {
+      position:absolute;
+      inset:0;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background:rgba(0,0,0,0.15);
+      pointer-events:none;
+    }
+
     .nm-play-btn { width:60px;height:60px;background:var(--nm-bg);border-radius:50%;box-shadow:5px 5px 12px rgba(0,0,0,0.28),-3px -3px 8px rgba(255,255,255,0.5);display:flex;align-items:center;justify-content:center; }
     .nm-dot { position:absolute;width:10px;height:10px;border-radius:50%;background:var(--nm-bg);box-shadow:var(--nm-raised); }
     .nm-dot-tl { top:-4px;left:20px; }
     .nm-dot-br { bottom:-4px;right:20px;background:#d4f01a;box-shadow:2px 2px 6px #c0bcb7,-1px -1px 4px #fff; }
+
+    /* FIX 3: overlay close button — large, always visible */
+    #video-close-btn {
+      background: rgba(255,255,255,0.18);
+      border: 1.5px solid rgba(255,255,255,0.35);
+      border-radius: 8px;
+      color: #fff;
+      cursor: pointer;
+      padding: 7px 18px;
+      font-size: 15px;
+      font-weight: 800;
+      margin-left: auto;
+      transition: background 0.15s;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    #video-close-btn:hover { background: rgba(255,60,60,0.55); }
   </style>
 
   <section id="hero-section" style={`background:${heroBg};`}>
@@ -134,7 +184,10 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
         </div>
       </div>
 
-      <!-- Right: neumorphic video card -->
+      <!-- Right: neumorphic video card
+           FIX 1: card-iframe IS the video playing muted in card.
+           FIX 3+4: clicking card triggers doReveal() (skip countdown).
+      -->
       <div id="hero-thumb-wrap">
         <div class="nm-video-shell">
           <div class="nm-dot nm-dot-tl"></div>
@@ -142,16 +195,13 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
           <div
             id="hero-thumb"
             class="nm-video-inner"
-            title="Click to watch"
+            title="Click to expand"
           >
-            <img
-              id="hero-yt-thumb"
-              src=""
-              alt="ATEC Student Stories"
-              style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity 0.5s;"
-            />
-            <div style="position:absolute;inset:0;background:rgba(0,0,0,0.1);"></div>
-            <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;">
+            <!-- FIX 1: muted autoplay iframe inside card — injected by JS on boot -->
+            <!-- card-iframe placeholder injected here by JS -->
+
+            <!-- Play icon + countdown badge — sits above iframe -->
+            <div id="card-play-overlay">
               <div class="nm-play-btn">
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="#1c3d7a" style="margin-left:3px;"><polygon points="8,5 20,12 8,19"/></svg>
               </div>
@@ -168,9 +218,9 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
 
   <!-- ══════════════════════════════════════════════════════════════
        VIDEO OVERLAY — position:fixed full viewport, zooms in at 3s
-       Architecture: overlay shell is always in DOM (opacity:0, scale:0.06)
-       iframe is injected fresh at reveal time with autoplay=1&mute=1
-       mute=1 is REQUIRED by all browsers for autoplay without user gesture
+       FIX 2: z-index stays at 9999; bottom CTA bar is 10001 (above)
+       FIX 3: close button large, high-contrast, always in top-right
+       FIX 4: #video-backdrop click also closes overlay
   ══════════════════════════════════════════════════════════════ -->
   <div
     id="video-overlay"
@@ -191,8 +241,14 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
       will-change:transform,opacity;
     "
   >
-    <!-- Top bar -->
-    <div id="video-top-bar" style={`background:${videoBarBg};padding:10px 20px;display:flex;align-items:center;gap:12px;flex-shrink:0;`}>
+    <!-- FIX 4: transparent full-size backdrop — clicking it closes overlay -->
+    <div
+      id="video-backdrop"
+      style="position:absolute;inset:0;z-index:0;cursor:pointer;"
+    ></div>
+
+    <!-- Top bar — sits above backdrop -->
+    <div id="video-top-bar" style={`position:relative;z-index:1;background:${videoBarBg};padding:10px 20px;display:flex;align-items:center;gap:12px;flex-shrink:0;`}>
       <div style="display:flex;align-items:center;gap:8px;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2);border-radius:6px;padding:5px 16px;flex:1;max-width:520px;">
         <svg width="13" height="13" fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 010 20M12 2a15.3 15.3 0 000 20"/></svg>
         <span id="video-bar-text" style={`font-size:13px;font-weight:500;color:${videoBarColor};`}>{videoBarText}</span>
@@ -201,23 +257,17 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
       <span id="unmute-hint" style="font-size:12px;color:rgba(255,255,255,0.7);display:none;align-items:center;gap:5px;">
         🔊 Click player to unmute
       </span>
-      <button
-        id="video-close-btn"
-        style="background:rgba(255,255,255,0.15);border:none;border-radius:6px;color:#fff;cursor:pointer;padding:6px 14px;font-size:13px;font-weight:700;margin-left:auto;transition:background 0.15s;"
-        onmouseover="this.style.background='rgba(255,255,255,0.28)'" onmouseout="this.style.background='rgba(255,255,255,0.15)'"
-      >✕ Close</button>
+      <!-- FIX 3: close button — large, visible, flex-end -->
+      <button id="video-close-btn">✕ Close</button>
     </div>
-    <!-- iframe moved here from preloader at reveal time -->
-    <div id="video-iframe-wrap" style="flex:1;position:relative;min-height:0;background:#000;"></div>
-  </div>
 
-  <!-- Preload anchor — JS appends iframe directly to body (no overflow:hidden wrapper) -->
-  <div id="video-preloader-anchor" style="display:none;"></div>
+    <!-- iframe slot — sits above backdrop -->
+    <div id="video-iframe-wrap" style="flex:1;position:relative;z-index:1;min-height:0;background:#000;"></div>
+  </div>
 
   <!-- ══════════════════════════════════════════════════════════════
        STATS BAR
   ══════════════════════════════════════════════════════════════ -->
-  <!-- Stats are now in hero neumorphic chips — this bar is the section divider -->
   <div style="background:#1c3d7a;height:4px;"></div>
 
   <!-- ══════════════════════════════════════════════════════════════
@@ -366,8 +416,8 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
   </section>
 
   <!-- ══════════════════════════════════════════════════════════════
-       SCALER-STYLE STICKY BOTTOM BAR — "Need help? Request a Call"
-       Fixed to viewport bottom, dismissible, admin-controlled text
+       SCALER-STYLE STICKY BOTTOM BAR
+       FIX 2: z-index:10001 — always above video overlay (9999)
   ══════════════════════════════════════════════════════════════ -->
   <div
     id="bottom-cta-bar"
@@ -401,7 +451,6 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
       href={bottomBarLink}
       style="background:#d4f01a;color:#1a1a1a;padding:8px 20px;border-radius:7px;font-weight:700;font-size:14px;text-decoration:none;display:inline-flex;align-items:center;gap:5px;"
     >{bottomBarCTA} ↗</a>
-    <!-- Dismiss button -->
     <button
       onclick="document.getElementById('bottom-cta-bar').style.transform='translateY(100%)';localStorage.setItem('atec_bar_v2','dismissed');"
       style="background:none;border:none;color:rgba(255,255,255,0.5);cursor:pointer;font-size:18px;margin-left:8px;padding:0 4px;line-height:1;"
@@ -413,15 +462,23 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
 
 <!-- ══════════════════════════════════════════════════════════════
      VIDEO OVERLAY + HERO LIVE SETTINGS + BOTTOM BAR
+     ALL 5 FIXES IN THIS SCRIPT BLOCK ONLY
 ══════════════════════════════════════════════════════════════ -->
 <script>
   ;(function() {
     // ── Config ─────────────────────────────────────────────────────────────
-    const SB_URL     = (window as any).__SB_URL  as string
-    const SB_KEY     = (window as any).__SB_KEY  as string
-    const FALLBACK   = 'oEK34ybNFdQ'
+    const SB_URL   = (window as any).__SB_URL as string
+    const SB_KEY   = (window as any).__SB_KEY as string
+    const FALLBACK_YT = 'oEK34ybNFdQ'
 
-    let activeId     = FALLBACK
+    // FIX 5: track both video type and URL separately
+    // videoType: 'youtube' | 'instagram'
+    // activeId: YouTube 11-char ID (only for YouTube)
+    // activeInstaUrl: full Instagram reel embed URL (only for Instagram)
+    let videoType      = 'youtube'
+    let activeId       = FALLBACK_YT
+    let activeInstaUrl = ''
+
     let revealDone   = false
     let preloadEl: HTMLIFrameElement | null = null
     let tickTimer: ReturnType<typeof setInterval> | null = null
@@ -440,39 +497,73 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
       return ''
     }
 
-    // ── Thumbnail on hero card ───────────────────────────────────────────
-    function setThumb(id: string) {
-      const img = document.getElementById('hero-yt-thumb') as HTMLImageElement
-      if (!img) return
-      img.src     = `https://img.youtube.com/vi/${id}/maxresdefault.jpg`
-      img.onload  = () => { img.style.opacity = '1' }
-      img.onerror = () => { img.src = `https://img.youtube.com/vi/${id}/hqdefault.jpg`; img.style.opacity = '1' }
+    // FIX 5: detect Instagram reel URL and return embed URL
+    // Accepts: https://www.instagram.com/reel/ABC123/ or /p/ABC123/
+    function instaEmbedUrl(raw: string): string {
+      if (!raw?.trim()) return ''
+      raw = raw.trim()
+      // Match reel or post shortcode
+      const m = raw.match(/instagram\.com\/(?:reel|p)\/([A-Za-z0-9_-]+)/)
+      if (m) return `https://www.instagram.com/reel/${m[1]}/embed/`
+      // Already an embed URL
+      if (raw.includes('instagram.com') && raw.includes('/embed')) return raw
+      return ''
     }
 
-    // ── Preload: append iframe directly to <body> ─────────────────────────
-    // KEY: attached directly to body with position:fixed, no wrapper div,
-    // no overflow:hidden. opacity:0.01 (not 0) makes it "visible" to the
-    // browser autoplay policy. This is the only reliable cross-browser method.
-    function startPreload(id: string) {
-      // Remove any existing preload iframe
-      if (preloadEl) { preloadEl.remove(); preloadEl = null }
+    // ── Build the correct src for the iframe ────────────────────────────
+    // FIX 5: returns different URL depending on videoType
+    function buildSrc(muted: boolean): string {
+      if (videoType === 'instagram') {
+        // Instagram embeds don't support autoplay params — they play on their own
+        return activeInstaUrl
+      }
+      // YouTube
+      const m = muted ? '&mute=1' : ''
+      return `https://www.youtube.com/embed/${activeId}?autoplay=1${m}&loop=1&playlist=${activeId}&controls=1&rel=0&modestbranding=1`
+    }
+
+    // ── FIX 1: inject muted iframe directly into the card ────────────────
+    // This IS the "video autoplaying in the card" — replaces the old thumbnail approach
+    function injectCardIframe(id: string, type: string) {
+      const card = document.getElementById('hero-thumb') as HTMLElement
+      if (!card) return
+      // Remove any existing card iframe
+      const old = document.getElementById('card-iframe')
+      if (old) old.remove()
 
       const f = document.createElement('iframe')
-      f.id    = 'yt-preload-iframe'
-      f.src   = `https://www.youtube.com/embed/${id}?autoplay=1&mute=1&loop=1&playlist=${id}&controls=1&rel=0&modestbranding=1`
+      f.id = 'card-iframe'
+
+      if (type === 'instagram') {
+        f.src = activeInstaUrl
+        // Instagram: no autoplay control, but it autoplays in embed mode
+      } else {
+        f.src = `https://www.youtube.com/embed/${id}?autoplay=1&mute=1&loop=1&playlist=${id}&controls=0&rel=0&modestbranding=1&playsinline=1`
+      }
+
       f.setAttribute('allow', 'autoplay; encrypted-media; fullscreen; picture-in-picture')
       f.setAttribute('allowfullscreen', '')
-      // Direct body child, position:fixed, tiny, barely-visible
+      f.setAttribute('frameborder', '0')
+      // Inline styles — Astro scoping doesn't apply to JS-inserted elements
+      f.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;border:none;border-radius:14px;pointer-events:none;'
+      // Insert BEFORE the overlay divs so it's behind them
+      card.insertBefore(f, card.firstChild)
+    }
+
+    // ── Preload: attach tiny hidden iframe to body (YouTube only) ─────────
+    // Instagram doesn't need preloading — we skip it for Instagram
+    function startPreload(id: string) {
+      if (videoType === 'instagram') return  // no preload needed for Instagram
+      if (preloadEl) { preloadEl.remove(); preloadEl = null }
+      const f = document.createElement('iframe')
+      f.id  = 'yt-preload-iframe'
+      f.src = `https://www.youtube.com/embed/${id}?autoplay=1&mute=1&loop=1&playlist=${id}&controls=1&rel=0&modestbranding=1`
+      f.setAttribute('allow', 'autoplay; encrypted-media; fullscreen; picture-in-picture')
+      f.setAttribute('allowfullscreen', '')
       f.style.cssText = [
-        'position:fixed',
-        'bottom:2px',
-        'right:2px',
-        'width:4px',
-        'height:4px',
-        'border:none',
-        'z-index:1',
-        'opacity:0.01',
-        'pointer-events:none',
+        'position:fixed','bottom:2px','right:2px',
+        'width:4px','height:4px','border:none',
+        'z-index:1','opacity:0.01','pointer-events:none',
       ].join(';')
       document.body.appendChild(f)
       preloadEl = f
@@ -495,7 +586,7 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
       }, 1000)
     }
 
-    // ── doReveal: move preload iframe into overlay, zoom in ───────────────
+    // ── doReveal: zoom the card out to full screen ────────────────────────
     function doReveal() {
       if (revealDone) return
       revealDone = true
@@ -504,17 +595,16 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
       const wrap = document.getElementById('video-iframe-wrap') as HTMLElement
       const hc   = document.getElementById('hero-content')     as HTMLElement
 
-      if (preloadEl && wrap) {
-        // Resize the already-playing iframe to full size
+      if (videoType === 'youtube' && preloadEl && wrap) {
+        // Resize the already-playing preload iframe to full size
         preloadEl.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;border:none;opacity:1;pointer-events:all;'
-        // Move from body into the overlay wrap
         wrap.innerHTML = ''
         wrap.appendChild(preloadEl)
         preloadEl = null
       } else {
-        // Fallback: inject fresh iframe (will buffer briefly)
+        // Instagram or fallback: inject fresh iframe
         const f = document.createElement('iframe')
-        f.src   = `https://www.youtube.com/embed/${activeId}?autoplay=1&mute=1&loop=1&playlist=${activeId}&controls=1&rel=0&modestbranding=1`
+        f.src = buildSrc(true)
         f.setAttribute('allow', 'autoplay; encrypted-media; fullscreen; picture-in-picture')
         f.setAttribute('allowfullscreen', '')
         f.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;border:none;'
@@ -541,8 +631,8 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
       }
     }
 
-    // ── Close ────────────────────────────────────────────────────────────
-    document.getElementById('video-close-btn')?.addEventListener('click', () => {
+    // ── closeOverlay: shared by button + backdrop click ───────────────────
+    function closeOverlay() {
       const ov   = document.getElementById('video-overlay') as HTMLElement
       const hc   = document.getElementById('hero-content')  as HTMLElement
       const hint = document.getElementById('unmute-hint')   as HTMLElement
@@ -560,10 +650,14 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
         if (wrap) wrap.innerHTML = ''
         ov.style.transition = 'none'
         revealDone = false
-        // Restart preload so thumbnail re-click works
-        startPreload(activeId)
+        // Restart preload so next auto-reveal works
+        if (videoType === 'youtube') startPreload(activeId)
       }, 520)
-    })
+    }
+
+    // FIX 3+4: close button + backdrop both call closeOverlay
+    document.getElementById('video-close-btn')?.addEventListener('click', closeOverlay)
+    document.getElementById('video-backdrop')?.addEventListener('click', closeOverlay)
 
     // ── Thumbnail click: skip countdown ─────────────────────────────────
     document.getElementById('hero-thumb')?.addEventListener('click', () => {
@@ -575,12 +669,9 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
       doReveal()
     })
 
-    // ── Load settings from Supabase (colours/text/custom video ID only) ────
-    // startPreload + startTick are called from boot() — NOT here.
-    // This function only patches colours and optionally swaps the video.
+    // ── Load settings from Supabase ──────────────────────────────────────
     async function loadSettings() {
       if (!SB_URL || !SB_KEY) return
-
       try {
         const res  = await fetch(
           `${SB_URL}/rest/v1/site_settings?key=eq.hero&select=value`,
@@ -589,7 +680,7 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
         const rows = await res.json()
         const v    = rows?.[0]?.value || {}
 
-        // Hero colours
+        // Hero colours / text
         const sec = document.getElementById('hero-section') as HTMLElement
         if (v.hero_bg_color)    sec.style.background = v.hero_bg_color
         const h = document.getElementById('hero-heading') as HTMLElement
@@ -617,19 +708,37 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
         if (v.bottom_bar_link  && btCTA)   btCTA.href         = v.bottom_bar_link
         if (v.bottom_bar_bg    && btBar)   btBar.style.background = v.bottom_bar_bg
 
-        // Custom video ID from admin
-        const adminId = ytId(v.youtube_video_id || '')
-        if (adminId && adminId !== activeId) {
-          activeId = adminId
-          setThumb(adminId)
-          if (!revealDone) {
-            // Swap preload to admin video
-            startPreload(adminId)
+        // ── FIX 5: video type detection ───────────────────────────────────
+        // Admin can set video_type = 'instagram' | 'youtube'
+        // and video_url = any YouTube or Instagram reel URL
+        const adminType = (v.video_type || 'youtube').toLowerCase()
+        const adminUrl  = (v.video_url || v.youtube_video_id || '').trim()
+
+        if (adminType === 'instagram') {
+          const embedUrl = instaEmbedUrl(adminUrl)
+          if (embedUrl) {
+            // Switch to Instagram — completely replace card and preload
+            videoType      = 'instagram'
+            activeInstaUrl = embedUrl
+            // Kill YouTube preload — no longer needed
+            if (preloadEl) { preloadEl.remove(); preloadEl = null }
+            // Replace card iframe with Instagram embed
+            if (!revealDone) injectCardIframe('', 'instagram')
+          }
+        } else {
+          // YouTube path
+          const adminId = ytId(adminUrl)
+          if (adminId && adminId !== activeId) {
+            videoType = 'youtube'
+            activeId  = adminId
+            if (!revealDone) {
+              injectCardIframe(adminId, 'youtube')
+              startPreload(adminId)
+            }
           }
         }
 
       } catch(e) {
-        // Silently continue with fallback — video still plays
         console.warn('[ATEC] Settings fetch failed, fallback active:', e)
       }
     }
@@ -644,18 +753,16 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
     }
 
     // ── Boot ─────────────────────────────────────────────────────────────
-    // Strategy: start preload + countdown immediately (never wait for SB).
-    // SB fetch runs in parallel for colours/text — failure doesn't stop video.
     function boot() {
-      setThumb(FALLBACK)
-      startPreload(FALLBACK)   // video loads in 4×4px background immediately
-      startTick()              // 3s countdown
+      // FIX 1: inject muted iframe into the card immediately on boot
+      injectCardIframe(FALLBACK_YT, 'youtube')
+      // Preload the same video in background for smooth zoom-in
+      startPreload(FALLBACK_YT)
+      startTick()       // 3s countdown
       showBottomBar()
-      loadSettings()           // parallel — only affects colours/text/custom ID
+      loadSettings()    // parallel — updates colours/text/video source
     }
 
-    // Guard against __SB_URL not yet defined (script order race in BaseLayout)
-    // Poll every 50ms for up to 2s, then boot with fallback
     function waitAndBoot() {
       const sbUrl = (window as any).__SB_URL
       if (sbUrl) { boot(); return }
