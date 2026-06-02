@@ -82,7 +82,7 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
   </style>
 
   <section id="hero-section" style={`background:${heroBg};`}>
-    <div id="hero-content" style="width:100%;max-width:1200px;margin:0 auto;padding:52px 40px 48px;">
+    <div id="hero-content" style="width:100%;max-width:1200px;margin:0 auto;padding:36px 40px 32px;">
 
       <!-- Left: text -->
       <div>
@@ -136,8 +136,10 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
   </section>
 
   <!-- ══════════════════════════════════════════════════════════════
-       FULL-VIEWPORT VIDEO OVERLAY — position:fixed, zooms in at 3s
-       display:flex + visibility:hidden — iframe pre-loaded, autoplay allowed, visually hidden
+       VIDEO OVERLAY — position:fixed full viewport, zooms in at 3s
+       Architecture: overlay shell is always in DOM (opacity:0, scale:0.06)
+       iframe is injected fresh at reveal time with autoplay=1&mute=1
+       mute=1 is REQUIRED by all browsers for autoplay without user gesture
   ══════════════════════════════════════════════════════════════ -->
   <div
     id="video-overlay"
@@ -147,41 +149,41 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
       z-index:9999;
       display:flex;
       flex-direction:column;
-      background:#000;
-      transform:scale(0.06);
+      background:#111;
+      transform:scale(0.07);
       opacity:0;
-      visibility:hidden;
       transform-origin:center center;
-      border-radius:28px;
+      border-radius:24px;
       overflow:hidden;
       pointer-events:none;
       transition:none;
+      will-change:transform,opacity;
     "
   >
-    <!-- Top bar — address bar style -->
+    <!-- Top bar -->
     <div id="video-top-bar" style={`background:${videoBarBg};padding:10px 20px;display:flex;align-items:center;gap:12px;flex-shrink:0;`}>
-      <!-- Address-style pill -->
-      <div style="display:flex;align-items:center;gap:8px;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2);border-radius:6px;padding:5px 16px;flex:1;max-width:480px;">
+      <div style="display:flex;align-items:center;gap:8px;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2);border-radius:6px;padding:5px 16px;flex:1;max-width:520px;">
         <svg width="13" height="13" fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 010 20M12 2a15.3 15.3 0 000 20"/></svg>
         <span id="video-bar-text" style={`font-size:13px;font-weight:500;color:${videoBarColor};`}>{videoBarText}</span>
       </div>
-      <!-- Close -->
+      <!-- Unmute hint — shown when video opens -->
+      <span id="unmute-hint" style="font-size:12px;color:rgba(255,255,255,0.7);display:none;align-items:center;gap:5px;">
+        🔊 Click player to unmute
+      </span>
       <button
         id="video-close-btn"
         style="background:rgba(255,255,255,0.15);border:none;border-radius:6px;color:#fff;cursor:pointer;padding:6px 14px;font-size:13px;font-weight:700;margin-left:auto;transition:background 0.15s;"
+        onmouseover="this.style.background='rgba(255,255,255,0.28)'" onmouseout="this.style.background='rgba(255,255,255,0.15)'"
       >✕ Close</button>
     </div>
-
-    <!-- iframe area -->
-    <div id="video-iframe-wrap" style="flex:1;position:relative;min-height:0;background:#000;">
-      <!-- injected by JS -->
-    </div>
+    <!-- iframe injected here at reveal time -->
+    <div id="video-iframe-wrap" style="flex:1;position:relative;min-height:0;background:#000;"></div>
   </div>
 
   <!-- ══════════════════════════════════════════════════════════════
        STATS BAR
   ══════════════════════════════════════════════════════════════ -->
-  <div style="background:#1c3d7a;padding:22px 32px;">
+  <div style="background:#1c3d7a;padding:14px 32px;">
     <div style="max-width:1200px;margin:0 auto;display:flex;align-items:center;justify-content:space-around;flex-wrap:wrap;gap:20px;">
       {[
         { n: siteStats.years     || '25+',   label:'Years of Excellence' },
@@ -393,18 +395,17 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
 ══════════════════════════════════════════════════════════════ -->
 <script>
   declare const window: any
-  const SB_URL: string = window.__SB_URL
-  const SB_KEY: string = window.__SB_KEY
+  const SB_URL: string  = window.__SB_URL
+  const SB_KEY: string  = window.__SB_KEY
+  const FALLBACK_ID     = 'oEK34ybNFdQ'
 
-  // ── Fallback YT ID — same video already in admin panel ────────────────────
-  const FALLBACK_YT_ID = 'oEK34ybNFdQ'
+  let activeYtId   = FALLBACK_ID
+  let revealDone   = false
+  let closedOnce   = false
+  let tickInterval: ReturnType<typeof setInterval> | null = null
 
-  let activeYtId    = FALLBACK_YT_ID
-  let revealDone    = false
-  let countdownTick: ReturnType<typeof setInterval> | null = null
-
-  // ── Extract 11-char ID from any YouTube URL format ────────────────────────
-  function ytId(raw: string): string {
+  // ── Extract YT 11-char ID from any URL format ────────────────────────────
+  function extractId(raw: string): string {
     if (!raw?.trim()) return ''
     raw = raw.trim()
     let m: RegExpMatchArray | null
@@ -416,131 +417,126 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
     return ''
   }
 
-  // ── STEP 1: Start 3s countdown immediately on page load ──────────────────
-  // Do NOT wait for Supabase fetch — countdown runs in parallel
-  let secondsLeft = 3
-  const countdownEl = document.getElementById('reveal-countdown') as HTMLElement
-
-  function startCountdown() {
-    if (countdownTick) return // already running
-    countdownTick = setInterval(() => {
-      secondsLeft--
-      if (countdownEl) countdownEl.textContent = String(Math.max(secondsLeft, 0))
-      if (secondsLeft <= 0) {
-        clearInterval(countdownTick!)
-        countdownTick = null
-        // Hide the countdown badge
-        const hint = document.getElementById('reveal-hint')
-        if (hint) hint.style.display = 'none'
-        triggerVideoReveal(activeYtId)
-      }
-    }, 1000)
-  }
-
-  // Apply YT thumbnail to placeholder card immediately
-  function setThumbnail(id: string) {
+  // ── Set YouTube thumbnail on hero card ───────────────────────────────────
+  function setThumb(id: string) {
     const img = document.getElementById('hero-yt-thumb') as HTMLImageElement
-    if (!img || !id) return
-    img.src = `https://img.youtube.com/vi/${id}/maxresdefault.jpg`
+    if (!img) return
+    img.src     = `https://img.youtube.com/vi/${id}/maxresdefault.jpg`
     img.onload  = () => { img.style.opacity = '1' }
     img.onerror = () => { img.src = `https://img.youtube.com/vi/${id}/hqdefault.jpg`; img.style.opacity = '1' }
   }
 
-  // ── STEP 2: Inject iframe — mute=1 required for browser autoplay policy ──
-  // YouTube's autoplay policy: ONLY muted video autoplays without user gesture.
-  // User can unmute using the volume icon inside the player.
+  // ── Build iframe src string ───────────────────────────────────────────────
+  // mute=1 is MANDATORY for autoplay — all browsers enforce this.
+  // User unmutes via the volume icon inside the YouTube player.
+  function iframeSrc(id: string): string {
+    return `https://www.youtube.com/embed/${id}?autoplay=1&mute=1&loop=1&playlist=${id}&controls=1&modestbranding=1&rel=0&enablejsapi=0`
+  }
+
+  // ── Inject iframe into wrap ───────────────────────────────────────────────
   function injectIframe(id: string) {
     const wrap = document.getElementById('video-iframe-wrap') as HTMLElement
     if (!wrap) return
-    wrap.innerHTML = `
-      <iframe
-        src="https://www.youtube.com/embed/${id}?autoplay=1&mute=1&loop=1&playlist=${id}&controls=1&modestbranding=1&rel=0"
-        allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
-        allowfullscreen
-        style="position:absolute;inset:0;width:100%;height:100%;border:none;"
-      ></iframe>
-    `
+    // Clear first to avoid double-inject
+    wrap.innerHTML = ''
+    const f = document.createElement('iframe')
+    f.src    = iframeSrc(id)
+    f.setAttribute('allow', 'autoplay; encrypted-media; fullscreen; picture-in-picture')
+    f.setAttribute('allowfullscreen', '')
+    f.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;border:none;'
+    wrap.appendChild(f)
   }
 
-  // ── STEP 3: Zoom-in reveal ────────────────────────────────────────────────
-  // Strategy: overlay is display:flex + visibility:hidden from the start.
-  // The iframe is pre-injected at page load so browser initialises it fully.
-  // At 3s we just un-hide + animate scale. Autoplay works because the iframe
-  // was never in a display:none context.
-  function triggerVideoReveal(id: string) {
+  // ── Countdown badge ───────────────────────────────────────────────────────
+  let secs = 3
+  const cdEl = document.getElementById('reveal-countdown') as HTMLElement
+
+  function startTick() {
+    if (tickInterval) return
+    tickInterval = setInterval(() => {
+      secs--
+      if (cdEl) cdEl.textContent = String(Math.max(secs, 0))
+      if (secs <= 0) {
+        clearInterval(tickInterval!); tickInterval = null
+        const hint = document.getElementById('reveal-hint')
+        if (hint) hint.style.display = 'none'
+        doReveal()
+      }
+    }, 1000)
+  }
+
+  // ── Reveal: inject iframe then zoom in ───────────────────────────────────
+  function doReveal() {
     if (revealDone) return
     revealDone = true
 
-    const overlay     = document.getElementById('video-overlay') as HTMLElement
-    const heroContent = document.getElementById('hero-content') as HTMLElement
+    const ov = document.getElementById('video-overlay') as HTMLElement
+    const hc = document.getElementById('hero-content')  as HTMLElement
 
-    // Un-hide and animate in one step — iframe is already loaded
-    overlay.style.visibility    = 'visible'
-    overlay.style.pointerEvents = 'all'
+    // Inject iframe NOW — overlay is already in DOM with opacity:0
+    // This is the user-gesture-free path: mute=1 is required
+    injectIframe(activeYtId)
 
+    // Show unmute hint
+    const hint = document.getElementById('unmute-hint') as HTMLElement
+    if (hint) hint.style.display = 'inline-flex'
+
+    // Single rAF so browser registers the iframe before transition
     requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        overlay.style.transition    = 'transform 1s cubic-bezier(0.16,1,0.3,1), opacity 0.65s ease, border-radius 1s ease'
-        overlay.style.transform     = 'scale(1)'
-        overlay.style.opacity       = '1'
-        overlay.style.borderRadius  = '0'
-      })
+      ov.style.transition    = 'transform 1s cubic-bezier(0.16,1,0.3,1), opacity 0.6s ease, border-radius 1s ease'
+      ov.style.transform     = 'scale(1)'
+      ov.style.opacity       = '1'
+      ov.style.borderRadius  = '0'
+      ov.style.pointerEvents = 'all'
     })
 
-    if (heroContent) {
-      heroContent.style.transition    = 'opacity 0.6s ease'
-      heroContent.style.opacity       = '0.08'
-      heroContent.style.pointerEvents = 'none'
+    if (hc) {
+      hc.style.transition    = 'opacity 0.6s ease'
+      hc.style.opacity       = '0.08'
+      hc.style.pointerEvents = 'none'
     }
   }
 
-  // ── STEP 4: Close button ──────────────────────────────────────────────────
+  // ── Close: zoom out, clear iframe ───────────────────────────────────────
   document.getElementById('video-close-btn')?.addEventListener('click', () => {
-    const overlay     = document.getElementById('video-overlay') as HTMLElement
-    const heroContent = document.getElementById('hero-content') as HTMLElement
+    const ov = document.getElementById('video-overlay') as HTMLElement
+    const hc = document.getElementById('hero-content')  as HTMLElement
 
-    overlay.style.transition = 'transform 0.55s ease, opacity 0.45s ease, border-radius 0.55s ease'
-    overlay.style.transform  = 'scale(0.06)'
-    overlay.style.opacity    = '0'
-    overlay.style.borderRadius = '28px'
-    overlay.style.pointerEvents = 'none'
+    ov.style.transition    = 'transform 0.5s ease, opacity 0.4s ease, border-radius 0.5s ease'
+    ov.style.transform     = 'scale(0.07)'
+    ov.style.opacity       = '0'
+    ov.style.borderRadius  = '24px'
+    ov.style.pointerEvents = 'none'
 
-    if (heroContent) {
-      heroContent.style.opacity = '1'
-      heroContent.style.pointerEvents = 'all'
-    }
+    if (hc) { hc.style.opacity = '1'; hc.style.pointerEvents = 'all' }
 
-    // After zoom-out: hide via visibility, pause video by removing src then restoring
+    const hint = document.getElementById('unmute-hint') as HTMLElement
+    if (hint) hint.style.display = 'none'
+
     setTimeout(() => {
-      overlay.style.visibility = 'hidden'
-      overlay.style.transition = 'none'
-      // Pause iframe by blanking src — keeps iframe in DOM so re-open works
-      const iframe = document.querySelector('#video-iframe-wrap iframe') as HTMLIFrameElement
-      if (iframe) { iframe.src = 'about:blank' }
-      // Allow re-open
-      revealDone = false
-    }, 580)
+      // Kill audio by clearing iframe
+      const wrap = document.getElementById('video-iframe-wrap') as HTMLElement
+      if (wrap) wrap.innerHTML = ''
+      ov.style.transition = 'none'
+      closedOnce  = true
+      revealDone  = false   // allow re-open
+    }, 520)
   })
 
-  // ── STEP 5: Thumbnail click — skip countdown, open immediately ───────────
+  // ── Thumbnail click: skip countdown, open immediately ───────────────────
   document.getElementById('hero-thumb')?.addEventListener('click', () => {
     if (revealDone) return
-    // Stop countdown
-    if (countdownTick) { clearInterval(countdownTick); countdownTick = null }
-    secondsLeft = 0
+    if (tickInterval) { clearInterval(tickInterval); tickInterval = null }
+    secs = 0
     const hint = document.getElementById('reveal-hint')
     if (hint) hint.style.display = 'none'
-    triggerVideoReveal(activeYtId)
+    doReveal()
   })
 
-  // ── STEP 6: Fetch Supabase settings (parallel to countdown) ──────────────
+  // ── Fetch Supabase settings (runs parallel to countdown) ────────────────
   async function loadSettings() {
-    // Pre-inject iframe immediately — keeps it in rendering pipeline so autoplay is allowed
-    // visibility:hidden means user never sees it until triggerVideoReveal()
-    injectIframe(FALLBACK_YT_ID)
-    // Start thumbnail + countdown immediately with fallback
-    setThumbnail(FALLBACK_YT_ID)
-    startCountdown()
+    setThumb(FALLBACK_ID)
+    startTick()              // countdown starts immediately — no waiting for Supabase
 
     if (!SB_URL || !SB_KEY) return
 
@@ -551,19 +547,19 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
       const rows = await res.json()
       const v    = rows?.[0]?.value || {}
 
-      // Apply colors/text
+      // Colors / text
       const sec = document.getElementById('hero-section') as HTMLElement
-      if (v.hero_bg_color)  sec.style.background = v.hero_bg_color
+      if (v.hero_bg_color)    sec.style.background = v.hero_bg_color
       const h = document.getElementById('hero-heading') as HTMLElement
-      if (v.heading)        h.innerHTML = v.heading
-      if (v.hero_text_color) h.style.color = v.hero_text_color
+      if (v.heading)           h.innerHTML = v.heading
+      if (v.hero_text_color)   h.style.color = v.hero_text_color
       const s = document.getElementById('hero-sub') as HTMLElement
-      if (v.subheading)     s.textContent = v.subheading
-      if (v.hero_sub_color) s.style.color = v.hero_sub_color
+      if (v.subheading)        s.textContent = v.subheading
+      if (v.hero_sub_color)    s.style.color = v.hero_sub_color
 
       // Video bar
       const barEl  = document.getElementById('video-bar-text') as HTMLElement
-      const topBar = document.getElementById('video-top-bar') as HTMLElement
+      const topBar = document.getElementById('video-top-bar')  as HTMLElement
       if (v.video_bar_text)       barEl.textContent       = v.video_bar_text
       if (v.video_bar_bg)         topBar.style.background = v.video_bar_bg
       if (v.video_bar_text_color) barEl.style.color       = v.video_bar_text_color
@@ -579,28 +575,21 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
       if (v.bottom_bar_link  && btCTA)   btCTA.href         = v.bottom_bar_link
       if (v.bottom_bar_bg    && btBar)   btBar.style.background = v.bottom_bar_bg
 
-      // Update video ID if admin set a different one (only if countdown not yet fired)
-      const adminId = ytId(v.youtube_video_id || '')
-      if (adminId) {
+      // Video ID from admin
+      const adminId = extractId(v.youtube_video_id || '')
+      if (adminId && adminId !== activeYtId) {
         activeYtId = adminId
-        setThumbnail(adminId)
-        // If countdown hasn't fired yet, swap iframe src to admin video
-        if (!revealDone) {
-          const iframe = document.querySelector('#video-iframe-wrap iframe') as HTMLIFrameElement
-          if (iframe) {
-            iframe.src = `https://www.youtube.com/embed/${adminId}?autoplay=1&mute=1&loop=1&playlist=${adminId}&controls=1&modestbranding=1&rel=0`
-          } else {
-            injectIframe(adminId)
-          }
-        }
+        setThumb(adminId)
+        // If reveal already fired (countdown won the race), update to correct video
+        if (revealDone) injectIframe(adminId)
       }
 
     } catch(e) {
-      console.warn('Settings fetch failed, using fallbacks:', e)
+      console.warn('Settings error, using fallback:', e)
     }
   }
 
-  // ── STEP 7: Bottom bar slide-up after 2s ─────────────────────────────────
+  // ── Bottom bar ────────────────────────────────────────────────────────────
   function showBottomBar() {
     if (localStorage.getItem('atec_bar_dismissed') === '1') return
     setTimeout(() => {
@@ -609,7 +598,6 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
     }, 2000)
   }
 
-  // ── Boot ──────────────────────────────────────────────────────────────────
   loadSettings()
   showBottomBar()
 </script>
