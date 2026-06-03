@@ -1,0 +1,122 @@
+---
+// src/pages/stories.astro
+import BaseLayout from '../layouts/BaseLayout.astro'
+import { supabase } from '../lib/supabase'
+
+let stories: any[] = []
+
+try {
+  const { data } = await supabase
+    .from('testimonials')
+    .select('*')
+    .eq('is_active', true)
+    .order('sort_order')
+    .limit(50)
+  stories = data ?? []
+} catch (e) {}
+
+const fallbackStories = [
+  { student_name:'Tanvi', course:'Hardware & Networking', company_placed:'Own Business', rating:5, review:'ATEC gave me the confidence and skills to start my own laptop repair business. Best decision of my life!', photo_url:'', video_url:'' },
+  { student_name:'Drishti', course:'GEN AI', company_placed:'Govt. Department, Punjab', rating:5, review:'The GEN AI course at ATEC completely transformed how I work. Now I use AI tools daily at my government job.', photo_url:'', video_url:'' },
+  { student_name:'Bhumika', course:'Tally Prime', company_placed:'CA Firm, Chandigarh', rating:5, review:'Got placed within 2 weeks of completing Tally Prime course. Excellent practical training!', photo_url:'', video_url:'' },
+  { student_name:'Priya', course:'Digital Marketing', company_placed:'IT Firm, Chandigarh', rating:5, review:'ATEC\'s Digital Marketing course helped me land a great job at an IT firm. The faculty is amazing.', photo_url:'', video_url:'' },
+  { student_name:'Rahul', course:'MERN Stack', company_placed:'Startup, Delhi', rating:5, review:'Went from knowing nothing about web development to building full-stack apps in 3 months. ATEC is incredible.', photo_url:'', video_url:'' },
+  { student_name:'Arjun', course:'Python Programming', company_placed:'MNC, Bengaluru', rating:5, review:'The Python course opened doors I never imagined. Placed at a top MNC thanks to ATEC\'s rigorous training.', photo_url:'', video_url:'' },
+]
+const displayStories = stories.length > 0 ? stories : fallbackStories
+---
+
+<BaseLayout
+  title="Student Stories — ATEC Gurdaspur | Real Transformations"
+  description="Real stories from ATEC students who transformed their careers. Placed at top companies across India after completing courses in GEN AI, MERN Stack, Tally, Hardware & more."
+>
+<style>
+  .hero { background:#0b1525; padding:72px 32px 60px; text-align:center; color:#fff; }
+  .hero .label { font-size:12px; font-weight:800; color:#d4f01a; text-transform:uppercase; letter-spacing:0.12em; margin:0 0 14px; display:block; }
+  .hero h1 { font-family:'Sora',sans-serif; font-size:clamp(2rem,5vw,3.2rem); font-weight:900; margin:0 0 14px; line-height:1.1; }
+  .hero p { font-size:17px; color:rgba(255,255,255,0.6); max-width:540px; margin:0 auto; }
+
+  .stats { background:#fff; border-bottom:1px solid #e2e8f0; padding:28px 32px; }
+  .stats-row { max-width:800px; margin:0 auto; display:grid; grid-template-columns:repeat(4,1fr); gap:16px; text-align:center; }
+  @media(max-width:560px){ .stats-row { grid-template-columns:repeat(2,1fr); } }
+  .stat-n { font-family:'Sora',sans-serif; font-size:1.8rem; font-weight:900; color:#0b1525; }
+  .stat-l { font-size:12px; color:#64748b; font-weight:600; }
+
+  .section { padding:64px 32px 80px; background:#f8f4ef; }
+  .grid { max-width:1280px; margin:0 auto; display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:24px; }
+  .card { background:#fff; border-radius:18px; overflow:hidden; border:1px solid #e2e8f0; box-shadow:0 3px 14px rgba(0,0,0,0.07); transition:transform 0.2s,box-shadow 0.2s; }
+  .card:hover { transform:translateY(-5px); box-shadow:0 14px 40px rgba(0,0,0,0.12); }
+  .card-top { height:200px; background:#0b1525; position:relative; overflow:hidden; display:flex; align-items:center; justify-content:center; }
+  .card-top img { width:100%; height:100%; object-fit:cover; object-position:top; }
+  .card-top-placeholder { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; }
+  .card-initial { width:72px; height:72px; border-radius:50%; background:#d4f01a; display:flex; align-items:center; justify-content:center; font-family:'Sora',sans-serif; font-weight:900; font-size:1.8rem; color:#0b1525; }
+  .company-badge { position:absolute; top:12px; right:12px; background:rgba(0,0,0,0.65); backdrop-filter:blur(4px); border:1px solid rgba(255,255,255,0.2); border-radius:20px; padding:4px 12px; font-size:11px; font-weight:700; color:#d4f01a; max-width:180px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .play-icon { position:absolute; bottom:12px; right:12px; width:40px; height:40px; border-radius:50%; background:rgba(255,255,255,0.2); border:2px solid rgba(255,255,255,0.5); display:flex; align-items:center; justify-content:center; }
+  .card-body { padding:18px 20px 20px; }
+  .stars { color:#d4f01a; font-size:13px; letter-spacing:2px; margin-bottom:6px; }
+  .name { font-family:'Sora',sans-serif; font-weight:800; font-size:17px; color:#0b1525; margin:0 0 2px; }
+  .course { font-size:13px; color:#64748b; margin:0 0 10px; }
+  .review { font-size:14px; color:#374151; line-height:1.6; margin:0; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; font-style:italic; }
+
+  .cta-strip { background:#0b1525; padding:56px 32px; text-align:center; color:#fff; }
+  .cta-strip h2 { font-family:'Sora',sans-serif; font-size:clamp(1.6rem,3vw,2.2rem); font-weight:900; margin:0 0 12px; }
+  .cta-strip p { color:rgba(255,255,255,0.65); margin:0 0 28px; font-size:16px; }
+  .btn-group { display:flex; gap:12px; justify-content:center; flex-wrap:wrap; }
+  .btn-lemon { background:#d4f01a; color:#0b1525; padding:13px 28px; border-radius:10px; font-weight:800; font-size:15px; text-decoration:none; }
+  .btn-outline { background:transparent; color:#fff; border:2px solid rgba(255,255,255,0.3); padding:13px 28px; border-radius:10px; font-weight:700; font-size:15px; text-decoration:none; }
+  .btn-outline:hover { border-color:#fff; }
+</style>
+
+<div class="hero">
+  <span class="label">Student Stories</span>
+  <h1>Stories That Speak<br/>Louder Than Ads</h1>
+  <p>Real students. Real transformations. Straight from ATEC Gurdaspur.</p>
+</div>
+
+<div class="stats">
+  <div class="stats-row">
+    <div><div class="stat-n">5000+</div><div class="stat-l">Students Trained</div></div>
+    <div><div class="stat-n">100%</div><div class="stat-l">Placement Support</div></div>
+    <div><div class="stat-n">25+</div><div class="stat-l">Years Experience</div></div>
+    <div><div class="stat-n">4.9★</div><div class="stat-l">Average Rating</div></div>
+  </div>
+</div>
+
+<section class="section">
+  <div class="grid">
+    {displayStories.map(s => (
+      <div class="card">
+        <div class="card-top">
+          {s.photo_url
+            ? <img src={s.photo_url} alt={s.student_name} loading="lazy" />
+            : <div class="card-top-placeholder">
+                <div class="card-initial">{(s.student_name||'?').charAt(0).toUpperCase()}</div>
+              </div>
+          }
+          {s.company_placed && <span class="company-badge">🏢 {s.company_placed}</span>}
+          {s.video_url && (
+            <div class="play-icon">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="#fff"><polygon points="8,5 20,12 8,19"/></svg>
+            </div>
+          )}
+        </div>
+        <div class="card-body">
+          <div class="stars">{'★'.repeat(Math.min(s.rating||5, 5))}</div>
+          <div class="name">{s.student_name}</div>
+          <div class="course">{s.course}</div>
+          {s.review && <p class="review">"{s.review}"</p>}
+        </div>
+      </div>
+    ))}
+  </div>
+</section>
+
+<div class="cta-strip">
+  <h2>Your Story Could Be Next</h2>
+  <p>Join 5000+ students who transformed their careers at ATEC Gurdaspur.</p>
+  <div class="btn-group">
+    <a href="/courses" class="btn-lemon">Browse All Courses →</a>
+    <a href="https://wa.me/917009933289?text=Hi%20I%20want%20to%20enroll%20at%20ATEC" target="_blank" rel="noopener" class="btn-outline">💬 WhatsApp Us</a>
+  </div>
+</div>
+</BaseLayout>
