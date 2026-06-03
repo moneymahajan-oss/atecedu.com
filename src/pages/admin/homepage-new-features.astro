@@ -1,0 +1,522 @@
+---
+// src/pages/admin/homepage-new-features.astro
+// ══════════════════════════════════════════════════════════════════════
+// Admin panel for NEW homepage features:
+//   1. Why Choose ATEC cards (5 cards, DB-driven)
+//   2. Hero Slider (below hero section)
+//   3. Drop Us a Query popup (timer + content)
+//   4. Section Colors (per-section bg + gradient)
+// All changes apply live — no rebuild needed.
+// ══════════════════════════════════════════════════════════════════════
+import AdminLayout from '../../layouts/AdminLayout.astro'
+---
+<AdminLayout title="New Features Manager" activeSection="homepage">
+
+<style>
+  .nf-wrap { max-width:920px; margin:0 auto; padding:32px 24px 100px; }
+  .nf-section { background:#fff; border-radius:16px; border:1px solid #e2e8f0; padding:28px; margin:0 0 28px; }
+  .nf-section h2 { font-family:'Sora',sans-serif; font-size:18px; font-weight:800; color:#1e293b; margin:0 0 4px; }
+  .nf-section .nf-desc { font-size:13px; color:#94a3b8; margin:0 0 22px; }
+  .nf-label { font-size:12px; font-weight:700; color:#475569; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:5px; display:block; }
+  .nf-input { width:100%; padding:9px 13px; border:1.5px solid #e2e8f0; border-radius:9px; font-size:14px; color:#1e293b; outline:none; transition:border-color 0.15s; box-sizing:border-box; }
+  .nf-input:focus { border-color:#0f2a5c; }
+  .nf-row { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:14px; }
+  .nf-row.triple { grid-template-columns:1fr 1fr 1fr; }
+  @media(max-width:640px){ .nf-row, .nf-row.triple { grid-template-columns:1fr; } }
+  .nf-field { display:flex; flex-direction:column; gap:5px; }
+  .nf-color-row { display:flex; align-items:center; gap:10px; }
+  .nf-color-row input[type=color] { width:44px; height:36px; border:1px solid #e2e8f0; border-radius:8px; cursor:pointer; padding:2px; background:#fff; }
+  .nf-color-row input[type=text] { width:110px; padding:7px 10px; border:1.5px solid #e2e8f0; border-radius:8px; font-size:13px; font-family:monospace; color:#334155; }
+  .nf-card { background:#f8fafc; border:1.5px solid #e2e8f0; border-radius:12px; padding:18px; margin-bottom:14px; position:relative; }
+  .nf-card-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
+  .nf-card-label { font-family:'Sora',sans-serif; font-weight:700; font-size:14px; color:#0f2a5c; }
+  .nf-del-btn { background:#fee2e2; border:none; color:#dc2626; border-radius:7px; padding:4px 12px; font-size:12px; font-weight:700; cursor:pointer; }
+  .nf-del-btn:hover { background:#fca5a5; }
+  .nf-add-btn { display:flex; align-items:center; gap:7px; background:#eff6ff; border:2px dashed #93c5fd; color:#1d4ed8; border-radius:10px; padding:10px 20px; font-size:14px; font-weight:700; cursor:pointer; width:100%; justify-content:center; margin-top:4px; }
+  .nf-add-btn:hover { background:#dbeafe; }
+  .save-btn { display:inline-flex; align-items:center; gap:8px; background:#0f2a5c; color:#d4f01a; border:none; border-radius:10px; padding:11px 24px; font-size:14px; font-weight:800; cursor:pointer; transition:background 0.15s; }
+  .save-btn:hover { background:#163264; }
+  .save-btn:disabled { background:#94a3b8; cursor:not-allowed; }
+  .nf-status { font-size:13px; font-weight:600; padding:8px 14px; border-radius:8px; display:none; margin-top:10px; }
+  .nf-status.ok { background:#dcfce7; color:#166534; }
+  .nf-status.err { background:#fee2e2; color:#991b1b; }
+  .nf-toggle { display:flex; align-items:center; gap:10px; margin-bottom:14px; }
+  .nf-toggle input[type=checkbox] { width:18px; height:18px; cursor:pointer; accent-color:#0f2a5c; }
+  .nf-toggle label { font-size:14px; font-weight:600; color:#334155; cursor:pointer; }
+  .gradient-row { display:flex; flex-direction:column; gap:5px; margin-bottom:14px; }
+  .gradient-preview { height:36px; border-radius:8px; border:1px solid #e2e8f0; margin-top:6px; transition:background 0.3s; }
+</style>
+
+<div class="nf-wrap">
+  <h1 style="font-family:'Sora',sans-serif;font-size:24px;font-weight:900;color:#1e293b;margin:0 0 6px;">🚀 New Features Manager</h1>
+  <p style="font-size:14px;color:#94a3b8;margin:0 0 32px;">Why ATEC cards, Hero Slider, Popup, and Section Colors — all live, no rebuild needed.</p>
+
+  <!-- ════════════════════════════════════════════════
+       1. WHY CHOOSE ATEC — 5 Cards
+  ════════════════════════════════════════════════ -->
+  <div class="nf-section" id="sec-why">
+    <h2>✅ Why Choose ATEC — 5 Cards</h2>
+    <p class="nf-desc">Manage the 5 cards shown in the "Why Choose ATEC?" section. Exactly 5 cards will show.</p>
+
+    <div class="nf-row">
+      <div class="nf-field">
+        <label class="nf-label">Section Title</label>
+        <input class="nf-input" id="why-title" placeholder="Why Choose ATEC?" value="Why Choose ATEC?" />
+      </div>
+      <div class="nf-field">
+        <label class="nf-label">Section Subtitle</label>
+        <input class="nf-input" id="why-sub" placeholder="25+ years of excellence..." />
+      </div>
+    </div>
+
+    <div id="why-cards-list"></div>
+
+    <button class="nf-add-btn" id="why-add-btn">+ Add Card (max 5)</button>
+
+    <br><br>
+    <button class="save-btn" id="why-save-btn">💾 Save Why ATEC Cards</button>
+    <div class="nf-status" id="why-status"></div>
+  </div>
+
+  <!-- ════════════════════════════════════════════════
+       2. HERO SLIDER
+  ════════════════════════════════════════════════ -->
+  <div class="nf-section" id="sec-slider">
+    <h2>🎠 Hero Slider</h2>
+    <p class="nf-desc">Add slides below the hero section. Each slide can have a heading, subheading, CTA button, video, and background color.</p>
+
+    <div id="slider-list"></div>
+    <button class="nf-add-btn" id="slider-add-btn">+ Add Slide</button>
+
+    <br><br>
+    <button class="save-btn" id="slider-save-btn">💾 Save Slider</button>
+    <div class="nf-status" id="slider-status"></div>
+  </div>
+
+  <!-- ════════════════════════════════════════════════
+       3. DROP US A QUERY POPUP
+  ════════════════════════════════════════════════ -->
+  <div class="nf-section" id="sec-popup">
+    <h2>💬 Drop Us a Query Popup</h2>
+    <p class="nf-desc">Configure the enquiry popup that appears to visitors. Set timing, content, and behavior.</p>
+
+    <div class="nf-toggle">
+      <input type="checkbox" id="popup-enabled" checked />
+      <label for="popup-enabled">Popup is enabled (show to visitors)</label>
+    </div>
+
+    <div class="nf-row">
+      <div class="nf-field">
+        <label class="nf-label">Show After (seconds)</label>
+        <input class="nf-input" type="number" id="popup-delay" value="15" min="5" max="120" />
+        <span style="font-size:12px;color:#94a3b8;margin-top:3px;">Default: 15 seconds. Visitor must be on page this long before popup appears.</span>
+      </div>
+      <div class="nf-field">
+        <label class="nf-label">Show Once Per Session?</label>
+        <div class="nf-toggle" style="margin:8px 0 0;">
+          <input type="checkbox" id="popup-once" checked />
+          <label for="popup-once">Yes — don't show again if dismissed</label>
+        </div>
+      </div>
+    </div>
+
+    <div class="nf-row">
+      <div class="nf-field">
+        <label class="nf-label">Popup Title</label>
+        <input class="nf-input" id="popup-title" value="Drop Us a Query" />
+      </div>
+      <div class="nf-field">
+        <label class="nf-label">Subtitle / Tagline</label>
+        <input class="nf-input" id="popup-subtitle" value="We'll call you back within 30 minutes" />
+      </div>
+    </div>
+
+    <button class="save-btn" id="popup-save-btn">💾 Save Popup Settings</button>
+    <div class="nf-status" id="popup-status"></div>
+  </div>
+
+  <!-- ════════════════════════════════════════════════
+       4. SECTION COLORS
+  ════════════════════════════════════════════════ -->
+  <div class="nf-section" id="sec-colors">
+    <h2>🎨 Section Colors</h2>
+    <p class="nf-desc">Override the background color of each section. Use a gradient (CSS) for advanced styling. Leave blank to use the default color.</p>
+
+    <!-- Primary Color -->
+    <div class="nf-field" style="margin-bottom:20px;">
+      <label class="nf-label">🎯 Primary Dark Blue (all buttons, badges, navbars)</label>
+      <div class="nf-color-row">
+        <input type="color" id="color-primary" value="#0f2a5c" oninput="document.getElementById('color-primary-hex').value=this.value" />
+        <input type="text" id="color-primary-hex" value="#0f2a5c" maxlength="7" oninput="document.getElementById('color-primary').value=this.value" />
+        <span style="font-size:13px;color:#64748b;">Default: #0f2a5c (dark navy)</span>
+      </div>
+    </div>
+
+    <div style="border-top:1px solid #f1f5f9;margin:20px 0;"></div>
+    <p style="font-size:13px;font-weight:700;color:#475569;margin:0 0 16px;">Per-Section Backgrounds:</p>
+
+    <!-- Each section -->
+    {[
+      { key:'why_atec', label:'Why Choose ATEC', default:'#0f2a5c' },
+      { key:'slider', label:'Hero Slider area', default:'(matches slide bg)' },
+      { key:'courses', label:'Popular Courses section', default:'#ffffff' },
+      { key:'instructors', label:'Instructors Marquee', default:'#f8f4ef' },
+      { key:'stories', label:'Student Stories (2-row marquee)', default:'#0b1525' },
+      { key:'cta', label:'Bottom CTA section', default:'#f8f4ef' },
+    ].map(s => (
+      <div style="margin-bottom:22px;">
+        <label class="nf-label">{s.label} <span style="color:#94a3b8;font-weight:400;text-transform:none;">(default: {s.default})</span></label>
+        <div class="nf-color-row" style="margin-bottom:8px;">
+          <input type="color" id={`color-${s.key}`} value="#0f2a5c"
+            oninput={`document.getElementById('color-${s.key}-hex').value=this.value;updateGradientPreview('${s.key}')`} />
+          <input type="text" id={`color-${s.key}-hex`} value="" maxlength="7" placeholder="Solid color (leave blank = default)"
+            oninput={`document.getElementById('color-${s.key}').value=this.value||'#000000';updateGradientPreview('${s.key}')`} />
+        </div>
+        <div class="gradient-row">
+          <label class="nf-label">Gradient (CSS) — overrides solid color</label>
+          <input class="nf-input" id={`grad-${s.key}`} placeholder="e.g. linear-gradient(135deg,#0f2a5c 0%,#1e3a8a 100%)"
+            oninput={`updateGradientPreview('${s.key}')`} />
+          <div class="gradient-preview" id={`grad-preview-${s.key}`} style="background:#f1f5f9;"></div>
+        </div>
+      </div>
+    ))}
+
+    <button class="save-btn" id="colors-save-btn">💾 Save Section Colors</button>
+    <div class="nf-status" id="colors-status"></div>
+  </div>
+</div>
+
+</AdminLayout>
+
+<script>
+const sb_url = (window as any).__SB_URL as string
+const sb_key = (window as any).__SB_KEY as string
+
+async function sbGet(key: string) {
+  if (!sb_url || !sb_key) return null
+  const r = await fetch(`${sb_url}/rest/v1/site_settings?key=eq.${key}&select=value`,
+    { headers:{ apikey:sb_key, Authorization:`Bearer ${sb_key}` } })
+  const d = await r.json()
+  return d?.[0]?.value ?? null
+}
+
+async function sbSet(key: string, value: any) {
+  if (!sb_url || !sb_key) throw new Error('Supabase not connected')
+  await fetch(`${sb_url}/rest/v1/site_settings`, {
+    method: 'POST',
+    headers: {
+      apikey: sb_key, Authorization: `Bearer ${sb_key}`,
+      'Content-Type':'application/json', Prefer:'resolution=merge-duplicates,return=minimal'
+    },
+    body: JSON.stringify({ key, value })
+  })
+}
+
+function showStatus(id: string, ok: boolean, msg: string) {
+  const el = document.getElementById(id)
+  if (!el) return
+  el.textContent = msg
+  el.className   = `nf-status ${ok?'ok':'err'}`
+  el.style.display = 'block'
+  setTimeout(() => { el.style.display='none' }, 3500)
+}
+
+function val(id: string): string {
+  return (document.getElementById(id) as HTMLInputElement)?.value?.trim() || ''
+}
+function checked(id: string): boolean {
+  return !!(document.getElementById(id) as HTMLInputElement)?.checked
+}
+function setVal(id: string, v: string) {
+  const el = document.getElementById(id) as HTMLInputElement
+  if (el) el.value = v
+}
+function setChecked(id: string, v: boolean) {
+  const el = document.getElementById(id) as HTMLInputElement
+  if (el) el.checked = v
+}
+
+// ─── GRADIENT PREVIEW ─────────────────────────────────────────────────
+(window as any).updateGradientPreview = function(key: string) {
+  const grad = (document.getElementById(`grad-${key}`) as HTMLInputElement)?.value?.trim()
+  const hex  = (document.getElementById(`color-${key}-hex`) as HTMLInputElement)?.value?.trim()
+  const prev = document.getElementById(`grad-preview-${key}`)
+  if (!prev) return
+  if (grad) prev.style.background = grad
+  else if (hex) prev.style.background = hex
+  else prev.style.background = '#f1f5f9'
+}
+
+// ─── WHY ATEC CARDS ───────────────────────────────────────────────────
+const DEFAULT_WHY = [
+  { icon:'🎓', title:'Expert Faculty',          desc:'Industry-certified trainers with 10+ years of experience' },
+  { icon:'🏆', title:'ISO Certified',            desc:'ISO 9001:2015 certified institute since 2000' },
+  { icon:'💼', title:'100% Placement',           desc:'Dedicated placement cell with 500+ hiring partners' },
+  { icon:'🌐', title:'Online + Hybrid',          desc:'Learn from anywhere or attend in-person at our centres' },
+  { icon:'📜', title:'Recognized Certificates',  desc:'Government & industry-recognised certifications' },
+]
+
+let whyCards: any[] = [...DEFAULT_WHY]
+
+function renderWhyCards() {
+  const list = document.getElementById('why-cards-list')
+  if (!list) return
+  list.innerHTML = ''
+  whyCards.forEach((c, i) => {
+    const card = document.createElement('div')
+    card.className = 'nf-card'
+    card.innerHTML = `
+      <div class="nf-card-header">
+        <span class="nf-card-label">Card ${i+1}</span>
+        <button class="nf-del-btn" onclick="deleteWhyCard(${i})">✕ Remove</button>
+      </div>
+      <div class="nf-row triple">
+        <div class="nf-field">
+          <label class="nf-label">Icon (emoji)</label>
+          <input class="nf-input" id="why-icon-${i}" value="${c.icon||''}" placeholder="🎓" />
+        </div>
+        <div class="nf-field" style="grid-column:span 2;">
+          <label class="nf-label">Title</label>
+          <input class="nf-input" id="why-title-${i}" value="${c.title||''}" placeholder="Card Title" />
+        </div>
+      </div>
+      <div class="nf-field">
+        <label class="nf-label">Description</label>
+        <input class="nf-input" id="why-desc-${i}" value="${c.desc||''}" placeholder="Short description..." />
+      </div>`
+    list.appendChild(card)
+  })
+  const addBtn = document.getElementById('why-add-btn')
+  if (addBtn) addBtn.style.display = whyCards.length >= 5 ? 'none' : 'flex'
+}
+
+;(window as any).deleteWhyCard = function(i: number) {
+  whyCards.splice(i, 1)
+  renderWhyCards()
+}
+
+document.getElementById('why-add-btn')?.addEventListener('click', () => {
+  if (whyCards.length >= 5) return
+  whyCards.push({ icon:'⭐', title:'New Feature', desc:'Describe this feature...' })
+  renderWhyCards()
+})
+
+document.getElementById('why-save-btn')?.addEventListener('click', async () => {
+  const btn = document.getElementById('why-save-btn') as HTMLButtonElement
+  btn.disabled = true; btn.textContent = '⏳ Saving...'
+  // Collect current values
+  const saved = whyCards.map((_,i) => ({
+    icon:  val(`why-icon-${i}`),
+    title: val(`why-title-${i}`),
+    desc:  val(`why-desc-${i}`),
+  }))
+  // Also store title/sub
+  ;(saved as any).section_title = val('why-title')
+  ;(saved as any).section_sub   = val('why-sub')
+  try {
+    await sbSet('why_features', saved)
+    showStatus('why-status', true, '✅ Saved! Cards will update on next page load.')
+  } catch(e) {
+    showStatus('why-status', false, '❌ Save failed. Check Supabase connection.')
+  }
+  btn.disabled = false; btn.textContent = '💾 Save Why ATEC Cards'
+})
+
+// ─── HERO SLIDER ──────────────────────────────────────────────────────
+const DEFAULT_SLIDES = [
+  { badge:'🔥 New Batch June 2026', heading:'Industrial Training<br>for Real World Jobs', subheading:'GEN AI | MERN Stack | Machine Learning | Python | Ethical Hacking', cta_text:'Register Now', cta_link:'/courses', video_link:'', bg_color:'#0f2a5c', text_color:'#ffffff', image_url:'' },
+  { badge:'🌐 Online & Hybrid', heading:'Learn From Anywhere<br>in India', subheading:'Live classes, recorded sessions, doubt clearing — all from home', cta_text:'Explore Online Courses', cta_link:'/courses', video_link:'', bg_color:'#1a1a2e', text_color:'#ffffff', image_url:'' },
+]
+
+let slides: any[] = [...DEFAULT_SLIDES]
+
+function renderSlides() {
+  const list = document.getElementById('slider-list')
+  if (!list) return
+  list.innerHTML = ''
+  slides.forEach((s, i) => {
+    const card = document.createElement('div')
+    card.className = 'nf-card'
+    card.innerHTML = `
+      <div class="nf-card-header">
+        <span class="nf-card-label">Slide ${i+1}</span>
+        <button class="nf-del-btn" onclick="deleteSlide(${i})">✕ Remove</button>
+      </div>
+      <div class="nf-row">
+        <div class="nf-field">
+          <label class="nf-label">Badge / Tag (e.g. 🔥 New Batch)</label>
+          <input class="nf-input" id="sl-badge-${i}" value="${s.badge||''}" placeholder="🔥 New Batch June 2026" />
+        </div>
+        <div class="nf-field">
+          <label class="nf-label">CTA Button Text</label>
+          <input class="nf-input" id="sl-cta-text-${i}" value="${s.cta_text||''}" placeholder="Register Now" />
+        </div>
+      </div>
+      <div class="nf-field" style="margin-bottom:14px;">
+        <label class="nf-label">Heading (HTML allowed for line breaks)</label>
+        <input class="nf-input" id="sl-heading-${i}" value="${(s.heading||'').replace(/"/g,'&quot;')}" placeholder="Learn MERN Stack in 6 Months" />
+      </div>
+      <div class="nf-field" style="margin-bottom:14px;">
+        <label class="nf-label">Subheading</label>
+        <input class="nf-input" id="sl-sub-${i}" value="${s.subheading||''}" placeholder="Batch starts Monday" />
+      </div>
+      <div class="nf-row">
+        <div class="nf-field">
+          <label class="nf-label">CTA Link (URL)</label>
+          <input class="nf-input" id="sl-cta-link-${i}" value="${s.cta_link||''}" placeholder="/courses" />
+        </div>
+        <div class="nf-field">
+          <label class="nf-label">Video Link (YouTube URL or ID)</label>
+          <input class="nf-input" id="sl-video-${i}" value="${s.video_link||''}" placeholder="https://youtube.com/watch?v=..." />
+        </div>
+      </div>
+      <div class="nf-row">
+        <div class="nf-field">
+          <label class="nf-label">Image URL (if no video)</label>
+          <input class="nf-input" id="sl-img-${i}" value="${s.image_url||''}" placeholder="https://..." />
+        </div>
+        <div class="nf-field">
+          <label class="nf-label">Background Color</label>
+          <div class="nf-color-row">
+            <input type="color" id="sl-bg-${i}" value="${s.bg_color||'#0f2a5c'}"
+              oninput="document.getElementById('sl-bg-hex-${i}').value=this.value" />
+            <input type="text" id="sl-bg-hex-${i}" value="${s.bg_color||'#0f2a5c'}" maxlength="7" class="nf-input" style="width:110px;"
+              oninput="document.getElementById('sl-bg-${i}').value=this.value||'#0f2a5c'" />
+          </div>
+        </div>
+      </div>`
+    list.appendChild(card)
+  })
+}
+
+;(window as any).deleteSlide = function(i: number) {
+  slides.splice(i, 1)
+  renderSlides()
+}
+
+document.getElementById('slider-add-btn')?.addEventListener('click', () => {
+  slides.push({ badge:'', heading:'New Slide', subheading:'', cta_text:'Learn More', cta_link:'/courses', video_link:'', bg_color:'#0f2a5c', text_color:'#ffffff', image_url:'' })
+  renderSlides()
+})
+
+document.getElementById('slider-save-btn')?.addEventListener('click', async () => {
+  const btn = document.getElementById('slider-save-btn') as HTMLButtonElement
+  btn.disabled = true; btn.textContent = '⏳ Saving...'
+  const saved = slides.map((_,i) => ({
+    badge:      val(`sl-badge-${i}`),
+    heading:    val(`sl-heading-${i}`),
+    subheading: val(`sl-sub-${i}`),
+    cta_text:   val(`sl-cta-text-${i}`),
+    cta_link:   val(`sl-cta-link-${i}`),
+    video_link: val(`sl-video-${i}`),
+    image_url:  val(`sl-img-${i}`),
+    bg_color:   val(`sl-bg-hex-${i}`) || '#0f2a5c',
+    text_color: '#ffffff',
+  }))
+  try {
+    await sbSet('hero_sliders', saved)
+    showStatus('slider-status', true, '✅ Slider saved! Reload homepage to see changes.')
+  } catch(e) {
+    showStatus('slider-status', false, '❌ Save failed. Check Supabase connection.')
+  }
+  btn.disabled = false; btn.textContent = '💾 Save Slider'
+})
+
+// ─── POPUP SETTINGS ───────────────────────────────────────────────────
+document.getElementById('popup-save-btn')?.addEventListener('click', async () => {
+  const btn = document.getElementById('popup-save-btn') as HTMLButtonElement
+  btn.disabled = true; btn.textContent = '⏳ Saving...'
+  const cfg = {
+    enabled:               checked('popup-enabled'),
+    delay_seconds:         parseInt(val('popup-delay')) || 15,
+    show_once_per_session: checked('popup-once'),
+    title:                 val('popup-title'),
+    subtitle:              val('popup-subtitle'),
+  }
+  try {
+    await sbSet('popup_settings', cfg)
+    showStatus('popup-status', true, '✅ Saved! Popup will respect new settings on next visit.')
+  } catch(e) {
+    showStatus('popup-status', false, '❌ Save failed. Check Supabase connection.')
+  }
+  btn.disabled = false; btn.textContent = '💾 Save Popup Settings'
+})
+
+// ─── SECTION COLORS ───────────────────────────────────────────────────
+const COLOR_KEYS = ['why_atec','slider','courses','instructors','stories','cta']
+
+document.getElementById('colors-save-btn')?.addEventListener('click', async () => {
+  const btn = document.getElementById('colors-save-btn') as HTMLButtonElement
+  btn.disabled = true; btn.textContent = '⏳ Saving...'
+  const cfg: any = { primary_color: val('color-primary-hex') || val('color-primary') }
+  COLOR_KEYS.forEach(k => {
+    const hex  = val(`color-${k}-hex`)
+    const grad = val(`grad-${k}`)
+    if (hex)  cfg[`${k}_bg`]       = hex
+    if (grad) cfg[`${k}_gradient`] = grad
+  })
+  try {
+    await sbSet('section_colors', cfg)
+    showStatus('colors-status', true, '✅ Colors saved! Reload homepage to see changes.')
+  } catch(e) {
+    showStatus('colors-status', false, '❌ Save failed. Check Supabase connection.')
+  }
+  btn.disabled = false; btn.textContent = '💾 Save Section Colors'
+})
+
+// ─── PRELOAD from DB ──────────────────────────────────────────────────
+async function preload() {
+  // Why ATEC
+  try {
+    const wData = await sbGet('why_features')
+    if (Array.isArray(wData) && wData.length) {
+      whyCards = wData.slice(0,5)
+      if ((wData as any).section_title) setVal('why-title', (wData as any).section_title)
+      if ((wData as any).section_sub)   setVal('why-sub',   (wData as any).section_sub)
+    }
+  } catch(_) {}
+  renderWhyCards()
+
+  // Slider
+  try {
+    const slData = await sbGet('hero_sliders')
+    if (Array.isArray(slData) && slData.length) slides = slData
+  } catch(_) {}
+  renderSlides()
+
+  // Popup
+  try {
+    const popCfg = await sbGet('popup_settings')
+    if (popCfg) {
+      setChecked('popup-enabled', popCfg.enabled !== false)
+      if (typeof popCfg.delay_seconds === 'number') setVal('popup-delay', String(popCfg.delay_seconds))
+      setChecked('popup-once', popCfg.show_once_per_session !== false)
+      if (popCfg.title)    setVal('popup-title',    popCfg.title)
+      if (popCfg.subtitle) setVal('popup-subtitle', popCfg.subtitle)
+    }
+  } catch(_) {}
+
+  // Section colors
+  try {
+    const colCfg = await sbGet('section_colors')
+    if (colCfg) {
+      if (colCfg.primary_color) {
+        setVal('color-primary', colCfg.primary_color)
+        setVal('color-primary-hex', colCfg.primary_color)
+      }
+      COLOR_KEYS.forEach(k => {
+        if (colCfg[`${k}_bg`]) {
+          setVal(`color-${k}`, colCfg[`${k}_bg`])
+          setVal(`color-${k}-hex`, colCfg[`${k}_bg`])
+        }
+        if (colCfg[`${k}_gradient`]) {
+          setVal(`grad-${k}`, colCfg[`${k}_gradient`])
+        }
+        ;(window as any).updateGradientPreview(k)
+      })
+    }
+  } catch(_) {}
+}
+
+preload()
+</script>

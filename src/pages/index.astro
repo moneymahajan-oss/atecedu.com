@@ -35,19 +35,19 @@ try { const { data } = await supabase.from('site_settings').select('value').eq('
 try { const { data } = await supabase.from('site_settings').select('value').eq('key', 'stats').single(); siteStats = data?.value ?? {} } catch(_) {}
 
 // Fallback data
-const heroHeading    = heroSettings.heading    || 'Learn <span style="color:#d4f01a">ONLINE</span>'
+const heroHeading    = heroSettings.heading    || 'Learn <span class="hero-online-chip">ONLINE</span>'
 const heroSub        = heroSettings.subheading || 'GEN AI | MERN STACK | TALLY | KIDS PROGRAMS'
 const heroBg         = heroSettings.hero_bg_color   || '#eae6e1'
 const heroTextColor  = heroSettings.hero_text_color || '#1c1c1c'
 const heroSubColor   = heroSettings.hero_sub_color  || '#555555'
 const videoBarText   = heroSettings.video_bar_text  || 'For OFFLINE COURSES : www.ateceducation.in'
-const videoBarBg     = heroSettings.video_bar_bg    || '#1c3d7a'
+const videoBarBg     = heroSettings.video_bar_bg    || '#0f2a5c'
 const videoBarColor  = heroSettings.video_bar_text_color || '#ffffff'
 const bottomBarText  = heroSettings.bottom_bar_text || 'Need help? Talk to us at'
 const bottomBarPhone = heroSettings.bottom_bar_phone || '+91 7009933289'
 const bottomBarCTA   = heroSettings.bottom_bar_cta  || 'Request a Call'
 const bottomBarLink  = heroSettings.bottom_bar_link || '/contact'
-const bottomBarBg    = heroSettings.bottom_bar_bg   || '#1c3d7a'
+const bottomBarBg    = heroSettings.bottom_bar_bg   || '#0f2a5c'
 
 // Fallback courses
 const fallbackCourses = courses.length > 0 ? courses : [
@@ -96,11 +96,25 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
     @media(max-width:768px){ #hero-content { grid-template-columns:1fr; } #hero-thumb-wrap { order:2; } }
     .nm-btn-primary { background:#d4f01a;color:#1a1a1a;padding:12px 26px;border-radius:12px;font-weight:800;font-size:14px;text-decoration:none;box-shadow:5px 5px 12px #c0bcb7,-3px -3px 8px #fff;display:inline-block;transition:box-shadow 0.15s; }
     .nm-btn-primary:hover { box-shadow:3px 3px 8px #c0bcb7,-2px -2px 5px #fff; }
-    .nm-btn-secondary { background:var(--nm-bg);color:#1c3d7a;padding:12px 26px;border-radius:12px;font-weight:700;font-size:14px;text-decoration:none;box-shadow:var(--nm-raised);display:inline-flex;align-items:center;gap:7px;transition:box-shadow 0.15s; }
+    .nm-btn-secondary { background:var(--nm-bg);color:#0f2a5c;padding:12px 26px;border-radius:12px;font-weight:700;font-size:14px;text-decoration:none;box-shadow:var(--nm-raised);display:inline-flex;align-items:center;gap:7px;transition:box-shadow 0.15s; }
     .nm-btn-secondary:hover { box-shadow:3px 3px 8px #c0bcb7,-2px -2px 5px #fff; }
-    .nm-stat-chip { background:var(--nm-bg);box-shadow:var(--nm-raised);border-radius:12px;padding:9px 16px;text-align:center;flex:1;min-width:70px; }
-    .nm-stat-n { font-size:1.05rem;font-weight:900;color:#1c3d7a;line-height:1.1; }
+    .nm-stat-chip { background:var(--nm-bg);box-shadow:8px 8px 18px #b8b4af,-6px -6px 14px #ffffff;border-radius:14px;padding:11px 18px;text-align:center;flex:1;min-width:70px;transition:box-shadow 0.15s; }
+    .nm-stat-chip:hover { box-shadow:5px 5px 12px #b8b4af,-4px -4px 10px #ffffff; }
+    .nm-stat-n { font-size:1.15rem;font-weight:900;color:#0f2a5c;line-height:1.1;text-shadow:1px 1px 2px rgba(0,0,0,0.12); }
     .nm-stat-l { font-size:9px;font-weight:700;color:#8a8480;text-transform:uppercase;letter-spacing:0.07em;margin-top:2px; }
+    /* ONLINE protruding chip in hero heading */
+    .hero-online-chip {
+      display:inline-block;
+      background:#d4f01a;
+      color:#0f2a5c;
+      padding:2px 18px 4px;
+      border-radius:10px;
+      box-shadow:6px 6px 16px rgba(0,0,0,0.22),-3px -3px 8px rgba(255,255,255,0.6);
+      font-style:normal;
+      letter-spacing:0.03em;
+      text-shadow:none;
+      transform:translateY(-2px);
+    }
     .nm-video-shell { background:var(--nm-bg);border-radius:20px;box-shadow:var(--nm-float);padding:10px;position:relative; }
     .nm-video-inner {
       border-radius:14px;
@@ -183,7 +197,7 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
           <div id="hero-thumb" class="nm-video-inner" title="Click to expand">
             <div id="card-play-overlay">
               <div class="nm-play-btn">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="#1c3d7a" style="margin-left:3px;"><polygon points="8,5 20,12 8,19"/></svg>
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="#0f2a5c" style="margin-left:3px;"><polygon points="8,5 20,12 8,19"/></svg>
               </div>
             </div>
             <div id="reveal-hint" style="position:absolute;bottom:10px;right:12px;background:var(--nm-bg);box-shadow:var(--nm-inset);border-radius:20px;color:#6b6460;font-size:11px;font-weight:700;padding:4px 12px;letter-spacing:0.04em;">
@@ -226,7 +240,129 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
   <!-- ══════════════════════════════════════════════════════════════
        STATS BAR
   ══════════════════════════════════════════════════════════════ -->
-  <div style="background:#1c3d7a;height:4px;"></div>
+  <div style="background:#0f2a5c;height:4px;"></div>
+
+  <!-- ══════════════════════════════════════════════════════════════
+       HERO SLIDER — below hero, like ateceducation.in
+       DB-driven from site_settings key='hero_sliders' (array)
+       Fields per slide: badge, heading, subheading, cta_text, cta_link,
+                         video_link, bg_color, text_color, image_url
+  ══════════════════════════════════════════════════════════════ -->
+  <style is:global>
+    /* Hero Slider */
+    #hero-slider-section { display:none; overflow:hidden; }
+    .hslider-wrap { position:relative; }
+    .hslider-track { display:flex; transition:transform 0.55s cubic-bezier(0.22,1,0.36,1); will-change:transform; }
+    .hslider-slide {
+      flex-shrink:0; width:100%; min-height:340px;
+      display:grid; grid-template-columns:1fr 1fr; align-items:center; gap:40px;
+      padding:48px 64px;
+    }
+    @media(max-width:768px){
+      .hslider-slide { grid-template-columns:1fr; padding:36px 24px; min-height:auto; }
+      .hslider-video-wrap { display:none; }
+    }
+    .hslider-badge {
+      display:inline-block; padding:4px 14px; border-radius:20px;
+      font-size:12px; font-weight:800; letter-spacing:0.06em; text-transform:uppercase;
+      margin-bottom:14px;
+    }
+    .hslider-h { font-family:'Sora',sans-serif; font-size:clamp(1.6rem,3vw,2.4rem); font-weight:900; line-height:1.1; margin:0 0 12px; }
+    .hslider-sub { font-size:14px; margin:0 0 24px; line-height:1.6; opacity:0.85; }
+    .hslider-cta { display:inline-flex; align-items:center; gap:8px; padding:12px 28px; border-radius:10px; font-weight:800; font-size:14px; text-decoration:none; background:#d4f01a; color:#0f2a5c; box-shadow:4px 4px 14px rgba(0,0,0,0.22); transition:transform 0.15s,box-shadow 0.15s; }
+    .hslider-cta:hover { transform:translateY(-2px); box-shadow:6px 8px 20px rgba(0,0,0,0.3); }
+    .hslider-video-wrap { border-radius:16px; overflow:hidden; aspect-ratio:16/9; background:#111; box-shadow:8px 8px 28px rgba(0,0,0,0.3); }
+    .hslider-video-wrap iframe,.hslider-video-wrap video { width:100%; height:100%; border:none; display:block; }
+    /* Dots */
+    .hslider-dots { display:flex; justify-content:center; gap:8px; padding:16px 0 0; }
+    .hslider-dot { width:8px; height:8px; border-radius:50%; background:rgba(0,0,0,0.2); border:none; cursor:pointer; transition:all 0.2s; padding:0; }
+    .hslider-dot.active { width:24px; border-radius:4px; background:#0f2a5c; }
+    /* Prev/Next arrows */
+    .hslider-arrow { position:absolute; top:50%; transform:translateY(-50%); z-index:10; background:rgba(255,255,255,0.9); border:none; border-radius:50%; width:40px; height:40px; display:flex; align-items:center; justify-content:center; cursor:pointer; box-shadow:0 2px 10px rgba(0,0,0,0.15); transition:background 0.15s; font-size:18px; }
+    .hslider-arrow:hover { background:#d4f01a; }
+    .hslider-prev { left:16px; }
+    .hslider-next { right:16px; }
+
+    /* DROP US QUERY POPUP */
+    #drop-query-popup {
+      position:fixed; bottom:80px; right:24px; z-index:9999;
+      width:340px; max-width:calc(100vw - 32px);
+      background:#fff; border-radius:18px;
+      box-shadow:0 20px 60px rgba(0,0,0,0.22),0 4px 16px rgba(0,0,0,0.1);
+      border:1px solid #e2e8f0;
+      transform:translateY(20px) scale(0.95); opacity:0;
+      pointer-events:none; transition:all 0.4s cubic-bezier(0.22,1,0.36,1);
+      overflow:hidden;
+    }
+    #drop-query-popup.visible { transform:translateY(0) scale(1); opacity:1; pointer-events:all; }
+    .dq-header { background:#0f2a5c; padding:16px 20px; display:flex; align-items:center; justify-content:space-between; }
+    .dq-header h3 { font-family:'Sora',sans-serif; font-weight:800; font-size:16px; color:#fff; margin:0; }
+    .dq-header span { font-size:12px; color:rgba(255,255,255,0.6); margin-top:2px; display:block; }
+    .dq-close { background:rgba(255,255,255,0.15); border:none; color:#fff; width:30px; height:30px; border-radius:8px; cursor:pointer; font-size:16px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+    .dq-close:hover { background:rgba(255,60,60,0.5); }
+    .dq-body { padding:20px; }
+    .dq-field { display:flex; flex-direction:column; gap:5px; margin-bottom:14px; }
+    .dq-field label { font-size:12px; font-weight:700; color:#475569; text-transform:uppercase; letter-spacing:0.05em; }
+    .dq-field input,.dq-field select,.dq-field textarea { padding:10px 14px; border:1.5px solid #e2e8f0; border-radius:9px; font-size:14px; color:#1e293b; outline:none; transition:border-color 0.15s; background:#f8fafc; }
+    .dq-field input:focus,.dq-field select:focus,.dq-field textarea:focus { border-color:#0f2a5c; background:#fff; }
+    .dq-field textarea { resize:none; min-height:70px; }
+    .dq-submit { width:100%; background:#0f2a5c; color:#d4f01a; border:none; border-radius:10px; padding:12px; font-size:15px; font-weight:800; cursor:pointer; transition:background 0.15s; }
+    .dq-submit:hover { background:#163264; }
+    .dq-success { text-align:center; padding:20px; display:none; }
+    .dq-success .tick { font-size:3rem; margin-bottom:8px; }
+    .dq-success p { font-weight:700; color:#166534; font-size:16px; }
+  </style>
+
+  <!-- Slider HTML shell — JS fills slides at runtime -->
+  <section id="hero-slider-section">
+    <div class="hslider-wrap">
+      <div id="hslider-track" class="hslider-track"></div>
+      <button class="hslider-arrow hslider-prev" id="hslider-prev" aria-label="Previous">‹</button>
+      <button class="hslider-arrow hslider-next" id="hslider-next" aria-label="Next">›</button>
+    </div>
+    <div class="hslider-dots" id="hslider-dots"></div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════════════
+       DROP US A QUERY POPUP — appears after configurable seconds
+  ══════════════════════════════════════════════════════════════ -->
+  <div id="drop-query-popup">
+    <div class="dq-header">
+      <div>
+        <h3 id="dq-title">Drop Us a Query</h3>
+        <span id="dq-subtitle">We'll call you back within 30 minutes</span>
+      </div>
+      <button class="dq-close" id="dq-close" aria-label="Close">✕</button>
+    </div>
+    <div class="dq-body" id="dq-body">
+      <div class="dq-field">
+        <label>Your Name *</label>
+        <input type="text" id="dq-name" placeholder="Eg: Manav Singh" maxlength="60" />
+      </div>
+      <div class="dq-field">
+        <label>Phone Number *</label>
+        <input type="tel" id="dq-phone" placeholder="+91 99999 00000" maxlength="15" />
+      </div>
+      <div class="dq-field">
+        <label>Interested In</label>
+        <select id="dq-course">
+          <option value="">Select a course...</option>
+          <option>GEN AI</option>
+          <option>MERN Stack</option>
+          <option>Hardware & Networking</option>
+          <option>Tally Prime</option>
+          <option>Python Programming</option>
+          <option>Other</option>
+        </select>
+      </div>
+      <button class="dq-submit" id="dq-submit">Submit Query →</button>
+      <div id="dq-err" style="color:#dc2626;font-size:13px;margin-top:8px;display:none;"></div>
+    </div>
+    <div class="dq-success" id="dq-success">
+      <div class="tick">✅</div>
+      <p>Thank you! We'll call you back shortly.</p>
+    </div>
+  </div>
 
   <!-- ══════════════════════════════════════════════════════════════
        COURSES SECTION
@@ -238,14 +374,14 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
           <p style="font-size:13px;font-weight:700;color:#d4f01a;text-transform:uppercase;letter-spacing:0.08em;margin:0 0 6px;">What We Offer</p>
           <h2 style="font-family:'Sora',sans-serif;font-size:clamp(1.6rem,3vw,2.2rem);font-weight:800;color:#1c1c1c;margin:0;">Popular Courses</h2>
         </div>
-        <a href="/courses" style="color:#1c3d7a;font-weight:700;font-size:14px;text-decoration:none;border:2px solid #1c3d7a;padding:8px 20px;border-radius:8px;">View All Courses →</a>
+        <a href="/courses" style="color:#0f2a5c;font-weight:700;font-size:14px;text-decoration:none;border:2px solid #0f2a5c;padding:8px 20px;border-radius:8px;">View All Courses →</a>
       </div>
       <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:24px;">
         {fallbackCourses.map(c => (
           <a href={`/courses/${c.slug}`} style="display:block;text-decoration:none;background:#fff;border:1px solid #e8ecf0;border-radius:16px;overflow:hidden;transition:box-shadow 0.2s,transform 0.2s;box-shadow:0 2px 8px rgba(0,0,0,0.06);"
             onmouseover="this.style.boxShadow='0 8px 28px rgba(0,0,0,0.12)';this.style.transform='translateY(-3px)'"
             onmouseout="this.style.boxShadow='0 2px 8px rgba(0,0,0,0.06)';this.style.transform='translateY(0)'">
-            <div style={`background:${c.thumbnail_url ? '#000' : '#1c3d7a'};aspect-ratio:16/9;display:flex;align-items:center;justify-content:center;position:relative;`}>
+            <div style={`background:${c.thumbnail_url ? '#000' : '#0f2a5c'};aspect-ratio:16/9;display:flex;align-items:center;justify-content:center;position:relative;`}>
               {c.thumbnail_url
                 ? <img src={c.thumbnail_url} alt={c.title} style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0;" />
                 : <span style="font-family:'Sora',sans-serif;font-size:1.4rem;font-weight:900;color:#d4f01a;">{c.title}</span>
@@ -259,10 +395,10 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
               <p style="font-size:13px;color:#64748b;margin:0 0 12px;line-height:1.5;">{c.short_description}</p>
               <div style="display:flex;align-items:center;justify-content:space-between;">
                 <div>
-                  <span style="font-size:17px;font-weight:800;color:#1c3d7a;">₹{c.fee_inr?.toLocaleString('en-IN')}</span>
+                  <span style="font-size:17px;font-weight:800;color:#0f2a5c;">₹{c.fee_inr?.toLocaleString('en-IN')}</span>
                   {c.original_fee_inr && <span style="font-size:12px;color:#94a3b8;text-decoration:line-through;margin-left:6px;">₹{c.original_fee_inr?.toLocaleString('en-IN')}</span>}
                 </div>
-                <span style="font-size:12px;color:#d4f01a;background:#1c3d7a;padding:4px 10px;border-radius:6px;font-weight:700;">Enroll →</span>
+                <span style="font-size:12px;color:#d4f01a;background:#0f2a5c;padding:4px 10px;border-radius:6px;font-weight:700;">Enroll →</span>
               </div>
             </div>
           </a>
@@ -280,14 +416,14 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
     .ins-track { display:flex; width:max-content; animation:marquee-ins 28s linear infinite; gap:0; }
     .ins-track:hover { animation-play-state:paused; }
     .ins-card { flex-shrink:0; width:200px; margin:0 12px; background:#fff; border-radius:14px; padding:20px; text-align:center; box-shadow:0 2px 8px rgba(0,0,0,0.06); }
-    .ins-avatar { width:64px; height:64px; border-radius:50%; margin:0 auto 12px; display:flex; align-items:center; justify-content:center; font-family:'Sora',sans-serif; font-weight:800; font-size:1.3rem; color:#fff; background:#1c3d7a; overflow:hidden; flex-shrink:0; }
+    .ins-avatar { width:64px; height:64px; border-radius:50%; margin:0 auto 12px; display:flex; align-items:center; justify-content:center; font-family:'Sora',sans-serif; font-weight:800; font-size:1.3rem; color:#fff; background:#0f2a5c; overflow:hidden; flex-shrink:0; }
     .ins-avatar img { width:100%; height:100%; object-fit:cover; border-radius:50%; }
     .ins-name { font-weight:700; font-size:14px; color:#1c1c1c; }
     .ins-spec { font-size:12px; color:#64748b; margin-top:3px; }
   </style>
   <section style="padding:56px 0;background:#f8f4ef;overflow:hidden;">
     <div style="max-width:1200px;margin:0 auto 32px;padding:0 32px;">
-      <p style="font-size:13px;font-weight:700;color:#d4f01a;text-transform:uppercase;letter-spacing:0.08em;margin:0 0 6px;background:#1c3d7a;display:inline-block;padding:3px 10px;border-radius:4px;">Expert Faculty</p>
+      <p style="font-size:13px;font-weight:700;color:#d4f01a;text-transform:uppercase;letter-spacing:0.08em;margin:0 0 6px;background:#0f2a5c;display:inline-block;padding:3px 10px;border-radius:4px;">Expert Faculty</p>
       <h2 style="font-family:'Sora',sans-serif;font-size:clamp(1.5rem,3vw,2rem);font-weight:800;color:#1c1c1c;margin:8px 0 0;">Learn from the Best</h2>
     </div>
     <!-- JS fills this track at runtime — photos always current, no rebuild needed -->
@@ -404,7 +540,7 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
     }
     #story-student-info { flex:1; display:flex; align-items:center; gap:12px; min-width:0; }
     #story-avatar-sm {
-      width:36px; height:36px; border-radius:50%; background:#1c3d7a;
+      width:36px; height:36px; border-radius:50%; background:#0f2a5c;
       flex-shrink:0; display:flex; align-items:center; justify-content:center;
       font-family:'Sora',sans-serif; font-weight:800; font-size:14px;
       color:#d4f01a; overflow:hidden;
@@ -449,27 +585,30 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
   </div>
 
   <!-- ══════════════════════════════════════════════════════════════
-       WHY ATEC
+       WHY ATEC — DB-driven, 5 cards, admin manageable, dark navy bg
   ══════════════════════════════════════════════════════════════ -->
-  <section style="padding:72px 32px;background:#1c3d7a;">
+  <section id="why-atec-section" style="padding:72px 32px;background:#0f2a5c;">
     <div style="max-width:1200px;margin:0 auto;">
       <div style="text-align:center;margin-bottom:48px;">
-        <h2 style="font-family:'Sora',sans-serif;font-size:clamp(1.6rem,3vw,2.2rem);font-weight:800;color:#fff;margin:0 0 12px;">Why Choose ATEC?</h2>
-        <p style="color:rgba(255,255,255,0.7);font-size:16px;margin:0;">25+ years of excellence. Real skills. Real placements.</p>
+        <h2 id="why-atec-title" style="font-family:'Sora',sans-serif;font-size:clamp(1.6rem,3vw,2.2rem);font-weight:800;color:#fff;margin:0 0 12px;">Why Choose ATEC?</h2>
+        <p id="why-atec-sub" style="color:rgba(255,255,255,0.7);font-size:16px;margin:0;">25+ years of excellence. Real skills. Real placements.</p>
       </div>
-      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:20px;">
+      <!-- JS fills this — fallback shown until DB loads -->
+      <div id="why-atec-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:20px;">
+        <!-- Fallback 5 cards (replaced at runtime by DB) -->
         {[
           { icon:'🎓', title:'Expert Faculty', desc:'Industry-certified trainers with 10+ years of experience' },
           { icon:'🏆', title:'ISO Certified', desc:'ISO 9001:2015 certified institute since 2000' },
           { icon:'💼', title:'100% Placement', desc:'Dedicated placement cell with 500+ hiring partners' },
           { icon:'🌐', title:'Online + Hybrid', desc:'Learn from anywhere or attend in-person at our centres' },
           { icon:'📜', title:'Recognized Certificates', desc:'Government & industry-recognised certifications' },
-          { icon:'🛠️', title:'Practical Training', desc:'80% hands-on lab sessions, 20% theory' },
         ].map(f => (
-          <div style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);border-radius:14px;padding:22px;">
-            <div style="font-size:2rem;margin-bottom:12px;">{f.icon}</div>
-            <h3 style="font-family:'Sora',sans-serif;font-weight:700;font-size:16px;color:#d4f01a;margin:0 0 8px;">{f.title}</h3>
-            <p style="font-size:13px;color:rgba(255,255,255,0.75);margin:0;line-height:1.55;">{f.desc}</p>
+          <div class="why-card" style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.14);border-radius:16px;padding:24px;backdrop-filter:blur(4px);transition:transform 0.2s,box-shadow 0.2s;cursor:default;"
+            onmouseover="this.style.transform='translateY(-4px)';this.style.boxShadow='0 12px 32px rgba(0,0,0,0.35)'"
+            onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='none'">
+            <div style="font-size:2.2rem;margin-bottom:14px;filter:drop-shadow(0 3px 6px rgba(0,0,0,0.3));">{f.icon}</div>
+            <h3 style="font-family:'Sora',sans-serif;font-weight:800;font-size:16px;color:#d4f01a;margin:0 0 8px;text-shadow:0 2px 8px rgba(212,240,26,0.3);">{f.title}</h3>
+            <p style="font-size:13px;color:rgba(255,255,255,0.78);margin:0;line-height:1.6;">{f.desc}</p>
           </div>
         ))}
       </div>
@@ -483,7 +622,7 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
     <div style="max-width:1200px;margin:0 auto;">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:36px;flex-wrap:wrap;gap:16px;">
         <div>
-          <p style="font-size:13px;font-weight:700;color:#d4f01a;text-transform:uppercase;letter-spacing:0.08em;margin:0 0 6px;background:#1c3d7a;display:inline-block;padding:3px 10px;border-radius:4px;">Our Channel</p>
+          <p style="font-size:13px;font-weight:700;color:#d4f01a;text-transform:uppercase;letter-spacing:0.08em;margin:0 0 6px;background:#0f2a5c;display:inline-block;padding:3px 10px;border-radius:4px;">Our Channel</p>
           <h2 style="font-family:'Sora',sans-serif;font-size:clamp(1.6rem,3vw,2.2rem);font-weight:800;color:#1c1c1c;margin:0;">Watch &amp; Learn</h2>
         </div>
         <a href="https://www.youtube.com/@ATECEducationalSociety" target="_blank" rel="noopener"
@@ -503,10 +642,10 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
     <div style="max-width:1200px;margin:0 auto;">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:36px;flex-wrap:wrap;gap:16px;">
         <div>
-          <p style="font-size:13px;font-weight:700;color:#d4f01a;text-transform:uppercase;letter-spacing:0.08em;margin:0 0 6px;background:#1c3d7a;display:inline-block;padding:3px 10px;border-radius:4px;">Knowledge Hub</p>
+          <p style="font-size:13px;font-weight:700;color:#d4f01a;text-transform:uppercase;letter-spacing:0.08em;margin:0 0 6px;background:#0f2a5c;display:inline-block;padding:3px 10px;border-radius:4px;">Knowledge Hub</p>
           <h2 style="font-family:'Sora',sans-serif;font-size:clamp(1.6rem,3vw,2.2rem);font-weight:800;color:#1c1c1c;margin:0;">Latest from Our Blog</h2>
         </div>
-        <a href="/blog" style="color:#1c3d7a;font-weight:700;font-size:14px;text-decoration:none;border:2px solid #1c3d7a;padding:8px 18px;border-radius:8px;">All Articles →</a>
+        <a href="/blog" style="color:#0f2a5c;font-weight:700;font-size:14px;text-decoration:none;border:2px solid #0f2a5c;padding:8px 18px;border-radius:8px;">All Articles →</a>
       </div>
       <div id="blog-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:24px;"></div>
     </div>
@@ -534,7 +673,7 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
   <section id="news-section" style="padding:72px 32px;background:#fff;display:none;">
     <div style="max-width:1200px;margin:0 auto;">
       <div style="margin-bottom:36px;">
-        <p style="font-size:13px;font-weight:700;color:#d4f01a;text-transform:uppercase;letter-spacing:0.08em;margin:0 0 6px;background:#1c3d7a;display:inline-block;padding:3px 10px;border-radius:4px;">Latest Updates</p>
+        <p style="font-size:13px;font-weight:700;color:#d4f01a;text-transform:uppercase;letter-spacing:0.08em;margin:0 0 6px;background:#0f2a5c;display:inline-block;padding:3px 10px;border-radius:4px;">Latest Updates</p>
         <h2 style="font-family:'Sora',sans-serif;font-size:clamp(1.6rem,3vw,2.2rem);font-weight:800;color:#1c1c1c;margin:8px 0 0;">News &amp; Announcements</h2>
       </div>
       <div id="news-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:20px;"></div>
@@ -547,12 +686,12 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
   <section style="padding:72px 32px;background:#f8f4ef;">
     <div style="max-width:760px;margin:0 auto;text-align:center;">
       <h2 style="font-family:'Sora',sans-serif;font-size:clamp(1.8rem,4vw,2.6rem);font-weight:900;color:#1c1c1c;margin:0 0 16px;">
-        Ready to Start Your <span style="color:#1c3d7a;">Career Journey?</span>
+        Ready to Start Your <span style="color:#0f2a5c;">Career Journey?</span>
       </h2>
       <p style="font-size:16px;color:#64748b;margin:0 0 32px;">New batches starting every month. Limited seats available.</p>
       <div style="display:flex;justify-content:center;gap:16px;flex-wrap:wrap;">
-        <a href="/courses" style="background:#1c3d7a;color:#d4f01a;padding:15px 32px;border-radius:10px;font-weight:700;font-size:15px;text-decoration:none;">Browse All Courses →</a>
-        <a href="tel:+917009933289" style="background:#fff;color:#1c3d7a;padding:15px 32px;border-radius:10px;font-weight:700;font-size:15px;text-decoration:none;border:2px solid #1c3d7a;">📞 Call +91 7009933289</a>
+        <a href="/courses" style="background:#0f2a5c;color:#d4f01a;padding:15px 32px;border-radius:10px;font-weight:700;font-size:15px;text-decoration:none;">Browse All Courses →</a>
+        <a href="tel:+917009933289" style="background:#fff;color:#0f2a5c;padding:15px 32px;border-radius:10px;font-weight:700;font-size:15px;text-decoration:none;border:2px solid #0f2a5c;">📞 Call +91 7009933289</a>
       </div>
     </div>
   </section>
@@ -643,7 +782,7 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
 
         card.innerHTML = `
           <div style="position:relative;aspect-ratio:16/9;background:#111;overflow:hidden;">
-            ${thumb ? `<img src="${thumb}" alt="${v.title}" style="width:100%;height:100%;object-fit:cover;" loading="lazy">` : '<div style="width:100%;height:100%;background:#1c3d7a;display:flex;align-items:center;justify-content:center;"><svg width="40" height="40" viewBox="0 0 24 24" fill="#d4f01a"><polygon points="8,5 20,12 8,19"/></svg></div>'}
+            ${thumb ? `<img src="${thumb}" alt="${v.title}" style="width:100%;height:100%;object-fit:cover;" loading="lazy">` : '<div style="width:100%;height:100%;background:#0f2a5c;display:flex;align-items:center;justify-content:center;"><svg width="40" height="40" viewBox="0 0 24 24" fill="#d4f01a"><polygon points="8,5 20,12 8,19"/></svg></div>'}
             <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.2);opacity:0;transition:opacity 0.2s;" class="yt-play-hover">
               <div style="width:52px;height:52px;background:#ff0000;border-radius:50%;display:flex;align-items:center;justify-content:center;">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="#fff" style="margin-left:3px"><polygon points="8,5 20,12 8,19"/></svg>
@@ -707,7 +846,7 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
         card.onmouseout  = () => { card.style.boxShadow='0 2px 8px rgba(0,0,0,0.06)'; card.style.transform='translateY(0)' }
 
         card.innerHTML = `
-          <div style="aspect-ratio:16/9;background:#1c3d7a;overflow:hidden;display:flex;align-items:center;justify-content:center;position:relative;">
+          <div style="aspect-ratio:16/9;background:#0f2a5c;overflow:hidden;display:flex;align-items:center;justify-content:center;position:relative;">
             ${p.thumbnail_url
               ? `<img src="${p.thumbnail_url}" alt="${p.title}" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0;" loading="lazy">`
               : `<span style="font-family:'Sora',sans-serif;font-size:3rem;color:#d4f01a;opacity:0.6;">📝</span>`}
@@ -755,7 +894,7 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
 
         card.innerHTML = `
           <div style="display:flex;gap:14px;padding:16px;align-items:flex-start;">
-            <div style="flex-shrink:0;width:72px;height:72px;border-radius:10px;overflow:hidden;background:#1c3d7a;">
+            <div style="flex-shrink:0;width:72px;height:72px;border-radius:10px;overflow:hidden;background:#0f2a5c;">
               ${thumb ? `<img src="${thumb}" alt="${ep.title}" style="width:100%;height:100%;object-fit:cover;" loading="lazy">` : '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:2rem;">🎙️</div>'}
             </div>
             <div style="flex:1;min-width:0;">
@@ -804,12 +943,12 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
         card.style.cssText = 'background:#fff;border:1px solid #e8ecf0;border-radius:14px;padding:20px;display:flex;flex-direction:column;gap:10px;box-shadow:0 2px 8px rgba(0,0,0,0.05);'
 
         card.innerHTML = `
-          ${n.category ? `<span style="font-size:11px;font-weight:700;color:#1c3d7a;background:#eff6ff;padding:2px 10px;border-radius:20px;display:inline-block;width:fit-content;">${n.category}</span>` : ''}
+          ${n.category ? `<span style="font-size:11px;font-weight:700;color:#0f2a5c;background:#eff6ff;padding:2px 10px;border-radius:20px;display:inline-block;width:fit-content;">${n.category}</span>` : ''}
           <h3 style="font-family:'Sora',sans-serif;font-weight:700;font-size:15px;color:#1c1c1c;margin:0;line-height:1.4;">${n.title || ''}</h3>
           ${n.description || n.excerpt ? `<p style="font-size:13px;color:#64748b;margin:0;line-height:1.55;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;">${n.description || n.excerpt}</p>` : ''}
           <div style="display:flex;justify-content:space-between;align-items:center;margin-top:auto;">
             ${date ? `<span style="font-size:12px;color:#94a3b8;">${date}</span>` : '<span></span>'}
-            ${n.link || n.url ? `<a href="${n.link || n.url}" target="_blank" rel="noopener" style="font-size:12px;font-weight:700;color:#1c3d7a;text-decoration:none;">Read more →</a>` : ''}
+            ${n.link || n.url ? `<a href="${n.link || n.url}" target="_blank" rel="noopener" style="font-size:12px;font-weight:700;color:#0f2a5c;text-decoration:none;">Read more →</a>` : ''}
           </div>`
 
         grid.appendChild(card)
@@ -1558,4 +1697,381 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot)
     else boot()
   })()
+</script>
+
+<!-- ══════════════════════════════════════════════════════════════
+     HERO SLIDER — DB-driven runtime loader
+     Fetches site_settings key='hero_sliders' (array of slides)
+     Each slide: { badge, heading, subheading, cta_text, cta_link,
+                   video_link, bg_color, text_color, image_url }
+══════════════════════════════════════════════════════════════ -->
+<script>
+;(function() {
+  const DEFAULT_SLIDES = [
+    {
+      badge:'🔥 New Batch June 2026',
+      heading:'Industrial Training<br>for Real World Jobs',
+      subheading:'GEN AI | MERN Stack | Machine Learning | Python | Ethical Hacking',
+      cta_text:'Register Now',
+      cta_link:'/courses',
+      video_link:'',
+      bg_color:'#0f2a5c',
+      text_color:'#ffffff',
+      image_url:''
+    },
+    {
+      badge:'🌐 Online & Hybrid',
+      heading:'Learn From Anywhere<br>in India',
+      subheading:'Live classes, recorded sessions, doubt clearing — all from home',
+      cta_text:'Explore Online Courses',
+      cta_link:'/courses',
+      video_link:'',
+      bg_color:'#1a1a2e',
+      text_color:'#ffffff',
+      image_url:''
+    },
+  ]
+
+  let slides:any[] = []
+  let current = 0
+  let autoTimer: any = null
+
+  function ytEmbedUrl(raw:string):string {
+    if (!raw?.trim()) return ''
+    const u = raw.trim()
+    const m = u.match(/youtu\.be\/([A-Za-z0-9_-]{11})/) ||
+              u.match(/(?:v=|\/embed\/|\/shorts\/|\/v\/)([A-Za-z0-9_-]{11})/)
+    const id = m?.[1] || (/^[A-Za-z0-9_-]{11}$/.test(u) ? u : '')
+    return id ? `https://www.youtube.com/embed/${id}?autoplay=1&mute=1&loop=1&playlist=${id}&controls=0&rel=0&modestbranding=1&playsinline=1` : ''
+  }
+
+  function renderSlides(list:any[]) {
+    slides = list
+    const track = document.getElementById('hslider-track')
+    const dots   = document.getElementById('hslider-dots')
+    if (!track || !dots) return
+
+    track.innerHTML = ''
+    dots.innerHTML  = ''
+
+    slides.forEach((s:any, i:number) => {
+      const bg   = s.bg_color   || '#0f2a5c'
+      const col  = s.text_color || '#ffffff'
+      const hasVideo = !!(s.video_link?.trim())
+      const hasImg   = !!(s.image_url?.trim())
+      const videoSrc = ytEmbedUrl(s.video_link || '')
+      const isDirectVid = s.video_link && /\.(mp4|webm|ogg)(\\?.*)?$/i.test(s.video_link)
+
+      const slide = document.createElement('div')
+      slide.className = 'hslider-slide'
+      slide.style.background = bg
+      slide.style.color = col
+
+      const rightCol = (hasVideo || hasImg)
+        ? `<div class="hslider-video-wrap">
+            ${hasVideo
+              ? (isDirectVid
+                  ? `<video src="${s.video_link}" autoplay muted loop playsinline></video>`
+                  : (videoSrc ? `<iframe src="${videoSrc}" allow="autoplay;encrypted-media" allowfullscreen frameborder="0"></iframe>` : ''))
+              : `<img src="${s.image_url}" alt="${(s.heading||'').replace(/<[^>]*>/g,'')}" style="width:100%;height:100%;object-fit:cover;">`
+            }
+          </div>`
+        : ''
+
+      slide.innerHTML = `
+        <div>
+          ${s.badge ? `<div class="hslider-badge" style="background:rgba(212,240,26,0.18);color:#d4f01a;">${s.badge}</div>` : ''}
+          <h2 class="hslider-h" style="color:${col};">${s.heading||''}</h2>
+          <p class="hslider-sub" style="color:${col};">${s.subheading||''}</p>
+          ${s.cta_text ? `<a href="${s.cta_link||'#'}" class="hslider-cta">${s.cta_text} →</a>` : ''}
+        </div>
+        ${rightCol}`
+
+      track.appendChild(slide)
+
+      const dot = document.createElement('button')
+      dot.className = 'hslider-dot' + (i===0?' active':'')
+      dot.addEventListener('click', () => goTo(i))
+      dots.appendChild(dot)
+    })
+
+    goTo(0, false)
+    startAuto()
+    const sec = document.getElementById('hero-slider-section')
+    if (sec && slides.length > 0) sec.style.display = ''
+  }
+
+  function goTo(idx:number, animate=true) {
+    if (!slides.length) return
+    current = (idx + slides.length) % slides.length
+    const track = document.getElementById('hslider-track')
+    if (track) track.style.transform = `translateX(-${current*100}%)`
+    document.querySelectorAll('.hslider-dot').forEach((d,i) => {
+      d.classList.toggle('active', i===current)
+    })
+  }
+
+  function startAuto() {
+    if (autoTimer) clearInterval(autoTimer)
+    if (slides.length < 2) return
+    autoTimer = setInterval(() => goTo(current+1), 5000)
+  }
+
+  document.getElementById('hslider-prev')?.addEventListener('click', () => { goTo(current-1); startAuto() })
+  document.getElementById('hslider-next')?.addEventListener('click', () => { goTo(current+1); startAuto() })
+
+  async function loadSlides() {
+    const SB_URL = (window as any).__SB_URL as string
+    const SB_KEY = (window as any).__SB_KEY as string
+    if (!SB_URL || !SB_KEY) { renderSlides(DEFAULT_SLIDES); return }
+    try {
+      const res = await fetch(
+        `${SB_URL}/rest/v1/site_settings?key=eq.hero_sliders&select=value`,
+        { headers: { apikey: SB_KEY, Authorization: `Bearer ${SB_KEY}` } }
+      )
+      const rows = await res.json()
+      const data = rows?.[0]?.value
+      if (Array.isArray(data) && data.length > 0) {
+        renderSlides(data)
+      } else {
+        renderSlides(DEFAULT_SLIDES)
+      }
+    } catch(e) {
+      renderSlides(DEFAULT_SLIDES)
+    }
+  }
+
+  function waitSB(cb:()=>void) {
+    if ((window as any).__SB_URL) { cb(); return }
+    let n=0; const t=setInterval(()=>{ n++; if((window as any).__SB_URL||n>40){clearInterval(t);cb()} },50)
+  }
+  if (document.readyState==='loading') document.addEventListener('DOMContentLoaded',()=>waitSB(loadSlides))
+  else waitSB(loadSlides)
+})()
+</script>
+
+<!-- ══════════════════════════════════════════════════════════════
+     DROP US A QUERY POPUP — timer-based, DB-configurable
+     site_settings key='popup_settings':
+       { enabled, delay_seconds, title, subtitle, show_once_per_session }
+══════════════════════════════════════════════════════════════ -->
+<script>
+;(function() {
+  let popupShown = false
+
+  function showPopup() {
+    if (popupShown) return
+    popupShown = true
+    const popup = document.getElementById('drop-query-popup')
+    if (popup) popup.classList.add('visible')
+  }
+
+  function hidePopup() {
+    const popup = document.getElementById('drop-query-popup')
+    if (popup) popup.classList.remove('visible')
+  }
+
+  document.getElementById('dq-close')?.addEventListener('click', hidePopup)
+
+  // Submit enquiry to Supabase
+  document.getElementById('dq-submit')?.addEventListener('click', async () => {
+    const name   = (document.getElementById('dq-name') as HTMLInputElement)?.value?.trim()
+    const phone  = (document.getElementById('dq-phone') as HTMLInputElement)?.value?.trim()
+    const course = (document.getElementById('dq-course') as HTMLSelectElement)?.value
+    const errEl  = document.getElementById('dq-err')
+
+    if (!name || !phone) {
+      if (errEl) { errEl.textContent='Please enter your name and phone number.'; errEl.style.display='block' }
+      return
+    }
+    if (errEl) errEl.style.display='none'
+
+    const btn = document.getElementById('dq-submit') as HTMLButtonElement
+    if (btn) { btn.textContent='Sending...'; btn.disabled=true }
+
+    const SB_URL = (window as any).__SB_URL as string
+    const SB_KEY = (window as any).__SB_KEY as string
+    if (SB_URL && SB_KEY) {
+      try {
+        await fetch(`${SB_URL}/rest/v1/enquiries`, {
+          method:'POST',
+          headers:{ apikey:SB_KEY, Authorization:`Bearer ${SB_KEY}`, 'Content-Type':'application/json', Prefer:'return=minimal' },
+          body: JSON.stringify({ name, phone, course_interest:course, message:'Via Drop Query Popup' })
+        })
+      } catch(e) { console.warn('[ATEC Popup]', e) }
+    }
+
+    // Show success
+    const body = document.getElementById('dq-body')
+    const succ = document.getElementById('dq-success')
+    if (body) body.style.display='none'
+    if (succ) succ.style.display='block'
+    setTimeout(hidePopup, 3500)
+  })
+
+  async function loadAndSchedule() {
+    let delaySeconds = 15
+    let enabled = true
+    let oncePerSession = true
+
+    const SB_URL = (window as any).__SB_URL as string
+    const SB_KEY = (window as any).__SB_KEY as string
+
+    if (SB_URL && SB_KEY) {
+      try {
+        const res = await fetch(
+          `${SB_URL}/rest/v1/site_settings?key=eq.popup_settings&select=value`,
+          { headers:{ apikey:SB_KEY, Authorization:`Bearer ${SB_KEY}` } }
+        )
+        const rows = await res.json()
+        const cfg  = rows?.[0]?.value || {}
+        if (typeof cfg.enabled !== 'undefined') enabled = !!cfg.enabled
+        if (typeof cfg.delay_seconds === 'number') delaySeconds = cfg.delay_seconds
+        if (typeof cfg.show_once_per_session !== 'undefined') oncePerSession = !!cfg.show_once_per_session
+        if (cfg.title) {
+          const t = document.getElementById('dq-title')
+          if (t) t.textContent = cfg.title
+        }
+        if (cfg.subtitle) {
+          const s = document.getElementById('dq-subtitle')
+          if (s) s.textContent = cfg.subtitle
+        }
+        // Update course options from courses table
+        const cr = await fetch(
+          `${SB_URL}/rest/v1/courses?is_active=eq.true&select=title&order=sort_order.asc&limit=20`,
+          { headers:{ apikey:SB_KEY, Authorization:`Bearer ${SB_KEY}` } }
+        )
+        const courses = await cr.json()
+        if (Array.isArray(courses) && courses.length > 0) {
+          const sel = document.getElementById('dq-course') as HTMLSelectElement
+          if (sel) {
+            sel.innerHTML = '<option value="">Select a course...</option>' +
+              courses.map((c:any) => `<option>${c.title}</option>`).join('') +
+              '<option value="Other">Other</option>'
+          }
+        }
+      } catch(e) { console.warn('[ATEC Popup cfg]', e) }
+    }
+
+    if (!enabled) return
+    if (oncePerSession && sessionStorage.getItem('atec_popup_shown')) return
+
+    setTimeout(() => {
+      showPopup()
+      if (oncePerSession) sessionStorage.setItem('atec_popup_shown','1')
+    }, delaySeconds * 1000)
+  }
+
+  function waitSB(cb:()=>void) {
+    if ((window as any).__SB_URL) { cb(); return }
+    let n=0; const t=setInterval(()=>{ n++; if((window as any).__SB_URL||n>40){clearInterval(t);cb()} },50)
+  }
+  if (document.readyState==='loading') document.addEventListener('DOMContentLoaded',()=>waitSB(loadAndSchedule))
+  else waitSB(loadAndSchedule)
+})()
+</script>
+
+<!-- ══════════════════════════════════════════════════════════════
+     WHY ATEC — DB loader + SECTION COLORS loader
+     Fetches site_settings key='why_features' (array of 5 cards)
+     Each: { icon, title, desc }
+     Also fetches key='section_colors' for per-section bg overrides
+══════════════════════════════════════════════════════════════ -->
+<script>
+;(function() {
+
+  // ── Why ATEC cards from DB ─────────────────────────────────────────────
+  async function loadWhyCards() {
+    const SB_URL = (window as any).__SB_URL as string
+    const SB_KEY = (window as any).__SB_KEY as string
+    if (!SB_URL || !SB_KEY) return
+    try {
+      const res  = await fetch(
+        `${SB_URL}/rest/v1/site_settings?key=eq.why_features&select=value`,
+        { headers:{ apikey:SB_KEY, Authorization:`Bearer ${SB_KEY}` } }
+      )
+      const rows = await res.json()
+      const data = rows?.[0]?.value
+      if (!Array.isArray(data) || !data.length) return
+
+      const grid = document.getElementById('why-atec-grid')
+      if (!grid) return
+      grid.innerHTML = ''
+
+      // Limit to 5
+      data.slice(0,5).forEach((f:any) => {
+        const card = document.createElement('div')
+        card.className = 'why-card'
+        card.style.cssText = 'background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.14);border-radius:16px;padding:24px;backdrop-filter:blur(4px);transition:transform 0.2s,box-shadow 0.2s;cursor:default;'
+        card.onmouseover = () => { card.style.transform='translateY(-4px)'; card.style.boxShadow='0 12px 32px rgba(0,0,0,0.35)' }
+        card.onmouseout  = () => { card.style.transform='translateY(0)';    card.style.boxShadow='none' }
+        card.innerHTML = `
+          <div style="font-size:2.2rem;margin-bottom:14px;filter:drop-shadow(0 3px 6px rgba(0,0,0,0.3));">${f.icon||'⭐'}</div>
+          <h3 style="font-family:'Sora',sans-serif;font-weight:800;font-size:16px;color:#d4f01a;margin:0 0 8px;text-shadow:0 2px 8px rgba(212,240,26,0.3);">${f.title||''}</h3>
+          <p style="font-size:13px;color:rgba(255,255,255,0.78);margin:0;line-height:1.6;">${f.desc||''}</p>`
+        grid.appendChild(card)
+      })
+
+      // Also update section title/sub if stored
+      const t = document.getElementById('why-atec-title')
+      const s = document.getElementById('why-atec-sub')
+      if (data.section_title && t) t.textContent = data.section_title
+      if (data.section_sub   && s) s.textContent = data.section_sub
+    } catch(e) { console.warn('[ATEC Why]', e) }
+  }
+
+  // ── Section colors from DB ─────────────────────────────────────────────
+  // site_settings key='section_colors':
+  //   { why_atec_bg, why_atec_gradient, courses_bg, stories_bg, etc. }
+  async function loadSectionColors() {
+    const SB_URL = (window as any).__SB_URL as string
+    const SB_KEY = (window as any).__SB_KEY as string
+    if (!SB_URL || !SB_KEY) return
+    try {
+      const res  = await fetch(
+        `${SB_URL}/rest/v1/site_settings?key=eq.section_colors&select=value`,
+        { headers:{ apikey:SB_KEY, Authorization:`Bearer ${SB_KEY}` } }
+      )
+      const rows = await res.json()
+      const cfg  = rows?.[0]?.value || {}
+
+      function applyBg(id:string, bg:string|undefined, gradient:string|undefined) {
+        if (!bg && !gradient) return
+        const el = document.getElementById(id)
+        if (!el) return
+        if (gradient) { el.style.background = gradient }
+        else if (bg) { el.style.background = bg }
+      }
+
+      applyBg('why-atec-section', cfg.why_atec_bg, cfg.why_atec_gradient)
+      // hero slider
+      const slSec = document.getElementById('hero-slider-section')
+      if (slSec && (cfg.slider_bg || cfg.slider_gradient)) {
+        slSec.style.background = cfg.slider_gradient || cfg.slider_bg
+      }
+      // stories
+      const storiesSec = document.querySelector('.stories-section') as HTMLElement|null
+      if (storiesSec && (cfg.stories_bg || cfg.stories_gradient)) {
+        storiesSec.style.background = cfg.stories_gradient || cfg.stories_bg
+      }
+      // instructors
+      const insSec = document.querySelector('#ins-track')?.closest('section') as HTMLElement|null
+      if (insSec && (cfg.instructors_bg || cfg.instructors_gradient)) {
+        insSec.style.background = cfg.instructors_gradient || cfg.instructors_bg
+      }
+
+      // Update CSS variable for primary dark blue if admin changed it
+      if (cfg.primary_color) {
+        document.documentElement.style.setProperty('--atec-primary', cfg.primary_color)
+      }
+    } catch(e) { console.warn('[ATEC Colors]', e) }
+  }
+
+  function waitSB(cb:()=>void) {
+    if ((window as any).__SB_URL) { cb(); return }
+    let n=0; const t=setInterval(()=>{ n++; if((window as any).__SB_URL||n>40){clearInterval(t);cb()} },50)
+  }
+  if (document.readyState==='loading') document.addEventListener('DOMContentLoaded',()=>waitSB(()=>{ loadWhyCards(); loadSectionColors() }))
+  else waitSB(()=>{ loadWhyCards(); loadSectionColors() })
+})()
 </script>
