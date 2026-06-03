@@ -129,6 +129,8 @@ function Mgr() {
     cta_link: '/courses',
     cta2_text: 'Chat on WhatsApp',
     cta2_link: 'https://wa.me/917009933289',
+    hero_text_color: '#0b1525',
+    hero_sub_color: '#555555',
   })
   const [strip, setStrip] = useState<any>({ text:'',link:'',link_text:'',is_active:true,bg_color:'#0f2347',text_color:'#ffffff',show_timer:false,ends_at:'' })
   const [stories, setStories] = useState<any[]>([])
@@ -403,6 +405,62 @@ function Mgr() {
               )
             ),
             h('div', {style:{fontSize:'11px',color:'#166534',marginTop:'8px'}}, '💡 WhatsApp link format: https://wa.me/917009933289?text=Hi%20I%20want%20to%20enroll')
+          ),
+
+          // ── Hero Text Colors ────────────────────────────────────
+          h('div', {style:{borderTop:'1px solid #f1f5f9',paddingTop:'20px',marginTop:'8px'}},
+            h('div', {style:{fontSize:'13px',fontWeight:'700',color:'#1e293b',marginBottom:'16px',display:'flex',alignItems:'center',gap:'8px'}},
+              '🎨 Hero Text Colors',
+              h('span', {style:{fontSize:'11px',color:'#94a3b8',fontWeight:'500'}}, '— changes update live without rebuild')
+            ),
+            h('div', {style:{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'16px'}},
+
+              // Heading color
+              h('div', {},
+                lbl('Heading Color  ("Learn ONLINE" text)'),
+                h('div', {style:{display:'flex',gap:'8px',alignItems:'center',marginBottom:'8px'}},
+                  h('div', {style:{width:'40px',height:'40px',background:hero.hero_text_color||'#0b1525',border:'2px solid #e2e8f0',borderRadius:'8px',flexShrink:0}}),
+                  h('input', {type:'text',value:hero.hero_text_color||'',
+                    onChange:(e:any)=>{let val=e.target.value.toLowerCase().trim();if(val&&!val.startsWith('#'))val='#'+val;setHero((p:any)=>({...p,hero_text_color:val}))},
+                    style:{...s,fontFamily:'monospace'},placeholder:'#0b1525'})
+                ),
+                h('div', {style:{display:'flex',gap:'4px',flexWrap:'wrap'}},
+                  ...['#0b1525','#1c1c1c','#ffffff','#1a3460','#d4f01a','#f9fafb','#374151','#1e293b','#f59e0b','#ef4444'].map((color:string) =>
+                    h('button', {key:color,type:'button',
+                      onMouseDown:(e:any)=>e.preventDefault(),
+                      onClick:()=>setHero((p:any)=>({...p,hero_text_color:color})),
+                      title:color,
+                      style:{width:'28px',height:'28px',background:color,
+                        border:(hero.hero_text_color||'').toLowerCase()===color.toLowerCase()?'3px solid #1c3d7a':'1px solid #e2e8f0',
+                        borderRadius:'6px',cursor:'pointer',padding:0}
+                    })
+                  )
+                )
+              ),
+
+              // Subtitle color
+              h('div', {},
+                lbl('Subtitle Color  (tagline below heading)'),
+                h('div', {style:{display:'flex',gap:'8px',alignItems:'center',marginBottom:'8px'}},
+                  h('div', {style:{width:'40px',height:'40px',background:hero.hero_sub_color||'#555555',border:'2px solid #e2e8f0',borderRadius:'8px',flexShrink:0}}),
+                  h('input', {type:'text',value:hero.hero_sub_color||'',
+                    onChange:(e:any)=>{let val=e.target.value.toLowerCase().trim();if(val&&!val.startsWith('#'))val='#'+val;setHero((p:any)=>({...p,hero_sub_color:val}))},
+                    style:{...s,fontFamily:'monospace'},placeholder:'#555555'})
+                ),
+                h('div', {style:{display:'flex',gap:'4px',flexWrap:'wrap'}},
+                  ...['#555555','#64748b','#374151','#94a3b8','#ffffff','#d4f01a','#1c1c1c','#0b1525','#f9fafb','#e2e8f0'].map((color:string) =>
+                    h('button', {key:color,type:'button',
+                      onMouseDown:(e:any)=>e.preventDefault(),
+                      onClick:()=>setHero((p:any)=>({...p,hero_sub_color:color})),
+                      title:color,
+                      style:{width:'28px',height:'28px',background:color,
+                        border:(hero.hero_sub_color||'').toLowerCase()===color.toLowerCase()?'3px solid #1c3d7a':'1px solid #e2e8f0',
+                        borderRadius:'6px',cursor:'pointer',padding:0}
+                    })
+                  )
+                )
+              )
+            )
           )
         )
       ]
