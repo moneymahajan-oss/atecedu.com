@@ -369,12 +369,10 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
   ══════════════════════════════════════════════════════════════ -->
   <section style="padding:72px 32px;background:#fff;">
     <div style="max-width:1200px;margin:0 auto;">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:40px;flex-wrap:wrap;gap:16px;">
-        <div>
+      <div style="text-align:center;margin-bottom:40px;">
           <p style="font-size:13px;font-weight:700;color:#d4f01a;text-transform:uppercase;letter-spacing:0.08em;margin:0 0 6px;">What We Offer</p>
-          <h2 style="font-family:'Sora',sans-serif;font-size:clamp(1.6rem,3vw,2.2rem);font-weight:800;color:#1c1c1c;margin:0;">Popular Courses</h2>
-        </div>
-        <a href="/courses" style="color:#0f2a5c;font-weight:700;font-size:14px;text-decoration:none;border:2px solid #0f2a5c;padding:8px 20px;border-radius:8px;">View All Courses →</a>
+          <h2 style="font-family:'Sora',sans-serif;font-size:clamp(1.6rem,3vw,2.2rem);font-weight:800;color:#1c1c1c;margin:0 0 20px;">Popular Courses</h2>
+          <a href="/courses" style="color:#0f2a5c;font-weight:700;font-size:14px;text-decoration:none;border:2px solid #0f2a5c;padding:8px 20px;border-radius:8px;">View All Courses →</a>
       </div>
       <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:24px;">
         {fallbackCourses.map(c => (
@@ -422,7 +420,7 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
     .ins-spec { font-size:12px; color:#64748b; margin-top:3px; }
   </style>
   <section style="padding:56px 0;background:#f8f4ef;overflow:hidden;">
-    <div style="max-width:1200px;margin:0 auto 32px;padding:0 32px;">
+    <div style="max-width:1200px;margin:0 auto 32px;padding:0 32px;text-align:center;">
       <p style="font-size:13px;font-weight:700;color:#d4f01a;text-transform:uppercase;letter-spacing:0.08em;margin:0 0 6px;background:#0f2a5c;display:inline-block;padding:3px 10px;border-radius:4px;">Expert Faculty</p>
       <h2 style="font-family:'Sora',sans-serif;font-size:clamp(1.5rem,3vw,2rem);font-weight:800;color:#1c1c1c;margin:8px 0 0;">Learn from the Best</h2>
     </div>
@@ -441,7 +439,7 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
   <style is:global>
     /* ── Section shell ── */
     .stories-section { padding:64px 0 72px; background:#0b1525; overflow:hidden; }
-    .stories-header  { max-width:1280px; margin:0 auto 40px; padding:0 40px; }
+    .stories-header  { max-width:1280px; margin:0 auto 40px; padding:0 40px; text-align:center; }
     .stories-label   { font-size:12px; font-weight:800; color:#d4f01a; text-transform:uppercase; letter-spacing:0.12em; margin:0 0 10px; display:block; }
     .stories-title   { font-family:'Sora',sans-serif; font-size:clamp(1.8rem,3.5vw,2.6rem); font-weight:900; color:#fff; margin:0; line-height:1.1; }
     .stories-sub     { font-size:15px; color:rgba(255,255,255,0.45); margin:10px 0 0; }
@@ -620,16 +618,14 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
   ══════════════════════════════════════════════════════════════ -->
   <section id="yt-section" style="padding:72px 32px;background:#fff;display:none;">
     <div style="max-width:1200px;margin:0 auto;">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:36px;flex-wrap:wrap;gap:16px;">
-        <div>
+      <div style="text-align:center;margin-bottom:36px;">
           <p style="font-size:13px;font-weight:700;color:#d4f01a;text-transform:uppercase;letter-spacing:0.08em;margin:0 0 6px;background:#0f2a5c;display:inline-block;padding:3px 10px;border-radius:4px;">Our Channel</p>
-          <h2 style="font-family:'Sora',sans-serif;font-size:clamp(1.6rem,3vw,2.2rem);font-weight:800;color:#1c1c1c;margin:0;">Watch &amp; Learn</h2>
-        </div>
-        <a href="https://www.youtube.com/@ATECEducationalSociety" target="_blank" rel="noopener"
-           style="color:#ff0000;font-weight:700;font-size:14px;text-decoration:none;border:2px solid #ff0000;padding:8px 18px;border-radius:8px;display:flex;align-items:center;gap:6px;">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="#ff0000"><path d="M23.5 6.2a3 3 0 00-2.1-2.1C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.4.6A3 3 0 00.5 6.2C0 8.1 0 12 0 12s0 3.9.5 5.8a3 3 0 002.1 2.1C4.5 20.5 12 20.5 12 20.5s7.5 0 9.4-.6a3 3 0 002.1-2.1C24 15.9 24 12 24 12s0-3.9-.5-5.8zM9.7 15.5V8.5l6.3 3.5-6.3 3.5z"/></svg>
-          YouTube Channel →
-        </a>
+          <h2 style="font-family:'Sora',sans-serif;font-size:clamp(1.6rem,3vw,2.2rem);font-weight:800;color:#1c1c1c;margin:0 0 16px;">Watch &amp; Learn</h2>
+          <a href="https://www.youtube.com/@ATECEducationalSociety" target="_blank" rel="noopener"
+             style="color:#ff0000;font-weight:700;font-size:14px;text-decoration:none;border:2px solid #ff0000;padding:8px 18px;border-radius:8px;display:inline-flex;align-items:center;gap:6px;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="#ff0000"><path d="M23.5 6.2a3 3 0 00-2.1-2.1C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.4.6A3 3 0 00.5 6.2C0 8.1 0 12 0 12s0 3.9.5 5.8a3 3 0 002.1 2.1C4.5 20.5 12 20.5 12 20.5s7.5 0 9.4-.6a3 3 0 002.1-2.1C24 15.9 24 12 24 12s0-3.9-.5-5.8zM9.7 15.5V8.5l6.3 3.5-6.3 3.5z"/></svg>
+            YouTube Channel →
+          </a>
       </div>
       <div id="yt-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:20px;"></div>
     </div>
@@ -640,12 +636,10 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
   ══════════════════════════════════════════════════════════════ -->
   <section id="blog-section" style="padding:72px 32px;background:#f8f4ef;display:none;">
     <div style="max-width:1200px;margin:0 auto;">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:36px;flex-wrap:wrap;gap:16px;">
-        <div>
+      <div style="text-align:center;margin-bottom:36px;">
           <p style="font-size:13px;font-weight:700;color:#d4f01a;text-transform:uppercase;letter-spacing:0.08em;margin:0 0 6px;background:#0f2a5c;display:inline-block;padding:3px 10px;border-radius:4px;">Knowledge Hub</p>
-          <h2 style="font-family:'Sora',sans-serif;font-size:clamp(1.6rem,3vw,2.2rem);font-weight:800;color:#1c1c1c;margin:0;">Latest from Our Blog</h2>
-        </div>
-        <a href="/blog" style="color:#0f2a5c;font-weight:700;font-size:14px;text-decoration:none;border:2px solid #0f2a5c;padding:8px 18px;border-radius:8px;">All Articles →</a>
+          <h2 style="font-family:'Sora',sans-serif;font-size:clamp(1.6rem,3vw,2.2rem);font-weight:800;color:#1c1c1c;margin:0 0 16px;">Latest from Our Blog</h2>
+          <a href="/blog" style="color:#0f2a5c;font-weight:700;font-size:14px;text-decoration:none;border:2px solid #0f2a5c;padding:8px 18px;border-radius:8px;">All Articles →</a>
       </div>
       <div id="blog-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:24px;"></div>
     </div>
@@ -656,12 +650,10 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
   ══════════════════════════════════════════════════════════════ -->
   <section id="podcast-section" style="padding:72px 32px;background:#0b1525;display:none;">
     <div style="max-width:1200px;margin:0 auto;">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:36px;flex-wrap:wrap;gap:16px;">
-        <div>
+      <div style="text-align:center;margin-bottom:36px;">
           <p style="font-size:13px;font-weight:700;color:#d4f01a;text-transform:uppercase;letter-spacing:0.08em;margin:0 0 6px;">🎙️ Podcast</p>
           <h2 style="font-family:'Sora',sans-serif;font-size:clamp(1.6rem,3vw,2.2rem);font-weight:800;color:#fff;margin:0;">ATEC Talks</h2>
-          <p style="color:rgba(255,255,255,0.5);font-size:14px;margin:6px 0 0;">Career conversations, tech trends, student stories.</p>
-        </div>
+          <p style="color:rgba(255,255,255,0.5);font-size:14px;margin:8px 0 0;">Career conversations, tech trends, student stories.</p>
       </div>
       <div id="podcast-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:20px;"></div>
     </div>
@@ -672,9 +664,9 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
   ══════════════════════════════════════════════════════════════ -->
   <section id="news-section" style="padding:72px 32px;background:#fff;display:none;">
     <div style="max-width:1200px;margin:0 auto;">
-      <div style="margin-bottom:36px;">
-        <p style="font-size:13px;font-weight:700;color:#d4f01a;text-transform:uppercase;letter-spacing:0.08em;margin:0 0 6px;background:#0f2a5c;display:inline-block;padding:3px 10px;border-radius:4px;">Latest Updates</p>
-        <h2 style="font-family:'Sora',sans-serif;font-size:clamp(1.6rem,3vw,2.2rem);font-weight:800;color:#1c1c1c;margin:8px 0 0;">News &amp; Announcements</h2>
+      <div style="text-align:center;margin-bottom:36px;">
+          <p style="font-size:13px;font-weight:700;color:#d4f01a;text-transform:uppercase;letter-spacing:0.08em;margin:0 0 6px;background:#0f2a5c;display:inline-block;padding:3px 10px;border-radius:4px;">Latest Updates</p>
+          <h2 style="font-family:'Sora',sans-serif;font-size:clamp(1.6rem,3vw,2.2rem);font-weight:800;color:#1c1c1c;margin:8px 0 0;">News &amp; Announcements</h2>
       </div>
       <div id="news-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:20px;"></div>
     </div>
