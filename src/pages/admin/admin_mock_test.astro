@@ -447,8 +447,9 @@ textarea{resize:vertical;min-height:60px}
 </AdminLayout>
 
 <script>
-const SB_URL = (window as any).__SB_URL as string
-const SB_KEY = (window as any).__SB_KEY as string
+// Deferred — window not available at Astro build time
+let SB_URL = ''
+let SB_KEY = ''
 
 // Helpers
 function v(id: string): string { return ((document.getElementById(id) as HTMLInputElement)?.value||'').trim() }
@@ -559,9 +560,7 @@ function updatePreview() {
   setText('prev-footer', v('rpt-footer'))
   setText('prev-validity', v('rpt-validity'))
 }
-;['rpt-color','rpt-institute','rpt-tagline','rpt-footer','rpt-validity'].forEach(id=>{
-  document.getElementById(id)?.addEventListener('input', updatePreview)
-})
+// (listeners wired in boot())
 
 // ── QUESTIONS ──────────────────────────────────────────────────────────
 let allQs: any[] = []
@@ -776,5 +775,19 @@ function renderAttemptsTable(list: any[]) {
 }
 
 // ── Init ──────────────────────────────────────────────────────────────
-loadSettings()
+function boot() {
+  SB_URL = (window as any).__SB_URL || ''
+  SB_KEY = (window as any).__SB_KEY || ''
+  loadSettings()
+  // Wire live preview listeners now that DOM exists
+  ;['rpt-color','rpt-institute','rpt-tagline','rpt-footer','rpt-validity'].forEach(id => {
+    document.getElementById(id)?.addEventListener('input', updatePreview)
+  })
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', boot)
+} else {
+  boot()
+}
 </script>
