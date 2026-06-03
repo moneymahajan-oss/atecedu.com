@@ -446,46 +446,46 @@ textarea{resize:vertical;min-height:60px}
 
 </AdminLayout>
 
-<script>
+<script is:inline>
 // Deferred — window not available at Astro build time
 let SB_URL = ''
 let SB_KEY = ''
 
 // Helpers
-function v(id: string): string { return ((document.getElementById(id) as HTMLInputElement)?.value||'').trim() }
-function sv(id: string, val: string) { const el=document.getElementById(id) as HTMLInputElement; if(el) el.value=val }
-function chk(id: string): boolean { return !!(document.getElementById(id) as HTMLInputElement)?.checked }
-function schk(id: string, val: boolean) { const el=document.getElementById(id) as HTMLInputElement; if(el) el.checked=val }
-function setText(id: string, t: string) { const el=document.getElementById(id); if(el) el.textContent=t }
-function showStatus(id: string, ok: boolean, msg: string) {
+function v(id) { return ((document.getElementById(id))?.value||'').trim() }
+function sv(id, val) { const el=document.getElementById(id); if(el) el.value=val }
+function chk(id) { return !!(document.getElementById(id))?.checked }
+function schk(id, val) { const el=document.getElementById(id); if(el) el.checked=val }
+function setText(id, t) { const el=document.getElementById(id); if(el) el.textContent=t }
+function showStatus(id, ok, msg) {
   const el=document.getElementById(id)
   if(!el) return
   el.textContent=msg; el.className='status '+(ok?'ok':'err'); el.style.display='block'
   setTimeout(()=>{el.style.display='none'},4000)
 }
 
-async function sbGet(endpoint: string): Promise<any> {
+async function sbGet(endpoint) {
   if(!SB_URL) return []
   const r=await fetch(`${SB_URL}/rest/v1/${endpoint}`,{headers:{apikey:SB_KEY,Authorization:`Bearer ${SB_KEY}`}})
   return r.json()
 }
-async function sbPost(endpoint: string, body: any): Promise<Response> {
+async function sbPost(endpoint, body) {
   return fetch(`${SB_URL}/rest/v1/${endpoint}`,{method:'POST',headers:{apikey:SB_KEY,Authorization:`Bearer ${SB_KEY}`,'Content-Type':'application/json',Prefer:'resolution=merge-duplicates,return=minimal'},body:JSON.stringify(body)})
 }
-async function sbPatch(endpoint: string, body: any): Promise<Response> {
+async function sbPatch(endpoint, body) {
   return fetch(`${SB_URL}/rest/v1/${endpoint}`,{method:'PATCH',headers:{apikey:SB_KEY,Authorization:`Bearer ${SB_KEY}`,'Content-Type':'application/json'},body:JSON.stringify(body)})
 }
-async function sbDelete(endpoint: string): Promise<Response> {
+async function sbDelete(endpoint) {
   return fetch(`${SB_URL}/rest/v1/${endpoint}`,{method:'DELETE',headers:{apikey:SB_KEY,Authorization:`Bearer ${SB_KEY}`}})
 }
-async function cfgGet(key: string): Promise<any> {
+async function cfgGet(key) {
   const d=await sbGet(`site_settings?key=eq.${key}&select=value`)
   return d?.[0]?.value??null
 }
 
 // ── Tab switching ──────────────────────────────────────────────────────
-;(window as any).switchTab = function(tab: string) {
-  document.querySelectorAll('[data-tab]').forEach(b=>b.classList.toggle('active',(b as HTMLElement).dataset.tab===tab))
+;window.switchTab = function(tab) {
+  document.querySelectorAll('[data-tab]').forEach(b=>b.classList.toggle('active',(b).dataset.tab===tab))
   ;['settings','questions','attempts','report'].forEach(t=>{
     const el=document.getElementById(`tab-${t}`)
     if(el) el.style.display=t===tab?'':'none'
@@ -518,12 +518,12 @@ async function loadSettings() {
   sv('rpt-logo', cfg.report_logo_url||'')
   sv('rpt-footer', cfg.report_footer||'')
   sv('rpt-validity', String(cfg.discount_validity_days||7))
-  document.getElementById('rpt-color-picker') && (document.getElementById('rpt-color-picker') as HTMLInputElement).value=cfg.report_color||'#0b1525'
+  const cpEl = document.getElementById('rpt-color-picker'); if(cpEl) cpEl.value = cfg.report_color||'#0b1525'
   updatePreview()
 }
 
-;(window as any).saveSettings = async function() {
-  const btn=document.getElementById('settings-save-btn') as HTMLButtonElement
+;window.saveSettings = async function() {
+  const btn=document.getElementById('settings-save-btn')
   btn.disabled=true; btn.textContent='⏳ Saving…'
   const payload={
     enabled: chk('cfg-enabled'), otp_enabled: chk('cfg-otp'),
@@ -548,7 +548,7 @@ async function loadSettings() {
   btn.disabled=false; btn.textContent='💾 Save All Settings'
 }
 
-;(window as any).saveReport = async function() { (window as any).saveSettings() }
+;window.saveReport = async function() { window.saveSettings() }
 
 // Live preview update
 function updatePreview() {
@@ -563,9 +563,9 @@ function updatePreview() {
 // (listeners wired in boot())
 
 // ── QUESTIONS ──────────────────────────────────────────────────────────
-let allQs: any[] = []
-let filteredQs: any[] = []
-let editingQId: string|null = null
+let allQs = []
+let filteredQs = []
+let editingQId|null = null
 
 async function loadQuestions() {
   const d=await sbGet('mock_test_questions?order=sort_order.asc,created_at.asc&select=*')
@@ -575,10 +575,10 @@ async function loadQuestions() {
   renderQTable(filteredQs)
 }
 
-;(window as any).filterQuestions = function() {
+;window.filterQuestions = function() {
   const search=v('q-search').toLowerCase()
-  const cat=(document.getElementById('q-filter-cat') as HTMLSelectElement).value
-  const diff=(document.getElementById('q-filter-diff') as HTMLSelectElement).value
+  const cat=(document.getElementById('q-filter-cat')).value
+  const diff=(document.getElementById('q-filter-diff')).value
   filteredQs=allQs.filter(q=>{
     const matchSearch=!search || q.question?.toLowerCase().includes(search) || q.category?.toLowerCase().includes(search)
     const matchCat=!cat || q.category===cat
@@ -589,7 +589,7 @@ async function loadQuestions() {
   setText('q-display-count', `Showing ${filteredQs.length} of ${allQs.length}`)
 }
 
-function renderQTable(qs: any[]) {
+function renderQTable(qs) {
   const tbody=document.getElementById('q-tbody')!
   tbody.innerHTML=''
   if(!qs.length){
@@ -598,7 +598,7 @@ function renderQTable(qs: any[]) {
   }
   qs.forEach((q,i)=>{
     const corrArr=Array.isArray(q.correct)?q.correct:[q.correct]
-    const corrText=corrArr.map((c: string)=>c.toUpperCase()).join(', ')
+    const corrText=corrArr.map((c)=>c.toUpperCase()).join(', ')
     const tr=document.createElement('tr')
     tr.innerHTML=`
       <td style="color:#94a3b8;font-weight:600">${i+1}</td>
@@ -621,42 +621,42 @@ function renderQTable(qs: any[]) {
   })
 }
 
-;(window as any).toggleQActive = async function(id: string, current: boolean) {
+;window.toggleQActive = async function(id, current) {
   await sbPatch(`mock_test_questions?id=eq.${id}`, { is_active: !current })
   loadQuestions()
 }
-;(window as any).deleteQ = async function(id: string) {
+;window.deleteQ = async function(id) {
   if(!confirm('Delete this question? This cannot be undone.')) return
   await sbDelete(`mock_test_questions?id=eq.${id}`)
   loadQuestions()
 }
 
-;(window as any).openQModal = function(id: string|null) {
+;window.openQModal = function(id|null) {
   editingQId=id
   setText('q-modal-title', id?'Edit Question':'Add New Question')
   if(!id) {
     // Clear form
     ;['qm-question','qm-a','qm-b','qm-c','qm-d','qm-e','qm-explain'].forEach(i=>{
-      const el=document.getElementById(i) as HTMLTextAreaElement|HTMLInputElement
+      const el=document.getElementById(i)|HTMLInputElement
       if(el) el.value=''
     })
-    ;['qm-ca','qm-cb','qm-cc','qm-cd','qm-ce'].forEach(i=>{ const el=document.getElementById(i) as HTMLInputElement; if(el) el.checked=false })
+    ;['qm-ca','qm-cb','qm-cc','qm-cd','qm-ce'].forEach(i=>{ const el=document.getElementById(i); if(el) el.checked=false })
     schk('qm-active',true)
-    ;(document.getElementById('qm-cat') as HTMLSelectElement).value='Hardware'
-    ;(document.getElementById('qm-diff') as HTMLSelectElement).value='medium'
+    ;(document.getElementById('qm-cat')).value='Hardware'
+    ;(document.getElementById('qm-diff')).value='medium'
   } else {
     const q=allQs.find(x=>x.id===id)
     if(!q) return
-    ;(document.getElementById('qm-question') as HTMLTextAreaElement).value=q.question||''
+    ;(document.getElementById('qm-question')).value=q.question||''
     sv('qm-a', q.option_a||''); sv('qm-b', q.option_b||'')
     sv('qm-c', q.option_c||''); sv('qm-d', q.option_d||''); sv('qm-e', q.option_e||'')
-    ;(document.getElementById('qm-explain') as HTMLTextAreaElement).value=q.explanation||''
-    ;(document.getElementById('qm-cat') as HTMLSelectElement).value=q.category||'Hardware'
-    ;(document.getElementById('qm-diff') as HTMLSelectElement).value=q.difficulty||'medium'
+    ;(document.getElementById('qm-explain')).value=q.explanation||''
+    ;(document.getElementById('qm-cat')).value=q.category||'Hardware'
+    ;(document.getElementById('qm-diff')).value=q.difficulty||'medium'
     schk('qm-active', q.is_active!==false)
-    const corrArr: string[]=Array.isArray(q.correct)?q.correct:[q.correct]
+    const corrArr[]=Array.isArray(q.correct)?q.correct:[q.correct]
     ;['a','b','c','d','e'].forEach(k=>{
-      const el=document.getElementById(`qm-c${k}`) as HTMLInputElement
+      const el=document.getElementById(`qm-c${k}`)
       if(el) el.checked=corrArr.includes(k)
     })
   }
@@ -664,15 +664,15 @@ function renderQTable(qs: any[]) {
   document.getElementById('q-modal')!.classList.add('open')
 }
 
-;(window as any).closeQModal = function() {
+;window.closeQModal = function() {
   document.getElementById('q-modal')!.classList.remove('open')
   editingQId=null
 }
 
-;(window as any).saveQuestion = async function() {
-  const question=(document.getElementById('qm-question') as HTMLTextAreaElement).value.trim()
+;window.saveQuestion = async function() {
+  const question=(document.getElementById('qm-question')).value.trim()
   const opt_a=v('qm-a'), opt_b=v('qm-b')
-  const correct=['a','b','c','d','e'].filter(k=>(document.getElementById(`qm-c${k}`) as HTMLInputElement)?.checked)
+  const correct=['a','b','c','d','e'].filter(k=>(document.getElementById(`qm-c${k}`))?.checked)
 
   const errEl=document.getElementById('qm-err')!
   if(!question){errEl.textContent='Question text is required.';errEl.style.display='block';return}
@@ -683,13 +683,13 @@ function renderQTable(qs: any[]) {
   const payload={
     question, option_a:opt_a, option_b:opt_b,
     option_c:v('qm-c')||null, option_d:v('qm-d')||null, option_e:v('qm-e')||null,
-    correct, explanation:(document.getElementById('qm-explain') as HTMLTextAreaElement).value.trim(),
-    category:(document.getElementById('qm-cat') as HTMLSelectElement).value,
-    difficulty:(document.getElementById('qm-diff') as HTMLSelectElement).value,
+    correct, explanation:(document.getElementById('qm-explain')).value.trim(),
+    category:(document.getElementById('qm-cat')).value,
+    difficulty:(document.getElementById('qm-diff')).value,
     is_active: chk('qm-active')
   }
 
-  const btn=document.getElementById('qm-save-btn') as HTMLButtonElement
+  const btn=document.getElementById('qm-save-btn')
   btn.disabled=true; btn.textContent='Saving…'
 
   if(editingQId) {
@@ -699,18 +699,18 @@ function renderQTable(qs: any[]) {
   }
 
   btn.disabled=false; btn.textContent='💾 Save Question'
-  ;(window as any).closeQModal()
+  ;window.closeQModal()
   loadQuestions()
 }
 
-;(window as any).exportQuestions = function() {
+;window.exportQuestions = function() {
   const rows=[['#','Question','A','B','C','D','Correct','Category','Difficulty'],...filteredQs.map((q,i)=>[i+1,q.question,q.option_a,q.option_b,q.option_c||'',q.option_d||'',(Array.isArray(q.correct)?q.correct:[q.correct]).join('|'),q.category,q.difficulty])]
   const csv=rows.map(r=>r.map(c=>`"${String(c||'').replace(/"/g,'""')}"`).join(',')).join('\n')
   const a=document.createElement('a'); a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv); a.download='atec_questions.csv'; a.click()
 }
 
 // ── ATTEMPTS ──────────────────────────────────────────────────────────
-let allAttempts: any[] = []
+let allAttempts = []
 
 async function loadAttempts() {
   const d=await sbGet('mock_test_attempts?order=created_at.desc&limit=200&select=*')
@@ -724,9 +724,9 @@ async function loadAttempts() {
   renderAttemptsTable(allAttempts)
 }
 
-;(window as any).filterAttempts = function() {
+;window.filterAttempts = function() {
   const search=v('att-search').toLowerCase()
-  const filter=(document.getElementById('att-filter') as HTMLSelectElement).value
+  const filter=(document.getElementById('att-filter')).value
   const filtered=allAttempts.filter(a=>{
     const ms=!search||(a.name||'').toLowerCase().includes(search)||(a.email||'').toLowerCase().includes(search)
     const mf=!filter||(filter==='disc'&&a.discount>0)||(filter==='pass'&&a.percentage>=75)||(filter==='fail'&&a.percentage<75)
@@ -735,7 +735,7 @@ async function loadAttempts() {
   renderAttemptsTable(filtered)
 }
 
-function renderAttemptsTable(list: any[]) {
+function renderAttemptsTable(list) {
   const tbody=document.getElementById('att-tbody')!
   tbody.innerHTML=''
   if(!list.length){
@@ -762,13 +762,13 @@ function renderAttemptsTable(list: any[]) {
   })
 }
 
-;(window as any).viewReport = function(id: string) {
+;window.viewReport = function(id) {
   const a=allAttempts.find(x=>x.id===id)
   if(!a) return
   alert(`Report for ${a.name}\nScore: ${a.score}/${a.total} (${a.percentage}%)\nDiscount: ${a.discount}%\nDate: ${new Date(a.created_at).toLocaleString('en-IN')}`)
 }
 
-;(window as any).exportAttempts = function() {
+;window.exportAttempts = function() {
   const rows=[['Name','Email','Phone','Score','Total','Percentage','Discount','Time (secs)','Date'],...allAttempts.map(a=>[a.name,a.email,a.phone,a.score,a.total,a.percentage,`${a.discount}%`,a.time_taken||'',new Date(a.created_at).toLocaleDateString('en-IN')])]
   const csv=rows.map(r=>r.map(c=>`"${String(c||'').replace(/"/g,'""')}"`).join(',')).join('\n')
   const el=document.createElement('a'); el.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv); el.download='atec_test_attempts.csv'; el.click()
@@ -776,8 +776,8 @@ function renderAttemptsTable(list: any[]) {
 
 // ── Init ──────────────────────────────────────────────────────────────
 function boot() {
-  SB_URL = (window as any).__SB_URL || ''
-  SB_KEY = (window as any).__SB_KEY || ''
+  SB_URL = window.__SB_URL || ''
+  SB_KEY = window.__SB_KEY || ''
   loadSettings()
   // Wire live preview listeners now that DOM exists
   ;['rpt-color','rpt-institute','rpt-tagline','rpt-footer','rpt-validity'].forEach(id => {
