@@ -1,0 +1,194 @@
+---
+// src/pages/about.astro
+import BaseLayout from '../layouts/BaseLayout.astro'
+---
+
+<BaseLayout
+  title="About ATEC Gurdaspur — ISO Certified Computer Institute Since 2000"
+  description="ATEC Educational Society, Gurdaspur — ISO 9001:2015 certified computer training institute established in 2000. 25+ years, 5000+ students placed. Expert faculty, 100% placement support."
+>
+
+<style>
+  .about-hero {
+    background: linear-gradient(135deg, #0f2a5c 0%, #1a3a6c 100%);
+    padding: 72px 32px 60px;
+    text-align: center;
+    color: #fff;
+  }
+  .about-hero .badge {
+    display: inline-block;
+    background: #d4f01a;
+    color: #1a1a1a;
+    font-size: 12px;
+    font-weight: 800;
+    padding: 4px 14px;
+    border-radius: 20px;
+    margin-bottom: 16px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+  .about-hero h1 {
+    font-family: 'Sora', sans-serif;
+    font-size: clamp(2rem, 4vw, 3rem);
+    font-weight: 900;
+    margin: 0 0 16px;
+  }
+  .about-hero p {
+    font-size: 17px;
+    color: rgba(255,255,255,0.75);
+    max-width: 600px;
+    margin: 0 auto;
+    line-height: 1.6;
+  }
+
+  .stats-strip {
+    background: #fff;
+    padding: 40px 32px;
+    border-bottom: 1px solid #e2e8f0;
+  }
+  .stats-grid {
+    max-width: 900px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 24px;
+    text-align: center;
+  }
+  @media(max-width: 600px) { .stats-grid { grid-template-columns: repeat(2, 1fr); } }
+  .stat-num {
+    font-family: 'Sora', sans-serif;
+    font-size: clamp(2rem, 4vw, 2.8rem);
+    font-weight: 900;
+    color: #0f2a5c;
+    line-height: 1;
+    margin-bottom: 6px;
+  }
+  .stat-label { font-size: 13px; color: #64748b; font-weight: 600; }
+
+  .about-section { padding: 72px 32px; max-width: 1100px; margin: 0 auto; }
+  .about-section h2 {
+    font-family: 'Sora', sans-serif;
+    font-size: clamp(1.5rem, 3vw, 2rem);
+    font-weight: 900;
+    color: #0f2a5c;
+    margin: 0 0 16px;
+  }
+  .about-section p { font-size: 16px; color: #475569; line-height: 1.8; margin-bottom: 16px; }
+
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: start; }
+  @media(max-width: 700px) { .two-col { grid-template-columns: 1fr; gap: 32px; } }
+
+  .feature-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 14px; }
+  .feature-list li {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    font-size: 15px;
+    color: #374151;
+    line-height: 1.5;
+  }
+  .feature-list li .icon {
+    width: 32px; height: 32px; border-radius: 8px;
+    background: #eff6ff; display: flex; align-items: center; justify-content: center;
+    font-size: 16px; flex-shrink: 0; margin-top: 1px;
+  }
+
+  .iso-badge {
+    background: #f0fdf4;
+    border: 2px solid #86efac;
+    border-radius: 16px;
+    padding: 28px;
+    text-align: center;
+    margin-bottom: 28px;
+  }
+  .iso-badge .iso-title {
+    font-family: 'Sora', sans-serif;
+    font-size: 1.2rem;
+    font-weight: 800;
+    color: #166534;
+    margin-bottom: 6px;
+  }
+  .iso-badge p { font-size: 13px; color: #4ade80; margin: 0; }
+
+  .contact-strip {
+    background: #0f2a5c;
+    padding: 56px 32px;
+    text-align: center;
+    color: #fff;
+  }
+  .contact-strip h2 {
+    font-family: 'Sora', sans-serif;
+    font-size: 1.8rem;
+    font-weight: 900;
+    margin: 0 0 16px;
+  }
+  .contact-strip p { color: rgba(255,255,255,0.7); margin: 0 0 28px; font-size: 16px; }
+  .btn-group { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+  .btn-lemon {
+    background: #d4f01a; color: #0f2a5c;
+    padding: 13px 28px; border-radius: 10px;
+    font-weight: 800; font-size: 15px; text-decoration: none;
+  }
+  .btn-outline {
+    background: transparent; color: #fff;
+    border: 2px solid rgba(255,255,255,0.4);
+    padding: 13px 28px; border-radius: 10px;
+    font-weight: 700; font-size: 15px; text-decoration: none;
+  }
+  .btn-outline:hover { border-color: #fff; }
+</style>
+
+<!-- Hero -->
+<div class="about-hero">
+  <div class="badge">Since 2000 — 25+ Years</div>
+  <h1>Avenue to Excellent Careers</h1>
+  <p>ATEC Educational Society, Gurdaspur — India's trusted computer training institute, empowering students with industry-ready skills since 2000.</p>
+</div>
+
+<!-- Stats strip -->
+<div class="stats-strip">
+  <div class="stats-grid">
+    <div><div class="stat-num">25+</div><div class="stat-label">Years of Excellence</div></div>
+    <div><div class="stat-num">5000+</div><div class="stat-label">Students Trained</div></div>
+    <div><div class="stat-num">100%</div><div class="stat-label">Placement Support</div></div>
+    <div><div class="stat-num">ISO</div><div class="stat-label">9001:2015 Certified</div></div>
+  </div>
+</div>
+
+<!-- About section -->
+<section class="about-section">
+  <div class="two-col">
+    <div>
+      <h2>Who We Are</h2>
+      <p>ATEC Educational Society (Avenue to Excellent Careers) is a premier ISO 9001:2015 certified computer training institute based in Gurdaspur, Punjab. Established in 2000, we have been transforming students into skilled IT professionals for over two decades.</p>
+      <p>We offer a blend of online, hybrid, and classroom-based courses — from cutting-edge GEN AI and full-stack web development to traditional Tally accounting and hardware networking. Our curriculum is constantly updated to match industry demands.</p>
+      <p>Our dedicated placement cell has helped thousands of students secure jobs at top companies across India. We don't just teach — we build careers.</p>
+    </div>
+    <div>
+      <div class="iso-badge">
+        <div class="iso-title">🏆 ISO 9001:2015 Certified</div>
+        <p>Quality Management System certified — our processes, training standards, and student outcomes meet international quality benchmarks.</p>
+      </div>
+      <ul class="feature-list">
+        <li><span class="icon">🎓</span><div><strong>Expert Faculty</strong> — Industry-certified trainers with 10+ years of real-world experience</div></li>
+        <li><span class="icon">🌐</span><div><strong>Online + Hybrid</strong> — Learn from anywhere or attend in-person at our Gurdaspur centre</div></li>
+        <li><span class="icon">📜</span><div><strong>Recognised Certificates</strong> — Government and industry-recognised on completion</div></li>
+        <li><span class="icon">💼</span><div><strong>Placement Cell</strong> — Dedicated team connecting graduates with 500+ hiring partners</div></li>
+        <li><span class="icon">🔬</span><div><strong>Modern Labs</strong> — Fully equipped computer labs with latest software and hardware</div></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- Contact strip -->
+<div class="contact-strip">
+  <h2>Ready to Start Your Career?</h2>
+  <p>New batches start every month. Limited seats available. Get in touch today.</p>
+  <div class="btn-group">
+    <a href="/courses" class="btn-lemon">Browse All Courses →</a>
+    <a href="https://wa.me/917009933289" target="_blank" rel="noopener" class="btn-outline">💬 WhatsApp Us</a>
+    <a href="tel:+917009933289" class="btn-outline">📞 +91 7009933289</a>
+  </div>
+</div>
+
+</BaseLayout>

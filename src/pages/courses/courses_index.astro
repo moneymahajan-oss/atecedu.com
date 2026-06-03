@@ -1,0 +1,310 @@
+---
+// src/pages/courses/index.astro
+import BaseLayout from '../../layouts/BaseLayout.astro'
+import { supabase } from '../../lib/supabase'
+
+let courses: any[] = []
+let categories: string[] = []
+
+try {
+  const { data } = await supabase
+    .from('courses')
+    .select('id,title,slug,short_description,thumbnail_url,mode,fee_inr,original_fee_inr,category,duration_weeks,is_featured,level,rating,total_enrolled')
+    .eq('is_active', true)
+    .order('sort_order')
+  courses = data ?? []
+  // Extract unique categories
+  const catSet = new Set(courses.map((c: any) => c.category).filter(Boolean))
+  categories = Array.from(catSet) as string[]
+} catch (e) {}
+
+// Fallback courses if DB empty
+if (courses.length === 0) {
+  courses = [
+    { id:'1', title:'GEN AI for Everyone', slug:'gen-ai', short_description:'Master ChatGPT, Midjourney & AI automation tools', mode:'online', fee_inr:4999, original_fee_inr:9999, category:'AI', duration_weeks:8, is_featured:true, level:'Beginner' },
+    { id:'2', title:'MERN Stack Development', slug:'mern-stack', short_description:'MongoDB, Express, React, Node.js — full stack web dev', mode:'online', fee_inr:5999, original_fee_inr:11999, category:'Web', duration_weeks:12, is_featured:true, level:'Intermediate' },
+    { id:'3', title:'Tally Prime + GST', slug:'tally-prime', short_description:'Complete accounting, GST filing & payroll management', mode:'hybrid', fee_inr:2999, original_fee_inr:5999, category:'Commerce', duration_weeks:6, is_featured:false, level:'Beginner' },
+    { id:'4', title:'Hardware & Networking', slug:'hardware-networking', short_description:'Chip-level laptop repair + CCNA networking fundamentals', mode:'hybrid', fee_inr:3999, original_fee_inr:7999, category:'Hardware', duration_weeks:10, is_featured:true, level:'Beginner' },
+    { id:'5', title:'Python Programming', slug:'python', short_description:'Core Python, data structures, automation & scripting', mode:'online', fee_inr:3999, original_fee_inr:7999, category:'Programming', duration_weeks:8, is_featured:false, level:'Beginner' },
+    { id:'6', title:'Coding for Kids', slug:'kids-coding', short_description:'Fun introduction to programming using Scratch & Python', mode:'online', fee_inr:2499, original_fee_inr:4999, category:'Kids', duration_weeks:6, is_featured:false, level:'Beginner' },
+  ]
+  categories = ['AI', 'Web', 'Commerce', 'Hardware', 'Programming', 'Kids']
+}
+
+const modeColor: Record<string, string> = {
+  online:    'background:#d4f01a;color:#1a1a1a',
+  hybrid:    'background:#bfdbfe;color:#1e40af',
+  classroom: 'background:#fde68a;color:#92400e',
+}
+---
+
+<BaseLayout
+  title="All Courses — ATEC Gurdaspur | Online & Hybrid Computer Courses"
+  description="Browse all ATEC courses: GEN AI, MERN Stack, Tally Prime, Hardware Networking, Python and more. Online, hybrid & classroom modes. Enroll today."
+>
+
+<style>
+  .courses-hero {
+    background: #0f2a5c;
+    padding: 56px 32px 48px;
+    text-align: center;
+    color: #fff;
+  }
+  .courses-hero h1 {
+    font-family: 'Sora', sans-serif;
+    font-size: clamp(1.8rem, 4vw, 2.8rem);
+    font-weight: 900;
+    margin: 0 0 12px;
+  }
+  .courses-hero p {
+    font-size: 16px;
+    color: rgba(255,255,255,0.7);
+    margin: 0 auto;
+    max-width: 560px;
+  }
+
+  /* Filter bar */
+  .filter-bar {
+    background: #fff;
+    border-bottom: 1px solid #e8edf2;
+    padding: 16px 32px;
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    align-items: center;
+    position: sticky;
+    top: 0;
+    z-index: 20;
+  }
+  .filter-label { font-size: 12px; font-weight: 700; color: #64748b; margin-right: 4px; white-space: nowrap; }
+  .filter-btn {
+    padding: 6px 14px;
+    border-radius: 20px;
+    border: 1.5px solid #e2e8f0;
+    background: #fff;
+    color: #475569;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .filter-btn:hover, .filter-btn.active {
+    background: #0f2a5c;
+    color: #d4f01a;
+    border-color: #0f2a5c;
+  }
+
+  /* Grid */
+  .courses-section { padding: 48px 32px 80px; background: #f8f4ef; }
+  .courses-grid {
+    max-width: 1280px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 24px;
+  }
+
+  /* Card */
+  .course-card {
+    background: #fff;
+    border-radius: 16px;
+    overflow: hidden;
+    border: 1px solid #e8ecf0;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+    text-decoration: none;
+    color: inherit;
+    display: block;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .course-card:hover { transform: translateY(-5px); box-shadow: 0 12px 36px rgba(0,0,0,0.12); }
+  .course-card.hidden { display: none; }
+
+  .card-thumb {
+    height: 170px;
+    background: #0f2a5c;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .card-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .card-thumb-placeholder {
+    font-family: 'Sora', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 900;
+    color: #d4f01a;
+    text-align: center;
+    padding: 20px;
+    line-height: 1.3;
+  }
+  .card-mode-badge {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .card-featured-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: #d4f01a;
+    color: #1a1a1a;
+    font-size: 10px;
+    font-weight: 800;
+    padding: 3px 8px;
+    border-radius: 4px;
+  }
+
+  .card-body { padding: 16px 18px 20px; }
+  .card-title {
+    font-family: 'Sora', sans-serif;
+    font-size: 17px;
+    font-weight: 800;
+    color: #111;
+    margin: 0 0 6px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .card-desc {
+    font-size: 13px;
+    color: #64748b;
+    margin: 0 0 12px;
+    line-height: 1.5;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .card-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .card-fee {
+    font-family: 'Sora', sans-serif;
+    font-size: 18px;
+    font-weight: 900;
+    color: #0f2a5c;
+  }
+  .card-fee-orig {
+    font-size: 12px;
+    color: #94a3b8;
+    text-decoration: line-through;
+    margin-left: 5px;
+  }
+  .card-duration {
+    font-size: 12px;
+    color: #94a3b8;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    padding: 3px 9px;
+    border-radius: 6px;
+  }
+
+  .enroll-cta {
+    display: block;
+    background: #0f2a5c;
+    color: #d4f01a;
+    text-align: center;
+    padding: 11px;
+    font-weight: 800;
+    font-size: 14px;
+    text-decoration: none;
+    transition: background 0.15s;
+  }
+  .enroll-cta:hover { background: #163264; }
+
+  /* No results */
+  .no-results { text-align: center; padding: 64px 32px; color: #94a3b8; grid-column: 1/-1; }
+  .no-results h3 { font-size: 1.2rem; color: #475569; margin-bottom: 8px; }
+</style>
+
+<!-- Hero -->
+<section class="courses-hero">
+  <h1>All Courses</h1>
+  <p>Online, hybrid & classroom programs to launch or advance your tech career.</p>
+</section>
+
+<!-- Filter bar -->
+<div class="filter-bar">
+  <span class="filter-label">Filter:</span>
+  <button class="filter-btn active" data-filter="all" onclick="filterCourses('all')">All Courses</button>
+  <button class="filter-btn" data-filter="online" onclick="filterCourses('online')">🌐 Online</button>
+  <button class="filter-btn" data-filter="hybrid" onclick="filterCourses('hybrid')">🏫 Hybrid</button>
+  {categories.map(cat => (
+    <button class="filter-btn" data-filter={cat.toLowerCase()} onclick={`filterCourses('${cat.toLowerCase()}')`}>{cat}</button>
+  ))}
+</div>
+
+<!-- Courses grid -->
+<section class="courses-section">
+  <div class="courses-grid" id="courses-grid">
+    {courses.map(course => (
+      <a
+        href={`/courses/${course.slug}`}
+        class="course-card"
+        data-mode={course.mode}
+        data-category={course.category?.toLowerCase() ?? ''}
+      >
+        <div class="card-thumb">
+          {course.thumbnail_url
+            ? <img src={course.thumbnail_url} alt={course.title} loading="lazy" />
+            : <div class="card-thumb-placeholder">{course.title}</div>
+          }
+          <span class="card-mode-badge" style={modeColor[course.mode] ?? modeColor.hybrid}>{course.mode}</span>
+          {course.is_featured && <span class="card-featured-badge">⭐ Featured</span>}
+        </div>
+        <div class="card-body">
+          <div class="card-title">{course.title}</div>
+          {course.short_description && <p class="card-desc">{course.short_description}</p>}
+          <div class="card-meta">
+            <div>
+              <span class="card-fee">₹{course.fee_inr?.toLocaleString('en-IN')}</span>
+              {course.original_fee_inr && <span class="card-fee-orig">₹{course.original_fee_inr.toLocaleString('en-IN')}</span>}
+            </div>
+            {course.duration_weeks && <span class="card-duration">⏱ {course.duration_weeks}w</span>}
+          </div>
+        </div>
+        <span class="enroll-cta">View Course →</span>
+      </a>
+    ))}
+    <div class="no-results" id="no-results" style="display:none">
+      <h3>No courses match this filter</h3>
+      <p>Try a different category or view all courses.</p>
+    </div>
+  </div>
+</section>
+
+<script>
+  function filterCourses(filter: string) {
+    // Update active button
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+      btn.classList.toggle('active', (btn as HTMLElement).dataset.filter === filter)
+    })
+
+    const cards = document.querySelectorAll('.course-card')
+    let visible = 0
+    cards.forEach(card => {
+      const el = card as HTMLElement
+      const mode = el.dataset.mode ?? ''
+      const cat  = el.dataset.category ?? ''
+      const show = filter === 'all' || mode === filter || cat === filter
+      el.classList.toggle('hidden', !show)
+      if (show) visible++
+    })
+
+    const noResults = document.getElementById('no-results')
+    if (noResults) noResults.style.display = visible === 0 ? 'block' : 'none'
+  }
+</script>
+
+</BaseLayout>

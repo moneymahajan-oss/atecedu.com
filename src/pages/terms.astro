@@ -1,0 +1,66 @@
+---
+// src/pages/terms.astro
+import BaseLayout from '../layouts/BaseLayout.astro'
+---
+<BaseLayout title="Terms of Service — ATEC Gurdaspur" noIndex={true}>
+<style>
+  .policy-hero { background:#0f2a5c; padding:56px 32px 44px; text-align:center; color:#fff; }
+  .policy-hero h1 { font-family:'Sora',sans-serif; font-size:2rem; font-weight:900; margin:0 0 8px; }
+  .policy-hero p { color:rgba(255,255,255,0.6); font-size:14px; }
+  .policy-body { max-width:800px; margin:0 auto; padding:56px 32px 80px; }
+  .policy-body h2 { font-family:'Sora',sans-serif; font-size:1.2rem; font-weight:800; color:#0f2a5c; margin:32px 0 10px; }
+  .policy-body p,.policy-body li { font-size:15px; color:#475569; line-height:1.8; margin:0 0 12px; }
+  .policy-body ul { padding-left:20px; }
+  .policy-body a { color:#0f2a5c; }
+  .last-updated { background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:12px 16px; font-size:13px; color:#94a3b8; margin-bottom:32px; }
+</style>
+<div class="policy-hero">
+  <h1>Terms of Service</h1>
+  <p>Please read these terms carefully before using ATEC services</p>
+</div>
+<div class="policy-body">
+  <div class="last-updated">Last updated: June 2026</div>
+
+  <p>By accessing atecedu.com or enrolling in any ATEC course, you agree to these Terms of Service.</p>
+
+  <h2>1. Enrolment & Access</h2>
+  <ul>
+    <li>Course access begins upon receipt of full payment (online courses) or on the batch start date (hybrid/classroom).</li>
+    <li>Login credentials are personal and must not be shared with others.</li>
+    <li>ATEC reserves the right to suspend access for violation of these terms.</li>
+  </ul>
+
+  <h2>2. Course Content</h2>
+  <ul>
+    <li>All course materials are the intellectual property of ATEC Educational Society.</li>
+    <li>Recording, redistribution, or resale of course content is strictly prohibited.</li>
+    <li>Curriculum may be updated to reflect industry changes — this is a benefit, not a breach.</li>
+  </ul>
+
+  <h2>3. Payments</h2>
+  <ul>
+    <li>All fees are quoted in Indian Rupees (INR) inclusive of applicable taxes.</li>
+    <li>Payment must be completed before course access is granted.</li>
+    <li>Refund terms are governed by our <a href="/refund">Refund Policy</a>.</li>
+  </ul>
+
+  <h2>4. Certificates</h2>
+  <ul>
+    <li>Certificates are issued only upon successful completion of course requirements.</li>
+    <li>ATEC certificates are institution-issued and not government-mandated qualifications unless specified.</li>
+    <li>Fraudulent use of certificates will result in immediate cancellation.</li>
+  </ul>
+
+  <h2>5. Conduct</h2>
+  <p>Students are expected to behave respectfully towards faculty, staff, and fellow students. Abusive behaviour may result in enrolment cancellation without refund.</p>
+
+  <h2>6. Limitation of Liability</h2>
+  <p>ATEC is not liable for indirect or consequential damages arising from use of our services. Our total liability shall not exceed the course fee paid by the student.</p>
+
+  <h2>7. Governing Law</h2>
+  <p>These terms are governed by the laws of India. Disputes shall be subject to the jurisdiction of courts in Gurdaspur, Punjab.</p>
+
+  <h2>8. Contact</h2>
+  <p>Questions? Email <a href="mailto:atecgsp@gmail.com">atecgsp@gmail.com</a>.</p>
+</div>
+</BaseLayout>

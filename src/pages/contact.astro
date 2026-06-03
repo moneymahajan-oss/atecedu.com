@@ -1,0 +1,217 @@
+---
+// src/pages/contact.astro
+import BaseLayout from '../layouts/BaseLayout.astro'
+---
+
+<BaseLayout
+  title="Contact ATEC Gurdaspur — Call, WhatsApp or Visit Us"
+  description="Contact ATEC Educational Society, Gurdaspur. Call +91 7009933289, WhatsApp us, or visit our centre on Hardochanni Road, Gurdaspur, Punjab."
+>
+
+<style>
+  .contact-hero {
+    background: #0f2a5c;
+    padding: 64px 32px 52px;
+    text-align: center;
+    color: #fff;
+  }
+  .contact-hero h1 { font-family:'Sora',sans-serif; font-size:clamp(1.8rem,4vw,2.8rem); font-weight:900; margin:0 0 12px; }
+  .contact-hero p { font-size:16px; color:rgba(255,255,255,0.7); max-width:500px; margin:0 auto; }
+
+  .contact-body { padding:64px 32px 80px; background:#f8f4ef; }
+  .contact-grid { max-width:1100px; margin:0 auto; display:grid; grid-template-columns:1fr 1fr; gap:48px; align-items:start; }
+  @media(max-width:700px){ .contact-grid { grid-template-columns:1fr; gap:32px; } }
+
+  /* Info cards */
+  .info-card {
+    background:#fff; border-radius:16px; padding:28px;
+    border:1px solid #e2e8f0; box-shadow:0 2px 10px rgba(0,0,0,0.05);
+    margin-bottom:16px; display:flex; align-items:flex-start; gap:16px;
+  }
+  .info-card .icon {
+    width:48px; height:48px; border-radius:12px; background:#eff6ff;
+    display:flex; align-items:center; justify-content:center;
+    font-size:22px; flex-shrink:0;
+  }
+  .info-card h3 { font-family:'Sora',sans-serif; font-weight:700; font-size:15px; margin:0 0 6px; color:#0f2a5c; }
+  .info-card p,.info-card a { font-size:14px; color:#475569; margin:0; line-height:1.6; text-decoration:none; }
+  .info-card a:hover { color:#0f2a5c; text-decoration:underline; }
+
+  /* Enquiry form */
+  .form-card {
+    background:#fff; border-radius:16px; padding:32px;
+    border:1px solid #e2e8f0; box-shadow:0 2px 10px rgba(0,0,0,0.05);
+  }
+  .form-card h2 { font-family:'Sora',sans-serif; font-weight:800; font-size:1.2rem; margin:0 0 6px; color:#0f2a5c; }
+  .form-card .sub { font-size:13px; color:#94a3b8; margin:0 0 24px; }
+  .field { margin-bottom:16px; }
+  .field label { display:block; font-size:12px; font-weight:700; color:#64748b; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:6px; }
+  .field input,.field select,.field textarea {
+    width:100%; padding:10px 14px;
+    border:1.5px solid #e2e8f0; border-radius:9px;
+    font-size:14px; color:#1e293b; outline:none;
+    transition:border-color 0.15s; background:#fff;
+    font-family:'Inter',sans-serif; box-sizing:border-box;
+  }
+  .field input:focus,.field select:focus,.field textarea:focus { border-color:#0f2a5c; }
+  .field textarea { resize:vertical; min-height:90px; }
+  .submit-btn {
+    width:100%; background:#0f2a5c; color:#d4f01a;
+    border:none; border-radius:10px; padding:13px;
+    font-size:15px; font-weight:800; cursor:pointer;
+    font-family:'Inter',sans-serif; transition:background 0.15s;
+  }
+  .submit-btn:hover { background:#163264; }
+  .submit-btn:disabled { background:#94a3b8; cursor:not-allowed; }
+  #form-success {
+    background:#dcfce7; color:#166534; border:1px solid #bbf7d0;
+    border-radius:10px; padding:16px; text-align:center;
+    font-weight:700; display:none; margin-top:12px;
+  }
+  #form-error { background:#fee2e2; color:#991b1b; border:1px solid #fecaca; border-radius:10px; padding:12px; font-size:13px; display:none; margin-bottom:12px; }
+</style>
+
+<!-- Hero -->
+<div class="contact-hero">
+  <h1>Get In Touch</h1>
+  <p>We'd love to help you find the right course. Call, WhatsApp, or drop a message.</p>
+</div>
+
+<div class="contact-body">
+  <div class="contact-grid">
+
+    <!-- Left: contact info -->
+    <div>
+      <div class="info-card">
+        <div class="icon">📞</div>
+        <div>
+          <h3>Call or WhatsApp</h3>
+          <a href="tel:+917009933289">+91 7009933289</a><br/>
+          <a href="https://wa.me/917009933289?text=Hi%20I%20want%20to%20know%20about%20ATEC%20courses" target="_blank" rel="noopener" style="color:#25D366;font-weight:700">💬 Open WhatsApp →</a>
+        </div>
+      </div>
+
+      <div class="info-card">
+        <div class="icon">✉️</div>
+        <div>
+          <h3>Email Us</h3>
+          <a href="mailto:atecgsp@gmail.com">atecgsp@gmail.com</a>
+        </div>
+      </div>
+
+      <div class="info-card">
+        <div class="icon">📍</div>
+        <div>
+          <h3>Visit Our Centre</h3>
+          <p>Hardochanni Road, Gurdaspur<br/>Punjab – 143521, India</p>
+        </div>
+      </div>
+
+      <div class="info-card">
+        <div class="icon">🕐</div>
+        <div>
+          <h3>Centre Hours</h3>
+          <p>Monday – Saturday: 9:00 AM – 7:00 PM<br/>Sunday: Closed</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right: enquiry form -->
+    <div class="form-card">
+      <h2>Send Us a Message</h2>
+      <p class="sub">We'll call you back within 30 minutes during business hours.</p>
+
+      <div id="form-error"></div>
+
+      <div class="field">
+        <label>Your Name *</label>
+        <input type="text" id="c-name" placeholder="Your full name" maxlength="60" />
+      </div>
+      <div class="field">
+        <label>Phone Number *</label>
+        <input type="tel" id="c-phone" placeholder="+91 99999 00000" maxlength="15" />
+      </div>
+      <div class="field">
+        <label>Email (optional)</label>
+        <input type="email" id="c-email" placeholder="you@example.com" />
+      </div>
+      <div class="field">
+        <label>Interested In</label>
+        <select id="c-course">
+          <option value="">Select a course…</option>
+          <option>GEN AI</option>
+          <option>MERN Stack</option>
+          <option>Hardware & Networking</option>
+          <option>Tally Prime</option>
+          <option>Python Programming</option>
+          <option>Coding for Kids</option>
+          <option>Other</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Message</label>
+        <textarea id="c-message" placeholder="Ask us anything — course details, fees, batches, placement…"></textarea>
+      </div>
+
+      <button class="submit-btn" id="submit-btn" onclick="submitEnquiry()">
+        Send Message →
+      </button>
+      <div id="form-success">✅ Message sent! We'll call you back shortly.</div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+;(function() {
+  async function submitEnquiry() {
+    const btn    = document.getElementById('submit-btn') as HTMLButtonElement
+    const errEl  = document.getElementById('form-error') as HTMLElement
+    const succEl = document.getElementById('form-success') as HTMLElement
+
+    const name    = (document.getElementById('c-name')    as HTMLInputElement).value.trim()
+    const phone   = (document.getElementById('c-phone')   as HTMLInputElement).value.trim()
+    const email   = (document.getElementById('c-email')   as HTMLInputElement).value.trim()
+    const course  = (document.getElementById('c-course')  as HTMLSelectElement).value
+    const message = (document.getElementById('c-message') as HTMLTextAreaElement).value.trim()
+
+    errEl.style.display = 'none'
+    if (!name || !phone) {
+      errEl.textContent = 'Please enter your name and phone number.'
+      errEl.style.display = 'block'
+      return
+    }
+
+    btn.disabled = true
+    btn.textContent = 'Sending…'
+
+    const SB_URL = (window as any).__SB_URL as string
+    const SB_KEY = (window as any).__SB_KEY as string
+
+    if (SB_URL && SB_KEY) {
+      try {
+        await fetch(`${SB_URL}/rest/v1/enquiries`, {
+          method: 'POST',
+          headers: {
+            apikey: SB_KEY,
+            Authorization: `Bearer ${SB_KEY}`,
+            'Content-Type': 'application/json',
+            Prefer: 'return=minimal',
+          },
+          body: JSON.stringify({ name, phone, email, course_interest: course, message }),
+        })
+      } catch(e) { console.warn('Enquiry save failed', e) }
+    }
+
+    // Also open WhatsApp as fallback
+    const waMsg = encodeURIComponent(`Hi ATEC! I'm ${name} (${phone}). I'm interested in ${course || 'your courses'}. ${message}`)
+    window.open(`https://wa.me/917009933289?text=${waMsg}`, '_blank')
+
+    btn.style.display = 'none'
+    succEl.style.display = 'block'
+  }
+  ;(window as any).submitEnquiry = submitEnquiry
+})()
+</script>
+
+</BaseLayout>
