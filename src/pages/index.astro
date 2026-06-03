@@ -258,13 +258,13 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
     /* Each slide: full-width, background photo/color, text overlay */
     .hslider-slide {
       flex-shrink:0; width:100%;
-      min-height:480px;
+      min-height:340px;
       position:relative;
       display:flex; align-items:center;
       overflow:hidden;
       box-sizing:border-box;
     }
-    @media(max-width:768px){ .hslider-slide { min-height:320px; } }
+    @media(max-width:768px){ .hslider-slide { min-height:220px; } }
 
     /* Background layers */
     .hslider-bg-img {
@@ -279,10 +279,10 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
     .hslider-content {
       position:relative; z-index:2;
       max-width:760px;
-      padding:56px 72px;
+      padding:36px 72px;
       width:100%;
     }
-    @media(max-width:768px){ .hslider-content { padding:40px 28px; } }
+    @media(max-width:768px){ .hslider-content { padding:28px 24px; } }
 
     .hslider-badge {
       display:inline-flex; align-items:center; gap:6px;
@@ -481,7 +481,7 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
     .cat-card-thumb-inner { width:100%; height:100%; object-fit:cover; display:block; }
     .cat-card-mode { position:absolute; top:10px; left:10px; padding:3px 10px; border-radius:20px; font-size:11px; font-weight:800; text-transform:uppercase; }
     .cat-card-body { padding:14px 16px 16px; }
-    .cat-card-title { font-family:var(--cat-font); font-size:15px; font-weight:700; color:#1c1c1c; margin:0 0 6px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .cat-card-title { font-family:var(--cat-font); font-size:17px; font-weight:800; color:#1c1c1c; margin:0 0 6px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
     .cat-card-fee { font-size:15px; font-weight:800; color:#0f2a5c; }
     .cat-card-fee-orig { font-size:12px; color:#94a3b8; text-decoration:line-through; margin-left:5px; }
     @media(max-width:900px){ .cat-card { width:calc(50% - 10px); } }
@@ -2267,7 +2267,7 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
     const modeColor = c.mode === 'online' ? '#1a1a1a' : '#fff'
     wrap.innerHTML = `
       <div class="cat-card-thumb" style="background:${c.thumbnail_url?'#000':'#0f2a5c'};">
-        ${c.thumbnail_url ? `<img class="cat-card-thumb-inner" src="${c.thumbnail_url}" alt="${c.title}" loading="lazy" />` : `<div style="display:flex;align-items:center;justify-content:center;height:100%;padding:12px;"><span style="font-family:'Sora',sans-serif;font-size:12px;font-weight:900;color:#d4f01a;text-align:center;">${c.title}</span></div>`}
+        ${c.thumbnail_url ? `<img class="cat-card-thumb-inner" src="${c.thumbnail_url}" alt="${c.title}" loading="lazy" />` : `<div style="display:flex;align-items:center;justify-content:center;height:100%;padding:12px;"><span style="font-family:'Sora',sans-serif;font-size:15px;font-weight:900;color:#d4f01a;text-align:center;">${c.title}</span></div>`}
         <span class="cat-card-mode" style="background:${modeBg};color:${modeColor};">${c.mode||'hybrid'}</span>
       </div>
       <div class="cat-card-body">
