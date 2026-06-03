@@ -254,12 +254,12 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
     .hslider-wrap { position:relative; }
     .hslider-track { display:flex; transition:transform 0.55s cubic-bezier(0.22,1,0.36,1); will-change:transform; }
     .hslider-slide {
-      flex-shrink:0; width:100%; min-height:340px;
+      flex-shrink:0; width:100%; height:360px;
       display:grid; grid-template-columns:1fr 1fr; align-items:center; gap:40px;
-      padding:48px 64px;
+      padding:48px 64px; box-sizing:border-box;
     }
     @media(max-width:768px){
-      .hslider-slide { grid-template-columns:1fr; padding:36px 24px; min-height:auto; }
+      .hslider-slide { grid-template-columns:1fr; height:auto; min-height:220px; padding:36px 24px; }
       .hslider-video-wrap { display:none; }
     }
     .hslider-badge {
@@ -271,8 +271,8 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
     .hslider-sub { font-size:14px; margin:0 0 24px; line-height:1.6; opacity:0.85; }
     .hslider-cta { display:inline-flex; align-items:center; gap:8px; padding:12px 28px; border-radius:10px; font-weight:800; font-size:14px; text-decoration:none; background:#d4f01a; color:#0f2a5c; box-shadow:4px 4px 14px rgba(0,0,0,0.22); transition:transform 0.15s,box-shadow 0.15s; }
     .hslider-cta:hover { transform:translateY(-2px); box-shadow:6px 8px 20px rgba(0,0,0,0.3); }
-    .hslider-video-wrap { border-radius:16px; overflow:hidden; aspect-ratio:16/9; background:#111; box-shadow:8px 8px 28px rgba(0,0,0,0.3); }
-    .hslider-video-wrap iframe,.hslider-video-wrap video { width:100%; height:100%; border:none; display:block; }
+    .hslider-video-wrap { border-radius:16px; overflow:hidden; height:260px; background:#111; box-shadow:8px 8px 28px rgba(0,0,0,0.3); }
+    .hslider-video-wrap iframe,.hslider-video-wrap video,.hslider-video-wrap img { width:100%; height:100%; border:none; display:block; object-fit:cover; }
     /* Dots */
     .hslider-dots { display:flex; justify-content:center; gap:8px; padding:16px 0 0; }
     .hslider-dot { width:8px; height:8px; border-radius:50%; background:rgba(0,0,0,0.2); border:none; cursor:pointer; transition:all 0.2s; padding:0; }
@@ -365,46 +365,63 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
   </div>
 
   <!-- ══════════════════════════════════════════════════════════════
-       COURSES SECTION
+       COURSES — Category Marquee Rows
+       DB-driven from site_settings key='course_categories'
+       Each category: { name, label_color, bg_color, courses:[...] }
+       Each course: { title, slug, mode, fee_inr, thumbnail_url }
+       Global: { section_title, section_sub, marquee_speed, show_fee }
+       Admin: /admin/homepage-new-features → Course Categories
   ══════════════════════════════════════════════════════════════ -->
-  <section style="padding:72px 32px;background:#fff;">
-    <div style="max-width:1200px;margin:0 auto;">
-      <div style="text-align:center;margin-bottom:40px;">
-          <p style="font-size:13px;font-weight:700;color:#d4f01a;text-transform:uppercase;letter-spacing:0.08em;margin:0 0 6px;">What We Offer</p>
-          <h2 style="font-family:'Sora',sans-serif;font-size:clamp(1.6rem,3vw,2.2rem);font-weight:800;color:#1c1c1c;margin:0 0 20px;">Popular Courses</h2>
-          <a href="/courses" style="color:#0f2a5c;font-weight:700;font-size:14px;text-decoration:none;border:2px solid #0f2a5c;padding:8px 20px;border-radius:8px;">View All Courses →</a>
-      </div>
-      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:24px;">
-        {fallbackCourses.map(c => (
-          <a href={`/courses/${c.slug}`} style="display:block;text-decoration:none;background:#fff;border:1px solid #e8ecf0;border-radius:16px;overflow:hidden;transition:box-shadow 0.2s,transform 0.2s;box-shadow:0 2px 8px rgba(0,0,0,0.06);"
-            onmouseover="this.style.boxShadow='0 8px 28px rgba(0,0,0,0.12)';this.style.transform='translateY(-3px)'"
-            onmouseout="this.style.boxShadow='0 2px 8px rgba(0,0,0,0.06)';this.style.transform='translateY(0)'">
-            <div style={`background:${c.thumbnail_url ? '#000' : '#0f2a5c'};aspect-ratio:16/9;display:flex;align-items:center;justify-content:center;position:relative;`}>
-              {c.thumbnail_url
-                ? <img src={c.thumbnail_url} alt={c.title} style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0;" />
-                : <span style="font-family:'Sora',sans-serif;font-size:1.4rem;font-weight:900;color:#d4f01a;">{c.title}</span>
-              }
-              <span style={`position:absolute;top:10px;left:10px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;text-transform:uppercase;background:${c.mode==='online'?'#d4f01a':'#60a5fa'};color:${c.mode==='online'?'#1a1a1a':'#fff'};`}>
-                {c.mode}
-              </span>
-            </div>
-            <div style="padding:16px;">
-              <h3 style="font-family:'Sora',sans-serif;font-size:16px;font-weight:700;color:#1c1c1c;margin:0 0 6px;">{c.title}</h3>
-              <p style="font-size:13px;color:#64748b;margin:0 0 12px;line-height:1.5;">{c.short_description}</p>
-              <div style="display:flex;align-items:center;justify-content:space-between;">
-                <div>
-                  <span style="font-size:17px;font-weight:800;color:#0f2a5c;">₹{c.fee_inr?.toLocaleString('en-IN')}</span>
-                  {c.original_fee_inr && <span style="font-size:12px;color:#94a3b8;text-decoration:line-through;margin-left:6px;">₹{c.original_fee_inr?.toLocaleString('en-IN')}</span>}
-                </div>
-                <span style="font-size:12px;color:#d4f01a;background:#0f2a5c;padding:4px 10px;border-radius:6px;font-weight:700;">Enroll →</span>
-              </div>
-            </div>
-          </a>
-        ))}
-      </div>
+  <style is:global>
+    .cat-section { padding:72px 0 80px; background:#fff; overflow:hidden; }
+    .cat-header { max-width:1200px; margin:0 auto 48px; padding:0 32px; text-align:center; }
+    .cat-rows { display:flex; flex-direction:column; gap:0; }
+    .cat-row { padding:28px 0; border-bottom:1px solid #f1f5f9; }
+    .cat-row:last-child { border-bottom:none; }
+    .cat-row-label { max-width:1200px; margin:0 auto 14px; padding:0 32px; display:flex; align-items:center; gap:10px; }
+    .cat-row-name { font-family:'Sora',sans-serif; font-size:14px; font-weight:800; text-transform:uppercase; letter-spacing:0.08em; }
+    .cat-row-count { font-size:12px; color:#94a3b8; font-weight:600; }
+    .cat-marquee-wrap { overflow:hidden; }
+    .cat-track { display:flex; gap:16px; width:max-content; padding:4px 0; }
+    .cat-track.ltr { animation:cat-ltr var(--cat-speed,32s) linear infinite; }
+    .cat-track.rtl { animation:cat-rtl var(--cat-speed,32s) linear infinite; }
+    .cat-track:hover { animation-play-state:paused; }
+    @keyframes cat-ltr { 0%{transform:translateX(0)} 100%{transform:translateX(-50%)} }
+    @keyframes cat-rtl { 0%{transform:translateX(-50%)} 100%{transform:translateX(0)} }
+    /* Course card */
+    .cat-card {
+      flex-shrink:0; width:220px; border-radius:14px; overflow:hidden;
+      background:#fff; border:1px solid #e8ecf0;
+      box-shadow:0 2px 8px rgba(0,0,0,0.06);
+      text-decoration:none; color:inherit; display:block;
+      transition:box-shadow 0.18s,transform 0.18s;
+    }
+    .cat-card:hover { box-shadow:0 8px 28px rgba(0,0,0,0.13); transform:translateY(-3px); }
+    .cat-card-thumb { width:100%; aspect-ratio:16/9; object-fit:cover; background:#0f2a5c; display:block; position:relative; }
+    .cat-card-thumb-inner { width:100%; height:100%; object-fit:cover; display:block; }
+    .cat-card-mode { position:absolute; top:8px; left:8px; padding:2px 8px; border-radius:20px; font-size:10px; font-weight:800; text-transform:uppercase; }
+    .cat-card-body { padding:12px 14px; }
+    .cat-card-title { font-family:'Sora',sans-serif; font-size:13px; font-weight:700; color:#1c1c1c; margin:0 0 4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .cat-card-fee { font-size:13px; font-weight:800; color:#0f2a5c; }
+    .cat-card-fee-orig { font-size:11px; color:#94a3b8; text-decoration:line-through; margin-left:5px; }
+    .cat-view-all { display:inline-flex; align-items:center; gap:6px; margin-top:28px; color:#0f2a5c; font-weight:700; font-size:14px; text-decoration:none; border:2px solid #0f2a5c; padding:8px 20px; border-radius:8px; }
+    .cat-view-all:hover { background:#0f2a5c; color:#d4f01a; }
+  </style>
+
+  <section class="cat-section" id="cat-section">
+    <div class="cat-header">
+      <p id="cat-sup" style="font-size:13px;font-weight:700;color:#d4f01a;text-transform:uppercase;letter-spacing:0.08em;margin:0 0 6px;">What We Offer</p>
+      <h2 id="cat-title" style="font-family:'Sora',sans-serif;font-size:clamp(1.6rem,3vw,2.2rem);font-weight:800;color:#1c1c1c;margin:0 0 20px;">Courses by Category</h2>
+      <a href="/courses" class="cat-view-all">View All Courses →</a>
+    </div>
+    <div class="cat-rows" id="cat-rows">
+      <!-- JS fills this at runtime from DB or defaults -->
     </div>
   </section>
 
+  <!-- ══════════════════════════════════════════════════════════════
+       INSTRUCTORS MARQUEE — runtime loaded so photos update instantly
+       JS fetches from Supabase on page load — no rebuild needed.
   <!-- ══════════════════════════════════════════════════════════════
        INSTRUCTORS MARQUEE — runtime loaded so photos update instantly
        JS fetches from Supabase on page load — no rebuild needed.
@@ -500,19 +517,19 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
       padding:3px 10px; font-size:10px; font-weight:700; color:#d4f01a;
       white-space:nowrap; max-width:90%; overflow:hidden; text-overflow:ellipsis;
     }
-    /* play icon — appears on hover for cards with video */
+    /* play icon — always visible for cards with video (thumbnail-only mode) */
     .story-play {
       position:absolute; top:50%; left:50%;
-      transform:translate(-50%,-50%) scale(0.75);
-      width:46px; height:46px; z-index:3;
-      background:rgba(255,255,255,0.15); backdrop-filter:blur(6px);
-      border:2px solid rgba(255,255,255,0.35); border-radius:50%;
+      transform:translate(-50%,-50%) scale(0.85);
+      width:50px; height:50px; z-index:3;
+      background:rgba(0,0,0,0.45); backdrop-filter:blur(6px);
+      border:2px solid rgba(255,255,255,0.6); border-radius:50%;
       display:flex; align-items:center; justify-content:center;
-      transition:all 0.2s ease; opacity:0; pointer-events:none;
+      transition:all 0.2s ease; opacity:1; pointer-events:none;
     }
     .story-card:hover .story-play {
-      transform:translate(-50%,-50%) scale(1);
-      background:rgba(212,240,26,0.22); border-color:#d4f01a; opacity:1;
+      transform:translate(-50%,-50%) scale(1.1);
+      background:rgba(212,240,26,0.3); border-color:#d4f01a;
     }
     .story-card.no-video .story-play { display:none; }
     /* bottom info */
@@ -1472,6 +1489,15 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
       return u
     }
 
+    // ── Extract YouTube ID from URL or bare ID ───────────────────────────
+    function extractYtId(url) {
+      if (!url) return ''
+      const u = url.trim()
+      const m = u.match(/youtu\.be\/([A-Za-z0-9_-]{11})/) ||
+                u.match(/(?:v=|\/embed\/|\/shorts\/|\/v\/)([A-Za-z0-9_-]{11})/)
+      return m?.[1] || (/^[A-Za-z0-9_-]{11}$/.test(u) ? u : '')
+    }
+
     // ── Build one portrait card DOM element ──────────────────────────────
     function makeCard(t) {
       const hasVideo  = !!(t.video_url)
@@ -1512,34 +1538,29 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
           <div class="story-role">${t.course || ''}</div>
         </div>`
 
-      // ── Inject video layer (autoplays muted, behind gradient) ──────────
-      // For cards WITH a photo: video is injected but photo stays on top via z-index
-      // until video loads — so thumbnail is always visible.
-      // For cards WITHOUT photo: video IS the background.
-      if (hasVideo) {
-        if (isDirect) {
-          const v = document.createElement('video')
-          v.src = t.video_url
-          v.muted = true; v.loop = true; v.autoplay = true; v.playsInline = true
-          v.className = 'story-card-video'
-          card.insertBefore(v, card.firstChild)
-        } else {
-          const src = cardSrc(t.video_url, vType)
-          if (src) {
-            const f = document.createElement('iframe')
-            f.src = src
-            f.setAttribute('allow', 'autoplay;encrypted-media;picture-in-picture')
-            f.setAttribute('allowfullscreen', '')
-            f.setAttribute('frameborder', '0')
-            f.className = 'story-card-video'
-            f.style.cssText = 'pointer-events:none;'
-            card.insertBefore(f, card.firstChild)
-          }
+      // ── NO inline video/iframe in cards — thumbnail only ──────────────
+      // YouTube iframes always show player UI (letters, controls) regardless
+      // of controls=0 or pointer-events:none. Solution: show thumbnail in card,
+      // play video only in the fullscreen overlay on click.
+      // Direct mp4/webm videos still autoplay cleanly (no player UI).
+      if (hasVideo && isDirect) {
+        const v = document.createElement('video')
+        v.src = t.video_url
+        v.muted = true; v.loop = true; v.autoplay = true; v.playsInline = true
+        v.className = 'story-card-video'
+        card.insertBefore(v, card.firstChild)
+      }
+      // If no photo and YouTube video — auto-generate thumbnail as background
+      if (hasVideo && !isDirect && !hasPhoto) {
+        const ytId = extractYtId(t.video_url)
+        if (ytId) {
+          const img = document.createElement('img')
+          img.className = 'story-photo'
+          img.src = `https://img.youtube.com/vi/${ytId}/mqdefault.jpg`
+          img.alt = t.student_name || ''
+          img.loading = 'lazy'
+          card.insertBefore(img, card.firstChild)
         }
-        // Transparent shield captures clicks and routes to our fullscreen — blocks YouTube native UI
-        const clickShield = document.createElement('div')
-        clickShield.style.cssText = 'position:absolute;inset:0;z-index:4;cursor:pointer;background:transparent;'
-        card.appendChild(clickShield)
       }
       return card
     }
@@ -2083,5 +2104,166 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
   }
   if (document.readyState==='loading') document.addEventListener('DOMContentLoaded',()=>waitSB(()=>{ loadWhyCards(); loadSectionColors() }))
   else waitSB(()=>{ loadWhyCards(); loadSectionColors() })
+})()
+</script>
+
+<!-- ══════════════════════════════════════════════════════════════
+     COURSE CATEGORIES MARQUEE — DB-driven runtime loader
+     Fetches site_settings key='course_categories'
+     Format: { section_title, section_sub, marquee_speed, show_fee, categories: [
+       { name, color, bg_color, courses: [
+         { title, slug, mode, fee_inr, original_fee_inr, thumbnail_url }
+       ]}
+     ]}
+══════════════════════════════════════════════════════════════ -->
+<script>
+;(function() {
+  const DEFAULT_CATEGORIES = [
+    {
+      name:'AI & Machine Learning', color:'#7c3aed', bg_color:'#f5f3ff',
+      courses:[
+        { title:'GEN AI for Everyone', slug:'gen-ai', mode:'online', fee_inr:4999, original_fee_inr:9999, thumbnail_url:'' },
+        { title:'Machine Learning', slug:'machine-learning', mode:'online', fee_inr:5999, original_fee_inr:11999, thumbnail_url:'' },
+        { title:'Python Programming', slug:'python', mode:'online', fee_inr:3999, original_fee_inr:7999, thumbnail_url:'' },
+        { title:'Deep Learning', slug:'deep-learning', mode:'online', fee_inr:6999, original_fee_inr:13999, thumbnail_url:'' },
+      ]
+    },
+    {
+      name:'Web & Full-Stack', color:'#0f2a5c', bg_color:'#eff6ff',
+      courses:[
+        { title:'MERN Stack', slug:'mern-stack', mode:'online', fee_inr:5999, original_fee_inr:11999, thumbnail_url:'' },
+        { title:'React.js', slug:'react', mode:'online', fee_inr:4499, original_fee_inr:8999, thumbnail_url:'' },
+        { title:'PHP & MySQL', slug:'php-mysql', mode:'hybrid', fee_inr:2999, original_fee_inr:5999, thumbnail_url:'' },
+        { title:'WordPress Design', slug:'wordpress', mode:'hybrid', fee_inr:2499, original_fee_inr:4999, thumbnail_url:'' },
+      ]
+    },
+    {
+      name:'Commerce & Accounting', color:'#065f46', bg_color:'#ecfdf5',
+      courses:[
+        { title:'Tally Prime + GST', slug:'tally-prime', mode:'hybrid', fee_inr:2999, original_fee_inr:5999, thumbnail_url:'' },
+        { title:'MS Office Advanced', slug:'ms-office', mode:'hybrid', fee_inr:1999, original_fee_inr:3999, thumbnail_url:'' },
+        { title:'Digital Marketing', slug:'digital-marketing', mode:'online', fee_inr:3999, original_fee_inr:7999, thumbnail_url:'' },
+        { title:'E-Commerce', slug:'ecommerce', mode:'online', fee_inr:2999, original_fee_inr:5999, thumbnail_url:'' },
+      ]
+    },
+    {
+      name:'Kids & Beginners', color:'#b45309', bg_color:'#fffbeb',
+      courses:[
+        { title:'Coding for Kids', slug:'kids-coding', mode:'online', fee_inr:2499, original_fee_inr:4999, thumbnail_url:'' },
+        { title:'Scratch Programming', slug:'scratch', mode:'online', fee_inr:1999, original_fee_inr:3999, thumbnail_url:'' },
+        { title:'Computer Basics', slug:'computer-basics', mode:'hybrid', fee_inr:1499, original_fee_inr:2999, thumbnail_url:'' },
+        { title:'Robotics', slug:'robotics', mode:'hybrid', fee_inr:3499, original_fee_inr:6999, thumbnail_url:'' },
+      ]
+    },
+    {
+      name:'Hardware & Networking', color:'#be123c', bg_color:'#fff1f2',
+      courses:[
+        { title:'Hardware + Networking', slug:'hardware-networking', mode:'hybrid', fee_inr:3999, original_fee_inr:7999, thumbnail_url:'' },
+        { title:'CCNA Networking', slug:'ccna', mode:'hybrid', fee_inr:4999, original_fee_inr:9999, thumbnail_url:'' },
+        { title:'Linux Admin', slug:'linux', mode:'online', fee_inr:3499, original_fee_inr:6999, thumbnail_url:'' },
+        { title:'Cybersecurity', slug:'cybersecurity', mode:'online', fee_inr:5499, original_fee_inr:10999, thumbnail_url:'' },
+      ]
+    },
+  ]
+
+  function makeCard(c: any, showFee: boolean): HTMLElement {
+    const wrap = document.createElement('a')
+    wrap.className = 'cat-card'
+    wrap.href = `/courses/${c.slug || ''}`
+    const modeBg = c.mode === 'online' ? '#d4f01a' : '#60a5fa'
+    const modeColor = c.mode === 'online' ? '#1a1a1a' : '#fff'
+    wrap.innerHTML = `
+      <div class="cat-card-thumb" style="background:${c.thumbnail_url?'#000':'#0f2a5c'};">
+        ${c.thumbnail_url ? `<img class="cat-card-thumb-inner" src="${c.thumbnail_url}" alt="${c.title}" loading="lazy" />` : `<div style="display:flex;align-items:center;justify-content:center;height:100%;padding:12px;"><span style="font-family:'Sora',sans-serif;font-size:12px;font-weight:900;color:#d4f01a;text-align:center;">${c.title}</span></div>`}
+        <span class="cat-card-mode" style="background:${modeBg};color:${modeColor};">${c.mode||'hybrid'}</span>
+      </div>
+      <div class="cat-card-body">
+        <div class="cat-card-title">${c.title}</div>
+        ${showFee && c.fee_inr ? `<div><span class="cat-card-fee">₹${Number(c.fee_inr).toLocaleString('en-IN')}</span>${c.original_fee_inr?`<span class="cat-card-fee-orig">₹${Number(c.original_fee_inr).toLocaleString('en-IN')}</span>`:''}</div>` : ''}
+      </div>`
+    return wrap
+  }
+
+  function renderCategories(cfg: any) {
+    const categories = cfg?.categories || DEFAULT_CATEGORIES
+    const speed     = cfg?.marquee_speed || 32
+    const showFee   = cfg?.show_fee !== false
+    const title     = cfg?.section_title || 'Courses by Category'
+    const sub       = cfg?.section_sub   || ''
+
+    const titleEl = document.getElementById('cat-title')
+    if (titleEl) titleEl.textContent = title
+    const subEl = document.getElementById('cat-sup')
+    if (subEl && sub) subEl.textContent = sub
+
+    const container = document.getElementById('cat-rows')
+    if (!container) return
+    container.innerHTML = ''
+
+    categories.forEach((cat: any, idx: number) => {
+      const courses = cat.courses || []
+      if (!courses.length) return
+      const isRtl = idx % 2 === 1
+
+      // Row wrapper
+      const row = document.createElement('div')
+      row.className = 'cat-row'
+      row.style.background = cat.bg_color || '#fff'
+
+      // Label
+      const label = document.createElement('div')
+      label.className = 'cat-row-label'
+      label.innerHTML = `
+        <span class="cat-row-name" style="color:${cat.color||'#0f2a5c'};">${cat.name}</span>
+        <span class="cat-row-count">${courses.length} course${courses.length!==1?'s':''}</span>`
+      row.appendChild(label)
+
+      // Marquee wrapper
+      const mwrap = document.createElement('div')
+      mwrap.className = 'cat-marquee-wrap'
+
+      const track = document.createElement('div')
+      track.className = `cat-track ${isRtl?'rtl':'ltr'}`
+      track.style.setProperty('--cat-speed', `${speed}s`)
+
+      // Double cards for seamless loop
+      const allCards = [...courses, ...courses]
+      allCards.forEach((c: any) => track.appendChild(makeCard(c, showFee)))
+
+      mwrap.appendChild(track)
+      row.appendChild(mwrap)
+      container.appendChild(row)
+    })
+  }
+
+  async function loadCategories() {
+    const SB_URL = (window as any).__SB_URL as string
+    const SB_KEY = (window as any).__SB_KEY as string
+    if (!SB_URL || !SB_KEY) { renderCategories(null); return }
+    try {
+      const res  = await fetch(
+        `${SB_URL}/rest/v1/site_settings?key=eq.course_categories&select=value`,
+        { headers:{ apikey:SB_KEY, Authorization:`Bearer ${SB_KEY}` } }
+      )
+      const rows = await res.json()
+      const data = rows?.[0]?.value
+      if (data?.categories?.length) {
+        renderCategories(data)
+      } else {
+        renderCategories(null)
+      }
+    } catch(e) {
+      renderCategories(null)
+    }
+  }
+
+  // Render defaults immediately, then upgrade from DB
+  renderCategories(null)
+  function waitSB(cb:()=>void) {
+    if ((window as any).__SB_URL) { cb(); return }
+    let n=0; const t=setInterval(()=>{ n++; if((window as any).__SB_URL||n>40){clearInterval(t);cb()} },50)
+  }
+  if (document.readyState==='loading') document.addEventListener('DOMContentLoaded',()=>waitSB(loadCategories))
+  else waitSB(loadCategories)
 })()
 </script>

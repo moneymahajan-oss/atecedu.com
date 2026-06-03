@@ -81,19 +81,64 @@ import AdminLayout from '../../layouts/AdminLayout.astro'
   <!-- ════════════════════════════════════════════════
        2. HERO SLIDER
   ════════════════════════════════════════════════ -->
+  <style>
+    .sc { background:#fff; border:1.5px solid #e2e8f0; border-radius:14px; margin-bottom:12px; overflow:hidden; }
+    .sc-hdr { display:flex; align-items:center; justify-content:space-between; padding:12px 16px; background:#f8fafc; border-bottom:1px solid #e2e8f0; cursor:pointer; user-select:none; gap:10px; }
+    .sc-num { width:24px; height:24px; border-radius:50%; background:#0f2a5c; color:#d4f01a; font-size:11px; font-weight:800; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+    .sc-hdr-title { font-size:13px; font-weight:700; color:#1e293b; flex:1; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .sc-hdr-badge { font-size:11px; color:#94a3b8; margin-left:8px; flex-shrink:0; }
+    .sc-hdr-actions { display:flex; align-items:center; gap:6px; flex-shrink:0; }
+    .sc-btn { background:#f1f5f9; border:none; color:#475569; border-radius:5px; padding:3px 8px; font-size:12px; cursor:pointer; height:28px; }
+    .sc-btn:hover { background:#e2e8f0; }
+    .sc-del { background:#fee2e2; color:#dc2626; }
+    .sc-del:hover { background:#fca5a5; }
+    .sc-chevron { font-size:12px; color:#94a3b8; transition:transform 0.2s; }
+    .sc-chevron.open { transform:rotate(180deg); }
+    .sc-body { display:none; padding:0; }
+    .sc-body.open { display:block; }
+
+    /* Two-panel layout inside each slide */
+    .sc-inner { display:grid; grid-template-columns:1fr 300px; gap:0; }
+    @media(max-width:700px){ .sc-inner { grid-template-columns:1fr; } }
+    .sc-fields { padding:16px; border-right:1px solid #f1f5f9; display:flex; flex-direction:column; gap:12px; }
+    .sc-preview-panel { padding:16px; background:#f8fafc; display:flex; flex-direction:column; gap:12px; }
+
+    /* Field styles */
+    .sc-field { display:flex; flex-direction:column; gap:4px; }
+    .sc-field-row { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+    .sc-lbl { font-size:11px; font-weight:700; color:#64748b; text-transform:uppercase; letter-spacing:0.04em; }
+    .sc-inp { padding:8px 10px; border:1.5px solid #e2e8f0; border-radius:7px; font-size:13px; color:#1e293b; outline:none; background:#fff; width:100%; box-sizing:border-box; }
+    .sc-inp:focus { border-color:#0f2a5c; }
+    .sc-color-wrap { display:flex; align-items:center; gap:6px; }
+    .sc-color-wrap input[type=color] { width:34px; height:32px; border:1px solid #e2e8f0; border-radius:6px; cursor:pointer; padding:2px; flex-shrink:0; }
+
+    /* Live preview */
+    .sc-prev { border-radius:10px; overflow:hidden; background:#0f2a5c; height:140px; position:relative; }
+    .sc-prev-img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
+    .sc-prev-overlay { position:absolute; inset:0; background:linear-gradient(135deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.1) 100%); }
+    .sc-prev-content { position:absolute; bottom:10px; left:12px; right:12px; }
+    .sc-prev-badge { font-size:9px; font-weight:800; color:#d4f01a; text-transform:uppercase; letter-spacing:0.06em; margin-bottom:3px; }
+    .sc-prev-title { font-size:13px; font-weight:900; color:#fff; line-height:1.2; margin-bottom:5px; }
+    .sc-prev-cta { display:inline-block; background:#d4f01a; color:#0f2a5c; font-size:10px; font-weight:800; padding:2px 8px; border-radius:4px; }
+
+    .sc-img-preview { border-radius:8px; overflow:hidden; background:#e2e8f0; }
+    .sc-img-preview img { width:100%; display:block; max-height:100px; object-fit:cover; }
+    .sc-img-placeholder { padding:16px; text-align:center; color:#94a3b8; font-size:12px; }
+    .sc-divider { border:none; border-top:1px solid #e2e8f0; margin:4px 0; }
+  </style>
+
   <div class="nf-section" id="sec-slider">
     <h2>🎠 Hero Slider</h2>
-    <p class="nf-desc">Add slides below the hero section. Each slide can have a heading, subheading, CTA button, video, and background color.</p>
-
+    <p class="nf-desc">Each slide shows text on the left, image/video on the right. Click a slide to expand. Changes save only when you click Save.</p>
     <div id="slider-list"></div>
-    <button class="nf-add-btn" id="slider-add-btn">+ Add Slide</button>
-
+    <button class="nf-add-btn" id="slider-add-btn">+ Add New Slide</button>
     <br><br>
-    <button class="save-btn" id="slider-save-btn">💾 Save Slider</button>
+    <button class="save-btn" id="slider-save-btn">💾 Save All Slides</button>
     <div class="nf-status" id="slider-status"></div>
   </div>
 
   <!-- ════════════════════════════════════════════════
+       3. DROP US A QUERY POPUP  <!-- ════════════════════════════════════════════════
        3. DROP US A QUERY POPUP
   ════════════════════════════════════════════════ -->
   <div class="nf-section" id="sec-popup">
@@ -138,7 +183,79 @@ import AdminLayout from '../../layouts/AdminLayout.astro'
   <!-- ════════════════════════════════════════════════
        4. SECTION COLORS
   ════════════════════════════════════════════════ -->
-  <div class="nf-section" id="sec-colors">
+  <!-- ════════════════════════════════════════════════
+       5. COURSE CATEGORIES MARQUEE
+  ════════════════════════════════════════════════ -->
+  <style>
+    .cat-admin-row { border:1.5px solid #e2e8f0; border-radius:12px; margin-bottom:12px; overflow:hidden; background:#fff; }
+    .cat-admin-hdr { display:flex; align-items:center; gap:10px; padding:12px 16px; background:#f8fafc; border-bottom:1px solid #e2e8f0; cursor:pointer; user-select:none; }
+    .cat-admin-hdr-num { width:22px; height:22px; border-radius:50%; background:#0f2a5c; color:#d4f01a; font-size:11px; font-weight:800; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+    .cat-admin-hdr-title { font-size:13px; font-weight:700; color:#1e293b; flex:1; }
+    .cat-admin-hdr-count { font-size:11px; color:#94a3b8; }
+    .cat-admin-hdr-btns { display:flex; gap:6px; }
+    .cat-admin-body { display:none; padding:14px; }
+    .cat-admin-body.open { display:block; }
+    .cat-meta-row { display:grid; grid-template-columns:1fr 1fr 80px; gap:10px; margin-bottom:12px; }
+    .cat-field { display:flex; flex-direction:column; gap:3px; }
+    .cat-lbl { font-size:11px; font-weight:700; color:#64748b; text-transform:uppercase; letter-spacing:0.04em; }
+    .cat-inp { padding:7px 10px; border:1.5px solid #e2e8f0; border-radius:7px; font-size:13px; color:#1e293b; outline:none; background:#fff; width:100%; box-sizing:border-box; }
+    .cat-inp:focus { border-color:#0f2a5c; }
+    .cat-color-row { display:flex; align-items:center; gap:6px; }
+    .cat-color-row input[type=color] { width:32px; height:30px; border:1px solid #e2e8f0; border-radius:5px; cursor:pointer; padding:2px; flex-shrink:0; }
+    /* course rows inside category */
+    .cat-course-list { border:1px solid #f1f5f9; border-radius:8px; overflow:hidden; margin-top:8px; }
+    .cat-course-row { display:grid; grid-template-columns:1fr 1fr 80px 80px 32px; gap:6px; align-items:center; padding:8px 10px; border-bottom:1px solid #f1f5f9; background:#fff; }
+    .cat-course-row:last-child { border-bottom:none; }
+    .cat-course-row:nth-child(even) { background:#f8fafc; }
+    .cat-course-inp { padding:5px 8px; border:1px solid #e2e8f0; border-radius:5px; font-size:12px; color:#1e293b; outline:none; background:transparent; width:100%; box-sizing:border-box; }
+    .cat-course-inp:focus { border-color:#0f2a5c; background:#fff; }
+    .cat-course-hdr { display:grid; grid-template-columns:1fr 1fr 80px 80px 32px; gap:6px; padding:6px 10px; background:#f1f5f9; }
+    .cat-course-hdr span { font-size:10px; font-weight:700; color:#64748b; text-transform:uppercase; letter-spacing:0.04em; }
+    .cat-add-course { display:flex; align-items:center; gap:6px; padding:8px 10px; font-size:12px; font-weight:700; color:#0f2a5c; cursor:pointer; background:none; border:none; width:100%; }
+    .cat-add-course:hover { background:#eff6ff; }
+    .mini-del { background:#fee2e2; border:none; color:#dc2626; border-radius:4px; width:26px; height:26px; cursor:pointer; font-size:13px; display:flex; align-items:center; justify-content:center; }
+    .mini-del:hover { background:#fca5a5; }
+    .mini-move { background:#f1f5f9; border:none; color:#475569; border-radius:4px; width:22px; height:22px; cursor:pointer; font-size:11px; }
+  </style>
+  <div class="nf-section" id="sec-categories">
+    <h2>📚 Course Categories Marquee</h2>
+    <p class="nf-desc">Replace the courses grid with alternating marquee rows by category. Each row scrolls in opposite directions. Odd rows → left, even rows → right.</p>
+
+    <!-- Global settings -->
+    <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:16px;margin-bottom:20px;">
+      <div style="font-size:12px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:12px;">Global Settings</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 120px 1fr;gap:12px;align-items:end;">
+        <div class="cat-field">
+          <label class="cat-lbl">Section Title</label>
+          <input class="cat-inp" id="cat-section-title" value="Courses by Category" placeholder="Courses by Category" />
+        </div>
+        <div class="cat-field">
+          <label class="cat-lbl">Section Subtitle Label</label>
+          <input class="cat-inp" id="cat-section-sub" value="What We Offer" placeholder="What We Offer" />
+        </div>
+        <div class="cat-field">
+          <label class="cat-lbl">Scroll Speed (s)</label>
+          <input class="cat-inp" type="number" id="cat-speed" value="32" min="8" max="120" />
+        </div>
+        <div class="cat-field">
+          <label class="cat-lbl">Show Course Price?</label>
+          <div style="display:flex;align-items:center;gap:8px;padding:8px 0;">
+            <input type="checkbox" id="cat-show-fee" checked style="width:16px;height:16px;accent-color:#0f2a5c;" />
+            <label for="cat-show-fee" style="font-size:13px;color:#334155;cursor:pointer;">Yes — show ₹ price on cards</label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="cat-admin-list"></div>
+    <button class="nf-add-btn" id="cat-add-btn">+ Add Category Row</button>
+
+    <br><br>
+    <button class="save-btn" id="cat-save-btn">💾 Save Category Marquee</button>
+    <div class="nf-status" id="cat-status"></div>
+  </div>
+
+    <div class="nf-section" id="sec-colors">
     <h2>🎨 Section Colors</h2>
     <p class="nf-desc">Override the background color of each section. Use a gradient (CSS) for advanced styling. Leave blank to use the default color.</p>
 
@@ -324,102 +441,233 @@ document.getElementById('why-save-btn')?.addEventListener('click', async () => {
 
 // ─── HERO SLIDER ──────────────────────────────────────────────────────
 const DEFAULT_SLIDES = [
-  { badge:'🔥 New Batch June 2026', heading:'Industrial Training<br>for Real World Jobs', subheading:'GEN AI | MERN Stack | Machine Learning | Python | Ethical Hacking', cta_text:'Register Now', cta_link:'/courses', video_link:'', bg_color:'#0f2a5c', text_color:'#ffffff', image_url:'' },
-  { badge:'🌐 Online & Hybrid', heading:'Learn From Anywhere<br>in India', subheading:'Live classes, recorded sessions, doubt clearing — all from home', cta_text:'Explore Online Courses', cta_link:'/courses', video_link:'', bg_color:'#1a1a2e', text_color:'#ffffff', image_url:'' },
+  { badge:'🔥 New Batch June 2026', heading:'Industrial Training for Real World Jobs', subheading:'GEN AI | MERN Stack | ML | Python | Ethical Hacking', cta_text:'Register Now', cta_link:'/courses', video_link:'', bg_color:'#0f2a5c', image_url:'' },
+  { badge:'🌐 Online & Hybrid', heading:'Learn From Anywhere in India', subheading:'Live classes · Recorded sessions · Doubt clearing', cta_text:'Explore Courses', cta_link:'/courses', video_link:'', bg_color:'#1a1a2e', image_url:'' },
 ]
-
 let slides: any[] = [...DEFAULT_SLIDES]
+
+function gv(id: string): string {
+  return ((document.getElementById(id) as HTMLInputElement)?.value || '').trim()
+}
+
+function collectSlides() {
+  slides = slides.map((_:any, i:number) => ({
+    badge:      gv(`sc-badge-${i}`),
+    heading:    gv(`sc-heading-${i}`),
+    subheading: gv(`sc-sub-${i}`),
+    cta_text:   gv(`sc-cta-text-${i}`),
+    cta_link:   gv(`sc-cta-link-${i}`) || '/courses',
+    video_link: gv(`sc-video-${i}`),
+    image_url:  gv(`sc-img-${i}`),
+    bg_color:   gv(`sc-bg-hex-${i}`) || '#0f2a5c',
+  }))
+}
+
+;(window as any).refreshPreview = function(i: number) {
+  const bg    = gv(`sc-bg-hex-${i}`) || '#0f2a5c'
+  const head  = gv(`sc-heading-${i}`) || 'Slide Heading'
+  const badge = gv(`sc-badge-${i}`) || ''
+  const cta   = gv(`sc-cta-text-${i}`) || 'CTA'
+  const img   = gv(`sc-img-${i}`)
+
+  const prevBox = document.getElementById(`sc-prev-${i}`)
+  if (prevBox) prevBox.style.background = bg
+
+  const prevImg = document.getElementById(`sc-prev-img-${i}`) as HTMLImageElement|null
+  if (prevImg) { prevImg.src = img || ''; prevImg.style.display = img ? 'block' : 'none' }
+
+  const badgeEl = document.getElementById(`sc-prev-badge-${i}`)
+  if (badgeEl) badgeEl.textContent = badge
+
+  const titleEl = document.getElementById(`sc-prev-title-${i}`)
+  if (titleEl) titleEl.textContent = head.replace(/<[^>]*>/g, '')
+
+  const ctaEl = document.getElementById(`sc-prev-cta-${i}`)
+  if (ctaEl) ctaEl.textContent = cta
+
+  const hdrTitle = document.getElementById(`sc-hdr-title-${i}`)
+  if (hdrTitle) hdrTitle.textContent = head.replace(/<[^>]*>/g, '') || `Slide ${i+1}`
+
+  // Update image thumbnail preview
+  const imgPrev = document.getElementById(`sc-img-prev-${i}`)
+  if (imgPrev) {
+    imgPrev.innerHTML = img
+      ? `<img src="${img}" onerror="this.style.opacity=0.3" />`
+      : `<div class="sc-img-placeholder">📷 No image set<br><span style="font-size:10px;">Paste an image URL above</span></div>`
+  }
+}
 
 function renderSlides() {
   const list = document.getElementById('slider-list')
   if (!list) return
   list.innerHTML = ''
-  slides.forEach((s, i) => {
+
+  slides.forEach((s: any, i: number) => {
+    const bg = s.bg_color || '#0f2a5c'
     const card = document.createElement('div')
-    card.className = 'nf-card'
+    card.className = 'sc'
     card.innerHTML = `
-      <div class="nf-card-header">
-        <span class="nf-card-label">Slide ${i+1}</span>
-        <button class="nf-del-btn" onclick="deleteSlide(${i})">✕ Remove</button>
-      </div>
-      <div class="nf-row">
-        <div class="nf-field">
-          <label class="nf-label">Badge / Tag (e.g. 🔥 New Batch)</label>
-          <input class="nf-input" id="sl-badge-${i}" value="${s.badge||''}" placeholder="🔥 New Batch June 2026" />
-        </div>
-        <div class="nf-field">
-          <label class="nf-label">CTA Button Text</label>
-          <input class="nf-input" id="sl-cta-text-${i}" value="${s.cta_text||''}" placeholder="Register Now" />
+      <div class="sc-hdr" onclick="toggleSlide(${i})">
+        <div class="sc-num">${i+1}</div>
+        <span class="sc-hdr-title" id="sc-hdr-title-${i}">${(s.heading||'New Slide').replace(/<[^>]*>/g,'')}</span>
+        <span class="sc-hdr-badge">${s.badge||''}</span>
+        <div class="sc-hdr-actions">
+          <button class="sc-btn" onclick="event.stopPropagation();scMove(${i},-1)">↑</button>
+          <button class="sc-btn" onclick="event.stopPropagation();scMove(${i},1)">↓</button>
+          <button class="sc-btn sc-del" onclick="event.stopPropagation();scDelete(${i})">✕</button>
+          <span class="sc-chevron" id="sc-chev-${i}">▼</span>
         </div>
       </div>
-      <div class="nf-field" style="margin-bottom:14px;">
-        <label class="nf-label">Heading (HTML allowed for line breaks)</label>
-        <input class="nf-input" id="sl-heading-${i}" value="${(s.heading||'').replace(/"/g,'&quot;')}" placeholder="Learn MERN Stack in 6 Months" />
-      </div>
-      <div class="nf-field" style="margin-bottom:14px;">
-        <label class="nf-label">Subheading</label>
-        <input class="nf-input" id="sl-sub-${i}" value="${s.subheading||''}" placeholder="Batch starts Monday" />
-      </div>
-      <div class="nf-row">
-        <div class="nf-field">
-          <label class="nf-label">CTA Link (URL)</label>
-          <input class="nf-input" id="sl-cta-link-${i}" value="${s.cta_link||''}" placeholder="/courses" />
-        </div>
-        <div class="nf-field">
-          <label class="nf-label">Video Link (YouTube URL or ID)</label>
-          <input class="nf-input" id="sl-video-${i}" value="${s.video_link||''}" placeholder="https://youtube.com/watch?v=..." />
-        </div>
-      </div>
-      <div class="nf-row">
-        <div class="nf-field">
-          <label class="nf-label">Image URL (if no video)</label>
-          <input class="nf-input" id="sl-img-${i}" value="${s.image_url||''}" placeholder="https://..." />
-        </div>
-        <div class="nf-field">
-          <label class="nf-label">Background Color</label>
-          <div class="nf-color-row">
-            <input type="color" id="sl-bg-${i}" value="${s.bg_color||'#0f2a5c'}"
-              oninput="document.getElementById('sl-bg-hex-${i}').value=this.value" />
-            <input type="text" id="sl-bg-hex-${i}" value="${s.bg_color||'#0f2a5c'}" maxlength="7" class="nf-input" style="width:110px;"
-              oninput="document.getElementById('sl-bg-${i}').value=this.value||'#0f2a5c'" />
+
+      <div class="sc-body" id="sc-body-${i}">
+        <div class="sc-inner">
+
+          <!-- LEFT: form fields -->
+          <div class="sc-fields">
+
+            <div class="sc-field-row">
+              <div class="sc-field">
+                <label class="sc-lbl">🏷️ Badge</label>
+                <input class="sc-inp" id="sc-badge-${i}" value="${(s.badge||'').replace(/"/g,'&quot;')}"
+                  placeholder="🔥 New Batch" oninput="refreshPreview(${i})" />
+              </div>
+              <div class="sc-field">
+                <label class="sc-lbl">🎨 Background</label>
+                <div class="sc-color-wrap">
+                  <input type="color" id="sc-bg-${i}" value="${bg}"
+                    oninput="document.getElementById('sc-bg-hex-${i}').value=this.value;refreshPreview(${i})" />
+                  <input class="sc-inp" id="sc-bg-hex-${i}" value="${bg}" maxlength="9"
+                    oninput="document.getElementById('sc-bg-${i}').value=this.value||'#000';refreshPreview(${i})" />
+                </div>
+              </div>
+            </div>
+
+            <div class="sc-field">
+              <label class="sc-lbl">📝 Heading</label>
+              <input class="sc-inp" id="sc-heading-${i}" value="${(s.heading||'').replace(/"/g,'&quot;')}"
+                placeholder="Learn MERN Stack in 6 Months" oninput="refreshPreview(${i})" />
+            </div>
+
+            <div class="sc-field">
+              <label class="sc-lbl">📄 Subheading</label>
+              <input class="sc-inp" id="sc-sub-${i}" value="${(s.subheading||'').replace(/"/g,'&quot;')}"
+                placeholder="GEN AI | Python | React | Batch starts Monday" />
+            </div>
+
+            <div class="sc-field-row">
+              <div class="sc-field">
+                <label class="sc-lbl">🔘 Button Text</label>
+                <input class="sc-inp" id="sc-cta-text-${i}" value="${(s.cta_text||'').replace(/"/g,'&quot;')}"
+                  placeholder="Register Now" oninput="refreshPreview(${i})" />
+              </div>
+              <div class="sc-field">
+                <label class="sc-lbl">🔗 Button Link</label>
+                <input class="sc-inp" id="sc-cta-link-${i}" value="${(s.cta_link||'/courses').replace(/"/g,'&quot;')}"
+                  placeholder="/courses" />
+              </div>
+            </div>
+
+            <hr class="sc-divider" />
+
+            <div class="sc-field">
+              <label class="sc-lbl">🖼️ Image URL <span style="font-weight:400;text-transform:none;">(right side of slide)</span></label>
+              <input class="sc-inp" id="sc-img-${i}" value="${(s.image_url||'').replace(/"/g,'&quot;')}"
+                placeholder="https://example.com/photo.jpg" oninput="refreshPreview(${i})" />
+            </div>
+
+            <div class="sc-field">
+              <label class="sc-lbl">▶️ YouTube URL <span style="font-weight:400;text-transform:none;">(overrides image)</span></label>
+              <input class="sc-inp" id="sc-video-${i}" value="${(s.video_link||'').replace(/"/g,'&quot;')}"
+                placeholder="https://youtube.com/watch?v=..." />
+            </div>
+
+          </div>
+
+          <!-- RIGHT: live preview panel -->
+          <div class="sc-preview-panel">
+            <div style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px;">Live Preview</div>
+
+            <div class="sc-prev" id="sc-prev-${i}" style="background:${bg}">
+              <img class="sc-prev-img" id="sc-prev-img-${i}" src="${s.image_url||''}"
+                style="display:${s.image_url?'block':'none'}" onerror="this.style.display='none'" />
+              <div class="sc-prev-overlay"></div>
+              <div class="sc-prev-content">
+                <div class="sc-prev-badge" id="sc-prev-badge-${i}">${s.badge||'Badge'}</div>
+                <div class="sc-prev-title" id="sc-prev-title-${i}">${(s.heading||'Heading').replace(/<[^>]*>/g,'')}</div>
+                <span class="sc-prev-cta" id="sc-prev-cta-${i}">${s.cta_text||'CTA'}</span>
+              </div>
+            </div>
+
+            <div style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.05em;margin:8px 0 4px;">Image Preview</div>
+            <div class="sc-img-preview" id="sc-img-prev-${i}">
+              ${s.image_url
+                ? `<img src="${s.image_url}" onerror="this.style.opacity=0.3" />`
+                : '<div class="sc-img-placeholder">📷 No image set<br><span style="font-size:10px;">Paste an image URL in the field</span></div>'}
+            </div>
+
+            <p style="font-size:11px;color:#94a3b8;margin:6px 0 0;line-height:1.5;">Tip: Use any public https:// image URL. Aspect ratio doesn't matter — it'll be cropped to fit.</p>
           </div>
         </div>
       </div>`
     list.appendChild(card)
   })
+
+  // Auto-expand all if ≤ 2 slides
+  if (slides.length <= 2) {
+    slides.forEach((_:any, i:number) => {
+      document.getElementById(`sc-body-${i}`)?.classList.add('open')
+      document.getElementById(`sc-chev-${i}`)?.classList.add('open')
+    })
+  }
 }
 
-;(window as any).deleteSlide = function(i: number) {
-  slides.splice(i, 1)
+;(window as any).toggleSlide = function(i: number) {
+  document.getElementById(`sc-body-${i}`)?.classList.toggle('open')
+  document.getElementById(`sc-chev-${i}`)?.classList.toggle('open')
+}
+;(window as any).scDelete = function(i: number) {
+  collectSlides(); slides.splice(i,1); renderSlides()
+}
+;(window as any).scMove = function(i: number, dir: number) {
+  collectSlides()
+  const j = i + dir
+  if (j < 0 || j >= slides.length) return
+  ;[slides[i], slides[j]] = [slides[j], slides[i]]
   renderSlides()
 }
 
 document.getElementById('slider-add-btn')?.addEventListener('click', () => {
-  slides.push({ badge:'', heading:'New Slide', subheading:'', cta_text:'Learn More', cta_link:'/courses', video_link:'', bg_color:'#0f2a5c', text_color:'#ffffff', image_url:'' })
+  collectSlides()
+  slides.push({ badge:'🔥 New Slide', heading:'Slide Heading', subheading:'Add description here', cta_text:'Learn More', cta_link:'/courses', video_link:'', bg_color:'#0f2a5c', image_url:'' })
   renderSlides()
+  const ni = slides.length - 1
+  document.getElementById(`sc-body-${ni}`)?.classList.add('open')
+  document.getElementById(`sc-chev-${ni}`)?.classList.add('open')
+})
+
+document.getElementById('slider-add-btn')?.addEventListener('click', () => {
+  collectSlides()
+  slides.push({ badge:'🔥 New Slide', heading:'Slide Heading', subheading:'Add your description here', cta_text:'Learn More', cta_link:'/courses', video_link:'', bg_color:'#0f2a5c', text_color:'#ffffff', image_url:'' })
+  renderSlides()
+  // Expand the new slide
+  const newIdx = slides.length - 1
+  const body = document.getElementById(`sl-body-${newIdx}`)
+  const chev = document.getElementById(`sl-chevron-${newIdx}`)
+  if (body) body.classList.add('open')
+  if (chev) chev.classList.add('open')
 })
 
 document.getElementById('slider-save-btn')?.addEventListener('click', async () => {
   const btn = document.getElementById('slider-save-btn') as HTMLButtonElement
   btn.disabled = true; btn.textContent = '⏳ Saving...'
-  const saved = slides.map((_,i) => ({
-    badge:      val(`sl-badge-${i}`),
-    heading:    val(`sl-heading-${i}`),
-    subheading: val(`sl-sub-${i}`),
-    cta_text:   val(`sl-cta-text-${i}`),
-    cta_link:   val(`sl-cta-link-${i}`),
-    video_link: val(`sl-video-${i}`),
-    image_url:  val(`sl-img-${i}`),
-    bg_color:   val(`sl-bg-hex-${i}`) || '#0f2a5c',
-    text_color: '#ffffff',
-  }))
+  collectSlides()
   try {
-    await sbSet('hero_sliders', saved)
+    await sbSet('hero_sliders', slides)
     showStatus('slider-status', true, '✅ Slider saved! Reload homepage to see changes.')
   } catch(e) {
     showStatus('slider-status', false, '❌ Save failed. Check Supabase connection.')
   }
-  btn.disabled = false; btn.textContent = '💾 Save Slider'
+  btn.disabled = false; btn.textContent = '💾 Save All Slides'
 })
 
 // ─── POPUP SETTINGS ───────────────────────────────────────────────────
@@ -516,7 +764,194 @@ async function preload() {
       })
     }
   } catch(_) {}
+
+  // Course categories
+  try {
+    const catCfg = await sbGet('course_categories')
+    if (catCfg?.categories?.length) {
+      cats = catCfg.categories
+      if (catCfg.section_title) setVal('cat-section-title', catCfg.section_title)
+      if (catCfg.section_sub)   setVal('cat-section-sub',   catCfg.section_sub)
+      if (catCfg.marquee_speed) setVal('cat-speed', String(catCfg.marquee_speed))
+      setChecked('cat-show-fee', catCfg.show_fee !== false)
+    }
+  } catch(_) {}
+  renderCatAdmin()
 }
+
+// ─── COURSE CATEGORIES ADMIN ──────────────────────────────────────────
+const DEFAULT_CATS = [
+  { name:'AI & Machine Learning', color:'#7c3aed', bg_color:'#f5f3ff', courses:[
+    { title:'GEN AI for Everyone', slug:'gen-ai', mode:'online', fee_inr:4999, original_fee_inr:9999, thumbnail_url:'' },
+    { title:'Machine Learning', slug:'machine-learning', mode:'online', fee_inr:5999, original_fee_inr:11999, thumbnail_url:'' },
+  ]},
+  { name:'Web & Full-Stack', color:'#0f2a5c', bg_color:'#eff6ff', courses:[
+    { title:'MERN Stack', slug:'mern-stack', mode:'online', fee_inr:5999, original_fee_inr:11999, thumbnail_url:'' },
+    { title:'React.js', slug:'react', mode:'online', fee_inr:4499, original_fee_inr:8999, thumbnail_url:'' },
+  ]},
+  { name:'Commerce & Accounting', color:'#065f46', bg_color:'#ecfdf5', courses:[
+    { title:'Tally Prime + GST', slug:'tally-prime', mode:'hybrid', fee_inr:2999, original_fee_inr:5999, thumbnail_url:'' },
+  ]},
+  { name:'Kids & Beginners', color:'#b45309', bg_color:'#fffbeb', courses:[
+    { title:'Coding for Kids', slug:'kids-coding', mode:'online', fee_inr:2499, original_fee_inr:4999, thumbnail_url:'' },
+  ]},
+  { name:'Hardware & Networking', color:'#be123c', bg_color:'#fff1f2', courses:[
+    { title:'Hardware + Networking', slug:'hardware-networking', mode:'hybrid', fee_inr:3999, original_fee_inr:7999, thumbnail_url:'' },
+  ]},
+]
+let cats: any[] = JSON.parse(JSON.stringify(DEFAULT_CATS))
+
+function gcv(id:string):string { return ((document.getElementById(id) as HTMLInputElement)?.value||'').trim() }
+function gcChk(id:string):boolean { return !!(document.getElementById(id) as HTMLInputElement)?.checked }
+
+function collectCats() {
+  cats = cats.map((_:any,ci:number) => {
+    const courses:any[] = []
+    let ri = 0
+    while (document.getElementById(`cc-title-${ci}-${ri}`)) {
+      courses.push({
+        title:        gcv(`cc-title-${ci}-${ri}`),
+        slug:         gcv(`cc-slug-${ci}-${ri}`),
+        mode:         (document.getElementById(`cc-mode-${ci}-${ri}`) as HTMLSelectElement)?.value || 'hybrid',
+        fee_inr:      parseInt(gcv(`cc-fee-${ci}-${ri}`)) || 0,
+        original_fee_inr: parseInt(gcv(`cc-ofee-${ci}-${ri}`)) || 0,
+        thumbnail_url:'',
+      })
+      ri++
+    }
+    return {
+      name:     gcv(`ca-name-${ci}`),
+      color:    gcv(`ca-color-hex-${ci}`) || '#0f2a5c',
+      bg_color: gcv(`ca-bg-hex-${ci}`) || '#ffffff',
+      courses,
+    }
+  })
+}
+
+function renderCatAdmin() {
+  const list = document.getElementById('cat-admin-list')
+  if (!list) return
+  list.innerHTML = ''
+  cats.forEach((cat:any, ci:number) => {
+    const div = document.createElement('div')
+    div.className = 'cat-admin-row'
+    const color = cat.color || '#0f2a5c'
+    const bg    = cat.bg_color || '#ffffff'
+    const courseRows = (cat.courses||[]).map((c:any, ri:number) => `
+      <div class="cat-course-row" id="cc-row-${ci}-${ri}">
+        <input class="cat-course-inp" id="cc-title-${ci}-${ri}" value="${(c.title||'').replace(/"/g,'&quot;')}" placeholder="Course title" />
+        <input class="cat-course-inp" id="cc-slug-${ci}-${ri}" value="${(c.slug||'').replace(/"/g,'&quot;')}" placeholder="url-slug" />
+        <select class="cat-course-inp" id="cc-mode-${ci}-${ri}">
+          <option value="online"${c.mode==='online'?' selected':''}>Online</option>
+          <option value="hybrid"${c.mode==='hybrid'?' selected':''}>Hybrid</option>
+          <option value="offline"${c.mode==='offline'?' selected':''}>Offline</option>
+        </select>
+        <input class="cat-course-inp" id="cc-fee-${ci}-${ri}" type="number" value="${c.fee_inr||''}" placeholder="Fee ₹" />
+        <button class="mini-del" onclick="catDelCourse(${ci},${ri})">✕</button>
+      </div>`).join('')
+
+    div.innerHTML = `
+      <div class="cat-admin-hdr" onclick="catToggle(${ci})">
+        <div class="cat-admin-hdr-num" style="background:${color};">${ci+1}</div>
+        <span class="cat-admin-hdr-title">${cat.name||'Category'}</span>
+        <span class="cat-admin-hdr-count">${(cat.courses||[]).length} courses</span>
+        <div class="cat-admin-hdr-btns">
+          <button class="mini-move" onclick="event.stopPropagation();catMove(${ci},-1)">↑</button>
+          <button class="mini-move" onclick="event.stopPropagation();catMove(${ci},1)">↓</button>
+          <button class="mini-del" onclick="event.stopPropagation();catDel(${ci})">✕</button>
+        </div>
+      </div>
+      <div class="cat-admin-body" id="ca-body-${ci}">
+        <div class="cat-meta-row">
+          <div class="cat-field">
+            <label class="cat-lbl">Category Name</label>
+            <input class="cat-inp" id="ca-name-${ci}" value="${(cat.name||'').replace(/"/g,'&quot;')}" placeholder="AI & Machine Learning" />
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+            <div class="cat-field">
+              <label class="cat-lbl">Label Color</label>
+              <div class="cat-color-row">
+                <input type="color" id="ca-color-${ci}" value="${color}" oninput="document.getElementById('ca-color-hex-${ci}').value=this.value" />
+                <input class="cat-inp" id="ca-color-hex-${ci}" value="${color}" maxlength="9" style="width:80px;" oninput="document.getElementById('ca-color-${ci}').value=this.value" />
+              </div>
+            </div>
+            <div class="cat-field">
+              <label class="cat-lbl">Row Background</label>
+              <div class="cat-color-row">
+                <input type="color" id="ca-bg-${ci}" value="${bg}" oninput="document.getElementById('ca-bg-hex-${ci}').value=this.value" />
+                <input class="cat-inp" id="ca-bg-hex-${ci}" value="${bg}" maxlength="9" style="width:80px;" oninput="document.getElementById('ca-bg-${ci}').value=this.value" />
+              </div>
+            </div>
+          </div>
+          <div style="font-size:11px;color:#94a3b8;padding-top:18px;">Row ${ci+1}: scrolls ${ci%2===0?'→ left':'← right'}</div>
+        </div>
+
+        <div style="font-size:11px;font-weight:700;color:#475569;text-transform:uppercase;margin-bottom:6px;">Courses in this category</div>
+        <div class="cat-course-list" id="cc-list-${ci}">
+          <div class="cat-course-hdr">
+            <span>Title</span><span>URL Slug</span><span>Mode</span><span>Fee ₹</span><span></span>
+          </div>
+          ${courseRows}
+        </div>
+        <button class="cat-add-course" onclick="catAddCourse(${ci})">+ Add Course</button>
+      </div>`
+    list.appendChild(div)
+  })
+  if (cats.length <= 3) {
+    cats.forEach((_:any,ci:number) => document.getElementById(`ca-body-${ci}`)?.classList.add('open'))
+  }
+}
+
+;(window as any).catToggle = (ci:number) => document.getElementById(`ca-body-${ci}`)?.classList.toggle('open')
+;(window as any).catDel = (ci:number) => { collectCats(); cats.splice(ci,1); renderCatAdmin() }
+;(window as any).catMove = (ci:number,dir:number) => {
+  collectCats(); const j=ci+dir
+  if(j<0||j>=cats.length) return
+  ;[cats[ci],cats[j]]=[cats[j],cats[ci]]; renderCatAdmin()
+}
+;(window as any).catDelCourse = (ci:number,ri:number) => {
+  collectCats(); cats[ci].courses.splice(ri,1); renderCatAdmin()
+}
+;(window as any).catAddCourse = (ci:number) => {
+  collectCats()
+  cats[ci].courses.push({ title:'New Course', slug:'new-course', mode:'hybrid', fee_inr:2999, original_fee_inr:5999, thumbnail_url:'' })
+  renderCatAdmin()
+  document.getElementById(`ca-body-${ci}`)?.classList.add('open')
+}
+
+document.getElementById('cat-add-btn')?.addEventListener('click', () => {
+  collectCats()
+  cats.push({ name:'New Category', color:'#0f2a5c', bg_color:'#f8fafc', courses:[
+    { title:'Course 1', slug:'course-1', mode:'hybrid', fee_inr:2999, original_fee_inr:5999, thumbnail_url:'' }
+  ]})
+  renderCatAdmin()
+  document.getElementById(`ca-body-${cats.length-1}`)?.classList.add('open')
+})
+
+document.getElementById('cat-save-btn')?.addEventListener('click', async () => {
+  const btn = document.getElementById('cat-save-btn') as HTMLButtonElement
+  btn.disabled=true; btn.textContent='⏳ Saving...'
+  collectCats()
+  const payload = {
+    section_title: gcv('cat-section-title') || 'Courses by Category',
+    section_sub:   gcv('cat-section-sub')   || 'What We Offer',
+    marquee_speed: parseInt(gcv('cat-speed')) || 32,
+    show_fee:      gcChk('cat-show-fee'),
+    categories:    cats,
+  }
+  try {
+    await sbSet('course_categories', payload)
+    showStatus('cat-status', true, '✅ Saved! Reload homepage to see category marquee.')
+  } catch(e) {
+    showStatus('cat-status', false, '❌ Save failed. Check Supabase connection.')
+  }
+  btn.disabled=false; btn.textContent='💾 Save Category Marquee'
+})
+
+// Initialize with defaults immediately
+renderSlides()
+renderCatAdmin()
+renderWhyCards()
 
 preload()
 </script>
