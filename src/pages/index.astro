@@ -507,32 +507,6 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
   </section>
 
   <!-- ══════════════════════════════════════════════════════════════
-       INSTRUCTORS MARQUEE — runtime loaded so photos update instantly
-       JS fetches from Supabase on page load — no rebuild needed.
-  <!-- ══════════════════════════════════════════════════════════════
-       INSTRUCTORS MARQUEE — runtime loaded so photos update instantly
-       JS fetches from Supabase on page load — no rebuild needed.
-  ══════════════════════════════════════════════════════════════ -->
-  <style is:global>
-    @keyframes marquee-ins { 0%{transform:translateX(0)} 100%{transform:translateX(-50%)} }
-    .ins-track { display:flex; width:max-content; animation:marquee-ins 28s linear infinite; gap:0; }
-    .ins-track:hover { animation-play-state:paused; }
-    .ins-card { flex-shrink:0; width:200px; margin:0 12px; background:#fff; border-radius:14px; padding:20px; text-align:center; box-shadow:0 2px 8px rgba(0,0,0,0.06); }
-    .ins-avatar { width:64px; height:64px; border-radius:50%; margin:0 auto 12px; display:flex; align-items:center; justify-content:center; font-family:'Sora',sans-serif; font-weight:800; font-size:1.3rem; color:#fff; background:#0f2a5c; overflow:hidden; flex-shrink:0; }
-    .ins-avatar img { width:100%; height:100%; object-fit:cover; border-radius:50%; }
-    .ins-name { font-weight:700; font-size:14px; color:#1c1c1c; }
-    .ins-spec { font-size:12px; color:#64748b; margin-top:3px; }
-  </style>
-  <section style="padding:56px 0;background:#f8f4ef;overflow:hidden;">
-    <div style="max-width:1200px;margin:0 auto 32px;padding:0 32px;text-align:center;">
-      <p style="font-size:13px;font-weight:700;color:#d4f01a;text-transform:uppercase;letter-spacing:0.08em;margin:0 0 6px;background:#0f2a5c;display:inline-block;padding:3px 10px;border-radius:4px;">Expert Faculty</p>
-      <h2 style="font-family:'Sora',sans-serif;font-size:clamp(1.5rem,3vw,2rem);font-weight:800;color:#1c1c1c;margin:8px 0 0;">Learn from the Best</h2>
-    </div>
-    <!-- JS fills this track at runtime — photos always current, no rebuild needed -->
-    <div id="ins-track" class="ins-track"></div>
-  </section>
-
-  <!-- ══════════════════════════════════════════════════════════════
        MEET OUR FACULTY — DB-driven card carousel, like ateceducation.in
        Fetches from 'faculty' table in Supabase (runtime load — no rebuild needed).
        Fields: name, designation, expert_field, photo_url, sort_order, is_active
@@ -1559,109 +1533,6 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
   })()
 </script>
 
-<!-- ══════════════════════════════════════════════════════════════
-     INSTRUCTORS MARQUEE — runtime JS loader
-     Fetches from Supabase on page load.
-     Photos saved in admin panel show INSTANTLY — no rebuild needed.
-     Falls back to build-time data if DB unavailable.
-══════════════════════════════════════════════════════════════ -->
-<script>
-  ;(function() {
-    // Build-time fallback instructors (shown instantly while DB loads)
-    const FALLBACK_INS = [
-      { name:'Er. Rajesh Kumar',  specialization:'Hardware & Networking', photo_url:'' },
-      { name:'Ms. Seema Rani',    specialization:'Tally & Accounting',    photo_url:'' },
-      { name:'Mr. Aman Goyal',    specialization:'MERN Stack Developer',  photo_url:'' },
-      { name:'Ms. Pooja Sharma',  specialization:'GEN AI & Python',       photo_url:'' },
-      { name:'Er. Vikas Thakur',  specialization:'Linux & Server Admin',  photo_url:'' },
-    ]
-
-    function initials(name) {
-      return (name || '?').split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase()
-    }
-
-    function makeCard(ins) {
-      const card = document.createElement('div')
-      card.className = 'ins-card'
-
-      const avatar = document.createElement('div')
-      avatar.className = 'ins-avatar'
-
-      if (ins.photo_url) {
-        const img = document.createElement('img')
-        img.src = ins.photo_url
-        img.alt = ins.name
-        img.loading = 'lazy'
-        img.onerror = () => {
-          // If image fails, fall back to initials
-          img.remove()
-          avatar.textContent = initials(ins.name)
-        }
-        avatar.appendChild(img)
-      } else {
-        avatar.textContent = initials(ins.name)
-      }
-
-      const name = document.createElement('div')
-      name.className = 'ins-name'
-      name.textContent = ins.name
-
-      const spec = document.createElement('div')
-      spec.className = 'ins-spec'
-      spec.textContent = ins.specialization || ''
-
-      card.appendChild(avatar)
-      card.appendChild(name)
-      card.appendChild(spec)
-      return card
-    }
-
-    function fillTrack(instructors) {
-      const track = document.getElementById('ins-track')
-      if (!track) return
-      track.innerHTML = ''
-      // Double for seamless loop
-      const doubled = [...instructors, ...instructors]
-      doubled.forEach(ins => track.appendChild(makeCard(ins)))
-    }
-
-    async function loadFromDB() {
-      const SB_URL = (window as any).__SB_URL as string
-      const SB_KEY = (window as any).__SB_KEY as string
-      if (!SB_URL || !SB_KEY) return
-      try {
-        const res = await fetch(
-          `${SB_URL}/rest/v1/instructors?is_active=eq.true&order=sort_order.asc.nullslast&limit=20&select=name,specialization,photo_url`,
-          { headers: { apikey: SB_KEY, Authorization: `Bearer ${SB_KEY}` } }
-        )
-        if (!res.ok) return
-        const rows = await res.json()
-        if (Array.isArray(rows) && rows.length > 0) {
-          fillTrack(rows)
-        }
-      } catch(e) {
-        console.warn('[ATEC Instructors]', e)
-      }
-    }
-
-    function boot() {
-      // Show fallback immediately
-      fillTrack(FALLBACK_INS)
-      // Replace with real DB data (with photos) once SB_URL ready
-      function tryLoad() {
-        if ((window as any).__SB_URL) { loadFromDB(); return }
-        let n = 0
-        const t = setInterval(() => {
-          n++
-          if ((window as any).__SB_URL || n > 40) { clearInterval(t); loadFromDB() }
-        }, 50)
-      }
-      tryLoad()
-    }
-
-    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot)
-    else boot()
-  })()
 </script>
 
 <!-- ══════════════════════════════════════════════════════════════
@@ -2415,10 +2286,6 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
         storiesSec.style.background = cfg.stories_gradient || cfg.stories_bg
       }
       // instructors
-      const insSec = document.querySelector('#ins-track')?.closest('section') as HTMLElement|null
-      if (insSec && (cfg.instructors_bg || cfg.instructors_gradient)) {
-        insSec.style.background = cfg.instructors_gradient || cfg.instructors_bg
-      }
 
       // Update CSS variable for primary dark blue if admin changed it
       if (cfg.primary_color) {
