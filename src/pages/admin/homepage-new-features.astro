@@ -170,61 +170,141 @@ import AdminLayout from '../../layouts/AdminLayout.astro'
         </div>
       </div>
 
-      <!-- Card Color Scheme -->
-      <div style="background:#0b1525;border-radius:12px;padding:18px 20px;margin-bottom:20px;">
-        <div style="font-size:13px;font-weight:700;color:#d4f01a;margin-bottom:14px;">🎨 Card Color Scheme — applies to all course cards</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px">
+      <!-- Card Color Scheme — redesigned full panel -->
+      <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:14px;padding:20px;margin-bottom:20px;">
+        <div style="font-size:14px;font-weight:800;color:#1e293b;margin-bottom:4px;">🎨 Card Color Scheme</div>
+        <div style="font-size:12px;color:#94a3b8;margin-bottom:18px;">All changes apply instantly on homepage after Save. Use colour picker or type a hex code.</div>
 
-          <div class="field">
-            <label class="lbl" style="color:rgba(255,255,255,0.55)">Card Background</label>
-            <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
-              <div id="card-bg-preview" style="width:32px;height:32px;border-radius:6px;border:1.5px solid rgba(255,255,255,0.2);background:#0b1525;flex-shrink:0"></div>
+        <!-- Row 1: Card backgrounds -->
+        <div style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid #e2e8f0;">Card Backgrounds</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px">
+          
+          <div>
+            <div style="font-size:11px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px">Thumbnail BG (no image)</div>
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
+              <div id="card-bg-color-preview" style="width:28px;height:28px;border-radius:6px;border:1.5px solid #e2e8f0;background:#0b1525;flex-shrink:0"></div>
               <input type="text" id="card-bg-color" value="#0b1525" maxlength="9"
-                style="font-family:monospace;padding:7px 10px;border:1.5px solid rgba(255,255,255,0.15);border-radius:8px;font-size:13px;color:#fff;background:rgba(255,255,255,0.08);width:100%;outline:none"
-                oninput="document.getElementById('card-bg-preview').style.background=this.value" />
+                style="font-family:monospace;padding:6px 9px;border:1.5px solid #e2e8f0;border-radius:7px;font-size:13px;color:#1e293b;width:100%;outline:none;box-sizing:border-box"
+                oninput="setColor('card-bg-color',this.value)" />
             </div>
-            <div style="display:flex;gap:4px;flex-wrap:wrap">
-              ${['#0b1525','#111827','#1e293b','#0f172a','#1a1a2e','#0d1b2a','#fff','#f8fafc'].map(c =>
-                `<button type="button" onmousedown="event.preventDefault()" onclick="document.getElementById('card-bg-color').value='${c}';document.getElementById('card-bg-preview').style.background='${c}'"
-                  style="width:24px;height:24px;background:${c};border:1.5px solid rgba(255,255,255,0.2);border-radius:5px;cursor:pointer;padding:0"></button>`
-              ).join('')}
-            </div>
+            <div style="display:flex;gap:3px;flex-wrap:wrap"><button type="button" onmousedown="event.preventDefault()" onclick="setColor('card-bg-color','#0b1525')" style="width:22px;height:22px;background:#0b1525;border:1.5px solid #e2e8f0;border-radius:4px;cursor:pointer;padding:0;flex-shrink:0"></button><button type="button" onmousedown="event.preventDefault()" onclick="setColor('card-bg-color','#111827')" style="width:22px;height:22px;background:#111827;border:1.5px solid #e2e8f0;border-radius:4px;cursor:pointer;padding:0;flex-shrink:0"></button><button type="button" onmousedown="event.preventDefault()" onclick="setColor('card-bg-color','#1e293b')" style="width:22px;height:22px;background:#1e293b;border:1.5px solid #e2e8f0;border-radius:4px;cursor:pointer;padding:0;flex-shrink:0"></button><button type="button" onmousedown="event.preventDefault()" onclick="setColor('card-bg-color','#1a1a2e')" style="width:22px;height:22px;background:#1a1a2e;border:1.5px solid #e2e8f0;border-radius:4px;cursor:pointer;padding:0;flex-shrink:0"></button><button type="button" onmousedown="event.preventDefault()" onclick="setColor('card-bg-color','#374151')" style="width:22px;height:22px;background:#374151;border:1.5px solid #e2e8f0;border-radius:4px;cursor:pointer;padding:0;flex-shrink:0"></button><button type="button" onmousedown="event.preventDefault()" onclick="setColor('card-bg-color','#0f172a')" style="width:22px;height:22px;background:#0f172a;border:1.5px solid #e2e8f0;border-radius:4px;cursor:pointer;padding:0;flex-shrink:0"></button><button type="button" onmousedown="event.preventDefault()" onclick="setColor('card-bg-color','#1c1c1c')" style="width:22px;height:22px;background:#1c1c1c;border:1.5px solid #e2e8f0;border-radius:4px;cursor:pointer;padding:0;flex-shrink:0"></button><button type="button" onmousedown="event.preventDefault()" onclick="setColor('card-bg-color','#000')" style="width:22px;height:22px;background:#000;border:1.5px solid #e2e8f0;border-radius:4px;cursor:pointer;padding:0;flex-shrink:0"></button></div>
           </div>
-
-          <div class="field">
-            <label class="lbl" style="color:rgba(255,255,255,0.55)">Title Color</label>
-            <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
-              <div id="card-title-preview" style="width:32px;height:32px;border-radius:6px;border:1.5px solid rgba(255,255,255,0.2);background:#d4f01a;flex-shrink:0"></div>
-              <input type="text" id="card-title-color" value="#d4f01a" maxlength="9"
-                style="font-family:monospace;padding:7px 10px;border:1.5px solid rgba(255,255,255,0.15);border-radius:8px;font-size:13px;color:#fff;background:rgba(255,255,255,0.08);width:100%;outline:none"
-                oninput="document.getElementById('card-title-preview').style.background=this.value" />
+          
+          <div>
+            <div style="font-size:11px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px">Card Body Background</div>
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
+              <div id="card-body-bg-preview" style="width:28px;height:28px;border-radius:6px;border:1.5px solid #e2e8f0;background:#ffffff;flex-shrink:0"></div>
+              <input type="text" id="card-body-bg" value="#ffffff" maxlength="9"
+                style="font-family:monospace;padding:6px 9px;border:1.5px solid #e2e8f0;border-radius:7px;font-size:13px;color:#1e293b;width:100%;outline:none;box-sizing:border-box"
+                oninput="setColor('card-body-bg',this.value)" />
             </div>
-            <div style="display:flex;gap:4px;flex-wrap:wrap">
-              ${['#d4f01a','#ffffff','#f59e0b','#34d399','#60a5fa','#f472b6','#a78bfa','#1c1c1c'].map(c =>
-                `<button type="button" onmousedown="event.preventDefault()" onclick="document.getElementById('card-title-color').value='${c}';document.getElementById('card-title-preview').style.background='${c}'"
-                  style="width:24px;height:24px;background:${c};border:1.5px solid rgba(255,255,255,0.2);border-radius:5px;cursor:pointer;padding:0"></button>`
-              ).join('')}
-            </div>
+            <div style="display:flex;gap:3px;flex-wrap:wrap"><button type="button" onmousedown="event.preventDefault()" onclick="setColor('card-body-bg','#ffffff')" style="width:22px;height:22px;background:#ffffff;border:1.5px solid #e2e8f0;border-radius:4px;cursor:pointer;padding:0;flex-shrink:0"></button><button type="button" onmousedown="event.preventDefault()" onclick="setColor('card-body-bg','#f9fafb')" style="width:22px;height:22px;background:#f9fafb;border:1.5px solid #e2e8f0;border-radius:4px;cursor:pointer;padding:0;flex-shrink:0"></button><button type="button" onmousedown="event.preventDefault()" onclick="setColor('card-body-bg','#f1f5f9')" style="width:22px;height:22px;background:#f1f5f9;border:1.5px solid #e2e8f0;border-radius:4px;cursor:pointer;padding:0;flex-shrink:0"></button><button type="button" onmousedown="event.preventDefault()" onclick="setColor('card-body-bg','#fff7ed')" style="width:22px;height:22px;background:#fff7ed;border:1.5px solid #e2e8f0;border-radius:4px;cursor:pointer;padding:0;flex-shrink:0"></button><button type="button" onmousedown="event.preventDefault()" onclick="setColor('card-body-bg','#fef3c7')" style="width:22px;height:22px;background:#fef3c7;border:1.5px solid #e2e8f0;border-radius:4px;cursor:pointer;padding:0;flex-shrink:0"></button><button type="button" onmousedown="event.preventDefault()" onclick="setColor('card-body-bg','#f0fdf4')" style="width:22px;height:22px;background:#f0fdf4;border:1.5px solid #e2e8f0;border-radius:4px;cursor:pointer;padding:0;flex-shrink:0"></button><button type="button" onmousedown="event.preventDefault()" onclick="setColor('card-body-bg','#eff6ff')" style="width:22px;height:22px;background:#eff6ff;border:1.5px solid #e2e8f0;border-radius:4px;cursor:pointer;padding:0;flex-shrink:0"></button><button type="button" onmousedown="event.preventDefault()" onclick="setColor('card-body-bg','#fdf4ff')" style="width:22px;height:22px;background:#fdf4ff;border:1.5px solid #e2e8f0;border-radius:4px;cursor:pointer;padding:0;flex-shrink:0"></button></div>
           </div>
-
-          <div class="field">
-            <label class="lbl" style="color:rgba(255,255,255,0.55)">Price Color</label>
-            <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
-              <div id="card-fee-preview" style="width:32px;height:32px;border-radius:6px;border:1.5px solid rgba(255,255,255,0.2);background:#d4f01a;flex-shrink:0"></div>
-              <input type="text" id="card-fee-color" value="#d4f01a" maxlength="9"
-                style="font-family:monospace;padding:7px 10px;border:1.5px solid rgba(255,255,255,0.15);border-radius:8px;font-size:13px;color:#fff;background:rgba(255,255,255,0.08);width:100%;outline:none"
-                oninput="document.getElementById('card-fee-preview').style.background=this.value" />
-            </div>
-            <div style="display:flex;gap:4px;flex-wrap:wrap">
-              ${['#d4f01a','#ffffff','#f59e0b','#34d399','#60a5fa','#f472b6','#a78bfa','#1c1c1c'].map(c =>
-                `<button type="button" onmousedown="event.preventDefault()" onclick="document.getElementById('card-fee-color').value='${c}';document.getElementById('card-fee-preview').style.background='${c}'"
-                  style="width:24px;height:24px;background:${c};border:1.5px solid rgba(255,255,255,0.2);border-radius:5px;cursor:pointer;padding:0"></button>`
-              ).join('')}
-            </div>
-          </div>
-
         </div>
-        <div style="font-size:11px;color:rgba(255,255,255,0.35);margin-top:10px">Description text is always rgba(255,255,255,0.72). Hit Save Categories to apply.</div>
+
+        <!-- Row 2: Text colors -->
+        <div style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid #e2e8f0;">Text Colors</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:18px">
+          
+          <div>
+            <div style="font-size:11px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px">Course Title</div>
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
+              <div id="card-title-color-preview" style="width:28px;height:28px;border-radius:6px;border:1.5px solid #e2e8f0;background:#1c1c1c;flex-shrink:0"></div>
+              <input type="text" id="card-title-color" value="#1c1c1c" maxlength="9"
+                style="font-family:monospace;padding:6px 9px;border:1.5px solid #e2e8f0;border-radius:7px;font-size:13px;color:#1e293b;width:100%;outline:none;box-sizing:border-box"
+                oninput="setColor('card-title-color',this.value)" />
+            </div>
+            <div style="display:flex;gap:3px;flex-wrap:wrap"><button type="button" onmousedown="event.preventDefault()" onclick="setColor('card-title-color','#1c1c1c')" style="width:22px;height:22px;background:#1c1c1c;border:1.5px solid #e2e8f0;border-radius:4px;cursor:pointer;padding:0;flex-shrink:0"></button><button type="button" onmousedown="event.preventDefault()" onclick="setColor('card-title-color','#111827')" style="width:22px;height:22px;background:#111827;border:1.5px solid #e2e8f0;border-radius:4px;cursor:pointer;padding:0;flex-shrink:0"></button><button type="button" onmousedown="event.preventDefault()" onclick="setColor('card-title-color','#374151')" style="width:22px;height:22px;background:#374151;border:1.5px solid #e2e8f0;border-radius:4px;cursor:pointer;padding:0;flex-shrink:0"></button><button type="button" onmousedown="event.preventDefault()" onclick="setColor('card-title-color','#475569')" style="width:22px;height:22px;background:#475569;border:1.5px solid #e2e8f0;border-radius:4px;cursor:pointer;padding:0;flex-shrink:0"></button><button type="button" onmousedown="event.preventDefault()" onclick="setColor('card-title-color','#0b1525')" style="width:22px;height:22px;background:#0b1525;border:1.5px solid #e2e8f0;border-radius:4px;cursor:pointer;padding:0;flex-shrink:0"></button><button type="button" onmousedown="event.preventDefault()" onclick="setColor('card-title-color','#ffffff')" style="width:22px;height:22px;background:#ffffff;border:1.5px solid #e2e8f0;border-radius:4px;cursor:pointer;padding:0;flex-shrink:0"></button><button type="button" onmousedown="event.preventDefault()" onclick="setColor('card-title-color','#d4f01a')" style="width:22px;height:22px;background:#d4f01a;border:1.5px solid #e2e8f0;border-radius:4px;cursor:pointer;padding:0;flex-shrink:0"></button><button type="button" onmousedown="event.preventDefault()" onclick="setColor('card-title-color','#f59e0b')" style="width:22px;height:22px;background:#f59e0b;border:1.5px solid #e2e8f0;border-radius:4px;cursor:pointer;padding:0;flex-shrink:0"></button></div>
+          </div>
+          
+          <div>
+            <div style="font-size:11px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px">Description</div>
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
+              <div id="card-desc-color-preview" style="width:28px;height:28px;border-radius:6px;border:1.5px solid #e2e8f0;background:#475569;flex-shrink:0"></div>
+              <input type="text" id="card-desc-color" value="#475569" maxlength="9"
+                style="font-family:monospace;padding:6px 9px;border:1.5px solid #e2e8f0;border-radius:7px;font-size:13px;color:#1e293b;width:100%;outline:none;box-sizing:border-box"
+                oninput="setColor('card-desc-color',this.value)" />
+            </div>
+            <div style="display:flex;gap:3px;flex-wrap:wrap"><button type="button" onmousedown="event.preventDefault()" onclick="setColor('card-desc-color','#1c1c1c')" style="width:22px;height:22px;background:#1c1c1c;border:1.5px solid #e2e8f0;border-radius:4px;cursor:pointer;padding:0;flex-shrink:0"></button><button type="button" onmousedown="event.preventDefault()" onclick="setColor('card-desc-color','#111827')" style="width:22px;height:22px;background:#111827;border:1.5px solid #e2e8f0;border-radius:4px;cursor:pointer;padding:0;flex-shrink:0"></button><button type="button" onmousedown="event.preventDefault()" onclick="setColor('card-desc-color','#374151')" style="width:22px;height:22px;background:#374151;border:1.5px solid #e2e8f0;border-radius:4px;cursor:pointer;padding:0;flex-shrink:0"></button><button type="button" onmousedown="event.preventDefault()" onclick="setColor('card-desc-color','#475569')" style="width:22px;height:22px;background:#475569;border:1.5px solid #e2e8f0;border-radius:4px;cursor:pointer;padding:0;flex-shrink:0"></button><button type="button" onmousedown="event.preventDefault()" onclick="setColor('card-desc-color','#0b1525')" style="width:22px;height:22px;background:#0b1525;border:1.5px solid #e2e8f0;border-radius:4px;cursor:pointer;padding:0;flex-shrink:0"></button><button type="button" onmousedown="event.preventDefault()" onclick="setColor('card-desc-color','#ffffff')" style="width:22px;height:22px;background:#ffffff;border:1.5px solid #e2e8f0;border-radius:4px;cursor:pointer;padding:0;flex-shrink:0"></button><button type="button" onmousedown="event.preventDefault()" onclick="setColor('card-desc-color','#d4f01a')" style="width:22px;height:22px;background:#d4f01a;border:1.5px solid #e2e8f0;border-radius:4px;cursor:pointer;padding:0;flex-shrink:0"></button><button type="button" onmousedown="event.preventDefault()" onclick="setColor('card-desc-color','#f59e0b')" style="width:22px;height:22px;background:#f59e0b;border:1.5px solid #e2e8f0;border-radius:4px;cursor:pointer;padding:0;flex-shrink:0"></button></div>
+          </div>
+          
+          <div>
+            <div style="font-size:11px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px">Price</div>
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
+              <div id="card-fee-color-preview" style="width:28px;height:28px;border-radius:6px;border:1.5px solid #e2e8f0;background:#0b1525;flex-shrink:0"></div>
+              <input type="text" id="card-fee-color" value="#0b1525" maxlength="9"
+                style="font-family:monospace;padding:6px 9px;border:1.5px solid #e2e8f0;border-radius:7px;font-size:13px;color:#1e293b;width:100%;outline:none;box-sizing:border-box"
+                oninput="setColor('card-fee-color',this.value)" />
+            </div>
+            <div style="display:flex;gap:3px;flex-wrap:wrap"><button type="button" onmousedown="event.preventDefault()" onclick="setColor('card-fee-color','#d4f01a')" style="width:22px;height:22px;background:#d4f01a;border:1.5px solid #e2e8f0;border-radius:4px;cursor:pointer;padding:0;flex-shrink:0"></button><button type="button" onmousedown="event.preventDefault()" onclick="setColor('card-fee-color','#ffffff')" style="width:22px;height:22px;background:#ffffff;border:1.5px solid #e2e8f0;border-radius:4px;cursor:pointer;padding:0;flex-shrink:0"></button><button type="button" onmousedown="event.preventDefault()" onclick="setColor('card-fee-color','#f59e0b')" style="width:22px;height:22px;background:#f59e0b;border:1.5px solid #e2e8f0;border-radius:4px;cursor:pointer;padding:0;flex-shrink:0"></button><button type="button" onmousedown="event.preventDefault()" onclick="setColor('card-fee-color','#34d399')" style="width:22px;height:22px;background:#34d399;border:1.5px solid #e2e8f0;border-radius:4px;cursor:pointer;padding:0;flex-shrink:0"></button><button type="button" onmousedown="event.preventDefault()" onclick="setColor('card-fee-color','#60a5fa')" style="width:22px;height:22px;background:#60a5fa;border:1.5px solid #e2e8f0;border-radius:4px;cursor:pointer;padding:0;flex-shrink:0"></button><button type="button" onmousedown="event.preventDefault()" onclick="setColor('card-fee-color','#ea580c')" style="width:22px;height:22px;background:#ea580c;border:1.5px solid #e2e8f0;border-radius:4px;cursor:pointer;padding:0;flex-shrink:0"></button><button type="button" onmousedown="event.preventDefault()" onclick="setColor('card-fee-color','#1c1c1c')" style="width:22px;height:22px;background:#1c1c1c;border:1.5px solid #e2e8f0;border-radius:4px;cursor:pointer;padding:0;flex-shrink:0"></button><button type="button" onmousedown="event.preventDefault()" onclick="setColor('card-fee-color','#0b1525')" style="width:22px;height:22px;background:#0b1525;border:1.5px solid #e2e8f0;border-radius:4px;cursor:pointer;padding:0;flex-shrink:0"></button></div>
+          </div>
+        </div>
+
+        <!-- Row 3: Button colors -->
+        <div style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid #e2e8f0;">Action Buttons</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:14px">
+          
+          <div>
+            <div style="font-size:11px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px">Enquire BG</div>
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
+              <div id="btn1-bg-preview" style="width:28px;height:28px;border-radius:6px;border:1.5px solid #e2e8f0;background:#ea580c;flex-shrink:0"></div>
+              <input type="text" id="btn1-bg" value="#ea580c" maxlength="9"
+                style="font-family:monospace;padding:6px 9px;border:1.5px solid #e2e8f0;border-radius:7px;font-size:13px;color:#1e293b;width:100%;outline:none;box-sizing:border-box"
+                oninput="setColor('btn1-bg',this.value)" />
+            </div>
+            <div style="display:flex;gap:3px;flex-wrap:wrap"><button type="button" onmousedown="event.preventDefault()" onclick="setColor('btn1-bg','#ea580c')" style="width:22px;height:22px;background:#ea580c;border:1.5px solid #e2e8f0;border-radius:4px;cursor:pointer;padding:0;flex-shrink:0"></button><button type="button" onmousedown="event.preventDefault()" onclick="setColor('btn1-bg','#0b1525')" style="width:22px;height:22px;background:#0b1525;border:1.5px solid #e2e8f0;border-radius:4px;cursor:pointer;padding:0;flex-shrink:0"></button><button type="button" onmousedown="event.preventDefault()" onclick="setColor('btn1-bg','#16a34a')" style="width:22px;height:22px;background:#16a34a;border:1.5px solid #e2e8f0;border-radius:4px;cursor:pointer;padding:0;flex-shrink:0"></button><button type="button" onmousedown="event.preventDefault()" onclick="setColor('btn1-bg','#7c3aed')" style="width:22px;height:22px;background:#7c3aed;border:1.5px solid #e2e8f0;border-radius:4px;cursor:pointer;padding:0;flex-shrink:0"></button><button type="button" onmousedown="event.preventDefault()" onclick="setColor('btn1-bg','#dc2626')" style="width:22px;height:22px;background:#dc2626;border:1.5px solid #e2e8f0;border-radius:4px;cursor:pointer;padding:0;flex-shrink:0"></button><button type="button" onmousedown="event.preventDefault()" onclick="setColor('btn1-bg','#0891b2')" style="width:22px;height:22px;background:#0891b2;border:1.5px solid #e2e8f0;border-radius:4px;cursor:pointer;padding:0;flex-shrink:0"></button><button type="button" onmousedown="event.preventDefault()" onclick="setColor('btn1-bg','#d4f01a')" style="width:22px;height:22px;background:#d4f01a;border:1.5px solid #e2e8f0;border-radius:4px;cursor:pointer;padding:0;flex-shrink:0"></button><button type="button" onmousedown="event.preventDefault()" onclick="setColor('btn1-bg','#fff')" style="width:22px;height:22px;background:#fff;border:1.5px solid #e2e8f0;border-radius:4px;cursor:pointer;padding:0;flex-shrink:0"></button></div>
+          </div>
+          
+          <div>
+            <div style="font-size:11px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px">Enquire Text</div>
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
+              <div id="btn1-color-preview" style="width:28px;height:28px;border-radius:6px;border:1.5px solid #e2e8f0;background:#ffffff;flex-shrink:0"></div>
+              <input type="text" id="btn1-color" value="#ffffff" maxlength="9"
+                style="font-family:monospace;padding:6px 9px;border:1.5px solid #e2e8f0;border-radius:7px;font-size:13px;color:#1e293b;width:100%;outline:none;box-sizing:border-box"
+                oninput="setColor('btn1-color',this.value)" />
+            </div>
+            <div style="display:flex;gap:3px;flex-wrap:wrap"><button type="button" onmousedown="event.preventDefault()" onclick="setColor('btn1-color','#fff')" style="width:22px;height:22px;background:#fff;border:1.5px solid #e2e8f0;border-radius:4px;cursor:pointer;padding:0;flex-shrink:0"></button><button type="button" onmousedown="event.preventDefault()" onclick="setColor('btn1-color','#1c1c1c')" style="width:22px;height:22px;background:#1c1c1c;border:1.5px solid #e2e8f0;border-radius:4px;cursor:pointer;padding:0;flex-shrink:0"></button><button type="button" onmousedown="event.preventDefault()" onclick="setColor('btn1-color','#d4f01a')" style="width:22px;height:22px;background:#d4f01a;border:1.5px solid #e2e8f0;border-radius:4px;cursor:pointer;padding:0;flex-shrink:0"></button><button type="button" onmousedown="event.preventDefault()" onclick="setColor('btn1-color','#0b1525')" style="width:22px;height:22px;background:#0b1525;border:1.5px solid #e2e8f0;border-radius:4px;cursor:pointer;padding:0;flex-shrink:0"></button><button type="button" onmousedown="event.preventDefault()" onclick="setColor('btn1-color','#f59e0b')" style="width:22px;height:22px;background:#f59e0b;border:1.5px solid #e2e8f0;border-radius:4px;cursor:pointer;padding:0;flex-shrink:0"></button><button type="button" onmousedown="event.preventDefault()" onclick="setColor('btn1-color','#000')" style="width:22px;height:22px;background:#000;border:1.5px solid #e2e8f0;border-radius:4px;cursor:pointer;padding:0;flex-shrink:0"></button><button type="button" onmousedown="event.preventDefault()" onclick="setColor('btn1-color','#f1f5f9')" style="width:22px;height:22px;background:#f1f5f9;border:1.5px solid #e2e8f0;border-radius:4px;cursor:pointer;padding:0;flex-shrink:0"></button><button type="button" onmousedown="event.preventDefault()" onclick="setColor('btn1-color','#fef3c7')" style="width:22px;height:22px;background:#fef3c7;border:1.5px solid #e2e8f0;border-radius:4px;cursor:pointer;padding:0;flex-shrink:0"></button></div>
+          </div>
+          
+          <div>
+            <div style="font-size:11px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px">Syllabus BG</div>
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
+              <div id="btn2-bg-preview" style="width:28px;height:28px;border-radius:6px;border:1.5px solid #e2e8f0;background:#0b1525;flex-shrink:0"></div>
+              <input type="text" id="btn2-bg" value="#0b1525" maxlength="9"
+                style="font-family:monospace;padding:6px 9px;border:1.5px solid #e2e8f0;border-radius:7px;font-size:13px;color:#1e293b;width:100%;outline:none;box-sizing:border-box"
+                oninput="setColor('btn2-bg',this.value)" />
+            </div>
+            <div style="display:flex;gap:3px;flex-wrap:wrap"><button type="button" onmousedown="event.preventDefault()" onclick="setColor('btn2-bg','#ea580c')" style="width:22px;height:22px;background:#ea580c;border:1.5px solid #e2e8f0;border-radius:4px;cursor:pointer;padding:0;flex-shrink:0"></button><button type="button" onmousedown="event.preventDefault()" onclick="setColor('btn2-bg','#0b1525')" style="width:22px;height:22px;background:#0b1525;border:1.5px solid #e2e8f0;border-radius:4px;cursor:pointer;padding:0;flex-shrink:0"></button><button type="button" onmousedown="event.preventDefault()" onclick="setColor('btn2-bg','#16a34a')" style="width:22px;height:22px;background:#16a34a;border:1.5px solid #e2e8f0;border-radius:4px;cursor:pointer;padding:0;flex-shrink:0"></button><button type="button" onmousedown="event.preventDefault()" onclick="setColor('btn2-bg','#7c3aed')" style="width:22px;height:22px;background:#7c3aed;border:1.5px solid #e2e8f0;border-radius:4px;cursor:pointer;padding:0;flex-shrink:0"></button><button type="button" onmousedown="event.preventDefault()" onclick="setColor('btn2-bg','#dc2626')" style="width:22px;height:22px;background:#dc2626;border:1.5px solid #e2e8f0;border-radius:4px;cursor:pointer;padding:0;flex-shrink:0"></button><button type="button" onmousedown="event.preventDefault()" onclick="setColor('btn2-bg','#0891b2')" style="width:22px;height:22px;background:#0891b2;border:1.5px solid #e2e8f0;border-radius:4px;cursor:pointer;padding:0;flex-shrink:0"></button><button type="button" onmousedown="event.preventDefault()" onclick="setColor('btn2-bg','#d4f01a')" style="width:22px;height:22px;background:#d4f01a;border:1.5px solid #e2e8f0;border-radius:4px;cursor:pointer;padding:0;flex-shrink:0"></button><button type="button" onmousedown="event.preventDefault()" onclick="setColor('btn2-bg','#fff')" style="width:22px;height:22px;background:#fff;border:1.5px solid #e2e8f0;border-radius:4px;cursor:pointer;padding:0;flex-shrink:0"></button></div>
+          </div>
+          
+          <div>
+            <div style="font-size:11px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px">Syllabus Text</div>
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
+              <div id="btn2-color-preview" style="width:28px;height:28px;border-radius:6px;border:1.5px solid #e2e8f0;background:#ffffff;flex-shrink:0"></div>
+              <input type="text" id="btn2-color" value="#ffffff" maxlength="9"
+                style="font-family:monospace;padding:6px 9px;border:1.5px solid #e2e8f0;border-radius:7px;font-size:13px;color:#1e293b;width:100%;outline:none;box-sizing:border-box"
+                oninput="setColor('btn2-color',this.value)" />
+            </div>
+            <div style="display:flex;gap:3px;flex-wrap:wrap"><button type="button" onmousedown="event.preventDefault()" onclick="setColor('btn2-color','#fff')" style="width:22px;height:22px;background:#fff;border:1.5px solid #e2e8f0;border-radius:4px;cursor:pointer;padding:0;flex-shrink:0"></button><button type="button" onmousedown="event.preventDefault()" onclick="setColor('btn2-color','#d4f01a')" style="width:22px;height:22px;background:#d4f01a;border:1.5px solid #e2e8f0;border-radius:4px;cursor:pointer;padding:0;flex-shrink:0"></button><button type="button" onmousedown="event.preventDefault()" onclick="setColor('btn2-color','#1c1c1c')" style="width:22px;height:22px;background:#1c1c1c;border:1.5px solid #e2e8f0;border-radius:4px;cursor:pointer;padding:0;flex-shrink:0"></button><button type="button" onmousedown="event.preventDefault()" onclick="setColor('btn2-color','#0b1525')" style="width:22px;height:22px;background:#0b1525;border:1.5px solid #e2e8f0;border-radius:4px;cursor:pointer;padding:0;flex-shrink:0"></button><button type="button" onmousedown="event.preventDefault()" onclick="setColor('btn2-color','#f59e0b')" style="width:22px;height:22px;background:#f59e0b;border:1.5px solid #e2e8f0;border-radius:4px;cursor:pointer;padding:0;flex-shrink:0"></button><button type="button" onmousedown="event.preventDefault()" onclick="setColor('btn2-color','#000')" style="width:22px;height:22px;background:#000;border:1.5px solid #e2e8f0;border-radius:4px;cursor:pointer;padding:0;flex-shrink:0"></button><button type="button" onmousedown="event.preventDefault()" onclick="setColor('btn2-color','#f1f5f9')" style="width:22px;height:22px;background:#f1f5f9;border:1.5px solid #e2e8f0;border-radius:4px;cursor:pointer;padding:0;flex-shrink:0"></button><button type="button" onmousedown="event.preventDefault()" onclick="setColor('btn2-color','#fef3c7')" style="width:22px;height:22px;background:#fef3c7;border:1.5px solid #e2e8f0;border-radius:4px;cursor:pointer;padding:0;flex-shrink:0"></button></div>
+          </div>
+        </div>
+
+        <!-- Live mini preview -->
+        <div style="margin-top:18px;padding-top:16px;border-top:1px solid #e2e8f0">
+          <div style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:10px">Live Preview</div>
+          <div id="card-live-preview" style="width:220px;border-radius:12px;overflow:hidden;border:1px solid #e2e8f0;box-shadow:0 3px 12px rgba(0,0,0,0.08)">
+            <div id="prev-thumb" style="height:120px;background:#0b1525;display:flex;align-items:center;justify-content:center;font-family:Sora,sans-serif;font-size:14px;font-weight:900;color:#d4f01a;text-align:center;padding:12px">GEN AI for Everyone</div>
+            <div id="prev-body" style="padding:12px 14px;background:#ffffff">
+              <div id="prev-title" style="font-size:14px;font-weight:800;color:#1c1c1c;margin-bottom:4px">GEN AI for Everyone</div>
+              <div id="prev-desc" style="font-size:11px;color:#475569;margin-bottom:8px">Master ChatGPT, AI automation tools</div>
+              <div id="prev-fee" style="font-size:14px;font-weight:900;color:#0b1525;margin-bottom:10px">₹4,999</div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+                <div id="prev-btn1" style="background:#ea580c;color:#fff;text-align:center;padding:6px;border-radius:7px;font-size:10px;font-weight:700">💬 Enquire</div>
+                <div id="prev-btn2" style="background:#0b1525;color:#fff;text-align:center;padding:6px;border-radius:7px;font-size:10px;font-weight:700">📄 Syllabus</div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div id="cat-admin-list"></div>
@@ -596,10 +676,13 @@ function collectCats() {
         title:             gcv(`cc-title-${ci}-${ri}`),
         slug:              gcv(`cc-slug-${ci}-${ri}`),
         short_description: gcv(`cc-desc-${ci}-${ri}`),
+        syllabus_url:      gcv(`cc-syllabus-${ci}-${ri}`),
+        thumbnail_url:     gcv(`cc-thumb-${ci}-${ri}`),
         mode:              (document.getElementById(`cc-mode-${ci}-${ri}`) as HTMLSelectElement)?.value || 'hybrid',
+        level:             (document.getElementById(`cc-level-${ci}-${ri}`) as HTMLSelectElement)?.value || '',
         fee_inr:           parseInt(gcv(`cc-fee-${ci}-${ri}`)) || 0,
         original_fee_inr:  parseInt(gcv(`cc-ofee-${ci}-${ri}`)) || 0,
-        thumbnail_url:     '',
+        duration_weeks:    parseInt(gcv(`cc-weeks-${ci}-${ri}`)) || 0,
       })
       ri++
     }
@@ -615,18 +698,66 @@ function renderCatAdmin() {
     const color = cat.color || '#0f2a5c'
     const bg    = cat.bg_color || '#ffffff'
     const courseRows = (cat.courses||[]).map((c: any, ri: number) => `
-      <div class="course-row" id="cc-row-${ci}-${ri}">
-        <input class="course-inp" id="cc-title-${ci}-${ri}" value="${(c.title||'').replace(/"/g,'&quot;')}" placeholder="Course title" />
-        <input class="course-inp" id="cc-desc-${ci}-${ri}" value="${(c.short_description||'').replace(/"/g,'&quot;')}" placeholder="Short description (shows on card)" />
-        <select class="course-inp" id="cc-mode-${ci}-${ri}">
-          <option value="online"${c.mode==='online'?' selected':''}>Online</option>
-          <option value="hybrid"${c.mode==='hybrid'?' selected':''}>Hybrid</option>
-          <option value="offline"${c.mode==='offline'?' selected':''}>Offline</option>
-        </select>
-        <input class="course-inp" id="cc-fee-${ci}-${ri}" type="number" value="${c.fee_inr||''}" placeholder="Fee ₹" />
-        <input class="course-inp" id="cc-slug-${ci}-${ri}" value="${(c.slug||'').replace(/"/g,'&quot;')}" placeholder="slug" style="display:none" />
-        <input class="course-inp" id="cc-ofee-${ci}-${ri}" type="number" value="${c.original_fee_inr||''}" placeholder="Orig ₹" style="display:none" />
-        <button class="btn-sm del" style="padding:4px 8px" onclick="catDelCourse(${ci},${ri})">✕</button>
+      <div style="border:1px solid #e2e8f0;border-radius:10px;margin-bottom:8px;overflow:hidden;background:#fafbfc">
+        <div style="display:flex;align-items:center;gap:6px;padding:8px 12px;background:#f1f5f9">
+          <span style="font-size:11px;font-weight:700;color:#475569;flex:1">${c.title||'New Course'}</span>
+          <button class="btn-sm del" onclick="catDelCourse(${ci},${ri})">✕ Remove</button>
+        </div>
+        <div style="padding:10px 12px;display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <div>
+            <div style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;margin-bottom:3px">Course Title</div>
+            <input class="course-inp" id="cc-title-${ci}-${ri}" value="${(c.title||'').replace(/"/g,'&quot;')}" placeholder="e.g. GEN AI for Everyone" style="width:100%" />
+          </div>
+          <div>
+            <div style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;margin-bottom:3px">Short Description</div>
+            <input class="course-inp" id="cc-desc-${ci}-${ri}" value="${(c.short_description||'').replace(/"/g,'&quot;')}" placeholder="Shows below title on card" style="width:100%" />
+          </div>
+          <div>
+            <div style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;margin-bottom:3px">Course Slug</div>
+            <input class="course-inp" id="cc-slug-${ci}-${ri}" value="${(c.slug||'').replace(/"/g,'&quot;')}" placeholder="gen-ai" style="width:100%" />
+          </div>
+          <div>
+            <div style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;margin-bottom:3px">Syllabus / Detail URL</div>
+            <input class="course-inp" id="cc-syllabus-${ci}-${ri}" value="${(c.syllabus_url||'').replace(/"/g,'&quot;')}" placeholder="/courses/gen-ai or PDF link" style="width:100%" />
+          </div>
+          <div>
+            <div style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;margin-bottom:3px">Thumbnail URL</div>
+            <input class="course-inp" id="cc-thumb-${ci}-${ri}" value="${(c.thumbnail_url||'').replace(/"/g,'&quot;')}" placeholder="https://... image URL" style="width:100%" />
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px">
+            <div>
+              <div style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;margin-bottom:3px">Fee ₹</div>
+              <input class="course-inp" id="cc-fee-${ci}-${ri}" type="number" value="${c.fee_inr||''}" placeholder="4999" style="width:100%" />
+            </div>
+            <div>
+              <div style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;margin-bottom:3px">Orig ₹</div>
+              <input class="course-inp" id="cc-ofee-${ci}-${ri}" type="number" value="${c.original_fee_inr||''}" placeholder="9999" style="width:100%" />
+            </div>
+            <div>
+              <div style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;margin-bottom:3px">Weeks</div>
+              <input class="course-inp" id="cc-weeks-${ci}-${ri}" type="number" value="${c.duration_weeks||''}" placeholder="8" style="width:100%" />
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+            <div>
+              <div style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;margin-bottom:3px">Mode</div>
+              <select class="course-inp" id="cc-mode-${ci}-${ri}" style="width:100%">
+                <option value="online"${c.mode==='online'?' selected':''}>Online</option>
+                <option value="hybrid"${c.mode==='hybrid'?' selected':''}>Hybrid</option>
+                <option value="classroom"${c.mode==='classroom'?' selected':''}>Classroom</option>
+              </select>
+            </div>
+            <div>
+              <div style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;margin-bottom:3px">Level</div>
+              <select class="course-inp" id="cc-level-${ci}-${ri}" style="width:100%">
+                <option value=""${!c.level?' selected':''}>— None —</option>
+                <option value="Beginner"${c.level==='Beginner'?' selected':''}>Beginner</option>
+                <option value="Intermediate"${c.level==='Intermediate'?' selected':''}>Intermediate</option>
+                <option value="Advanced"${c.level==='Advanced'?' selected':''}>Advanced</option>
+              </select>
+            </div>
+          </div>
+        </div>
       </div>`).join('')
 
     const div = document.createElement('div')
@@ -666,8 +797,8 @@ function renderCatAdmin() {
           </div>
           <div style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;margin-bottom:8px">Courses in this row</div>
           <div style="border:1px solid #f1f5f9;border-radius:8px;overflow:hidden">
-            <div class="course-hdr">
-              <span>Title</span><span>Description (shown on card)</span><span>Mode</span><span>Fee ₹</span><span></span>
+            <div style="font-size:11px;font-weight:700;color:#64748b;padding:6px 12px;background:#f1f5f9;border-radius:6px;margin-bottom:6px">
+              Click any course below to expand and edit all fields
             </div>
             <div id="cc-list-${ci}">${courseRows}</div>
           </div>
@@ -717,14 +848,20 @@ document.getElementById('cat-save-btn')?.addEventListener('click', async () => {
   btn.disabled = true; btn.textContent = '⏳ Saving…'
   collectCats()
   const payload = {
-    section_title:    gcv('cat-section-title') || 'Courses by Category',
-    section_sub:      gcv('cat-section-sub')   || 'What We Offer',
-    show_fee:         gcChk('cat-show-fee'),
-    font_name:        "'Sora',sans-serif",
-    card_bg_color:    gcv('card-bg-color')    || '#0b1525',
-    card_title_color: gcv('card-title-color') || '#d4f01a',
-    card_fee_color:   gcv('card-fee-color')   || '#d4f01a',
-    categories:       cats,
+    section_title:      gcv('cat-section-title') || 'Courses by Category',
+    section_sub:        gcv('cat-section-sub')   || 'What We Offer',
+    show_fee:           gcChk('cat-show-fee'),
+    font_name:          "'Sora',sans-serif",
+    card_bg_color:      gcv('card-bg-color')     || '#0b1525',
+    card_body_bg:       gcv('card-body-bg')      || '#ffffff',
+    card_title_color:   gcv('card-title-color')  || '#1c1c1c',
+    card_desc_color:    gcv('card-desc-color')   || '#475569',
+    card_fee_color:     gcv('card-fee-color')    || '#0b1525',
+    btn1_bg:            gcv('btn1-bg')           || '#ea580c',
+    btn1_color:         gcv('btn1-color')        || '#ffffff',
+    btn2_bg:            gcv('btn2-bg')           || '#0b1525',
+    btn2_color:         gcv('btn2-color')        || '#ffffff',
+    categories:         cats,
   }
   try {
     await sbSet('course_categories', payload)
@@ -756,6 +893,34 @@ document.getElementById('popup-save-btn')?.addEventListener('click', async () =>
 // ═══════════════════════════════════════════════════════════
 // PRELOAD from DB
 // ═══════════════════════════════════════════════════════════
+// ── setColor: updates input, preview dot, and live card preview ─────
+function setColor(id, val) {
+  if (!val) return
+  const inp = document.getElementById(id)
+  if (inp && inp.value !== val) inp.value = val
+  const prev = document.getElementById(id + '-preview')
+  if (prev) prev.style.background = val
+  // Update live card preview
+  const previewMap = {
+    'card-bg-color':    ['prev-thumb', 'bg'],
+    'card-body-bg':     ['prev-body',  'bg'],
+    'card-title-color': ['prev-title', 'color'],
+    'card-desc-color':  ['prev-desc',  'color'],
+    'card-fee-color':   ['prev-fee',   'color'],
+    'btn1-bg':          ['prev-btn1',  'bg'],
+    'btn1-color':       ['prev-btn1',  'color'],
+    'btn2-bg':          ['prev-btn2',  'bg'],
+    'btn2-color':       ['prev-btn2',  'color'],
+  }
+  const mapping = previewMap[id]
+  if (!mapping) return
+  const target = document.getElementById(mapping[0])
+  if (!target) return
+  if (mapping[1] === 'color') target.style.color = val
+  else target.style.background = val
+}
+window.setColor = setColor
+
 async function preload() {
   try {
     const slData = await sbGet('hero_sliders')
@@ -780,21 +945,24 @@ async function preload() {
       if (catCfg.section_title) sv('cat-section-title', catCfg.section_title)
       if (catCfg.section_sub)   sv('cat-section-sub',   catCfg.section_sub)
       schk('cat-show-fee', catCfg.show_fee !== false)
-      if (catCfg.card_bg_color) {
-        sv('card-bg-color', catCfg.card_bg_color)
-        const bp = document.getElementById('card-bg-preview')
-        if (bp) bp.style.background = catCfg.card_bg_color
-      }
-      if (catCfg.card_title_color) {
-        sv('card-title-color', catCfg.card_title_color)
-        const tp = document.getElementById('card-title-preview')
-        if (tp) tp.style.background = catCfg.card_title_color
-      }
-      if (catCfg.card_fee_color) {
-        sv('card-fee-color', catCfg.card_fee_color)
-        const fp = document.getElementById('card-fee-preview')
-        if (fp) fp.style.background = catCfg.card_fee_color
-      }
+      const colorFields = [
+        ['card-bg-color',    catCfg.card_bg_color],
+        ['card-body-bg',     catCfg.card_body_bg],
+        ['card-title-color', catCfg.card_title_color],
+        ['card-desc-color',  catCfg.card_desc_color],
+        ['card-fee-color',   catCfg.card_fee_color],
+        ['btn1-bg',          catCfg.btn1_bg],
+        ['btn1-color',       catCfg.btn1_color],
+        ['btn2-bg',          catCfg.btn2_bg],
+        ['btn2-color',       catCfg.btn2_color],
+      ]
+      colorFields.forEach(([id, val]) => {
+        if (!val) return
+        sv(id, val)
+        const prev = document.getElementById(id + '-preview')
+        if (prev) prev.style.background = val
+        setColor(id, val)
+      })
     }
   } catch {}
   renderCatAdmin()
