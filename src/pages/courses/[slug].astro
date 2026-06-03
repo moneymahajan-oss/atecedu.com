@@ -5,11 +5,28 @@ import { supabase } from '../../lib/supabase'
 import AddToCartButton from '../../components/courses/AddToCartButton'
 
 export async function getStaticPaths() {
-  const { data: courses } = await supabase
-    .from('courses')
-    .select('slug')
-    .eq('is_active', true)
-  return (courses ?? []).map(c => ({ params: { slug: c.slug } }))
+  // Fallback slugs ensure pages always build even if Supabase is empty at build time
+  const FALLBACK_SLUGS = [
+    'gen-ai', 'mern-stack', 'tally-prime', 'hardware-networking',
+    'python', 'kids-coding', 'digital-marketing', 'ms-office',
+    'react', 'php-mysql', 'wordpress', 'ccna', 'linux',
+    'cybersecurity', 'deep-learning', 'machine-learning',
+    'scratch', 'robotics', 'ecommerce', 'chip-level-repair',
+    'hardware-networking', 'linux-administrator', 'tally', 'web-designing',
+  ]
+
+  let dbSlugs: string[] = []
+  try {
+    const { data: courses } = await supabase
+      .from('courses')
+      .select('slug')
+      .eq('is_active', true)
+    dbSlugs = (courses ?? []).map(c => c.slug)
+  } catch (e) {}
+
+  // Merge DB slugs + fallbacks, deduplicate
+  const allSlugs = Array.from(new Set([...dbSlugs, ...FALLBACK_SLUGS]))
+  return allSlugs.map(slug => ({ params: { slug } }))
 }
 
 const { slug } = Astro.params
