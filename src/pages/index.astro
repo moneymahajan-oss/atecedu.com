@@ -375,26 +375,42 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
   <style is:global>
     :root { --cat-font:'Sora',sans-serif; }
     .cat-section { padding:72px 0 80px; background:#fff; overflow:hidden; }
-    .cat-header { max-width:1200px; margin:0 auto 48px; padding:0 32px; text-align:center; }
+    .cat-header { max-width:1280px; margin:0 auto 48px; padding:0 40px; text-align:center; }
     .cat-rows { display:flex; flex-direction:column; gap:0; }
-    .cat-row { padding:32px 0; border-bottom:1px solid #f1f5f9; }
+    .cat-row { padding:36px 0; border-bottom:1px solid #f1f5f9; }
     .cat-row:last-child { border-bottom:none; }
-    .cat-row-label { max-width:1200px; margin:0 auto 18px; padding:0 32px; display:flex; align-items:baseline; gap:12px; }
+
+    /* Row header: label + arrow buttons */
+    .cat-row-head { max-width:1280px; margin:0 auto 18px; padding:0 40px; display:flex; align-items:center; justify-content:space-between; gap:12px; }
+    .cat-row-left { display:flex; align-items:baseline; gap:12px; }
     .cat-row-name { font-family:var(--cat-font); font-size:20px; font-weight:900; text-transform:uppercase; letter-spacing:0.06em; }
     .cat-row-count { font-size:14px; color:#94a3b8; font-weight:600; }
-    /* Marquee — padding on sides so cards peek in from edges */
-    .cat-marquee-wrap { overflow:hidden; padding:4px 0; }
-    .cat-track { display:flex; gap:20px; width:max-content; will-change:transform; }
-    /* ltr: starts at 0, moves left until half-point, then snaps back = seamless */
-    .cat-track.ltr { animation:cat-ltr var(--cat-speed,32s) linear infinite; }
-    .cat-track.rtl { animation:cat-rtl var(--cat-speed,32s) linear infinite; }
-    .cat-track:hover { animation-play-state:paused; }
-    @keyframes cat-ltr { 0%{transform:translateX(0)} 100%{transform:translateX(-50%)} }
-    @keyframes cat-rtl { 0%{transform:translateX(-50%)} 100%{transform:translateX(0)} }
-    /* Course card — sized so ~4 fit on screen */
+    .cat-row-arrows { display:flex; align-items:center; gap:8px; flex-shrink:0; }
+    .cat-arrow {
+      width:38px; height:38px; border-radius:50%; border:2px solid #e2e8f0;
+      background:#fff; color:#0f2a5c; font-size:18px; cursor:pointer;
+      display:flex; align-items:center; justify-content:center;
+      transition:all 0.18s; flex-shrink:0; line-height:1;
+    }
+    .cat-arrow:hover { background:#0f2a5c; color:#d4f01a; border-color:#0f2a5c; }
+    .cat-arrow:disabled { opacity:0.3; cursor:not-allowed; }
+    /* Dots */
+    .cat-dots { display:flex; align-items:center; gap:5px; }
+    .cat-dot { width:7px; height:7px; border-radius:50%; background:#e2e8f0; cursor:pointer; border:none; padding:0; transition:all 0.18s; }
+    .cat-dot.active { background:#0f2a5c; width:20px; border-radius:4px; }
+
+    /* Slider viewport */
+    .cat-slider-outer { max-width:1280px; margin:0 auto; padding:0 40px; overflow:hidden; }
+    .cat-slider-track {
+      display:flex; gap:20px;
+      transition:transform 0.42s cubic-bezier(0.22,1,0.36,1);
+      will-change:transform;
+    }
+    /* Course card — 4 per screen */
     .cat-card {
       flex-shrink:0;
-      width:clamp(240px, calc(25vw - 28px), 320px);
+      width:calc(25% - 15px);
+      min-width:220px;
       border-radius:16px; overflow:hidden;
       background:#fff; border:1px solid #e8ecf0;
       box-shadow:0 3px 12px rgba(0,0,0,0.07);
@@ -409,6 +425,8 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
     .cat-card-title { font-family:var(--cat-font); font-size:15px; font-weight:700; color:#1c1c1c; margin:0 0 6px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
     .cat-card-fee { font-size:15px; font-weight:800; color:#0f2a5c; }
     .cat-card-fee-orig { font-size:12px; color:#94a3b8; text-decoration:line-through; margin-left:5px; }
+    @media(max-width:900px){ .cat-card { width:calc(50% - 10px); } }
+    @media(max-width:560px){ .cat-card { width:calc(100% - 0px); min-width:0; } }
     .cat-view-all { display:inline-flex; align-items:center; gap:6px; margin-top:28px; color:#0f2a5c; font-weight:700; font-size:14px; text-decoration:none; border:2px solid #0f2a5c; padding:8px 20px; border-radius:8px; }
     .cat-view-all:hover { background:#0f2a5c; color:#d4f01a; }
   </style>
@@ -2189,15 +2207,61 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
     return wrap
   }
 
+  // ── Per-row slider state ──────────────────────────────────────────────
+  const rowState: Record<number, { pos: number; total: number; visible: number }> = {}
+
+  function getCardWidth(rowIdx: number): number {
+    const track = document.getElementById(`cat-track-${rowIdx}`)
+    const first = track?.querySelector('.cat-card') as HTMLElement | null
+    if (!first) return 300
+    const gap = 20
+    return first.offsetWidth + gap
+  }
+
+  function getVisibleCount(): number {
+    const outer = document.querySelector('.cat-slider-outer') as HTMLElement | null
+    if (!outer) return 4
+    const w = outer.offsetWidth - 80  // subtract padding
+    const cardW = 300 // approx
+    return Math.max(1, Math.floor(w / (cardW + 20)))
+  }
+
+  function slideCat(rowIdx: number, dir: number) {
+    const state = rowState[rowIdx]
+    if (!state) return
+    const visible = getVisibleCount()
+    const maxPos  = Math.max(0, state.total - visible)
+    state.pos = Math.max(0, Math.min(state.pos + dir, maxPos))
+    const track = document.getElementById(`cat-track-${rowIdx}`) as HTMLElement | null
+    if (track) {
+      const cw = getCardWidth(rowIdx)
+      track.style.transform = `translateX(-${state.pos * cw}px)`
+    }
+    // Update dots
+    const dotsEl = document.getElementById(`cat-dots-${rowIdx}`)
+    if (dotsEl) {
+      dotsEl.querySelectorAll('.cat-dot').forEach((d, i) => d.classList.toggle('active', i === state.pos))
+    }
+    // Update arrow disabled state
+    const prev = document.getElementById(`cat-prev-${rowIdx}`) as HTMLButtonElement | null
+    const next = document.getElementById(`cat-next-${rowIdx}`) as HTMLButtonElement | null
+    if (prev) prev.disabled = state.pos <= 0
+    if (next) next.disabled = state.pos >= maxPos
+  }
+
+  ;(window as any).catSlide = slideCat
+  ;(window as any).catDotGo = function(rowIdx: number, pos: number) {
+    const state = rowState[rowIdx]
+    if (state) { state.pos = pos; slideCat(rowIdx, 0) }
+  }
+
   function renderCategories(cfg: any) {
     const categories = cfg?.categories || DEFAULT_CATEGORIES
-    const speed     = cfg?.marquee_speed || 32
     const showFee   = cfg?.show_fee !== false
     const title     = cfg?.section_title || 'Courses by Category'
     const sub       = cfg?.section_sub   || ''
     const font      = cfg?.font_name     || "'Sora',sans-serif"
 
-    // Apply font CSS variable
     document.documentElement.style.setProperty('--cat-font', font)
 
     const titleEl = document.getElementById('cat-title')
@@ -2212,51 +2276,51 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
     categories.forEach((cat: any, idx: number) => {
       const courses = cat.courses || []
       if (!courses.length) return
-      const isRtl = idx % 2 === 1
 
-      // Row wrapper
+      rowState[idx] = { pos: 0, total: courses.length, visible: 4 }
+
+      // Dot count = max(1, total - 3) so we show a dot per slide position
+      const dotCount = Math.max(1, courses.length - 3)
+
       const row = document.createElement('div')
       row.className = 'cat-row'
       row.style.background = cat.bg_color || '#fff'
 
-      // Label
-      const label = document.createElement('div')
-      label.className = 'cat-row-label'
-      label.innerHTML = `
-        <span class="cat-row-name" style="color:${cat.color||'#0f2a5c'};">${cat.name}</span>
-        <span class="cat-row-count">${courses.length} course${courses.length!==1?'s':''}</span>`
-      row.appendChild(label)
+      // Header: name + dots + arrows
+      const head = document.createElement('div')
+      head.className = 'cat-row-head'
+      head.innerHTML = `
+        <div class="cat-row-left">
+          <span class="cat-row-name" style="color:${cat.color||'#0f2a5c'};">${cat.name}</span>
+          <span class="cat-row-count">${courses.length} course${courses.length!==1?'s':''}</span>
+        </div>
+        <div class="cat-row-arrows">
+          <div class="cat-dots" id="cat-dots-${idx}">
+            ${Array.from({length:dotCount},(_,i)=>`<button class="cat-dot${i===0?' active':''}" onclick="catDotGo(${idx},${i})" aria-label="Slide ${i+1}"></button>`).join('')}
+          </div>
+          <button class="cat-arrow" id="cat-prev-${idx}" onclick="catSlide(${idx},-1)" disabled aria-label="Previous">‹</button>
+          <button class="cat-arrow" id="cat-next-${idx}" onclick="catSlide(${idx},1)" aria-label="Next">›</button>
+        </div>`
+      row.appendChild(head)
 
-      // Marquee wrapper
-      const mwrap = document.createElement('div')
-      mwrap.className = 'cat-marquee-wrap'
+      // Slider outer viewport
+      const outer = document.createElement('div')
+      outer.className = 'cat-slider-outer'
 
       const track = document.createElement('div')
-      track.className = `cat-track ${isRtl?'rtl':'ltr'}`
-      track.style.setProperty('--cat-speed', `${speed}s`)
+      track.className = 'cat-slider-track'
+      track.id = `cat-track-${idx}`
 
-      // Repeat courses until we have enough to fill 2× viewport width
-      // CSS animation translates -50% → needs track to be at least 2× visible area
-      // Card width ~280px + 20px gap = ~300px per card. Viewport ~1400px → need ~10 cards per half.
-      // We build set1 (first half) = enough cards, then duplicate for set2 (second half = identical).
-      // The -50% translateX snaps back seamlessly.
-      const MIN_CARDS_PER_HALF = Math.max(8, courses.length)
-      const repeatsNeeded = Math.ceil(MIN_CARDS_PER_HALF / courses.length)
-      const baseSet: any[] = []
-      for (let r = 0; r < repeatsNeeded; r++) {
-        courses.forEach((c: any) => baseSet.push(c))
-      }
-      // Full track = baseSet + baseSet (CSS animates first half, second half is clone)
-      const fullSet = [...baseSet, ...baseSet]
-      fullSet.forEach((c: any) => track.appendChild(makeCard(c, showFee)))
+      courses.forEach((c: any) => track.appendChild(makeCard(c, showFee)))
 
-      mwrap.appendChild(track)
-      row.appendChild(mwrap)
+      outer.appendChild(track)
+      row.appendChild(outer)
       container.appendChild(row)
     })
   }
 
   async function loadCategories() {
+
     const SB_URL = (window as any).__SB_URL as string
     const SB_KEY = (window as any).__SB_KEY as string
     if (!SB_URL || !SB_KEY) { renderCategories(null); return }

@@ -234,8 +234,9 @@ import AdminLayout from '../../layouts/AdminLayout.astro'
           <input class="cat-inp" id="cat-section-sub" value="What We Offer" placeholder="What We Offer" />
         </div>
         <div class="cat-field">
-          <label class="cat-lbl">Scroll Speed (s)</label>
-          <input class="cat-inp" type="number" id="cat-speed" value="32" min="8" max="120" />
+          <label class="cat-lbl">Cards Per Row (info only)</label>
+          <input class="cat-inp" type="number" id="cat-speed" value="4" min="1" max="6" disabled style="opacity:0.5;" />
+          <span style="font-size:10px;color:#94a3b8;margin-top:2px;">Always 4 cards per row on desktop</span>
         </div>
         <div class="cat-field">
           <label class="cat-lbl">Card Font Name</label>
