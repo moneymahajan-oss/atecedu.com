@@ -35,7 +35,7 @@ try { const { data } = await supabase.from('site_settings').select('value').eq('
 try { const { data } = await supabase.from('site_settings').select('value').eq('key', 'stats').single(); siteStats = data?.value ?? {} } catch(_) {}
 
 // Fallback data
-const heroHeading    = heroSettings.heading    || 'Learn <span class="hero-online-chip">ONLINE</span>'
+const heroHeading    = heroSettings.heading    || 'Learn <span style="display:inline-block;background:#d4f01a;color:#0f2a5c;padding:2px 20px 5px;border-radius:10px;box-shadow:6px 6px 18px rgba(0,0,0,0.25),-3px -3px 8px rgba(255,255,255,0.55);transform:translateY(-3px);">ONLINE</span>'
 const heroSub        = heroSettings.subheading || 'GEN AI | MERN STACK | TALLY | KIDS PROGRAMS'
 const heroBg         = heroSettings.hero_bg_color   || '#eae6e1'
 const heroTextColor  = heroSettings.hero_text_color || '#1c1c1c'
@@ -250,7 +250,7 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
   ══════════════════════════════════════════════════════════════ -->
   <style is:global>
     /* Hero Slider */
-    #hero-slider-section { display:none; overflow:hidden; }
+    #hero-slider-section { display:block; overflow:hidden; }
     .hslider-wrap { position:relative; }
     .hslider-track { display:flex; transition:transform 0.55s cubic-bezier(0.22,1,0.36,1); will-change:transform; }
     .hslider-slide {
@@ -1798,7 +1798,7 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
     goTo(0, false)
     startAuto()
     const sec = document.getElementById('hero-slider-section')
-    if (sec && slides.length > 0) sec.style.display = ''
+    // section always visible — no display toggle needed
   }
 
   function goTo(idx:number, animate=true) {
@@ -1845,8 +1845,15 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
     if ((window as any).__SB_URL) { cb(); return }
     let n=0; const t=setInterval(()=>{ n++; if((window as any).__SB_URL||n>40){clearInterval(t);cb()} },50)
   }
-  if (document.readyState==='loading') document.addEventListener('DOMContentLoaded',()=>waitSB(loadSlides))
-  else waitSB(loadSlides)
+  // Render defaults IMMEDIATELY — no waiting for DB
+  renderSlides(DEFAULT_SLIDES)
+  // Then upgrade from DB when Supabase is ready
+  function tryDBUpgrade() {
+    if ((window as any).__SB_URL) { loadSlides(); return }
+    let n=0; const t=setInterval(()=>{ n++; if((window as any).__SB_URL||n>40){clearInterval(t);loadSlides()} },50)
+  }
+  if (document.readyState==='loading') document.addEventListener('DOMContentLoaded', tryDBUpgrade)
+  else tryDBUpgrade()
 })()
 </script>
 
