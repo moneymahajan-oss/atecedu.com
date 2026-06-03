@@ -1548,8 +1548,9 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
     }
 
     // ── Fill 2 tracks ────────────────────────────────────────────────────
-    // Row 1: full set doubled for loop
-    // Row 2: offset by half (Scaler stagger), doubled for loop
+    // Row 1: first half of stories (doubled for seamless loop)
+    // Row 2: second half of stories (doubled for seamless loop)
+    // This ensures the two rows show DIFFERENT videos, not the same ones
     function fillTracks(stories) {
       if (!stories || !stories.length) return
       const t1 = document.getElementById('stories-track-1')
@@ -1559,12 +1560,17 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
       t1.innerHTML = ''
       t2.innerHTML = ''
 
-      const half    = Math.ceil(stories.length / 2)
-      const offset2 = [...stories.slice(half), ...stories.slice(0, half)]
+      const half  = Math.ceil(stories.length / 2)
+      const row1  = stories.slice(0, half)
+      const row2  = stories.slice(half)
 
-      // Double for seamless CSS animation loop
-      ;[...stories, ...stories].forEach(s    => t1.appendChild(makeCard(s)))
-      ;[...offset2, ...offset2].forEach(s    => t2.appendChild(makeCard(s)))
+      // Need at least a few cards per row — if only 1 story total, duplicate
+      const fill1 = row1.length >= 2 ? row1 : [...row1, ...row1]
+      const fill2 = row2.length >= 2 ? row2 : (row2.length === 0 ? [...row1].reverse() : [...row2, ...row2])
+
+      // Double each row for seamless CSS animation loop
+      ;[...fill1, ...fill1].forEach(s => t1.appendChild(makeCard(s)))
+      ;[...fill2, ...fill2].forEach(s => t2.appendChild(makeCard(s)))
 
       wireOverlay()
     }
