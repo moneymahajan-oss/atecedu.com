@@ -561,7 +561,7 @@ function Mgr() {
               ),
               h('div', {style:{display:'grid',gridTemplateColumns:'repeat(10, 1fr)',gap:'4px',marginBottom:'8px'}},
                 ...palette.map((color: string) =>
-                  h('button', {key:color,type:'button',onClick:()=>setTheme((p:any)=>({...p,[k]:color})),title:color,
+                  h('button', {key:color,type:'button',onMouseDown:(e:any)=>e.preventDefault(),onClick:()=>setTheme((p:any)=>({...p,[k]:color})),title:color,
                     style:{width:'100%',aspectRatio:'1',background:color,border:(theme[k]||'').toLowerCase()===color.toLowerCase()?'3px solid #1c3d7a':'1px solid #e2e8f0',borderRadius:'6px',cursor:'pointer',padding:'0',transition:'transform 0.1s'},
                     onMouseEnter:(e:any)=>{e.currentTarget.style.transform='scale(1.15)'},
                     onMouseLeave:(e:any)=>{e.currentTarget.style.transform='scale(1)'}
@@ -614,7 +614,7 @@ function Mgr() {
             ),
             h('div', {style:{display:'flex',gap:'4px',flexWrap:'wrap'}},
               ...['#0f2347','#1c3d7a','#1e40af','#7c3aed','#dc2626','#ea580c','#ca8a04','#15803d','#0891b2','#000000','#1f2937','#7f1d1d'].map((color:string) =>
-                h('button', {key:color,type:'button',onClick:()=>setStrip((p:any)=>({...p,bg_color:color})),style:{width:'28px',height:'28px',background:color,border:(strip.bg_color||'').toLowerCase()===color.toLowerCase()?'3px solid #1c3d7a':'1px solid #e2e8f0',borderRadius:'6px',cursor:'pointer',padding:0}})
+                h('button', {key:color,type:'button',onMouseDown:(e:any)=>e.preventDefault(),onClick:()=>setStrip((p:any)=>({...p,bg_color:color})),style:{width:'28px',height:'28px',background:color,border:(strip.bg_color||'').toLowerCase()===color.toLowerCase()?'3px solid #1c3d7a':'1px solid #e2e8f0',borderRadius:'6px',cursor:'pointer',padding:0}})
               )
             )
           ),
@@ -626,7 +626,7 @@ function Mgr() {
             ),
             h('div', {style:{display:'flex',gap:'4px',flexWrap:'wrap'}},
               ...['#ffffff','#d4f01a','#facc15','#fef08a','#bfdbfe','#a7f3d0','#fecaca','#000000','#94a3b8','#f0f9ff'].map((color:string) =>
-                h('button', {key:color,type:'button',onClick:()=>setStrip((p:any)=>({...p,text_color:color})),style:{width:'28px',height:'28px',background:color,border:(strip.text_color||'').toLowerCase()===color.toLowerCase()?'3px solid #1c3d7a':'1px solid #e2e8f0',borderRadius:'6px',cursor:'pointer',padding:0}})
+                h('button', {key:color,type:'button',onMouseDown:(e:any)=>e.preventDefault(),onClick:()=>setStrip((p:any)=>({...p,text_color:color})),style:{width:'28px',height:'28px',background:color,border:(strip.text_color||'').toLowerCase()===color.toLowerCase()?'3px solid #1c3d7a':'1px solid #e2e8f0',borderRadius:'6px',cursor:'pointer',padding:0}})
               )
             )
           ),
