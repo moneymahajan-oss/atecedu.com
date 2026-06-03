@@ -35,7 +35,7 @@ try { const { data } = await supabase.from('site_settings').select('value').eq('
 try { const { data } = await supabase.from('site_settings').select('value').eq('key', 'stats').single(); siteStats = data?.value ?? {} } catch(_) {}
 
 // Fallback data
-const heroHeading    = heroSettings.heading    || 'Learn <span style="display:inline-block;background:#d4f01a;color:#0b1525;padding:2px 20px 5px;border-radius:10px;box-shadow:6px 6px 18px rgba(0,0,0,0.25),-3px -3px 8px rgba(255,255,255,0.55);transform:translateY(-3px);">ONLINE</span>'
+const heroHeading    = heroSettings.heading    || '<span style="font-size:0.55em;font-weight:900;color:#0b1525;background:rgba(212,240,26,0.18);border:1.5px solid rgba(11,21,37,0.18);border-radius:6px;padding:2px 10px;letter-spacing:0.12em;text-transform:uppercase;vertical-align:middle;margin-right:6px;position:relative;top:-4px;">NOW</span><span style="color:#0b1525;font-weight:900;text-shadow:1px 1px 0 rgba(255,255,255,0.6),-1px -1px 0 rgba(0,0,0,0.08);">Learn</span> <span style="display:inline-block;background:linear-gradient(160deg,#e8ff47 0%,#d4f01a 45%,#b8d400 100%);color:#0b1525;padding:4px 22px 7px;border-radius:12px;transform:perspective(200px) rotateX(-6deg) translateY(-4px);transform-origin:bottom center;box-shadow:0 2px 0 #8fa800,0 4px 0 #7a9200,0 6px 0 #668000,0 8px 0 rgba(0,0,0,0.15),0 12px 18px rgba(0,0,0,0.25),inset 0 1px 0 rgba(255,255,255,0.5),inset 0 -2px 0 rgba(0,0,0,0.12);border-top:1.5px solid rgba(255,255,255,0.6);position:relative;">ONLINE</span>'
 const heroSub        = heroSettings.subheading || 'GEN AI | MERN STACK | TALLY | KIDS PROGRAMS'
 const heroBg         = heroSettings.hero_bg_color   || '#eae6e1'
 const heroTextColor  = heroSettings.hero_text_color || '#1c1c1c'
