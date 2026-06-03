@@ -1540,9 +1540,14 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
             f.setAttribute('allowfullscreen', '')
             f.setAttribute('frameborder', '0')
             f.className = 'story-card-video'
+            f.style.cssText = 'pointer-events:none;'
             card.insertBefore(f, card.firstChild)
           }
         }
+        // Transparent shield captures clicks and routes to our fullscreen — blocks YouTube native UI
+        const clickShield = document.createElement('div')
+        clickShield.style.cssText = 'position:absolute;inset:0;z-index:4;cursor:pointer;background:transparent;'
+        card.appendChild(clickShield)
       }
       return card
     }
