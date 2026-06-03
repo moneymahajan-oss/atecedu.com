@@ -278,39 +278,44 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
     /* Text content — over background */
     .hslider-content {
       position:relative; z-index:2;
-      max-width:760px;
-      padding:20px 48px;
-      width:100%;
+      width:100%; padding:0 56px;
+      display:flex; align-items:center; gap:28px;
+      flex-wrap:nowrap;
     }
-    @media(max-width:768px){ .hslider-content { padding:16px 20px; } }
+    @media(max-width:900px){ .hslider-content { padding:0 24px; gap:16px; flex-wrap:wrap; } }
+
+    /* Left text block */
+    .hslider-text { display:flex; flex-direction:column; gap:4px; flex:1; min-width:0; }
 
     .hslider-badge {
       display:inline-flex; align-items:center; gap:5px;
       padding:3px 11px; border-radius:30px;
       font-size:11px; font-weight:800; letter-spacing:0.05em;
-      margin-bottom:8px; border:1px solid rgba(255,255,255,0.25);
+      margin-bottom:6px; border:1px solid rgba(255,255,255,0.25);
       background:rgba(0,0,0,0.25); backdrop-filter:blur(4px);
-      color:#fff;
+      color:#fff; align-self:flex-start;
     }
     .hslider-h {
       font-family:'Sora',sans-serif;
-      font-size:clamp(1.3rem,3vw,2rem);
+      font-size:clamp(1.4rem,2.8vw,2.2rem);
       font-weight:900; line-height:1.1;
-      margin:0 0 6px;
+      margin:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
       text-shadow:0 2px 12px rgba(0,0,0,0.4);
     }
     .hslider-sub {
-      font-size:clamp(12px,1.5vw,14px);
-      margin:0 0 14px; line-height:1.5;
+      font-size:clamp(12px,1.4vw,15px);
+      margin:0; line-height:1.4;
       text-shadow:0 1px 6px rgba(0,0,0,0.3);
-      max-width:520px;
+      white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
     }
     .hslider-cta {
+      flex-shrink:0;
       display:inline-flex; align-items:center; gap:6px;
-      padding:8px 20px; border-radius:8px;
-      font-weight:800; font-size:13px; text-decoration:none;
+      padding:10px 24px; border-radius:8px;
+      font-weight:800; font-size:14px; text-decoration:none;
       box-shadow:0 3px 12px rgba(0,0,0,0.3);
       transition:transform 0.15s,box-shadow 0.15s;
+      white-space:nowrap;
     }
     .hslider-cta:hover { transform:translateY(-2px); box-shadow:0 6px 20px rgba(0,0,0,0.4); }
 
@@ -1900,9 +1905,11 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
         ${ytBg}
         ${overlayLayer}
         <div class="hslider-content">
-          ${s.badge ? `<div class="hslider-badge">${s.badge}</div>` : ''}
-          <h2 class="hslider-h" style="color:${col};font-size:${headSize};font-family:${headFont};">${s.heading||''}</h2>
-          <p class="hslider-sub" style="color:${col};font-size:${subSize};">${s.subheading||''}</p>
+          <div class="hslider-text">
+            ${s.badge ? `<div class="hslider-badge">${s.badge}</div>` : ''}
+            <h2 class="hslider-h" style="color:${col};font-size:${headSize};font-family:${headFont};">${(s.heading||'').replace(/<br\s*\/?>/gi,' ')}</h2>
+            <p class="hslider-sub" style="color:${col};font-size:${subSize};">${s.subheading||''}</p>
+          </div>
           ${s.cta_text ? `<a href="${s.cta_link||'#'}" class="hslider-cta" style="background:${ctaBg};color:${ctaColor};">${s.cta_text} →</a>` : ''}
         </div>`
 
