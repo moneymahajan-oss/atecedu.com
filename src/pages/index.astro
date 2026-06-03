@@ -35,19 +35,19 @@ try { const { data } = await supabase.from('site_settings').select('value').eq('
 try { const { data } = await supabase.from('site_settings').select('value').eq('key', 'stats').single(); siteStats = data?.value ?? {} } catch(_) {}
 
 // Fallback data
-const heroHeading    = heroSettings.heading    || 'Learn <span style="display:inline-block;background:#d4f01a;color:#0f2a5c;padding:2px 20px 5px;border-radius:10px;box-shadow:6px 6px 18px rgba(0,0,0,0.25),-3px -3px 8px rgba(255,255,255,0.55);transform:translateY(-3px);">ONLINE</span>'
+const heroHeading    = heroSettings.heading    || 'Learn <span style="display:inline-block;background:#d4f01a;color:#0b1525;padding:2px 20px 5px;border-radius:10px;box-shadow:6px 6px 18px rgba(0,0,0,0.25),-3px -3px 8px rgba(255,255,255,0.55);transform:translateY(-3px);">ONLINE</span>'
 const heroSub        = heroSettings.subheading || 'GEN AI | MERN STACK | TALLY | KIDS PROGRAMS'
 const heroBg         = heroSettings.hero_bg_color   || '#eae6e1'
 const heroTextColor  = heroSettings.hero_text_color || '#1c1c1c'
 const heroSubColor   = heroSettings.hero_sub_color  || '#555555'
 const videoBarText   = heroSettings.video_bar_text  || 'For OFFLINE COURSES : www.ateceducation.in'
-const videoBarBg     = heroSettings.video_bar_bg    || '#0f2a5c'
+const videoBarBg     = heroSettings.video_bar_bg    || '#0b1525'
 const videoBarColor  = heroSettings.video_bar_text_color || '#ffffff'
 const bottomBarText  = heroSettings.bottom_bar_text || 'Need help? Talk to us at'
 const bottomBarPhone = heroSettings.bottom_bar_phone || '+91 7009933289'
 const bottomBarCTA   = heroSettings.bottom_bar_cta  || 'Request a Call'
 const bottomBarLink  = heroSettings.bottom_bar_link || '/contact'
-const bottomBarBg    = heroSettings.bottom_bar_bg   || '#0f2a5c'
+const bottomBarBg    = heroSettings.bottom_bar_bg   || '#0b1525'
 
 // Fallback courses
 const fallbackCourses = courses.length > 0 ? courses : [
@@ -96,17 +96,17 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
     @media(max-width:768px){ #hero-content { grid-template-columns:1fr; } #hero-thumb-wrap { order:2; } }
     .nm-btn-primary { background:#d4f01a;color:#1a1a1a;padding:12px 26px;border-radius:12px;font-weight:800;font-size:14px;text-decoration:none;box-shadow:5px 5px 12px #c0bcb7,-3px -3px 8px #fff;display:inline-block;transition:box-shadow 0.15s; }
     .nm-btn-primary:hover { box-shadow:3px 3px 8px #c0bcb7,-2px -2px 5px #fff; }
-    .nm-btn-secondary { background:var(--nm-bg);color:#0f2a5c;padding:12px 26px;border-radius:12px;font-weight:700;font-size:14px;text-decoration:none;box-shadow:var(--nm-raised);display:inline-flex;align-items:center;gap:7px;transition:box-shadow 0.15s; }
+    .nm-btn-secondary { background:var(--nm-bg);color:#0b1525;padding:12px 26px;border-radius:12px;font-weight:700;font-size:14px;text-decoration:none;box-shadow:var(--nm-raised);display:inline-flex;align-items:center;gap:7px;transition:box-shadow 0.15s; }
     .nm-btn-secondary:hover { box-shadow:3px 3px 8px #c0bcb7,-2px -2px 5px #fff; }
     .nm-stat-chip { background:var(--nm-bg);box-shadow:8px 8px 18px #b8b4af,-6px -6px 14px #ffffff;border-radius:14px;padding:11px 18px;text-align:center;flex:1;min-width:70px;transition:box-shadow 0.15s; }
     .nm-stat-chip:hover { box-shadow:5px 5px 12px #b8b4af,-4px -4px 10px #ffffff; }
-    .nm-stat-n { font-size:1.15rem;font-weight:900;color:#0f2a5c;line-height:1.1;text-shadow:1px 1px 2px rgba(0,0,0,0.12); }
+    .nm-stat-n { font-size:1.15rem;font-weight:900;color:#0b1525;line-height:1.1;text-shadow:1px 1px 2px rgba(0,0,0,0.12); }
     .nm-stat-l { font-size:9px;font-weight:700;color:#8a8480;text-transform:uppercase;letter-spacing:0.07em;margin-top:2px; }
     /* ONLINE protruding chip in hero heading */
     .hero-online-chip {
       display:inline-block;
       background:#d4f01a;
-      color:#0f2a5c;
+      color:#0b1525;
       padding:2px 18px 4px;
       border-radius:10px;
       box-shadow:6px 6px 16px rgba(0,0,0,0.22),-3px -3px 8px rgba(255,255,255,0.6);
@@ -197,7 +197,7 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
           <div id="hero-thumb" class="nm-video-inner" title="Click to expand">
             <div id="card-play-overlay">
               <div class="nm-play-btn">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="#0f2a5c" style="margin-left:3px;"><polygon points="8,5 20,12 8,19"/></svg>
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="#0b1525" style="margin-left:3px;"><polygon points="8,5 20,12 8,19"/></svg>
               </div>
             </div>
             <div id="reveal-hint" style="position:absolute;bottom:10px;right:12px;background:var(--nm-bg);box-shadow:var(--nm-inset);border-radius:20px;color:#6b6460;font-size:11px;font-weight:700;padding:4px 12px;letter-spacing:0.04em;">
@@ -240,7 +240,7 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
   <!-- ══════════════════════════════════════════════════════════════
        STATS BAR
   ══════════════════════════════════════════════════════════════ -->
-  <div style="background:#0f2a5c;height:4px;"></div>
+  <div style="background:#0b1525;height:4px;"></div>
 
   <!-- ══════════════════════════════════════════════════════════════
        HERO SLIDER — below hero, like ateceducation.in
@@ -359,7 +359,7 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
       overflow:hidden;
     }
     #drop-query-popup.visible { transform:translateY(0) scale(1); opacity:1; pointer-events:all; }
-    .dq-header { background:#0f2a5c; padding:16px 20px; display:flex; align-items:center; justify-content:space-between; }
+    .dq-header { background:#0b1525; padding:16px 20px; display:flex; align-items:center; justify-content:space-between; }
     .dq-header h3 { font-family:'Sora',sans-serif; font-weight:800; font-size:16px; color:#fff; margin:0; }
     .dq-header span { font-size:12px; color:rgba(255,255,255,0.6); margin-top:2px; display:block; }
     .dq-close { background:rgba(255,255,255,0.15); border:none; color:#fff; width:30px; height:30px; border-radius:8px; cursor:pointer; font-size:16px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
@@ -368,10 +368,10 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
     .dq-field { display:flex; flex-direction:column; gap:5px; margin-bottom:14px; }
     .dq-field label { font-size:12px; font-weight:700; color:#475569; text-transform:uppercase; letter-spacing:0.05em; }
     .dq-field input,.dq-field select,.dq-field textarea { padding:10px 14px; border:1.5px solid #e2e8f0; border-radius:9px; font-size:14px; color:#1e293b; outline:none; transition:border-color 0.15s; background:#f8fafc; }
-    .dq-field input:focus,.dq-field select:focus,.dq-field textarea:focus { border-color:#0f2a5c; background:#fff; }
+    .dq-field input:focus,.dq-field select:focus,.dq-field textarea:focus { border-color:#0b1525; background:#fff; }
     .dq-field textarea { resize:none; min-height:70px; }
-    .dq-submit { width:100%; background:#0f2a5c; color:#d4f01a; border:none; border-radius:10px; padding:12px; font-size:15px; font-weight:800; cursor:pointer; transition:background 0.15s; }
-    .dq-submit:hover { background:#163264; }
+    .dq-submit { width:100%; background:#0b1525; color:#d4f01a; border:none; border-radius:10px; padding:12px; font-size:15px; font-weight:800; cursor:pointer; transition:background 0.15s; }
+    .dq-submit:hover { background:#0b1525; }
     .dq-success { text-align:center; padding:20px; display:none; }
     .dq-success .tick { font-size:3rem; margin-bottom:8px; }
     .dq-success p { font-weight:700; color:#166534; font-size:16px; }
@@ -452,16 +452,16 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
     .cat-row-arrows { display:flex; align-items:center; gap:8px; flex-shrink:0; }
     .cat-arrow {
       width:38px; height:38px; border-radius:50%; border:2px solid #e2e8f0;
-      background:#fff; color:#0f2a5c; font-size:18px; cursor:pointer;
+      background:#fff; color:#0b1525; font-size:18px; cursor:pointer;
       display:flex; align-items:center; justify-content:center;
       transition:all 0.18s; flex-shrink:0; line-height:1;
     }
-    .cat-arrow:hover { background:#0f2a5c; color:#d4f01a; border-color:#0f2a5c; }
+    .cat-arrow:hover { background:#0b1525; color:#d4f01a; border-color:#0b1525; }
     .cat-arrow:disabled { opacity:0.3; cursor:not-allowed; }
     /* Dots */
     .cat-dots { display:flex; align-items:center; gap:5px; }
     .cat-dot { width:7px; height:7px; border-radius:50%; background:#e2e8f0; cursor:pointer; border:none; padding:0; transition:all 0.18s; }
-    .cat-dot.active { background:#0f2a5c; width:20px; border-radius:4px; }
+    .cat-dot.active { background:#0b1525; width:20px; border-radius:4px; }
 
     /* Slider viewport */
     .cat-slider-outer { max-width:1280px; margin:0 auto; padding:0 40px; overflow:hidden; }
@@ -482,18 +482,18 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
       transition:box-shadow 0.18s,transform 0.18s;
     }
     .cat-card:hover { box-shadow:0 10px 32px rgba(0,0,0,0.14); transform:translateY(-4px); }
-    .cat-card-thumb { width:100%; height:160px; background:#0f2a5c; display:block; position:relative; overflow:hidden; }
+    .cat-card-thumb { width:100%; height:160px; background:#0b1525; display:block; position:relative; overflow:hidden; }
     .cat-card-thumb-inner { width:100%; height:100%; object-fit:cover; display:block; }
     .cat-card-mode { position:absolute; top:10px; left:10px; padding:3px 10px; border-radius:20px; font-size:11px; font-weight:800; text-transform:uppercase; }
     .cat-card-body { padding:14px 16px 16px; }
     .cat-card-title { font-family:var(--cat-font); font-size:17px; font-weight:800; color:#1c1c1c; margin:0 0 6px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
     .cat-card-desc { font-size:12px; color:#64748b; margin:4px 0 8px; line-height:1.4; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
-    .cat-card-fee { font-size:15px; font-weight:800; color:#0f2a5c; }
+    .cat-card-fee { font-size:15px; font-weight:800; color:#0b1525; }
     .cat-card-fee-orig { font-size:12px; color:#94a3b8; text-decoration:line-through; margin-left:5px; }
     @media(max-width:900px){ .cat-card { width:calc(50% - 10px); } }
     @media(max-width:560px){ .cat-card { width:calc(100% - 0px); min-width:0; } }
-    .cat-view-all { display:inline-flex; align-items:center; gap:6px; margin-top:28px; color:#0f2a5c; font-weight:700; font-size:14px; text-decoration:none; border:2px solid #0f2a5c; padding:8px 20px; border-radius:8px; }
-    .cat-view-all:hover { background:#0f2a5c; color:#d4f01a; }
+    .cat-view-all { display:inline-flex; align-items:center; gap:6px; margin-top:28px; color:#0b1525; font-weight:700; font-size:14px; text-decoration:none; border:2px solid #0b1525; padding:8px 20px; border-radius:8px; }
+    .cat-view-all:hover { background:#0b1525; color:#d4f01a; }
   </style>
 
   <section class="cat-section" id="cat-section">
@@ -559,23 +559,23 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
       background:#fff; border:1.5px solid #e2e8f0;
       box-shadow:0 2px 10px rgba(0,0,0,0.1);
       display:flex; align-items:center; justify-content:center;
-      cursor:pointer; font-size:18px; transition:all 0.18s; color:#0f2a5c;
+      cursor:pointer; font-size:18px; transition:all 0.18s; color:#0b1525;
     }
-    .faculty-arrow:hover { background:#0f2a5c; color:#d4f01a; border-color:#0f2a5c; }
+    .faculty-arrow:hover { background:#0b1525; color:#d4f01a; border-color:#0b1525; }
     .faculty-arrow:disabled { opacity:0.3; cursor:not-allowed; }
     .faculty-prev { left:-20px; }
     .faculty-next { right:-20px; }
     /* Dots */
     .faculty-dots { display:flex; justify-content:center; gap:6px; margin-top:28px; }
     .faculty-dot  { width:8px; height:8px; border-radius:50%; background:#d1d5db; border:none; cursor:pointer; padding:0; transition:all 0.2s; }
-    .faculty-dot.active { width:22px; border-radius:4px; background:#0f2a5c; }
+    .faculty-dot.active { width:22px; border-radius:4px; background:#0b1525; }
     @media(max-width:900px){ .faculty-card { width:calc(50% - 12px); } }
     @media(max-width:560px){ .faculty-card { width:100%; min-width:0; } .faculty-prev,.faculty-next { display:none; } }
   </style>
 
   <section class="faculty-section" id="faculty-section" style="display:none;">
     <div class="faculty-header">
-      <p style="font-size:13px;font-weight:700;color:#d4f01a;text-transform:uppercase;letter-spacing:0.08em;margin:0 0 6px;background:#0f2a5c;display:inline-block;padding:3px 10px;border-radius:4px;">Our Team</p>
+      <p style="font-size:13px;font-weight:700;color:#d4f01a;text-transform:uppercase;letter-spacing:0.08em;margin:0 0 6px;background:#0b1525;display:inline-block;padding:3px 10px;border-radius:4px;">Our Team</p>
       <h2 class="faculty-title">Meet Our Faculty</h2>
       <p class="faculty-sub">Learn from experienced trainers who blend industry exposure with classroom mastery.</p>
     </div>
@@ -625,7 +625,7 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
       width:300px; height:200px;
       border-radius:14px; overflow:hidden;
       position:relative; cursor:pointer;
-      background:#1c2a40;
+      background:#0b1525;
       transition:transform 0.25s ease, box-shadow 0.25s ease;
       box-shadow:0 4px 20px rgba(0,0,0,0.4);
     }
@@ -699,7 +699,7 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
     }
     #story-student-info { flex:1; display:flex; align-items:center; gap:12px; min-width:0; }
     #story-avatar-sm {
-      width:36px; height:36px; border-radius:50%; background:#0f2a5c;
+      width:36px; height:36px; border-radius:50%; background:#0b1525;
       flex-shrink:0; display:flex; align-items:center; justify-content:center;
       font-family:'Sora',sans-serif; font-weight:800; font-size:14px;
       color:#d4f01a; overflow:hidden;
@@ -746,7 +746,7 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
   <!-- ══════════════════════════════════════════════════════════════
        WHY ATEC — DB-driven, 5 cards, admin manageable, dark navy bg
   ══════════════════════════════════════════════════════════════ -->
-  <section id="why-atec-section" style="padding:72px 32px;background:#0f2a5c;">
+  <section id="why-atec-section" style="padding:72px 32px;background:#0b1525;">
     <div style="max-width:1200px;margin:0 auto;">
       <div style="text-align:center;margin-bottom:48px;">
         <h2 id="why-atec-title" style="font-family:'Sora',sans-serif;font-size:clamp(1.6rem,3vw,2.2rem);font-weight:800;color:#fff;margin:0 0 12px;">Why Choose ATEC?</h2>
@@ -780,7 +780,7 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
   <section id="yt-section" style="padding:72px 32px;background:#fff;display:none;">
     <div style="max-width:1200px;margin:0 auto;">
       <div style="text-align:center;margin-bottom:36px;">
-          <p style="font-size:13px;font-weight:700;color:#d4f01a;text-transform:uppercase;letter-spacing:0.08em;margin:0 0 6px;background:#0f2a5c;display:inline-block;padding:3px 10px;border-radius:4px;">Our Channel</p>
+          <p style="font-size:13px;font-weight:700;color:#d4f01a;text-transform:uppercase;letter-spacing:0.08em;margin:0 0 6px;background:#0b1525;display:inline-block;padding:3px 10px;border-radius:4px;">Our Channel</p>
           <h2 style="font-family:'Sora',sans-serif;font-size:clamp(1.6rem,3vw,2.2rem);font-weight:800;color:#1c1c1c;margin:0 0 16px;">Watch &amp; Learn</h2>
           <a href="https://www.youtube.com/@ATECEducationalSociety" target="_blank" rel="noopener"
              style="color:#ff0000;font-weight:700;font-size:14px;text-decoration:none;border:2px solid #ff0000;padding:8px 18px;border-radius:8px;display:inline-flex;align-items:center;gap:6px;">
@@ -798,9 +798,9 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
   <section id="blog-section" style="padding:72px 32px;background:#f8f4ef;display:none;">
     <div style="max-width:1200px;margin:0 auto;">
       <div style="text-align:center;margin-bottom:36px;">
-          <p style="font-size:13px;font-weight:700;color:#d4f01a;text-transform:uppercase;letter-spacing:0.08em;margin:0 0 6px;background:#0f2a5c;display:inline-block;padding:3px 10px;border-radius:4px;">Knowledge Hub</p>
+          <p style="font-size:13px;font-weight:700;color:#d4f01a;text-transform:uppercase;letter-spacing:0.08em;margin:0 0 6px;background:#0b1525;display:inline-block;padding:3px 10px;border-radius:4px;">Knowledge Hub</p>
           <h2 style="font-family:'Sora',sans-serif;font-size:clamp(1.6rem,3vw,2.2rem);font-weight:800;color:#1c1c1c;margin:0 0 16px;">Latest from Our Blog</h2>
-          <a href="/blog" style="color:#0f2a5c;font-weight:700;font-size:14px;text-decoration:none;border:2px solid #0f2a5c;padding:8px 18px;border-radius:8px;">All Articles →</a>
+          <a href="/blog" style="color:#0b1525;font-weight:700;font-size:14px;text-decoration:none;border:2px solid #0b1525;padding:8px 18px;border-radius:8px;">All Articles →</a>
       </div>
       <div id="blog-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:24px;"></div>
     </div>
@@ -826,7 +826,7 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
   <section id="news-section" style="padding:72px 32px;background:#fff;display:none;">
     <div style="max-width:1200px;margin:0 auto;">
       <div style="text-align:center;margin-bottom:36px;">
-          <p style="font-size:13px;font-weight:700;color:#d4f01a;text-transform:uppercase;letter-spacing:0.08em;margin:0 0 6px;background:#0f2a5c;display:inline-block;padding:3px 10px;border-radius:4px;">Latest Updates</p>
+          <p style="font-size:13px;font-weight:700;color:#d4f01a;text-transform:uppercase;letter-spacing:0.08em;margin:0 0 6px;background:#0b1525;display:inline-block;padding:3px 10px;border-radius:4px;">Latest Updates</p>
           <h2 style="font-family:'Sora',sans-serif;font-size:clamp(1.6rem,3vw,2.2rem);font-weight:800;color:#1c1c1c;margin:8px 0 0;">News &amp; Announcements</h2>
       </div>
       <div id="news-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:20px;"></div>
@@ -839,12 +839,12 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
   <section style="padding:72px 32px;background:#f8f4ef;">
     <div style="max-width:760px;margin:0 auto;text-align:center;">
       <h2 style="font-family:'Sora',sans-serif;font-size:clamp(1.8rem,4vw,2.6rem);font-weight:900;color:#1c1c1c;margin:0 0 16px;">
-        Ready to Start Your <span style="color:#0f2a5c;">Career Journey?</span>
+        Ready to Start Your <span style="color:#0b1525;">Career Journey?</span>
       </h2>
       <p style="font-size:16px;color:#64748b;margin:0 0 32px;">New batches starting every month. Limited seats available.</p>
       <div style="display:flex;justify-content:center;gap:16px;flex-wrap:wrap;">
-        <a href="/courses" style="background:#0f2a5c;color:#d4f01a;padding:15px 32px;border-radius:10px;font-weight:700;font-size:15px;text-decoration:none;">Browse All Courses →</a>
-        <a href="tel:+917009933289" style="background:#fff;color:#0f2a5c;padding:15px 32px;border-radius:10px;font-weight:700;font-size:15px;text-decoration:none;border:2px solid #0f2a5c;">📞 Call +91 7009933289</a>
+        <a href="/courses" style="background:#0b1525;color:#d4f01a;padding:15px 32px;border-radius:10px;font-weight:700;font-size:15px;text-decoration:none;">Browse All Courses →</a>
+        <a href="tel:+917009933289" style="background:#fff;color:#0b1525;padding:15px 32px;border-radius:10px;font-weight:700;font-size:15px;text-decoration:none;border:2px solid #0b1525;">📞 Call +91 7009933289</a>
       </div>
     </div>
   </section>
@@ -935,7 +935,7 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
 
         card.innerHTML = `
           <div style="position:relative;aspect-ratio:16/9;background:#111;overflow:hidden;">
-            ${thumb ? `<img src="${thumb}" alt="${v.title}" style="width:100%;height:100%;object-fit:cover;" loading="lazy">` : '<div style="width:100%;height:100%;background:#0f2a5c;display:flex;align-items:center;justify-content:center;"><svg width="40" height="40" viewBox="0 0 24 24" fill="#d4f01a"><polygon points="8,5 20,12 8,19"/></svg></div>'}
+            ${thumb ? `<img src="${thumb}" alt="${v.title}" style="width:100%;height:100%;object-fit:cover;" loading="lazy">` : '<div style="width:100%;height:100%;background:#0b1525;display:flex;align-items:center;justify-content:center;"><svg width="40" height="40" viewBox="0 0 24 24" fill="#d4f01a"><polygon points="8,5 20,12 8,19"/></svg></div>'}
             <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.2);opacity:0;transition:opacity 0.2s;" class="yt-play-hover">
               <div style="width:52px;height:52px;background:#ff0000;border-radius:50%;display:flex;align-items:center;justify-content:center;">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="#fff" style="margin-left:3px"><polygon points="8,5 20,12 8,19"/></svg>
@@ -999,7 +999,7 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
         card.onmouseout  = () => { card.style.boxShadow='0 2px 8px rgba(0,0,0,0.06)'; card.style.transform='translateY(0)' }
 
         card.innerHTML = `
-          <div style="aspect-ratio:16/9;background:#0f2a5c;overflow:hidden;display:flex;align-items:center;justify-content:center;position:relative;">
+          <div style="aspect-ratio:16/9;background:#0b1525;overflow:hidden;display:flex;align-items:center;justify-content:center;position:relative;">
             ${p.thumbnail_url
               ? `<img src="${p.thumbnail_url}" alt="${p.title}" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0;" loading="lazy">`
               : `<span style="font-family:'Sora',sans-serif;font-size:3rem;color:#d4f01a;opacity:0.6;">📝</span>`}
@@ -1047,7 +1047,7 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
 
         card.innerHTML = `
           <div style="display:flex;gap:14px;padding:16px;align-items:flex-start;">
-            <div style="flex-shrink:0;width:72px;height:72px;border-radius:10px;overflow:hidden;background:#0f2a5c;">
+            <div style="flex-shrink:0;width:72px;height:72px;border-radius:10px;overflow:hidden;background:#0b1525;">
               ${thumb ? `<img src="${thumb}" alt="${ep.title}" style="width:100%;height:100%;object-fit:cover;" loading="lazy">` : '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:2rem;">🎙️</div>'}
             </div>
             <div style="flex:1;min-width:0;">
@@ -1096,12 +1096,12 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
         card.style.cssText = 'background:#fff;border:1px solid #e8ecf0;border-radius:14px;padding:20px;display:flex;flex-direction:column;gap:10px;box-shadow:0 2px 8px rgba(0,0,0,0.05);'
 
         card.innerHTML = `
-          ${n.category ? `<span style="font-size:11px;font-weight:700;color:#0f2a5c;background:#eff6ff;padding:2px 10px;border-radius:20px;display:inline-block;width:fit-content;">${n.category}</span>` : ''}
+          ${n.category ? `<span style="font-size:11px;font-weight:700;color:#0b1525;background:#eff6ff;padding:2px 10px;border-radius:20px;display:inline-block;width:fit-content;">${n.category}</span>` : ''}
           <h3 style="font-family:'Sora',sans-serif;font-weight:700;font-size:15px;color:#1c1c1c;margin:0;line-height:1.4;">${n.title || ''}</h3>
           ${n.description || n.excerpt ? `<p style="font-size:13px;color:#64748b;margin:0;line-height:1.55;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;">${n.description || n.excerpt}</p>` : ''}
           <div style="display:flex;justify-content:space-between;align-items:center;margin-top:auto;">
             ${date ? `<span style="font-size:12px;color:#94a3b8;">${date}</span>` : '<span></span>'}
-            ${n.link || n.url ? `<a href="${n.link || n.url}" target="_blank" rel="noopener" style="font-size:12px;font-weight:700;color:#0f2a5c;text-decoration:none;">Read more →</a>` : ''}
+            ${n.link || n.url ? `<a href="${n.link || n.url}" target="_blank" rel="noopener" style="font-size:12px;font-weight:700;color:#0b1525;text-decoration:none;">Read more →</a>` : ''}
           </div>`
 
         grid.appendChild(card)
@@ -1170,7 +1170,7 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
 
   <section class="connect-section" id="connect-section" style="display:none;">
     <div class="connect-header">
-      <p id="connect-sup" style="font-size:13px;font-weight:700;color:#d4f01a;text-transform:uppercase;letter-spacing:0.08em;margin:0 0 6px;background:#0f2a5c;display:inline-block;padding:3px 10px;border-radius:4px;">Follow Us</p>
+      <p id="connect-sup" style="font-size:13px;font-weight:700;color:#d4f01a;text-transform:uppercase;letter-spacing:0.08em;margin:0 0 6px;background:#0b1525;display:inline-block;padding:3px 10px;border-radius:4px;">Follow Us</p>
       <h2 id="connect-title" style="font-family:'Sora',sans-serif;font-size:clamp(1.6rem,3vw,2.2rem);font-weight:800;color:#1c1c1c;margin:8px 0 10px;">Connect With Us</h2>
       <p id="connect-sub" style="font-size:15px;color:#64748b;margin:0;">Scan a QR or tap a card to follow us — stay updated with latest courses, events & student wins</p>
     </div>
@@ -1197,9 +1197,9 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
       width:44px; height:44px; border-radius:12px; background:#eff6ff;
       display:flex; align-items:center; justify-content:center; font-size:20px; flex-shrink:0;
     }
-    .contact-info-label { font-family:'Sora',sans-serif; font-weight:700; font-size:14px; color:#0f2a5c; margin:0 0 4px; }
+    .contact-info-label { font-family:'Sora',sans-serif; font-weight:700; font-size:14px; color:#0b1525; margin:0 0 4px; }
     .contact-info-val { font-size:14px; color:#475569; line-height:1.6; margin:0; }
-    .contact-info-val a { color:#0f2a5c; text-decoration:none; }
+    .contact-info-val a { color:#0b1525; text-decoration:none; }
     .contact-info-val a:hover { text-decoration:underline; }
     .contact-map { border-radius:16px; overflow:hidden; border:1px solid #e2e8f0; height:220px; margin-top:14px; background:#f1f5f9; display:flex; align-items:center; justify-content:center; font-size:13px; color:#94a3b8; }
     .contact-map iframe { width:100%; height:100%; border:none; }
@@ -1207,7 +1207,7 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
       background:#fff; border-radius:16px; padding:32px;
       border:1px solid #e2e8f0; box-shadow:0 2px 8px rgba(0,0,0,0.05);
     }
-    .contact-form-title { font-family:'Sora',sans-serif; font-weight:800; font-size:1.15rem; color:#0f2a5c; margin:0 0 4px; }
+    .contact-form-title { font-family:'Sora',sans-serif; font-weight:800; font-size:1.15rem; color:#0b1525; margin:0 0 4px; }
     .contact-form-sub { font-size:13px; color:#94a3b8; margin:0 0 22px; }
     .cf-field { margin-bottom:14px; }
     .cf-field input, .cf-field select, .cf-field textarea {
@@ -1215,15 +1215,15 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
       font-size:14px; color:#1e293b; outline:none; background:#fff;
       font-family:'Inter',sans-serif; box-sizing:border-box; transition:border-color 0.15s;
     }
-    .cf-field input:focus, .cf-field select:focus, .cf-field textarea:focus { border-color:#0f2a5c; }
+    .cf-field input:focus, .cf-field select:focus, .cf-field textarea:focus { border-color:#0b1525; }
     .cf-field textarea { resize:vertical; min-height:80px; }
     .cf-submit {
-      width:100%; background:#0f2a5c; color:#d4f01a;
+      width:100%; background:#0b1525; color:#d4f01a;
       border:none; border-radius:10px; padding:13px;
       font-size:15px; font-weight:800; cursor:pointer;
       font-family:'Inter',sans-serif; transition:background 0.15s;
     }
-    .cf-submit:hover { background:#163264; }
+    .cf-submit:hover { background:#0b1525; }
     .cf-submit:disabled { background:#94a3b8; cursor:not-allowed; }
     #cf-success { background:#dcfce7; color:#166534; border:1px solid #bbf7d0; border-radius:9px; padding:14px; text-align:center; font-weight:700; display:none; margin-top:12px; }
     #cf-error { background:#fee2e2; color:#991b1b; border-radius:9px; padding:10px 14px; font-size:13px; display:none; margin-bottom:12px; }
@@ -1232,7 +1232,7 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
   <section class="contact-section" id="contact-section" style="display:none;">
     <div class="contact-inner">
       <div style="text-align:center;margin-bottom:48px;">
-        <p style="font-size:13px;font-weight:700;color:#d4f01a;text-transform:uppercase;letter-spacing:0.08em;margin:0 0 6px;background:#0f2a5c;display:inline-block;padding:3px 10px;border-radius:4px;">Contact</p>
+        <p style="font-size:13px;font-weight:700;color:#d4f01a;text-transform:uppercase;letter-spacing:0.08em;margin:0 0 6px;background:#0b1525;display:inline-block;padding:3px 10px;border-radius:4px;">Contact</p>
         <h2 id="contact-title" style="font-family:'Sora',sans-serif;font-size:clamp(1.6rem,3vw,2.2rem);font-weight:800;color:#1c1c1c;margin:8px 0 10px;">Get in Touch</h2>
         <p id="contact-sub" style="font-size:15px;color:#64748b;margin:0;">We're here to help you choose the right course</p>
       </div>
@@ -1301,10 +1301,10 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
       width:28px; height:28px; border-radius:50%;
       background:#f1f5f9; flex-shrink:0;
       display:flex; align-items:center; justify-content:center;
-      font-size:16px; font-weight:700; color:#0f2a5c;
+      font-size:16px; font-weight:700; color:#0b1525;
       transition:all 0.2s; line-height:1;
     }
-    .faq-item.open .faq-icon { background:#0f2a5c; color:#d4f01a; transform:rotate(45deg); }
+    .faq-item.open .faq-icon { background:#0b1525; color:#d4f01a; transform:rotate(45deg); }
     .faq-a {
       display:none; padding:0 4px 18px;
       font-size:15px; color:#475569; line-height:1.7;
@@ -1315,7 +1315,7 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
   <section class="faq-section" id="faq-section" style="display:none;">
     <div class="faq-inner">
       <div style="text-align:center;margin-bottom:48px;">
-        <p style="font-size:13px;font-weight:700;color:#d4f01a;text-transform:uppercase;letter-spacing:0.08em;margin:0 0 6px;background:#0f2a5c;display:inline-block;padding:3px 10px;border-radius:4px;">FAQ</p>
+        <p style="font-size:13px;font-weight:700;color:#d4f01a;text-transform:uppercase;letter-spacing:0.08em;margin:0 0 6px;background:#0b1525;display:inline-block;padding:3px 10px;border-radius:4px;">FAQ</p>
         <h2 id="faq-title" style="font-family:'Sora',sans-serif;font-size:clamp(1.6rem,3vw,2.2rem);font-weight:800;color:#1c1c1c;margin:8px 0 10px;">Frequently Asked Questions</h2>
         <p id="faq-sub" style="font-size:15px;color:#64748b;margin:0;">Everything you need to know about ATEC courses</p>
       </div>
@@ -1346,7 +1346,7 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
     }
     .dl-card:hover { transform:translateY(-4px); box-shadow:0 10px 28px rgba(0,0,0,0.1); }
     .dl-thumb {
-      height:140px; background:#0f2a5c;
+      height:140px; background:#0b1525;
       display:flex; align-items:center; justify-content:center;
       font-size:3rem; position:relative; overflow:hidden;
     }
@@ -1362,19 +1362,19 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
     .dl-desc { font-size:13px; color:#64748b; margin:0 0 14px; line-height:1.5; }
     .dl-btn {
       display:inline-flex; align-items:center; gap:7px;
-      background:#0f2a5c; color:#d4f01a;
+      background:#0b1525; color:#d4f01a;
       padding:9px 18px; border-radius:8px;
       font-size:13px; font-weight:700; text-decoration:none;
       transition:background 0.15s;
     }
-    .dl-btn:hover { background:#163264; }
+    .dl-btn:hover { background:#0b1525; }
     .dl-btn svg { flex-shrink:0; }
   </style>
 
   <section class="downloads-section" id="downloads-section" style="display:none;">
     <div class="downloads-inner">
       <div style="text-align:center;margin-bottom:48px;">
-        <p style="font-size:13px;font-weight:700;color:#d4f01a;text-transform:uppercase;letter-spacing:0.08em;margin:0 0 6px;background:#0f2a5c;display:inline-block;padding:3px 10px;border-radius:4px;">Free Downloads</p>
+        <p style="font-size:13px;font-weight:700;color:#d4f01a;text-transform:uppercase;letter-spacing:0.08em;margin:0 0 6px;background:#0b1525;display:inline-block;padding:3px 10px;border-radius:4px;">Free Downloads</p>
         <h2 id="dl-title" style="font-family:'Sora',sans-serif;font-size:clamp(1.6rem,3vw,2.2rem);font-weight:800;color:#1c1c1c;margin:8px 0 10px;">Download Resources</h2>
         <p id="dl-sub" style="font-size:15px;color:#64748b;margin:0;">Free course brochures, syllabus PDFs, and study materials</p>
       </div>
@@ -2193,7 +2193,7 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
       cta_text:'Register Now',
       cta_link:'/courses',
       video_link:'',
-      bg_color:'#0f2a5c',
+      bg_color:'#0b1525',
       text_color:'#ffffff',
       image_url:''
     },
@@ -2204,7 +2204,7 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
       cta_text:'Explore Online Courses',
       cta_link:'/courses',
       video_link:'',
-      bg_color:'#1a1a2e',
+      bg_color:'#0b1525',
       text_color:'#ffffff',
       image_url:''
     },
@@ -2233,10 +2233,10 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
     dots.innerHTML  = ''
 
     slides.forEach((s:any, i:number) => {
-      const bg        = s.bg_color    || '#0f2a5c'
+      const bg        = s.bg_color    || '#0b1525'
       const col       = s.text_color  || '#ffffff'
       const ctaBg     = s.cta_bg      || '#d4f01a'
-      const ctaColor  = s.cta_color   || '#0f2a5c'
+      const ctaColor  = s.cta_color   || '#0b1525'
       const headSize  = s.heading_size || 'clamp(2rem,5vw,3.4rem)'
       const headFont  = s.heading_font || "'Sora',sans-serif"
       const subSize   = s.sub_size     || 'clamp(14px,2vw,18px)'
@@ -2592,7 +2592,7 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
       ]
     },
     {
-      name:'Web & Full-Stack', color:'#0f2a5c', bg_color:'#eff6ff',
+      name:'Web & Full-Stack', color:'#0b1525', bg_color:'#eff6ff',
       courses:[
         { title:'MERN Stack', slug:'mern-stack', mode:'online', fee_inr:5999, original_fee_inr:11999, thumbnail_url:'' },
         { title:'React.js', slug:'react', mode:'online', fee_inr:4499, original_fee_inr:8999, thumbnail_url:'' },
@@ -2636,7 +2636,7 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
     const modeBg = c.mode === 'online' ? '#d4f01a' : '#60a5fa'
     const modeColor = c.mode === 'online' ? '#1a1a1a' : '#fff'
     wrap.innerHTML = `
-      <div class="cat-card-thumb" style="background:${c.thumbnail_url?'#000':'#0f2a5c'};">
+      <div class="cat-card-thumb" style="background:${c.thumbnail_url?'#000':'#0b1525'};">
         ${c.thumbnail_url ? `<img class="cat-card-thumb-inner" src="${c.thumbnail_url}" alt="${c.title}" loading="lazy" />` : `<div style="display:flex;align-items:center;justify-content:center;height:100%;padding:12px;"><span style="font-family:'Sora',sans-serif;font-size:15px;font-weight:900;color:#d4f01a;text-align:center;">${c.title}</span></div>`}
         <span class="cat-card-mode" style="background:${modeBg};color:${modeColor};">${c.mode||'hybrid'}</span>
       </div>
@@ -2732,7 +2732,7 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
       head.className = 'cat-row-head'
       head.innerHTML = `
         <div class="cat-row-left">
-          <span class="cat-row-name" style="color:${cat.color||'#0f2a5c'};">${cat.name}</span>
+          <span class="cat-row-name" style="color:${cat.color||'#0b1525'};">${cat.name}</span>
           <span class="cat-row-count">${courses.length} course${courses.length!==1?'s':''}</span>
         </div>
         <div class="cat-row-arrows">
@@ -2919,7 +2919,7 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
     if (mapEl && c.map_embed_url) {
       mapEl.innerHTML = `<iframe src="${c.map_embed_url}" allowfullscreen loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>`
     } else if (mapEl) {
-      mapEl.innerHTML = `<a href="https://maps.google.com/?q=ATEC+Gurdaspur+Punjab" target="_blank" rel="noopener" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:#0f2a5c;font-weight:700;text-decoration:none;width:100%;height:100%">📍 Open in Google Maps</a>`
+      mapEl.innerHTML = `<a href="https://maps.google.com/?q=ATEC+Gurdaspur+Punjab" target="_blank" rel="noopener" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:#0b1525;font-weight:700;text-decoration:none;width:100%;height:100%">📍 Open in Google Maps</a>`
     }
 
     // Hide form if disabled

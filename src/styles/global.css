@@ -1,6 +1,6 @@
 /* ============================================================
    atecedu.com — Global Styles
-   Theme: Navy (#1c3d7a) + Lemon (#d4f01a)
+   Theme: Navy (#0b1525) + Lemon (#d4f01a)
    Fonts: Sora (headings) + Inter (body)
    ============================================================ */
 
@@ -8,10 +8,10 @@
 
 /* ---- Design Tokens ---- */
 :root {
-  --navy:        #1c3d7a;
-  --navy-dark:   #0f2347;
-  --navy-mid:    #1e4694;
-  --navy-light:  #2d5cc6;
+  --navy:        #0b1525;
+  --navy-dark:   #0b1525;
+  --navy-mid:    #0d1e38;
+  --navy-light:  #112040;
   --lemon:       #d4f01a;
   --lemon-dark:  #b8d400;
   --lemon-light: #e8f94d;
@@ -23,7 +23,7 @@
   --gray-400:    #9ca3af;
   --gray-600:    #4b5563;
   --gray-800:    #1f2937;
-  --text-primary:   #0f1724;
+  --text-primary:   #0b1525;
   --text-secondary: #3d4f6b;
   --text-muted:     #6b7a99;
 
@@ -35,9 +35,9 @@
   --radius-lg:  16px;
   --radius-xl:  24px;
 
-  --shadow-sm: 0 1px 3px rgba(28,61,122,0.08);
-  --shadow-md: 0 4px 16px rgba(28,61,122,0.12);
-  --shadow-lg: 0 8px 32px rgba(28,61,122,0.16);
+  --shadow-sm: 0 1px 3px rgba(11,21,37,0.08);
+  --shadow-md: 0 4px 16px rgba(11,21,37,0.12);
+  --shadow-lg: 0 8px 32px rgba(11,21,37,0.16);
 
   --max-width: 1280px;
   --nav-height: 64px;
