@@ -258,13 +258,13 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
     /* Each slide: full-width, background photo/color, text overlay */
     .hslider-slide {
       flex-shrink:0; width:100%;
-      min-height:340px;
+      height:220px;
       position:relative;
       display:flex; align-items:center;
       overflow:hidden;
       box-sizing:border-box;
     }
-    @media(max-width:768px){ .hslider-slide { min-height:220px; } }
+    @media(max-width:768px){ .hslider-slide { height:160px; } }
 
     /* Background layers */
     .hslider-bg-img {
@@ -279,62 +279,62 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
     .hslider-content {
       position:relative; z-index:2;
       max-width:760px;
-      padding:36px 72px;
+      padding:20px 48px;
       width:100%;
     }
-    @media(max-width:768px){ .hslider-content { padding:28px 24px; } }
+    @media(max-width:768px){ .hslider-content { padding:16px 20px; } }
 
     .hslider-badge {
-      display:inline-flex; align-items:center; gap:6px;
-      padding:5px 16px; border-radius:30px;
-      font-size:13px; font-weight:800; letter-spacing:0.05em;
-      margin-bottom:18px; border:1px solid rgba(255,255,255,0.25);
+      display:inline-flex; align-items:center; gap:5px;
+      padding:3px 11px; border-radius:30px;
+      font-size:11px; font-weight:800; letter-spacing:0.05em;
+      margin-bottom:8px; border:1px solid rgba(255,255,255,0.25);
       background:rgba(0,0,0,0.25); backdrop-filter:blur(4px);
       color:#fff;
     }
     .hslider-h {
       font-family:'Sora',sans-serif;
-      font-size:clamp(2rem,5vw,3.4rem);
-      font-weight:900; line-height:1.08;
-      margin:0 0 16px;
-      text-shadow:0 2px 20px rgba(0,0,0,0.35);
+      font-size:clamp(1.3rem,3vw,2rem);
+      font-weight:900; line-height:1.1;
+      margin:0 0 6px;
+      text-shadow:0 2px 12px rgba(0,0,0,0.4);
     }
     .hslider-sub {
-      font-size:clamp(14px,2vw,18px);
-      margin:0 0 32px; line-height:1.65;
-      text-shadow:0 1px 8px rgba(0,0,0,0.3);
-      max-width:560px;
+      font-size:clamp(12px,1.5vw,14px);
+      margin:0 0 14px; line-height:1.5;
+      text-shadow:0 1px 6px rgba(0,0,0,0.3);
+      max-width:520px;
     }
     .hslider-cta {
-      display:inline-flex; align-items:center; gap:8px;
-      padding:14px 32px; border-radius:10px;
-      font-weight:800; font-size:15px; text-decoration:none;
-      box-shadow:0 4px 18px rgba(0,0,0,0.3);
-      transition:transform 0.18s,box-shadow 0.18s;
+      display:inline-flex; align-items:center; gap:6px;
+      padding:8px 20px; border-radius:8px;
+      font-weight:800; font-size:13px; text-decoration:none;
+      box-shadow:0 3px 12px rgba(0,0,0,0.3);
+      transition:transform 0.15s,box-shadow 0.15s;
     }
-    .hslider-cta:hover { transform:translateY(-2px); box-shadow:0 8px 28px rgba(0,0,0,0.4); }
+    .hslider-cta:hover { transform:translateY(-2px); box-shadow:0 6px 20px rgba(0,0,0,0.4); }
 
     /* Dots — centered at bottom of slider */
     .hslider-dots {
-      position:absolute; bottom:20px; left:50%; transform:translateX(-50%);
-      display:flex; gap:8px; z-index:10;
+      position:absolute; bottom:10px; left:50%; transform:translateX(-50%);
+      display:flex; gap:6px; z-index:10;
     }
     .hslider-dot {
-      width:9px; height:9px; border-radius:50%;
-      background:rgba(255,255,255,0.45); border:2px solid rgba(255,255,255,0.7);
+      width:7px; height:7px; border-radius:50%;
+      background:rgba(255,255,255,0.45); border:1.5px solid rgba(255,255,255,0.7);
       cursor:pointer; transition:all 0.22s; padding:0;
     }
-    .hslider-dot.active { width:26px; border-radius:5px; background:#fff; border-color:#fff; }
+    .hslider-dot.active { width:20px; border-radius:4px; background:#fff; border-color:#fff; }
 
     /* Arrows — on sides, inside the slide area */
     .hslider-arrow {
       position:absolute; top:50%; transform:translateY(-50%); z-index:10;
       background:rgba(255,255,255,0.18); backdrop-filter:blur(6px);
-      border:2px solid rgba(255,255,255,0.4);
+      border:1.5px solid rgba(255,255,255,0.4);
       color:#fff; border-radius:50%;
-      width:46px; height:46px;
+      width:34px; height:34px;
       display:flex; align-items:center; justify-content:center;
-      cursor:pointer; font-size:22px; line-height:1;
+      cursor:pointer; font-size:17px; line-height:1;
       transition:all 0.18s;
     }
     .hslider-arrow:hover { background:rgba(255,255,255,0.35); border-color:#fff; }
