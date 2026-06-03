@@ -503,36 +503,55 @@ function setText(id: string, val: string) {
 }
 
 async function sendOTPEmail(email: string, name: string, otp: string) {
-  // Use Anthropic API to compose OTP email
+  // ── EmailJS — free tier, 200 emails/month, no backend needed ──────
+  // Service ID, Template ID and Public Key come from emailjs.com dashboard
+  // Template variables used: {{to_name}}, {{otp_code}}, {{to_email}}
+  const EMAILJS_SERVICE  = 'service_vaxrywu'      // ← replace with your EmailJS Service ID
+  const EMAILJS_TEMPLATE = '__ejs-test-mail-service__' // ← replace with your EmailJS Template ID
+  const EMAILJS_PUBLIC   = '4I_3wxmCi6V2pfdGE'   // ← replace with your EmailJS Public Key
+
   try {
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 200,
-        messages: [{
-          role: 'user',
-          content: `Generate a brief, professional OTP email body (plain text only, no HTML) for ATEC computer test. Name: ${name}, OTP: ${otp}. Keep it under 80 words.`
-        }]
+    // Load EmailJS SDK lazily
+    if (!(window as any).emailjs) {
+      await new Promise<void>((resolve, reject) => {
+        const s = document.createElement('script')
+        s.src = 'https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js'
+        s.onload = () => resolve()
+        s.onerror = () => reject()
+        document.head.appendChild(s)
       })
-    })
-    const data = await response.json()
-    const emailBody = data?.content?.[0]?.text || `Hi ${name}, your ATEC test OTP is: ${otp}. Valid for 10 minutes.`
-    // Store OTP in Supabase for verification reference
-    if (SB_URL) {
-      await fetch(`${SB_URL}/rest/v1/site_settings`, {
-        method: 'POST',
-        headers: { apikey: SB_KEY, Authorization: `Bearer ${SB_KEY}`, 'Content-Type': 'application/json', Prefer: 'resolution=merge-duplicates,return=minimal' },
-        body: JSON.stringify({ key: `otp_${email.replace('@','_at_').replace('.','_dot_')}`, value: { otp: generatedOTP, expires: Date.now() + 600000, email_body: emailBody } })
-      })
+      ;(window as any).emailjs.init({ publicKey: EMAILJS_PUBLIC })
     }
-  } catch(e) {}
-  // Show OTP in console for testing (in production use email service)
-  console.log(`[ATEC TEST OTP] ${otp}`)
-  // Fallback: show OTP on screen in a subtle way for now
-  const otpTimer = document.getElementById('otp-timer')
-  if (otpTimer) otpTimer.setAttribute('data-dev-otp', generatedOTP)
+
+    await (window as any).emailjs.send(EMAILJS_SERVICE, EMAILJS_TEMPLATE, {
+      to_name:   name,
+      to_email:  email,
+      otp_code:  otp,
+      institute: 'ATEC Educational Society, Gurdaspur',
+      valid_min: '10',
+    })
+    console.log('[ATEC OTP] Sent via EmailJS to', email)
+  } catch (err) {
+    console.warn('[ATEC OTP] EmailJS failed:', err)
+    // Fallback: show OTP on screen so student can still continue
+    const timerEl = document.getElementById('otp-timer')
+    if (timerEl) {
+      timerEl.innerHTML = `Code expires in <strong id="otp-countdown">10:00</strong>
+        <br/><span style="font-size:12px;color:#ef4444;font-weight:700;margin-top:6px;display:block">
+        ⚠️ Email delivery failed. Your OTP: <span style="letter-spacing:0.15em">${otp}</span></span>`
+    }
+  }
+
+  // Always store in Supabase as backup record
+  if (SB_URL && SB_KEY) {
+    try {
+      await fetch(\`\${SB_URL}/rest/v1/site_settings\`, {
+        method: 'POST',
+        headers: { apikey: SB_KEY, Authorization: \`Bearer \${SB_KEY}\`, 'Content-Type': 'application/json', Prefer: 'resolution=merge-duplicates,return=minimal' },
+        body: JSON.stringify({ key: \`otp_\${email.replace('@','_at_').replace(/\./g,'_')}\`, value: { otp, expires: Date.now() + 600000, name } })
+      })
+    } catch(e) {}
+  }
 }
 
 // ── OTP ────────────────────────────────────────────────────────────────
