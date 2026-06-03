@@ -447,8 +447,8 @@ document.getElementById('why-save-btn')?.addEventListener('click', async () => {
 
 // ─── HERO SLIDER ──────────────────────────────────────────────────────
 const DEFAULT_SLIDES = [
-  { badge:'🔥 New Batch June 2026', heading:'Industrial Training for Real World Jobs', subheading:'GEN AI | MERN Stack | ML | Python | Ethical Hacking', cta_text:'Register Now', cta_link:'/courses', video_link:'', bg_color:'#0f2a5c', image_url:'' },
-  { badge:'🌐 Online & Hybrid', heading:'Learn From Anywhere in India', subheading:'Live classes · Recorded sessions · Doubt clearing', cta_text:'Explore Courses', cta_link:'/courses', video_link:'', bg_color:'#1a1a2e', image_url:'' },
+  { badge:'🔥 New Batch June 2026', heading:'Industrial Training<br>for Real World Jobs', subheading:'GEN AI | MERN Stack | Machine Learning | Python | Ethical Hacking', cta_text:'Register Now', cta_link:'/courses', video_link:'', bg_color:'#0f2a5c', image_url:'', text_color:'#ffffff', cta_bg:'#d4f01a', cta_color:'#0f2a5c', heading_font:"'Sora',sans-serif", heading_size:'clamp(2rem,5vw,3.4rem)', sub_size:'clamp(14px,2vw,18px)', overlay_opacity:0.45 },
+  { badge:'🌐 Online & Hybrid', heading:'Learn From Anywhere<br>in India', subheading:'Live classes · Recorded sessions · Doubt clearing — from home', cta_text:'Explore Courses', cta_link:'/courses', video_link:'', bg_color:'#1a1a2e', image_url:'', text_color:'#ffffff', cta_bg:'#d4f01a', cta_color:'#0f2a5c', heading_font:"'Sora',sans-serif", heading_size:'clamp(2rem,5vw,3.4rem)', sub_size:'clamp(14px,2vw,18px)', overlay_opacity:0.45 },
 ]
 let slides: any[] = [...DEFAULT_SLIDES]
 
@@ -458,23 +458,34 @@ function gv(id: string): string {
 
 function collectSlides() {
   slides = slides.map((_:any, i:number) => ({
-    badge:      gv(`sc-badge-${i}`),
-    heading:    gv(`sc-heading-${i}`),
-    subheading: gv(`sc-sub-${i}`),
-    cta_text:   gv(`sc-cta-text-${i}`),
-    cta_link:   gv(`sc-cta-link-${i}`) || '/courses',
-    video_link: gv(`sc-video-${i}`),
-    image_url:  gv(`sc-img-${i}`),
-    bg_color:   gv(`sc-bg-hex-${i}`) || '#0f2a5c',
+    badge:            gv(`sc-badge-${i}`),
+    heading:          gv(`sc-heading-${i}`),
+    subheading:       gv(`sc-sub-${i}`),
+    cta_text:         gv(`sc-cta-text-${i}`),
+    cta_link:         gv(`sc-cta-link-${i}`) || '/courses',
+    video_link:       gv(`sc-video-${i}`),
+    image_url:        gv(`sc-img-${i}`),
+    bg_color:         gv(`sc-bg-hex-${i}`)    || '#0f2a5c',
+    text_color:       gv(`sc-textcol-hex-${i}`) || '#ffffff',
+    cta_bg:           gv(`sc-ctabg-hex-${i}`)  || '#d4f01a',
+    cta_color:        gv(`sc-ctacol-hex-${i}`) || '#0f2a5c',
+    heading_font:     gv(`sc-hfont-${i}`)     || "'Sora',sans-serif",
+    heading_size:     gv(`sc-hsize-${i}`)     || 'clamp(2rem,5vw,3.4rem)',
+    sub_size:         gv(`sc-ssize-${i}`)     || 'clamp(14px,2vw,18px)',
+    overlay_opacity:  parseFloat(gv(`sc-overlay-${i}`)) || 0.45,
   }))
 }
 
 ;(window as any).refreshPreview = function(i: number) {
-  const bg    = gv(`sc-bg-hex-${i}`) || '#0f2a5c'
-  const head  = gv(`sc-heading-${i}`) || 'Slide Heading'
-  const badge = gv(`sc-badge-${i}`) || ''
-  const cta   = gv(`sc-cta-text-${i}`) || 'CTA'
-  const img   = gv(`sc-img-${i}`)
+  const bg      = gv(`sc-bg-hex-${i}`)     || '#0f2a5c'
+  const textCol = gv(`sc-textcol-hex-${i}`) || '#ffffff'
+  const ctaBg   = gv(`sc-ctabg-hex-${i}`)  || '#d4f01a'
+  const ctaCol  = gv(`sc-ctacol-hex-${i}`) || '#0f2a5c'
+  const head    = gv(`sc-heading-${i}`)    || 'Slide Heading'
+  const badge   = gv(`sc-badge-${i}`)      || ''
+  const cta     = gv(`sc-cta-text-${i}`)   || 'CTA'
+  const img     = gv(`sc-img-${i}`)
+  const overlay = parseFloat(gv(`sc-overlay-${i}`)) || 0.45
 
   const prevBox = document.getElementById(`sc-prev-${i}`)
   if (prevBox) prevBox.style.background = bg
@@ -482,24 +493,26 @@ function collectSlides() {
   const prevImg = document.getElementById(`sc-prev-img-${i}`) as HTMLImageElement|null
   if (prevImg) { prevImg.src = img || ''; prevImg.style.display = img ? 'block' : 'none' }
 
+  const ovlEl = document.getElementById(`sc-prev-ovl-${i}`) as HTMLElement|null
+  if (ovlEl) ovlEl.style.background = `linear-gradient(90deg,rgba(0,0,0,${overlay}) 0%,rgba(0,0,0,${Math.max(0,overlay-0.2)}) 100%)`
+
   const badgeEl = document.getElementById(`sc-prev-badge-${i}`)
   if (badgeEl) badgeEl.textContent = badge
 
-  const titleEl = document.getElementById(`sc-prev-title-${i}`)
-  if (titleEl) titleEl.textContent = head.replace(/<[^>]*>/g, '')
+  const titleEl = document.getElementById(`sc-prev-title-${i}`) as HTMLElement|null
+  if (titleEl) { titleEl.textContent = head.replace(/<[^>]*>/g,''); titleEl.style.color = textCol }
 
-  const ctaEl = document.getElementById(`sc-prev-cta-${i}`)
-  if (ctaEl) ctaEl.textContent = cta
+  const ctaEl = document.getElementById(`sc-prev-cta-${i}`) as HTMLElement|null
+  if (ctaEl) { ctaEl.textContent = cta; ctaEl.style.background = ctaBg; ctaEl.style.color = ctaCol }
 
   const hdrTitle = document.getElementById(`sc-hdr-title-${i}`)
-  if (hdrTitle) hdrTitle.textContent = head.replace(/<[^>]*>/g, '') || `Slide ${i+1}`
+  if (hdrTitle) hdrTitle.textContent = head.replace(/<[^>]*>/g,'') || `Slide ${i+1}`
 
-  // Update image thumbnail preview
   const imgPrev = document.getElementById(`sc-img-prev-${i}`)
   if (imgPrev) {
     imgPrev.innerHTML = img
       ? `<img src="${img}" onerror="this.style.opacity=0.3" />`
-      : `<div class="sc-img-placeholder">📷 No image set<br><span style="font-size:10px;">Paste an image URL above</span></div>`
+      : `<div class="sc-img-placeholder">🖼️ No image set<br><span style="font-size:10px;">Paste a URL in the Background Image field</span></div>`
   }
 }
 
@@ -509,7 +522,15 @@ function renderSlides() {
   list.innerHTML = ''
 
   slides.forEach((s: any, i: number) => {
-    const bg = s.bg_color || '#0f2a5c'
+    const bg       = s.bg_color    || '#0f2a5c'
+    const textCol  = s.text_color  || '#ffffff'
+    const ctaBg    = s.cta_bg      || '#d4f01a'
+    const ctaColor = s.cta_color   || '#0f2a5c'
+    const headSize = s.heading_size|| 'clamp(2rem,5vw,3.4rem)'
+    const headFont = s.heading_font|| "'Sora',sans-serif"
+    const subSize  = s.sub_size    || 'clamp(14px,2vw,18px)'
+    const overlay  = s.overlay_opacity != null ? s.overlay_opacity : 0.45
+
     const card = document.createElement('div')
     card.className = 'sc'
     card.innerHTML = `
@@ -531,14 +552,67 @@ function renderSlides() {
           <!-- LEFT: form fields -->
           <div class="sc-fields">
 
+            <!-- ROW 1: Badge + overlay opacity -->
             <div class="sc-field-row">
               <div class="sc-field">
-                <label class="sc-lbl">🏷️ Badge</label>
+                <label class="sc-lbl">🏷️ Badge Text</label>
                 <input class="sc-inp" id="sc-badge-${i}" value="${(s.badge||'').replace(/"/g,'&quot;')}"
-                  placeholder="🔥 New Batch" oninput="refreshPreview(${i})" />
+                  placeholder="🔥 Free Demo | New Batch" oninput="refreshPreview(${i})" />
               </div>
               <div class="sc-field">
-                <label class="sc-lbl">🎨 Background</label>
+                <label class="sc-lbl">🌑 Overlay Opacity (0–1)</label>
+                <input class="sc-inp" type="number" id="sc-overlay-${i}" value="${overlay}" min="0" max="1" step="0.05"
+                  oninput="refreshPreview(${i})" />
+                <span style="font-size:10px;color:#94a3b8;">0 = no darken · 0.5 = half dark · 1 = black</span>
+              </div>
+            </div>
+
+            <!-- ROW 2: Heading + heading font -->
+            <div class="sc-field">
+              <label class="sc-lbl">📝 Heading <span style="font-weight:400;text-transform:none;">(HTML ok: use &lt;br&gt; for new line)</span></label>
+              <input class="sc-inp" id="sc-heading-${i}" value="${(s.heading||'').replace(/"/g,'&quot;')}"
+                placeholder="10% Off — on Industrial Trainings" oninput="refreshPreview(${i})" />
+            </div>
+            <div class="sc-field-row">
+              <div class="sc-field">
+                <label class="sc-lbl">🔤 Heading Font</label>
+                <input class="sc-inp" id="sc-hfont-${i}" value="${(headFont).replace(/"/g,'&quot;')}"
+                  placeholder="'Sora',sans-serif" />
+                <span style="font-size:10px;color:#94a3b8;">'Poppins','Inter','Roboto',sans-serif</span>
+              </div>
+              <div class="sc-field">
+                <label class="sc-lbl">📏 Heading Font Size</label>
+                <input class="sc-inp" id="sc-hsize-${i}" value="${headSize}"
+                  placeholder="clamp(2rem,5vw,3.4rem)" />
+                <span style="font-size:10px;color:#94a3b8;">e.g. 3rem · 48px · clamp(2rem,5vw,3.4rem)</span>
+              </div>
+            </div>
+
+            <!-- ROW 3: Subheading + sub size -->
+            <div class="sc-field">
+              <label class="sc-lbl">📄 Subheading</label>
+              <input class="sc-inp" id="sc-sub-${i}" value="${(s.subheading||'').replace(/"/g,'&quot;')}"
+                placeholder="Try ATEC Before You Join · Book a free demo today" />
+            </div>
+            <div class="sc-field">
+              <label class="sc-lbl">📏 Subheading Font Size</label>
+              <input class="sc-inp" id="sc-ssize-${i}" value="${subSize}"
+                placeholder="clamp(14px,2vw,18px)" style="width:200px;" />
+            </div>
+
+            <!-- ROW 4: Text color + bg color -->
+            <div class="sc-field-row">
+              <div class="sc-field">
+                <label class="sc-lbl">🔤 Text Color</label>
+                <div class="sc-color-wrap">
+                  <input type="color" id="sc-textcol-${i}" value="${textCol}"
+                    oninput="document.getElementById('sc-textcol-hex-${i}').value=this.value;refreshPreview(${i})" />
+                  <input class="sc-inp" id="sc-textcol-hex-${i}" value="${textCol}" maxlength="9"
+                    oninput="document.getElementById('sc-textcol-${i}').value=this.value||'#fff';refreshPreview(${i})" />
+                </div>
+              </div>
+              <div class="sc-field">
+                <label class="sc-lbl">🎨 Fallback Bg Color <span style="font-weight:400;text-transform:none;">(shows if no image)</span></label>
                 <div class="sc-color-wrap">
                   <input type="color" id="sc-bg-${i}" value="${bg}"
                     oninput="document.getElementById('sc-bg-hex-${i}').value=this.value;refreshPreview(${i})" />
@@ -548,23 +622,12 @@ function renderSlides() {
               </div>
             </div>
 
-            <div class="sc-field">
-              <label class="sc-lbl">📝 Heading</label>
-              <input class="sc-inp" id="sc-heading-${i}" value="${(s.heading||'').replace(/"/g,'&quot;')}"
-                placeholder="Learn MERN Stack in 6 Months" oninput="refreshPreview(${i})" />
-            </div>
-
-            <div class="sc-field">
-              <label class="sc-lbl">📄 Subheading</label>
-              <input class="sc-inp" id="sc-sub-${i}" value="${(s.subheading||'').replace(/"/g,'&quot;')}"
-                placeholder="GEN AI | Python | React | Batch starts Monday" />
-            </div>
-
+            <!-- ROW 5: CTA button -->
             <div class="sc-field-row">
               <div class="sc-field">
                 <label class="sc-lbl">🔘 Button Text</label>
                 <input class="sc-inp" id="sc-cta-text-${i}" value="${(s.cta_text||'').replace(/"/g,'&quot;')}"
-                  placeholder="Register Now" oninput="refreshPreview(${i})" />
+                  placeholder="Book Free Demo" oninput="refreshPreview(${i})" />
               </div>
               <div class="sc-field">
                 <label class="sc-lbl">🔗 Button Link</label>
@@ -572,17 +635,44 @@ function renderSlides() {
                   placeholder="/courses" />
               </div>
             </div>
+            <div class="sc-field-row">
+              <div class="sc-field">
+                <label class="sc-lbl">🎨 Button Background</label>
+                <div class="sc-color-wrap">
+                  <input type="color" id="sc-ctabg-${i}" value="${ctaBg}"
+                    oninput="document.getElementById('sc-ctabg-hex-${i}').value=this.value;refreshPreview(${i})" />
+                  <input class="sc-inp" id="sc-ctabg-hex-${i}" value="${ctaBg}" maxlength="9"
+                    oninput="document.getElementById('sc-ctabg-${i}').value=this.value||'#000';refreshPreview(${i})" />
+                </div>
+              </div>
+              <div class="sc-field">
+                <label class="sc-lbl">🔤 Button Text Color</label>
+                <div class="sc-color-wrap">
+                  <input type="color" id="sc-ctacol-${i}" value="${ctaColor}"
+                    oninput="document.getElementById('sc-ctacol-hex-${i}').value=this.value" />
+                  <input class="sc-inp" id="sc-ctacol-hex-${i}" value="${ctaColor}" maxlength="9"
+                    oninput="document.getElementById('sc-ctacol-${i}').value=this.value||'#000'" />
+                </div>
+              </div>
+            </div>
 
             <hr class="sc-divider" />
 
+            <!-- ROW 6: Background image (full slide) -->
             <div class="sc-field">
-              <label class="sc-lbl">🖼️ Image URL <span style="font-weight:400;text-transform:none;">(right side of slide)</span></label>
+              <label class="sc-lbl">🖼️ Background Image URL <span style="font-weight:400;text-transform:none;">(fills entire slide behind text)</span></label>
               <input class="sc-inp" id="sc-img-${i}" value="${(s.image_url||'').replace(/"/g,'&quot;')}"
                 placeholder="https://example.com/photo.jpg" oninput="refreshPreview(${i})" />
+              ${s.image_url
+                ? `<div style="margin-top:8px;border-radius:8px;overflow:hidden;height:80px;background:#f1f5f9;">
+                    <img src="${s.image_url}" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'" />
+                   </div>`
+                : `<p style="font-size:11px;color:#94a3b8;margin:4px 0 0;">💡 Paste a full https:// image URL. The image will cover the entire slide width &amp; height.</p>`}
             </div>
 
+            <!-- ROW 7: YouTube video bg -->
             <div class="sc-field">
-              <label class="sc-lbl">▶️ YouTube URL <span style="font-weight:400;text-transform:none;">(overrides image)</span></label>
+              <label class="sc-lbl">▶️ YouTube/Video URL <span style="font-weight:400;text-transform:none;">(plays as background, overrides image)</span></label>
               <input class="sc-inp" id="sc-video-${i}" value="${(s.video_link||'').replace(/"/g,'&quot;')}"
                 placeholder="https://youtube.com/watch?v=..." />
             </div>
@@ -591,16 +681,16 @@ function renderSlides() {
 
           <!-- RIGHT: live preview panel -->
           <div class="sc-preview-panel">
-            <div style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px;">Live Preview</div>
+            <div style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px;">Live Preview</div>
 
             <div class="sc-prev" id="sc-prev-${i}" style="background:${bg}">
               <img class="sc-prev-img" id="sc-prev-img-${i}" src="${s.image_url||''}"
                 style="display:${s.image_url?'block':'none'}" onerror="this.style.display='none'" />
-              <div class="sc-prev-overlay"></div>
+              <div class="sc-prev-overlay" id="sc-prev-ovl-${i}" style="background:linear-gradient(90deg,rgba(0,0,0,${overlay}) 0%,rgba(0,0,0,${Math.max(0,overlay-0.2)}) 100%);"></div>
               <div class="sc-prev-content">
                 <div class="sc-prev-badge" id="sc-prev-badge-${i}">${s.badge||'Badge'}</div>
-                <div class="sc-prev-title" id="sc-prev-title-${i}">${(s.heading||'Heading').replace(/<[^>]*>/g,'')}</div>
-                <span class="sc-prev-cta" id="sc-prev-cta-${i}">${s.cta_text||'CTA'}</span>
+                <div class="sc-prev-title" id="sc-prev-title-${i}" style="color:${textCol};">${(s.heading||'Heading').replace(/<[^>]*>/g,'')}</div>
+                <span class="sc-prev-cta" id="sc-prev-cta-${i}" style="background:${ctaBg};color:${ctaColor};">${s.cta_text||'CTA'}</span>
               </div>
             </div>
 
@@ -608,17 +698,15 @@ function renderSlides() {
             <div class="sc-img-preview" id="sc-img-prev-${i}">
               ${s.image_url
                 ? `<img src="${s.image_url}" onerror="this.style.opacity=0.3" />`
-                : '<div class="sc-img-placeholder">📷 No image set<br><span style="font-size:10px;">Paste an image URL in the field</span></div>'}
+                : '<div class="sc-img-placeholder">🖼️ No image set<br><span style="font-size:10px;">Paste a URL in the Background Image field</span></div>'}
             </div>
-
-            <p style="font-size:11px;color:#94a3b8;margin:6px 0 0;line-height:1.5;">Tip: Use any public https:// image URL. Aspect ratio doesn't matter — it'll be cropped to fit.</p>
+            <p style="font-size:11px;color:#94a3b8;margin:6px 0 0;line-height:1.5;">The image covers the full slide. Use a wide (16:9+) photo for best results.</p>
           </div>
         </div>
       </div>`
     list.appendChild(card)
   })
 
-  // Auto-expand all if ≤ 2 slides
   if (slides.length <= 2) {
     slides.forEach((_:any, i:number) => {
       document.getElementById(`sc-body-${i}`)?.classList.add('open')
