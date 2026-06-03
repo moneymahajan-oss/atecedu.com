@@ -487,6 +487,7 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
     .cat-card-mode { position:absolute; top:10px; left:10px; padding:3px 10px; border-radius:20px; font-size:11px; font-weight:800; text-transform:uppercase; }
     .cat-card-body { padding:14px 16px 16px; }
     .cat-card-title { font-family:var(--cat-font); font-size:17px; font-weight:800; color:#1c1c1c; margin:0 0 6px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .cat-card-desc { font-size:12px; color:#64748b; margin:4px 0 8px; line-height:1.4; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
     .cat-card-fee { font-size:15px; font-weight:800; color:#0f2a5c; }
     .cat-card-fee-orig { font-size:12px; color:#94a3b8; text-decoration:line-through; margin-left:5px; }
     @media(max-width:900px){ .cat-card { width:calc(50% - 10px); } }
@@ -1725,19 +1726,30 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
           <div class="story-role">${t.course || ''}</div>
         </div>`
 
-      // ── NO inline video/iframe in cards — thumbnail only ──────────────
-      // YouTube iframes always show player UI (letters, controls) regardless
-      // of controls=0 or pointer-events:none. Solution: show thumbnail in card,
-      // play video only in the fullscreen overlay on click.
-      // Direct mp4/webm videos still autoplay cleanly (no player UI).
+      // ── Inline video autoplay in cards ───────────────────────────────
+      // Direct mp4/webm: native <video> element, clean autoplay.
+      // YouTube: iframe with autoplay+mute — works on all modern browsers.
       if (hasVideo && isDirect) {
         const v = document.createElement('video')
         v.src = t.video_url
         v.muted = true; v.loop = true; v.autoplay = true; v.playsInline = true
         v.className = 'story-card-video'
         card.insertBefore(v, card.firstChild)
+      } else if (hasVideo && !isDirect) {
+        // YouTube / Instagram / Vimeo — embed as iframe, muted autoplay
+        const src = cardSrc(t.video_url, t.video_type || 'youtube')
+        if (src) {
+          const f = document.createElement('iframe')
+          f.src = src
+          f.className = 'story-card-video'
+          f.setAttribute('allow', 'autoplay; encrypted-media; fullscreen; picture-in-picture')
+          f.setAttribute('allowfullscreen', '')
+          f.setAttribute('frameborder', '0')
+          f.setAttribute('loading', 'lazy')
+          card.insertBefore(f, card.firstChild)
+        }
       }
-      // If no photo and YouTube video — auto-generate thumbnail as background
+      // If no photo and YouTube video — also auto-generate thumbnail as BG
       if (hasVideo && !isDirect && !hasPhoto) {
         const ytId = extractYtId(t.video_url)
         if (ytId) {
@@ -2375,6 +2387,7 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
       </div>
       <div class="cat-card-body">
         <div class="cat-card-title">${c.title}</div>
+        ${c.short_description ? `<div class="cat-card-desc">${c.short_description}</div>` : ''}
         ${showFee && c.fee_inr ? `<div><span class="cat-card-fee">₹${Number(c.fee_inr).toLocaleString('en-IN')}</span>${c.original_fee_inr?`<span class="cat-card-fee-orig">₹${Number(c.original_fee_inr).toLocaleString('en-IN')}</span>`:''}</div>` : ''}
       </div>`
     return wrap
