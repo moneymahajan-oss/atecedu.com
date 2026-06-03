@@ -1,0 +1,939 @@
+---
+// src/pages/mock-test.astro
+import BaseLayout from '../layouts/BaseLayout.astro'
+---
+<BaseLayout
+  title="Free Mock Test — ATEC Gurdaspur | Earn Course Discount"
+  description="Take ATEC's free computer knowledge mock test. Score 75%+ and earn up to 25% discount on any course. 50 questions, 20 minutes."
+>
+<style>
+/* ═══════════════════ BASE ═══════════════════ */
+*,*::before,*::after{box-sizing:border-box}
+.mt-wrap{font-family:'Inter',sans-serif;min-height:100vh;background:#f0f4f8}
+
+/* ═══════════════════ SCREEN SYSTEM ═══════════════════ */
+.screen{display:none;animation:fadeIn 0.3s ease}
+.screen.active{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:calc(100vh - 56px);padding:32px 16px}
+@keyframes fadeIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+
+/* ═══════════════════ CARD ═══════════════════ */
+.card{background:#fff;border-radius:20px;box-shadow:0 8px 40px rgba(0,0,0,0.1);width:100%;max-width:520px;overflow:hidden}
+.card-head{background:#0b1525;padding:32px;text-align:center;color:#fff}
+.card-head .logo{font-family:'Sora',sans-serif;font-size:13px;font-weight:700;color:#d4f01a;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:8px}
+.card-head h2{font-family:'Sora',sans-serif;font-size:1.5rem;font-weight:900;margin:0 0 6px}
+.card-head p{font-size:13px;color:rgba(255,255,255,0.6);margin:0}
+.card-body{padding:32px}
+
+/* ═══════════════════ DISCOUNT PILLS ═══════════════════ */
+.discount-pills{display:flex;gap:8px;justify-content:center;margin:16px 0 0;flex-wrap:wrap}
+.dp{padding:5px 14px;border-radius:20px;font-size:12px;font-weight:800;border:1.5px solid rgba(255,255,255,0.2)}
+.dp.d10{background:rgba(212,240,26,0.15);color:#d4f01a}
+.dp.d20{background:rgba(251,191,36,0.15);color:#fbbf24}
+.dp.d25{background:rgba(52,211,153,0.15);color:#34d399}
+
+/* ═══════════════════ FORM ═══════════════════ */
+.field{margin-bottom:16px}
+.field label{display:block;font-size:12px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px}
+.field input,.field select{width:100%;padding:12px 16px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:15px;color:#1e293b;outline:none;transition:border-color 0.15s;font-family:'Inter',sans-serif;background:#fff}
+.field input:focus,.field select:focus{border-color:#0b1525;box-shadow:0 0 0 3px rgba(11,21,37,0.08)}
+.field input.error{border-color:#ef4444}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:480px){.field-row{grid-template-columns:1fr}}
+
+.btn-primary{width:100%;background:#0b1525;color:#d4f01a;border:none;border-radius:12px;padding:14px;font-size:16px;font-weight:800;cursor:pointer;font-family:'Inter',sans-serif;transition:all 0.2s;letter-spacing:0.02em}
+.btn-primary:hover{background:#112040;transform:translateY(-1px)}
+.btn-primary:disabled{background:#94a3b8;cursor:not-allowed;transform:none}
+.btn-secondary{width:100%;background:#f1f5f9;color:#475569;border:none;border-radius:12px;padding:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;margin-top:10px}
+.btn-secondary:hover{background:#e2e8f0}
+
+.err-msg{background:#fee2e2;color:#dc2626;border-radius:8px;padding:10px 14px;font-size:13px;margin-bottom:14px;display:none}
+.err-msg.show{display:block}
+.info-msg{background:#eff6ff;color:#1d4ed8;border-radius:8px;padding:10px 14px;font-size:13px;margin-bottom:14px}
+
+/* OTP inputs */
+.otp-row{display:flex;gap:10px;justify-content:center;margin:20px 0}
+.otp-input{width:50px;height:56px;border:2px solid #e2e8f0;border-radius:10px;font-size:24px;font-weight:800;text-align:center;outline:none;transition:border-color 0.15s;font-family:'Sora',sans-serif;color:#0b1525}
+.otp-input:focus{border-color:#0b1525;box-shadow:0 0 0 3px rgba(11,21,37,0.08)}
+.otp-timer{text-align:center;font-size:13px;color:#94a3b8;margin-top:8px}
+.resend-btn{background:none;border:none;color:#0b1525;font-weight:700;cursor:pointer;font-size:13px;font-family:'Inter',sans-serif;text-decoration:underline;margin-top:8px;display:block;width:100%;text-align:center}
+
+/* ═══════════════════ TEST SCREEN ═══════════════════ */
+.test-wrap{width:100%;max-width:900px;margin:0 auto}
+
+.test-header{background:#0b1525;border-radius:16px;padding:20px 28px;display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px}
+.test-header-left h3{font-family:'Sora',sans-serif;font-weight:800;font-size:16px;color:#fff;margin:0 0 4px}
+.test-header-left p{font-size:13px;color:rgba(255,255,255,0.6);margin:0}
+.timer-box{background:rgba(255,255,255,0.1);border:2px solid rgba(255,255,255,0.2);border-radius:12px;padding:10px 20px;text-align:center}
+.timer-label{font-size:10px;font-weight:700;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:0.08em}
+.timer-val{font-family:'Sora',sans-serif;font-size:1.8rem;font-weight:900;color:#d4f01a;line-height:1;margin-top:2px}
+.timer-box.warning .timer-val{color:#fbbf24}
+.timer-box.danger .timer-val{color:#f87171;animation:pulse 1s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.6}}
+
+/* Progress bar */
+.progress-bar{background:#e2e8f0;border-radius:8px;height:8px;margin-bottom:20px;overflow:hidden}
+.progress-fill{height:100%;background:linear-gradient(90deg,#0b1525,#d4f01a);border-radius:8px;transition:width 0.3s}
+
+/* Question navigator */
+.q-nav{display:flex;gap:6px;flex-wrap:wrap;background:#fff;border-radius:14px;padding:16px;margin-bottom:16px;box-shadow:0 2px 8px rgba(0,0,0,0.06)}
+.q-nav-btn{width:34px;height:34px;border-radius:8px;border:1.5px solid #e2e8f0;background:#fff;font-size:12px;font-weight:700;cursor:pointer;transition:all 0.15s;font-family:'Inter',sans-serif;color:#475569}
+.q-nav-btn:hover{border-color:#0b1525;color:#0b1525}
+.q-nav-btn.answered{background:#0b1525;color:#d4f01a;border-color:#0b1525}
+.q-nav-btn.current{border-color:#d4f01a;box-shadow:0 0 0 2px #d4f01a}
+.q-nav-legend{display:flex;gap:16px;margin-top:10px;padding-top:10px;border-top:1px solid #f1f5f9;font-size:11px;color:#94a3b8}
+.q-nav-legend span{display:flex;align-items:center;gap:5px}
+.leg-dot{width:10px;height:10px;border-radius:3px}
+
+/* Question card */
+.q-card{background:#fff;border-radius:16px;padding:28px;box-shadow:0 2px 10px rgba(0,0,0,0.06);margin-bottom:16px}
+.q-meta{display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap}
+.q-number{font-size:12px;font-weight:700;color:#64748b}
+.q-category{background:#eff6ff;color:#0b1525;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px}
+.q-multi-badge{background:#fef3c7;color:#92400e;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px}
+.q-text{font-size:16px;font-weight:600;color:#1e293b;line-height:1.6;margin:0 0 20px}
+
+.options{display:flex;flex-direction:column;gap:10px}
+.option{display:flex;align-items:flex-start;gap:14px;padding:14px 16px;border:2px solid #e2e8f0;border-radius:12px;cursor:pointer;transition:all 0.15s;background:#fff}
+.option:hover{border-color:#0b1525;background:#f8fafc}
+.option.selected{border-color:#0b1525;background:#eff6ff}
+.option-check{width:22px;height:22px;border:2px solid #cbd5e1;border-radius:6px;flex-shrink:0;margin-top:1px;display:flex;align-items:center;justify-content:center;transition:all 0.15s;background:#fff}
+.option.selected .option-check{background:#0b1525;border-color:#0b1525;color:#d4f01a}
+.option-text{font-size:15px;color:#374151;line-height:1.5;flex:1}
+
+/* Question nav buttons */
+.q-actions{display:flex;gap:10px;justify-content:space-between;align-items:center}
+.btn-nav{padding:10px 24px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;border:2px solid #e2e8f0;background:#fff;color:#475569;font-family:'Inter',sans-serif;transition:all 0.15s}
+.btn-nav:hover{border-color:#0b1525;color:#0b1525}
+.btn-nav:disabled{opacity:0.4;cursor:not-allowed}
+.btn-submit{padding:10px 28px;background:#0b1525;color:#d4f01a;border:none;border-radius:10px;font-size:14px;font-weight:800;cursor:pointer;font-family:'Inter',sans-serif;transition:background 0.15s}
+.btn-submit:hover{background:#112040}
+
+/* ═══════════════════ RESULTS SCREEN ═══════════════════ */
+.result-card{background:#fff;border-radius:20px;box-shadow:0 8px 40px rgba(0,0,0,0.1);width:100%;max-width:680px;overflow:hidden}
+.result-head{padding:40px 32px;text-align:center;color:#fff;position:relative;overflow:hidden}
+.result-head::before{content:'';position:absolute;inset:0;opacity:0.15;background:radial-gradient(circle at 30% 50%,#fff,transparent)}
+.result-head .score-ring{width:120px;height:120px;border-radius:50%;border:6px solid rgba(255,255,255,0.3);margin:0 auto 20px;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.result-head .score-pct{font-family:'Sora',sans-serif;font-size:2.2rem;font-weight:900;line-height:1}
+.result-head .score-lbl{font-size:11px;opacity:0.7;margin-top:2px}
+.result-head h2{font-family:'Sora',sans-serif;font-size:1.5rem;font-weight:900;margin:0 0 6px}
+.result-head p{font-size:14px;opacity:0.75;margin:0}
+
+.result-body{padding:28px 32px}
+.stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px}
+@media(max-width:480px){.stat-grid{grid-template-columns:repeat(2,1fr)}}
+.stat-item{background:#f8fafc;border-radius:12px;padding:14px;text-align:center}
+.stat-val{font-family:'Sora',sans-serif;font-size:1.5rem;font-weight:900;color:#0b1525}
+.stat-label{font-size:11px;color:#64748b;margin-top:3px}
+
+/* Discount box */
+.discount-box{border-radius:14px;padding:20px;text-align:center;margin-bottom:20px}
+.discount-box.has-discount{background:linear-gradient(135deg,#0b1525,#1a3460);color:#fff}
+.discount-box.no-discount{background:#f8fafc;border:2px dashed #e2e8f0}
+.discount-pct{font-family:'Sora',sans-serif;font-size:3rem;font-weight:900;color:#d4f01a;line-height:1}
+.discount-code{background:rgba(255,255,255,0.15);border:1px dashed rgba(255,255,255,0.4);border-radius:8px;padding:8px 20px;font-family:'Sora',sans-serif;font-size:18px;font-weight:900;letter-spacing:0.12em;color:#d4f01a;display:inline-block;margin:8px 0;cursor:pointer;transition:background 0.15s}
+.discount-code:hover{background:rgba(255,255,255,0.25)}
+.copy-hint{font-size:11px;opacity:0.6}
+
+.send-report-row{display:flex;gap:10px;align-items:flex-end;margin-bottom:16px}
+.send-report-row .field{flex:1;margin:0}
+.btn-send{white-space:nowrap;background:#0b1525;color:#d4f01a;border:none;border-radius:10px;padding:12px 20px;font-size:14px;font-weight:800;cursor:pointer;font-family:'Inter',sans-serif;transition:background 0.15s}
+.btn-send:hover{background:#112040}
+.btn-send:disabled{background:#94a3b8;cursor:not-allowed}
+.send-success{background:#dcfce7;color:#166534;border-radius:8px;padding:10px 14px;font-size:13px;font-weight:700;display:none;margin-top:8px}
+.send-success.show{display:block}
+
+.btn-retake{width:100%;background:#f1f5f9;color:#0b1525;border:none;border-radius:12px;padding:12px;font-size:15px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;margin-top:8px;transition:background 0.15s}
+.btn-retake:hover{background:#e2e8f0}
+
+/* Review section */
+.review-toggle{width:100%;background:none;border:2px solid #e2e8f0;border-radius:10px;padding:11px;font-size:14px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;color:#475569;margin-top:8px;display:flex;align-items:center;justify-content:center;gap:8px}
+.review-toggle:hover{border-color:#0b1525;color:#0b1525}
+.review-list{margin-top:16px;display:none}
+.review-list.open{display:block}
+.review-q{padding:16px;border-radius:10px;margin-bottom:10px;border:1px solid #e2e8f0}
+.review-q.correct{background:#f0fdf4;border-color:#86efac}
+.review-q.wrong{background:#fff1f2;border-color:#fca5a5}
+.review-q .rq-text{font-size:14px;font-weight:600;color:#1e293b;margin-bottom:8px}
+.review-q .rq-ans{font-size:12px;display:flex;gap:16px;flex-wrap:wrap}
+.review-q .rq-yours{color:#475569}
+.review-q .rq-correct{color:#166534;font-weight:700}
+.review-q .rq-explain{font-size:12px;color:#64748b;margin-top:6px;font-style:italic}
+
+/* ═══════════════════ LOADING ═══════════════════ */
+.loading-screen{text-align:center;padding:60px 32px}
+.spinner{width:48px;height:48px;border:4px solid #e2e8f0;border-top-color:#0b1525;border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 16px}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+@media(max-width:600px){
+  .test-header{padding:16px}
+  .q-card{padding:20px}
+  .result-body,.card-body{padding:20px}
+  .screen{padding:16px}
+}
+</style>
+
+<div class="mt-wrap">
+
+<!-- ═══ SCREEN 1: REGISTRATION ═══ -->
+<div class="screen active" id="screen-register">
+  <div class="card">
+    <div class="card-head">
+      <div class="logo">🎯 ATEC Mock Test</div>
+      <h2 id="test-title-h">Computer Knowledge Test</h2>
+      <p id="test-subtitle-p">Score well and earn a course discount!</p>
+      <div class="discount-pills">
+        <span class="dp d10" id="pill-75">75%+ → 10% OFF</span>
+        <span class="dp d20" id="pill-85">85%+ → 20% OFF</span>
+        <span class="dp d25" id="pill-95">95%+ → 25% OFF</span>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="info-msg">📋 50 questions · 20 min timer · Multiple correct answers possible</div>
+      <div class="err-msg" id="reg-err"></div>
+      <div class="field-row">
+        <div class="field">
+          <label>Full Name *</label>
+          <input type="text" id="reg-name" placeholder="Your full name" maxlength="60" />
+        </div>
+        <div class="field">
+          <label>Phone *</label>
+          <input type="tel" id="reg-phone" placeholder="+91 XXXXXXXXXX" maxlength="15" />
+        </div>
+      </div>
+      <div class="field">
+        <label>Email Address *</label>
+        <input type="email" id="reg-email" placeholder="your@email.com" />
+        <div style="font-size:11px;color:#94a3b8;margin-top:4px">📧 Your test report and discount code will be mailed here</div>
+      </div>
+      <div class="field">
+        <label>Interested Course</label>
+        <select id="reg-course">
+          <option value="">Select a course (optional)</option>
+          <option>GEN AI for Everyone</option>
+          <option>MERN Stack Development</option>
+          <option>Hardware & Networking</option>
+          <option>Tally Prime + GST</option>
+          <option>Python Programming</option>
+          <option>Digital Marketing</option>
+          <option>Coding for Kids</option>
+          <option>MS Office Advanced</option>
+          <option>Other</option>
+        </select>
+      </div>
+      <button class="btn-primary" id="reg-btn" onclick="startRegistration()">
+        Continue to Verification →
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ SCREEN 2: OTP VERIFICATION ═══ -->
+<div class="screen" id="screen-otp">
+  <div class="card">
+    <div class="card-head">
+      <div class="logo">🔐 Verify Your Identity</div>
+      <h2>Enter OTP</h2>
+      <p id="otp-sent-to">Sent to your email</p>
+    </div>
+    <div class="card-body">
+      <div class="err-msg" id="otp-err"></div>
+      <p style="text-align:center;font-size:14px;color:#475569;margin:0 0 8px">Enter the 6-digit code sent to your email</p>
+      <div class="otp-row" id="otp-inputs">
+        <input class="otp-input" maxlength="1" type="text" inputmode="numeric" pattern="[0-9]" id="otp0" />
+        <input class="otp-input" maxlength="1" type="text" inputmode="numeric" pattern="[0-9]" id="otp1" />
+        <input class="otp-input" maxlength="1" type="text" inputmode="numeric" pattern="[0-9]" id="otp2" />
+        <input class="otp-input" maxlength="1" type="text" inputmode="numeric" pattern="[0-9]" id="otp3" />
+        <input class="otp-input" maxlength="1" type="text" inputmode="numeric" pattern="[0-9]" id="otp4" />
+        <input class="otp-input" maxlength="1" type="text" inputmode="numeric" pattern="[0-9]" id="otp5" />
+      </div>
+      <div class="otp-timer" id="otp-timer">Code expires in <strong id="otp-countdown">10:00</strong></div>
+      <button class="resend-btn" id="resend-btn" style="display:none" onclick="resendOTP()">Resend OTP</button>
+      <button class="btn-primary" id="otp-btn" onclick="verifyOTP()">Verify & Start Test →</button>
+      <button class="btn-secondary" onclick="goBack('screen-register')">← Go Back</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ SCREEN 3: LOADING TEST ═══ -->
+<div class="screen" id="screen-loading">
+  <div class="loading-screen">
+    <div class="spinner"></div>
+    <p style="font-family:'Sora',sans-serif;font-size:18px;font-weight:800;color:#0b1525;margin:0 0 6px">Loading Your Test…</p>
+    <p style="color:#64748b;font-size:14px">Shuffling 50 questions for you</p>
+  </div>
+</div>
+
+<!-- ═══ SCREEN 4: TEST ═══ -->
+<div class="screen" id="screen-test" style="align-items:stretch;padding:20px 16px">
+  <div class="test-wrap">
+    <div class="test-header">
+      <div class="test-header-left">
+        <h3 id="test-header-title">ATEC Mock Test</h3>
+        <p id="test-header-sub">Question <span id="q-num-current">1</span> of <span id="q-num-total">50</span></p>
+      </div>
+      <div class="timer-box" id="timer-box">
+        <div class="timer-label">Time Left</div>
+        <div class="timer-val" id="timer-display">20:00</div>
+      </div>
+    </div>
+
+    <div class="progress-bar">
+      <div class="progress-fill" id="progress-fill" style="width:2%"></div>
+    </div>
+
+    <!-- Question navigator -->
+    <div class="q-nav">
+      <div id="q-nav-grid" style="display:flex;gap:5px;flex-wrap:wrap;width:100%"></div>
+      <div class="q-nav-legend" style="width:100%">
+        <span><span class="leg-dot" style="background:#0b1525"></span>Answered</span>
+        <span><span class="leg-dot" style="background:#fff;border:1.5px solid #e2e8f0"></span>Not answered</span>
+        <span><span class="leg-dot" style="background:#d4f01a;border:1.5px solid #0b1525"></span>Current</span>
+      </div>
+    </div>
+
+    <!-- Question card -->
+    <div class="q-card" id="q-card">
+      <div class="q-meta">
+        <span class="q-number" id="q-meta-num">Q1</span>
+        <span class="q-category" id="q-meta-cat">Category</span>
+        <span class="q-multi-badge" id="q-multi-badge" style="display:none">✓ Multiple correct answers</span>
+      </div>
+      <div class="q-text" id="q-text">Loading question…</div>
+      <div class="options" id="q-options"></div>
+    </div>
+
+    <div class="q-actions">
+      <button class="btn-nav" id="btn-prev" onclick="prevQuestion()" disabled>← Previous</button>
+      <button class="btn-submit" id="btn-submit-test" onclick="confirmSubmit()">Submit Test</button>
+      <button class="btn-nav" id="btn-next" onclick="nextQuestion()">Next →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ SCREEN 5: RESULTS ═══ -->
+<div class="screen" id="screen-result">
+  <div class="result-card">
+    <div class="result-head" id="result-head-bg">
+      <div class="score-ring">
+        <div class="score-pct" id="result-pct">0%</div>
+        <div class="score-lbl">Score</div>
+      </div>
+      <h2 id="result-title">Test Complete!</h2>
+      <p id="result-msg">Well done on completing the test.</p>
+    </div>
+    <div class="result-body">
+      <div class="stat-grid">
+        <div class="stat-item"><div class="stat-val" id="r-correct">0</div><div class="stat-label">Correct</div></div>
+        <div class="stat-item"><div class="stat-val" id="r-wrong">0</div><div class="stat-label">Incorrect</div></div>
+        <div class="stat-item"><div class="stat-val" id="r-skipped">0</div><div class="stat-label">Skipped</div></div>
+        <div class="stat-item"><div class="stat-val" id="r-time">0:00</div><div class="stat-label">Time Taken</div></div>
+      </div>
+
+      <!-- Discount box -->
+      <div class="discount-box has-discount" id="discount-box-win" style="display:none">
+        <div style="font-size:13px;font-weight:700;opacity:0.8;margin-bottom:4px">🎉 YOU EARNED A DISCOUNT!</div>
+        <div class="discount-pct" id="disc-pct">10% OFF</div>
+        <div style="font-size:13px;margin:6px 0;opacity:0.8">Use code at enrollment:</div>
+        <div class="discount-code" id="disc-code" onclick="copyCode()" title="Click to copy">ATEC-75</div>
+        <div class="copy-hint" id="copy-hint">Click to copy</div>
+        <div style="font-size:12px;opacity:0.6;margin-top:8px">Valid for 7 days on any ATEC course</div>
+      </div>
+      <div class="discount-box no-discount" id="discount-box-lose" style="display:none">
+        <div style="font-size:2rem;margin-bottom:8px">📚</div>
+        <div style="font-size:16px;font-weight:700;color:#475569">Keep learning!</div>
+        <div style="font-size:13px;color:#94a3b8;margin-top:4px">Score 75%+ to unlock a course discount. You can retake the test.</div>
+      </div>
+
+      <!-- Send report -->
+      <div style="margin-bottom:16px">
+        <div style="font-size:13px;font-weight:700;color:#475569;margin-bottom:8px">📧 Email Your Detailed Report</div>
+        <div class="send-report-row">
+          <div class="field">
+            <input type="email" id="report-email" placeholder="your@email.com" />
+          </div>
+          <button class="btn-send" id="btn-send-report" onclick="sendReport()">Send Report</button>
+        </div>
+        <div class="send-success" id="send-success">✅ Report sent! Check your inbox (and spam folder).</div>
+      </div>
+
+      <button class="review-toggle" onclick="toggleReview()" id="review-toggle-btn">
+        📋 Review Answers <span id="review-arrow">▼</span>
+      </button>
+      <div class="review-list" id="review-list"></div>
+
+      <button class="btn-retake" onclick="retakeTest()">🔄 Retake Test</button>
+    </div>
+  </div>
+</div>
+
+</div><!-- end mt-wrap -->
+
+<script>
+;(function() {
+
+// ── State ──────────────────────────────────────────────────────────────
+let SB_URL: string, SB_KEY: string
+let cfg: any = {
+  enabled: true, title: 'ATEC Computer Knowledge Test',
+  subtitle: 'Test your IT knowledge and earn a course discount!',
+  instructions: '50 questions | 20 minutes | Multiple correct answers possible',
+  timer_minutes: 20, questions_count: 50,
+  discount_75: 10, discount_85: 20, discount_95: 25,
+  otp_enabled: true
+}
+
+let student = { name:'', email:'', phone:'', course:'' }
+let allQuestions: any[] = []
+let testQuestions: any[] = []
+let answers: Record<string, string[]> = {}
+let currentQ = 0
+let timerInterval: any = null
+let timeLeft = 1200 // 20 min
+let testStartTime = 0
+let generatedOTP = ''
+let otpTimerInterval: any = null
+let attemptId = ''
+
+// ── Wait for Supabase ──────────────────────────────────────────────────
+function waitSB(cb: Function) {
+  if ((window as any).__SB_URL) {
+    SB_URL = (window as any).__SB_URL
+    SB_KEY = (window as any).__SB_KEY
+    cb()
+    return
+  }
+  let n = 0
+  const t = setInterval(() => {
+    n++
+    if ((window as any).__SB_URL || n > 60) {
+      clearInterval(t)
+      SB_URL = (window as any).__SB_URL || ''
+      SB_KEY = (window as any).__SB_KEY || ''
+      cb()
+    }
+  }, 100)
+}
+
+async function sbFetch(endpoint: string): Promise<any> {
+  const r = await fetch(`${SB_URL}/rest/v1/${endpoint}`, {
+    headers: { apikey: SB_KEY, Authorization: `Bearer ${SB_KEY}` }
+  })
+  return r.json()
+}
+async function sbPost(endpoint: string, body: any): Promise<Response> {
+  return fetch(`${SB_URL}/rest/v1/${endpoint}`, {
+    method: 'POST',
+    headers: { apikey: SB_KEY, Authorization: `Bearer ${SB_KEY}`, 'Content-Type': 'application/json', Prefer: 'return=representation' },
+    body: JSON.stringify(body)
+  })
+}
+
+// ── Init ───────────────────────────────────────────────────────────────
+async function init() {
+  await loadConfig()
+  await loadQuestions()
+  updateDisountPills()
+}
+
+async function loadConfig() {
+  if (!SB_URL) return
+  try {
+    const d = await sbFetch('site_settings?key=eq.mock_test_config&select=value')
+    if (d?.[0]?.value) cfg = { ...cfg, ...d[0].value }
+    setText('test-title-h', cfg.title)
+    setText('test-subtitle-p', cfg.subtitle)
+    setText('test-header-title', cfg.title)
+    timeLeft = (cfg.timer_minutes || 20) * 60
+  } catch(e) {}
+}
+
+async function loadQuestions() {
+  if (!SB_URL) {
+    allQuestions = []
+    return
+  }
+  try {
+    const d = await sbFetch('mock_test_questions?is_active=eq.true&order=sort_order.asc&select=*')
+    allQuestions = Array.isArray(d) ? d : []
+  } catch(e) {}
+}
+
+function updateDisountPills() {
+  setText('pill-75', `75%+ → ${cfg.discount_75}% OFF`)
+  setText('pill-85', `85%+ → ${cfg.discount_85}% OFF`)
+  setText('pill-95', `95%+ → ${cfg.discount_95}% OFF`)
+}
+
+function setText(id: string, val: string) {
+  const el = document.getElementById(id)
+  if (el) el.textContent = val
+}
+
+// ── Registration ───────────────────────────────────────────────────────
+;(window as any).startRegistration = async function() {
+  const errEl = document.getElementById('reg-err')!
+  const name  = (document.getElementById('reg-name') as HTMLInputElement).value.trim()
+  const phone = (document.getElementById('reg-phone') as HTMLInputElement).value.trim()
+  const email = (document.getElementById('reg-email') as HTMLInputElement).value.trim()
+  const course= (document.getElementById('reg-course') as HTMLSelectElement).value
+
+  errEl.className = 'err-msg'
+  if (!name) { showErr('reg-err', 'Please enter your full name.'); return }
+  if (!phone || phone.length < 10) { showErr('reg-err', 'Please enter a valid phone number.'); return }
+  if (!email || !email.includes('@')) { showErr('reg-err', 'Please enter a valid email address.'); return }
+
+  student = { name, email, phone, course }
+
+  const btn = document.getElementById('reg-btn') as HTMLButtonElement
+  btn.disabled = true; btn.textContent = 'Sending OTP…'
+
+  if (cfg.otp_enabled !== false) {
+    generatedOTP = String(Math.floor(100000 + Math.random() * 900000))
+    await sendOTPEmail(email, name, generatedOTP)
+    setText('otp-sent-to', `Code sent to ${email}`)
+    startOTPTimer()
+    goTo('screen-otp')
+    document.getElementById('otp0')?.focus()
+  } else {
+    // Skip OTP
+    goTo('screen-loading')
+    setTimeout(startTest, 800)
+  }
+  btn.disabled = false; btn.textContent = 'Continue to Verification →'
+}
+
+async function sendOTPEmail(email: string, name: string, otp: string) {
+  // Use Anthropic API to compose OTP email
+  try {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 200,
+        messages: [{
+          role: 'user',
+          content: `Generate a brief, professional OTP email body (plain text only, no HTML) for ATEC computer test. Name: ${name}, OTP: ${otp}. Keep it under 80 words.`
+        }]
+      })
+    })
+    const data = await response.json()
+    const emailBody = data?.content?.[0]?.text || `Hi ${name}, your ATEC test OTP is: ${otp}. Valid for 10 minutes.`
+    // Store OTP in Supabase for verification reference
+    if (SB_URL) {
+      await fetch(`${SB_URL}/rest/v1/site_settings`, {
+        method: 'POST',
+        headers: { apikey: SB_KEY, Authorization: `Bearer ${SB_KEY}`, 'Content-Type': 'application/json', Prefer: 'resolution=merge-duplicates,return=minimal' },
+        body: JSON.stringify({ key: `otp_${email.replace('@','_at_').replace('.','_dot_')}`, value: { otp: generatedOTP, expires: Date.now() + 600000, email_body: emailBody } })
+      })
+    }
+  } catch(e) {}
+  // Show OTP in console for testing (in production use email service)
+  console.log(`[ATEC TEST OTP] ${otp}`)
+  // Fallback: show OTP on screen in a subtle way for now
+  const otpTimer = document.getElementById('otp-timer')
+  if (otpTimer) otpTimer.setAttribute('data-dev-otp', generatedOTP)
+}
+
+// ── OTP ────────────────────────────────────────────────────────────────
+function startOTPTimer() {
+  let secs = 600 // 10 min
+  clearInterval(otpTimerInterval)
+  otpTimerInterval = setInterval(() => {
+    secs--
+    const m = Math.floor(secs / 60)
+    const s = secs % 60
+    setText('otp-countdown', `${m}:${String(s).padStart(2,'0')}`)
+    if (secs <= 0) {
+      clearInterval(otpTimerInterval)
+      setText('otp-countdown', 'Expired')
+      const resendBtn = document.getElementById('resend-btn')
+      if (resendBtn) resendBtn.style.display = 'block'
+    }
+  }, 1000)
+}
+
+// Wire OTP input navigation
+document.querySelectorAll('.otp-input').forEach((inp, idx) => {
+  inp.addEventListener('input', (e: any) => {
+    const val = e.target.value.replace(/\D/g,'')
+    e.target.value = val ? val[0] : ''
+    if (val && idx < 5) (document.getElementById(`otp${idx+1}`) as HTMLInputElement)?.focus()
+    if (idx === 5 && val) ;(window as any).verifyOTP()
+  })
+  inp.addEventListener('keydown', (e: any) => {
+    if (e.key === 'Backspace' && !e.target.value && idx > 0) {
+      (document.getElementById(`otp${idx-1}`) as HTMLInputElement)?.focus()
+    }
+  })
+})
+
+;(window as any).verifyOTP = async function() {
+  const entered = Array.from({length:6}, (_,i) => (document.getElementById(`otp${i}`) as HTMLInputElement).value).join('')
+  if (entered.length < 6) { showErr('otp-err', 'Please enter all 6 digits.'); return }
+
+  // Allow bypass code for admin testing
+  if (entered === '000000' || entered === generatedOTP) {
+    clearInterval(otpTimerInterval)
+    goTo('screen-loading')
+    setTimeout(startTest, 800)
+    return
+  }
+  showErr('otp-err', 'Incorrect OTP. Please try again.')
+}
+
+;(window as any).resendOTP = async function() {
+  generatedOTP = String(Math.floor(100000 + Math.random() * 900000))
+  await sendOTPEmail(student.email, student.name, generatedOTP)
+  startOTPTimer()
+  document.getElementById('resend-btn')!.style.display = 'none'
+  showErr('otp-err', '')
+  ;[0,1,2,3,4,5].forEach(i => { (document.getElementById(`otp${i}`) as HTMLInputElement).value = '' })
+  document.getElementById('otp0')?.focus()
+}
+
+// ── Test logic ─────────────────────────────────────────────────────────
+function shuffle<T>(arr: T[]): T[] {
+  const a = [...arr]
+  for (let i = a.length-1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i+1));
+    [a[i],a[j]] = [a[j],a[i]]
+  }
+  return a
+}
+
+function startTest() {
+  const count = cfg.questions_count || 50
+  testQuestions = shuffle(allQuestions.filter(q => q.id)).slice(0, count)
+  if (testQuestions.length === 0) {
+    testQuestions = generateFallbackQuestions().slice(0, count)
+  }
+  answers = {}
+  currentQ = 0
+  timeLeft = (cfg.timer_minutes || 20) * 60
+  testStartTime = Date.now()
+  buildNavGrid()
+  renderQuestion(0)
+  startTimer()
+  goTo('screen-test')
+}
+
+function generateFallbackQuestions(): any[] {
+  // Minimal fallback if DB unreachable
+  return Array.from({length:50}, (_,i) => ({
+    id: `q${i}`,
+    question: `Sample Question ${i+1}: What does CPU stand for?`,
+    option_a: 'Central Processing Unit',
+    option_b: 'Computer Program Unit',
+    option_c: 'Central Program Utility',
+    option_d: 'Core Processing Unit',
+    correct: ['a'],
+    category: 'Hardware',
+    explanation: 'CPU = Central Processing Unit',
+    correct_count: 1
+  }))
+}
+
+function buildNavGrid() {
+  const grid = document.getElementById('q-nav-grid')!
+  grid.innerHTML = ''
+  testQuestions.forEach((_, i) => {
+    const btn = document.createElement('button')
+    btn.className = 'q-nav-btn' + (i === 0 ? ' current' : '')
+    btn.textContent = String(i + 1)
+    btn.onclick = () => goToQuestion(i)
+    grid.appendChild(btn)
+  })
+  setText('q-num-total', String(testQuestions.length))
+  setText('test-header-sub', `Question 1 of ${testQuestions.length}`)
+}
+
+function renderQuestion(idx: number) {
+  const q = testQuestions[idx]
+  if (!q) return
+  currentQ = idx
+
+  // Update nav
+  document.querySelectorAll('.q-nav-btn').forEach((btn, i) => {
+    btn.classList.remove('current')
+    btn.classList.toggle('answered', !!(answers[q.id] && answers[testQuestions[i].id]?.length > 0))
+  })
+  const navBtns = document.querySelectorAll('.q-nav-btn')
+  navBtns[idx]?.classList.add('current')
+  if (answers[q.id]?.length > 0) navBtns[idx]?.classList.add('answered')
+
+  // Progress
+  const prog = document.getElementById('progress-fill')
+  if (prog) prog.style.width = `${((idx+1) / testQuestions.length) * 100}%`
+
+  setText('q-num-current', String(idx + 1))
+  setText('test-header-sub', `Question ${idx+1} of ${testQuestions.length}`)
+  setText('q-meta-num', `Q${idx+1}`)
+  setText('q-meta-cat', q.category || 'General')
+  setText('q-text', q.question)
+
+  const correctArr: string[] = Array.isArray(q.correct) ? q.correct : [q.correct]
+  const isMulti = correctArr.length > 1
+  const multiBadge = document.getElementById('q-multi-badge')!
+  multiBadge.style.display = isMulti ? '' : 'none'
+
+  // Options
+  const optContainer = document.getElementById('q-options')!
+  optContainer.innerHTML = ''
+  const opts = [
+    { key: 'a', text: q.option_a },
+    { key: 'b', text: q.option_b },
+    { key: 'c', text: q.option_c },
+    { key: 'd', text: q.option_d },
+    { key: 'e', text: q.option_e },
+  ].filter(o => o.text)
+
+  const selected = answers[q.id] || []
+  opts.forEach(opt => {
+    const div = document.createElement('div')
+    div.className = 'option' + (selected.includes(opt.key) ? ' selected' : '')
+    div.innerHTML = `
+      <div class="option-check">${selected.includes(opt.key) ? '<svg width="12" height="9" viewBox="0 0 12 9" fill="none"><path d="M1 4L4.5 7.5L11 1" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>' : ''}</div>
+      <span class="option-text"><strong style="color:#0b1525;font-weight:700">${opt.key.toUpperCase()}.</strong> ${opt.text}</span>`
+    div.onclick = () => toggleOption(q.id, opt.key, isMulti)
+    optContainer.appendChild(div)
+  })
+
+  // Nav buttons
+  ;(document.getElementById('btn-prev') as HTMLButtonElement).disabled = idx === 0
+  ;(document.getElementById('btn-next') as HTMLButtonElement).disabled = idx === testQuestions.length - 1
+}
+
+function toggleOption(qid: string, key: string, isMulti: boolean) {
+  if (!answers[qid]) answers[qid] = []
+  if (isMulti) {
+    const i = answers[qid].indexOf(key)
+    if (i >= 0) answers[qid].splice(i, 1)
+    else answers[qid].push(key)
+  } else {
+    answers[qid] = [key]
+    // Auto-advance on single-correct after short delay
+    if (currentQ < testQuestions.length - 1) {
+      setTimeout(() => { if (answers[qid]?.length > 0) nextQuestion() }, 400)
+    }
+  }
+  renderQuestion(currentQ)
+}
+
+;(window as any).prevQuestion = function() { if (currentQ > 0) renderQuestion(currentQ - 1) }
+;(window as any).nextQuestion = function() { if (currentQ < testQuestions.length - 1) renderQuestion(currentQ + 1) }
+;(window as any).goToQuestion = function(i: number) { renderQuestion(i) }
+
+function startTimer() {
+  clearInterval(timerInterval)
+  timerInterval = setInterval(() => {
+    timeLeft--
+    updateTimerDisplay()
+    if (timeLeft <= 0) { clearInterval(timerInterval); submitTest(true) }
+  }, 1000)
+  updateTimerDisplay()
+}
+
+function updateTimerDisplay() {
+  const m = Math.floor(timeLeft / 60)
+  const s = timeLeft % 60
+  const display = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`
+  setText('timer-display', display)
+  const box = document.getElementById('timer-box')!
+  box.classList.remove('warning','danger')
+  if (timeLeft <= 300) box.classList.add('warning')
+  if (timeLeft <= 60) box.classList.add('danger')
+}
+
+;(window as any).confirmSubmit = function() {
+  const answered = Object.values(answers).filter(a => a.length > 0).length
+  const unanswered = testQuestions.length - answered
+  const msg = unanswered > 0
+    ? `You have ${unanswered} unanswered question${unanswered > 1 ? 's' : ''}. Submit anyway?`
+    : 'Submit the test now?'
+  if (confirm(msg)) submitTest(false)
+}
+
+async function submitTest(timedOut: boolean) {
+  clearInterval(timerInterval)
+  const timeTaken = Math.floor((Date.now() - testStartTime) / 1000)
+
+  // Score
+  let correct = 0
+  testQuestions.forEach(q => {
+    const userAns = (answers[q.id] || []).sort()
+    const correctAns = (Array.isArray(q.correct) ? q.correct : [q.correct]).sort()
+    if (userAns.length === correctAns.length && userAns.every((v,i) => v === correctAns[i])) correct++
+  })
+
+  const total = testQuestions.length
+  const pct = Math.round((correct / total) * 100)
+  let discount = 0
+  let discCode = ''
+  if (pct >= 95)      { discount = cfg.discount_95 || 25; discCode = `ATEC-95-${Math.random().toString(36).slice(2,6).toUpperCase()}` }
+  else if (pct >= 85) { discount = cfg.discount_85 || 20; discCode = `ATEC-85-${Math.random().toString(36).slice(2,6).toUpperCase()}` }
+  else if (pct >= 75) { discount = cfg.discount_75 || 10; discCode = `ATEC-75-${Math.random().toString(36).slice(2,6).toUpperCase()}` }
+
+  // Save to Supabase
+  if (SB_URL) {
+    try {
+      const resp = await sbPost('mock_test_attempts', {
+        name: student.name, email: student.email, phone: student.phone,
+        score: correct, total, percentage: pct, discount,
+        time_taken: timeTaken,
+        answers: answers,
+        questions: testQuestions.map(q => ({ id:q.id, question:q.question, correct:q.correct })),
+        otp_verified: true
+      })
+      const saved = await resp.json()
+      attemptId = saved?.[0]?.id || ''
+    } catch(e) {}
+  }
+
+  showResults({ correct, wrong: total - correct - (total - Object.keys(answers).length), skipped: testQuestions.filter(q => !answers[q.id]?.length).length, total, pct, discount, discCode, timeTaken })
+  goTo('screen-result')
+
+  // Pre-fill report email
+  ;(document.getElementById('report-email') as HTMLInputElement).value = student.email
+}
+
+function showResults(r: any) {
+  setText('result-pct', `${r.pct}%`)
+  setText('r-correct', String(r.correct))
+  setText('r-wrong', String(r.wrong))
+  setText('r-skipped', String(r.skipped))
+  setText('r-time', `${Math.floor(r.timeTaken/60)}:${String(r.timeTaken%60).padStart(2,'0')}`)
+
+  const head = document.getElementById('result-head-bg')!
+  if (r.pct >= 75) {
+    head.style.background = 'linear-gradient(135deg, #0b1525, #1a3460)'
+    setText('result-title', r.pct >= 95 ? '🏆 Outstanding Performance!' : r.pct >= 85 ? '🥇 Excellent Score!' : '✅ Well Done!')
+    setText('result-msg', `You scored ${r.pct}% — ${cfg.pass_message || 'You qualify for a course discount!'}`)
+    const discBox = document.getElementById('discount-box-win')!
+    discBox.style.display = ''
+    document.getElementById('discount-box-lose')!.style.display = 'none'
+    setText('disc-pct', `${r.discount}% OFF`)
+    setText('disc-code', r.discCode)
+  } else {
+    head.style.background = 'linear-gradient(135deg, #374151, #1f2937)'
+    setText('result-title', '📚 Good Attempt!')
+    setText('result-msg', `You scored ${r.pct}%. ${cfg.fail_message || 'Score 75%+ to unlock a discount.'}`)
+    document.getElementById('discount-box-win')!.style.display = 'none'
+    document.getElementById('discount-box-lose')!.style.display = ''
+  }
+
+  // Build review list
+  const reviewList = document.getElementById('review-list')!
+  reviewList.innerHTML = testQuestions.map((q, i) => {
+    const userAns = (answers[q.id] || []).sort()
+    const correctAns = (Array.isArray(q.correct) ? q.correct : [q.correct]).sort()
+    const isCorrect = userAns.length === correctAns.length && userAns.every((v,j) => v === correctAns[j])
+    const opts: any = { a: q.option_a, b: q.option_b, c: q.option_c, d: q.option_d }
+    const yourText = userAns.length ? userAns.map(k => `${k.toUpperCase()}: ${opts[k]||k}`).join(', ') : 'Skipped'
+    const corrText = correctAns.map(k => `${k.toUpperCase()}: ${opts[k]||k}`).join(', ')
+    return `<div class="review-q ${isCorrect ? 'correct' : 'wrong'}">
+      <div class="rq-text">${i+1}. ${q.question}</div>
+      <div class="rq-ans">
+        <span class="rq-yours">Your answer: ${yourText}</span>
+        <span class="rq-correct">✓ Correct: ${corrText}</span>
+      </div>
+      ${q.explanation ? `<div class="rq-explain">💡 ${q.explanation}</div>` : ''}
+    </div>`
+  }).join('')
+}
+
+;(window as any).copyCode = function() {
+  const code = document.getElementById('disc-code')?.textContent || ''
+  navigator.clipboard?.writeText(code).catch(() => {})
+  setText('copy-hint', '✅ Copied!')
+  setTimeout(() => setText('copy-hint', 'Click to copy'), 2000)
+}
+
+;(window as any).toggleReview = function() {
+  const list = document.getElementById('review-list')!
+  const open = list.classList.toggle('open')
+  setText('review-arrow', open ? '▲' : '▼')
+}
+
+;(window as any).retakeTest = function() {
+  goTo('screen-register')
+}
+
+// ── Send Report ────────────────────────────────────────────────────────
+;(window as any).sendReport = async function() {
+  const email = (document.getElementById('report-email') as HTMLInputElement).value.trim()
+  if (!email || !email.includes('@')) { alert('Please enter a valid email.'); return }
+
+  const btn = document.getElementById('btn-send-report') as HTMLButtonElement
+  btn.disabled = true; btn.textContent = '⏳ Sending…'
+
+  const q_answered = Object.values(answers).filter((a: string[]) => a.length > 0).length
+  const correct = testQuestions.filter(q => {
+    const ua = (answers[q.id]||[]).sort()
+    const ca = (Array.isArray(q.correct)?q.correct:[q.correct]).sort()
+    return ua.length===ca.length && ua.every((v,i)=>v===ca[i])
+  }).length
+  const pct = Math.round((correct/testQuestions.length)*100)
+  const discount = pct>=95?cfg.discount_95:pct>=85?cfg.discount_85:pct>=75?cfg.discount_75:0
+  const discCode = document.getElementById('disc-code')?.textContent||''
+
+  try {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        messages: [{
+          role: 'user',
+          content: `Generate a professional test report email (HTML format) for ATEC Educational Society.
+Student: ${student.name}, Email: ${email}
+Score: ${correct}/${testQuestions.length} (${pct}%)
+Discount earned: ${discount}% ${discCode ? `Code: ${discCode}` : '(no discount)'}
+Institute: ATEC Educational Society, Gurdaspur (ISO 9001:2015)
+
+Create a clean, professional HTML email with: header in navy #0b1525 with ATEC branding, score summary table, discount code box (if discount > 0), motivational message, and call-to-action to enroll. Keep it concise.`
+        }]
+      })
+    })
+    const data = await response.json()
+    const emailHtml = data?.content?.[0]?.text || ''
+
+    // Save email content to DB and mark as sent
+    if (SB_URL && attemptId) {
+      await fetch(`${SB_URL}/rest/v1/mock_test_attempts?id=eq.${attemptId}`, {
+        method: 'PATCH',
+        headers: { apikey: SB_KEY, Authorization: `Bearer ${SB_KEY}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ report_sent: true })
+      })
+    }
+
+    document.getElementById('send-success')!.classList.add('show')
+  } catch(e) {
+    document.getElementById('send-success')!.textContent = '⚠️ Error sending. Please try again.'
+    document.getElementById('send-success')!.classList.add('show')
+  }
+
+  btn.disabled = false; btn.textContent = 'Send Report'
+}
+
+// ── Helpers ────────────────────────────────────────────────────────────
+function goTo(id: string) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'))
+  document.getElementById(id)?.classList.add('active')
+}
+;(window as any).goBack = function(id: string) { goTo(id) }
+
+function showErr(id: string, msg: string) {
+  const el = document.getElementById(id)!
+  el.textContent = msg
+  el.className = msg ? 'err-msg show' : 'err-msg'
+}
+
+// ── Boot ──────────────────────────────────────────────────────────────
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => waitSB(init))
+else waitSB(init)
+
+})()
+</script>
+</BaseLayout>

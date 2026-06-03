@@ -1,0 +1,780 @@
+---
+// src/pages/admin/mock-test.astro
+import AdminLayout from '../../layouts/AdminLayout.astro'
+---
+<AdminLayout title="Mock Test Manager" activeSection="mock-test">
+
+<style>
+.wrap{max-width:1100px}
+.page-title{font-family:'Sora',sans-serif;font-size:22px;font-weight:900;color:#1e293b;margin:0 0 4px}
+.page-sub{font-size:13px;color:#94a3b8;margin:0 0 28px}
+
+/* Tabs */
+.tabs{display:flex;gap:4px;background:#e8edf2;padding:4px;border-radius:12px;flex-wrap:wrap;margin-bottom:28px}
+.tab{padding:9px 18px;border:none;border-radius:9px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;transition:all 0.15s;background:transparent;color:#64748b}
+.tab.active{background:#fff;color:#0b1525;box-shadow:0 1px 4px rgba(0,0,0,0.1)}
+
+/* Cards */
+.sc{background:#fff;border-radius:16px;border:1px solid #e2e8f0;margin-bottom:24px;overflow:hidden}
+.sc-head{padding:20px 24px;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;justify-content:space-between}
+.sc-title{font-family:'Sora',sans-serif;font-size:15px;font-weight:800;color:#1e293b;margin:0 0 2px}
+.sc-sub{font-size:12px;color:#94a3b8;margin:0}
+.sc-body{padding:24px}
+
+/* Fields */
+.field{display:flex;flex-direction:column;gap:5px;margin-bottom:16px}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px}
+.field-row.three{grid-template-columns:1fr 1fr 1fr}
+@media(max-width:640px){.field-row,.field-row.three{grid-template-columns:1fr}}
+.lbl{font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.05em}
+.tip{font-size:11px;color:#94a3b8;margin-top:3px}
+input[type=text],.inp,input[type=number],input[type=url],select,textarea{
+  padding:9px 13px;border:1.5px solid #e2e8f0;border-radius:9px;
+  font-size:14px;color:#1e293b;outline:none;background:#fff;
+  width:100%;box-sizing:border-box;font-family:'Inter',sans-serif;transition:border-color 0.15s;
+}
+input:focus,select:focus,textarea:focus{border-color:#0b1525}
+textarea{resize:vertical;min-height:60px}
+
+/* Buttons */
+.save-btn{display:inline-flex;align-items:center;gap:8px;background:#0b1525;color:#d4f01a;border:none;border-radius:10px;padding:10px 22px;font-size:14px;font-weight:800;cursor:pointer;font-family:'Inter',sans-serif;transition:background 0.15s}
+.save-btn:hover{background:#112040}
+.save-btn:disabled{background:#94a3b8;cursor:not-allowed}
+.add-btn{display:flex;align-items:center;gap:6px;padding:9px 16px;background:#eff6ff;border:2px dashed #93c5fd;color:#1d4ed8;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;justify-content:center}
+.add-btn:hover{background:#dbeafe}
+.btn-del{background:#fee2e2;border:none;color:#dc2626;border-radius:6px;padding:4px 12px;font-size:12px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif}
+.btn-edit{background:#eff6ff;border:none;color:#0b1525;border-radius:6px;padding:4px 12px;font-size:12px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif}
+.status{font-size:13px;font-weight:600;padding:9px 16px;border-radius:9px;display:none;margin-top:12px}
+.status.ok{background:#dcfce7;color:#166534}
+.status.err{background:#fee2e2;color:#991b1b}
+.toggle-row{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.toggle-row input[type=checkbox]{width:16px;height:16px;accent-color:#0b1525;cursor:pointer}
+.toggle-row label{font-size:14px;font-weight:500;color:#374151;cursor:pointer}
+
+/* Stats row */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px}
+@media(max-width:640px){.stats-row{grid-template-columns:repeat(2,1fr)}}
+.stat-card{background:#fff;border-radius:14px;border:1px solid #e2e8f0;padding:16px;text-align:center}
+.stat-n{font-family:'Sora',sans-serif;font-size:2rem;font-weight:900;color:#0b1525}
+.stat-l{font-size:12px;color:#64748b;margin-top:3px}
+
+/* Questions table */
+.q-table{width:100%;border-collapse:collapse;font-size:13px}
+.q-table th{padding:10px 14px;text-align:left;font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;background:#f8fafc;border-bottom:1px solid #f1f5f9}
+.q-table td{padding:10px 14px;border-bottom:1px solid #f8fafc;vertical-align:top}
+.q-table tr:hover td{background:#fafbfc}
+.cat-badge{background:#eff6ff;color:#0b1525;font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;white-space:nowrap}
+.diff-badge{font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px}
+.diff-easy{background:#dcfce7;color:#166534}
+.diff-medium{background:#fef3c7;color:#92400e}
+.diff-hard{background:#fee2e2;color:#991b1b}
+
+/* Attempts table */
+.att-table{width:100%;border-collapse:collapse;font-size:13px}
+.att-table th{padding:10px 14px;text-align:left;font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;background:#f8fafc}
+.att-table td{padding:10px 14px;border-bottom:1px solid #f8fafc}
+.att-table tr:hover td{background:#fafbfc}
+.pct-badge{font-size:12px;font-weight:800;padding:3px 10px;border-radius:20px}
+.pct-95{background:#dcfce7;color:#166534}
+.pct-85{background:#dbeafe;color:#1d4ed8}
+.pct-75{background:#fef3c7;color:#92400e}
+.pct-fail{background:#f1f5f9;color:#64748b}
+.disc-badge{background:#0b1525;color:#d4f01a;font-size:11px;font-weight:800;padding:2px 8px;border-radius:20px}
+
+/* Q form modal */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:999;display:none;align-items:center;justify-content:center;padding:16px}
+.modal-overlay.open{display:flex}
+.modal-box{background:#fff;border-radius:18px;width:100%;max-width:680px;padding:28px;box-shadow:0 24px 64px rgba(0,0,0,0.2);max-height:90vh;overflow-y:auto}
+.modal-title{font-family:'Sora',sans-serif;font-weight:800;font-size:18px;margin:0 0 20px;color:#1e293b}
+.correct-checkboxes{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+.cc{display:flex;align-items:center;gap:6px;padding:5px 12px;border:1.5px solid #e2e8f0;border-radius:7px;cursor:pointer;font-size:13px;font-weight:600;transition:all 0.15s}
+.cc:has(input:checked){background:#0b1525;color:#d4f01a;border-color:#0b1525}
+.cc input{width:14px;height:14px;accent-color:#d4f01a;cursor:pointer}
+
+/* Search + filter bar */
+.filter-bar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:16px}
+.filter-bar input{max-width:240px;padding:8px 12px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;outline:none;font-family:'Inter',sans-serif}
+.filter-bar input:focus{border-color:#0b1525}
+.filter-bar select{padding:8px 12px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;outline:none;font-family:'Inter',sans-serif;background:#fff}
+.q-count{font-size:13px;color:#64748b;margin-left:auto}
+</style>
+
+<div class="wrap">
+  <h1 class="page-title">🎯 Mock Test Manager</h1>
+  <p class="page-sub">Manage test settings, questions bank, discount rules, and view student attempts with report layout.</p>
+
+  <div class="tabs">
+    <button class="tab active" data-tab="settings"  onclick="switchTab('settings')">⚙️ Settings & Discounts</button>
+    <button class="tab"        data-tab="questions" onclick="switchTab('questions')">📝 Questions Bank</button>
+    <button class="tab"        data-tab="attempts"  onclick="switchTab('attempts')">📊 Student Attempts</button>
+    <button class="tab"        data-tab="report"    onclick="switchTab('report')">🎨 Report Layout</button>
+  </div>
+
+  <!-- ═══ SETTINGS ═══ -->
+  <div id="tab-settings">
+    <!-- Test config -->
+    <div class="sc">
+      <div class="sc-head">
+        <div><div class="sc-title">Test Configuration</div><div class="sc-sub">Basic settings, timer, and question count</div></div>
+        <a href="/mock-test" target="_blank" style="font-size:13px;font-weight:700;color:#0b1525;text-decoration:none;background:#eff6ff;padding:6px 14px;border-radius:8px">🔗 View Live Test</a>
+      </div>
+      <div class="sc-body">
+        <div class="toggle-row">
+          <input type="checkbox" id="cfg-enabled" checked />
+          <label for="cfg-enabled">Test is enabled (visible on website)</label>
+        </div>
+        <div class="toggle-row">
+          <input type="checkbox" id="cfg-otp" checked />
+          <label for="cfg-otp">Require OTP verification before test starts</label>
+        </div>
+        <div class="field-row">
+          <div class="field"><label class="lbl">Test Title</label><input type="text" id="cfg-title" value="ATEC Computer Knowledge Test" /></div>
+          <div class="field"><label class="lbl">Subtitle / Tagline</label><input type="text" id="cfg-subtitle" value="Test your IT knowledge and earn a course discount!" /></div>
+        </div>
+        <div class="field">
+          <label class="lbl">Instructions (shown at start)</label>
+          <input type="text" id="cfg-instructions" value="50 questions | 20 minutes | Multiple correct answers possible | Select ALL correct options" />
+        </div>
+        <div class="field-row three">
+          <div class="field"><label class="lbl">Timer (minutes)</label><input type="number" id="cfg-timer" value="20" min="5" max="120" /><span class="tip">Recommended: 20 min for 50 questions</span></div>
+          <div class="field"><label class="lbl">Questions per Test</label><input type="number" id="cfg-qcount" value="50" min="10" max="100" /><span class="tip">Randomly selected from total bank</span></div>
+          <div class="field"><label class="lbl">Pass Score (questions)</label><input type="number" id="cfg-pass" value="40" min="1" max="100" /><span class="tip">Minimum correct for any discount</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Discount rules -->
+    <div class="sc">
+      <div class="sc-head"><div><div class="sc-title">💰 Discount Rules</div><div class="sc-sub">Set discount percentage for each score threshold</div></div></div>
+      <div class="sc-body">
+        <div style="background:#eff6ff;border-radius:10px;padding:14px 18px;margin-bottom:20px;font-size:13px;color:#1d4ed8">
+          <strong>How it works:</strong> When a student scores at or above a threshold, they receive a unique discount code valid for 7 days on any ATEC course.
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px">
+          <div style="border:2px solid #fde68a;border-radius:14px;padding:20px;text-align:center">
+            <div style="font-size:2rem;margin-bottom:8px">🥉</div>
+            <div style="font-size:13px;font-weight:700;color:#92400e;margin-bottom:10px">Score ≥ 75%</div>
+            <div style="display:flex;align-items:center;gap:6px;justify-content:center">
+              <input type="number" id="disc-75" value="10" min="0" max="50" style="width:70px;text-align:center;font-size:1.4rem;font-weight:900;color:#0b1525;border-color:#fde68a" />
+              <span style="font-size:1.2rem;font-weight:700;color:#0b1525">% OFF</span>
+            </div>
+          </div>
+          <div style="border:2px solid #93c5fd;border-radius:14px;padding:20px;text-align:center">
+            <div style="font-size:2rem;margin-bottom:8px">🥈</div>
+            <div style="font-size:13px;font-weight:700;color:#1d4ed8;margin-bottom:10px">Score ≥ 85%</div>
+            <div style="display:flex;align-items:center;gap:6px;justify-content:center">
+              <input type="number" id="disc-85" value="20" min="0" max="50" style="width:70px;text-align:center;font-size:1.4rem;font-weight:900;color:#0b1525;border-color:#93c5fd" />
+              <span style="font-size:1.2rem;font-weight:700;color:#0b1525">% OFF</span>
+            </div>
+          </div>
+          <div style="border:2px solid #86efac;border-radius:14px;padding:20px;text-align:center">
+            <div style="font-size:2rem;margin-bottom:8px">🥇</div>
+            <div style="font-size:13px;font-weight:700;color:#166534;margin-bottom:10px">Score ≥ 95%</div>
+            <div style="display:flex;align-items:center;gap:6px;justify-content:center">
+              <input type="number" id="disc-95" value="25" min="0" max="50" style="width:70px;text-align:center;font-size:1.4rem;font-weight:900;color:#0b1525;border-color:#86efac" />
+              <span style="font-size:1.2rem;font-weight:700;color:#0b1525">% OFF</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Messages -->
+    <div class="sc">
+      <div class="sc-head"><div><div class="sc-title">💬 Result Messages</div><div class="sc-sub">Shown on the result screen after test submission</div></div></div>
+      <div class="sc-body">
+        <div class="field-row">
+          <div class="field"><label class="lbl">Pass Message (75%+)</label><input type="text" id="cfg-pass-msg" value="Excellent! You qualify for a course discount." /></div>
+          <div class="field"><label class="lbl">Fail Message (below 75%)</label><input type="text" id="cfg-fail-msg" value="Good attempt! Keep learning and try again." /></div>
+        </div>
+      </div>
+    </div>
+
+    <button class="save-btn" id="settings-save-btn" onclick="saveSettings()">💾 Save All Settings</button>
+    <div class="status" id="settings-status"></div>
+  </div>
+
+  <!-- ═══ QUESTIONS BANK ═══ -->
+  <div id="tab-questions" style="display:none">
+    <div class="sc">
+      <div class="sc-head">
+        <div>
+          <div class="sc-title">📝 Questions Bank</div>
+          <div class="sc-sub" id="q-bank-count">Loading…</div>
+        </div>
+        <button class="save-btn" onclick="openQModal(null)">+ Add Question</button>
+      </div>
+      <div class="sc-body">
+        <div class="filter-bar">
+          <input type="text" id="q-search" placeholder="Search questions…" oninput="filterQuestions()" />
+          <select id="q-filter-cat" onchange="filterQuestions()">
+            <option value="">All Categories</option>
+            <option>Hardware</option>
+            <option>Software</option>
+            <option>Networking</option>
+            <option>Security</option>
+            <option>Programming</option>
+            <option>Tally</option>
+            <option>GEN AI</option>
+            <option>Digital Logic</option>
+            <option>Commerce</option>
+          </select>
+          <select id="q-filter-diff" onchange="filterQuestions()">
+            <option value="">All Difficulties</option>
+            <option value="easy">Easy</option>
+            <option value="medium">Medium</option>
+            <option value="hard">Hard</option>
+          </select>
+          <span class="q-count" id="q-display-count"></span>
+          <button class="save-btn" style="padding:8px 16px;font-size:13px" onclick="exportQuestions()">⬇️ Export CSV</button>
+        </div>
+        <div style="overflow-x:auto">
+          <table class="q-table" id="questions-table">
+            <thead>
+              <tr>
+                <th style="width:40px">#</th>
+                <th>Question</th>
+                <th>Category</th>
+                <th>Difficulty</th>
+                <th>Correct</th>
+                <th>Active</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="q-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ ATTEMPTS ═══ -->
+  <div id="tab-attempts" style="display:none">
+    <div class="stats-row" id="attempts-stats">
+      <div class="stat-card"><div class="stat-n" id="st-total">-</div><div class="stat-l">Total Attempts</div></div>
+      <div class="stat-card"><div class="stat-n" id="st-pass">-</div><div class="stat-l">Passed (75%+)</div></div>
+      <div class="stat-card"><div class="stat-n" id="st-avg">-</div><div class="stat-l">Avg Score</div></div>
+      <div class="stat-card"><div class="stat-n" id="st-disc">-</div><div class="stat-l">Discounts Given</div></div>
+    </div>
+    <div class="sc">
+      <div class="sc-head">
+        <div><div class="sc-title">📊 Student Attempts</div><div class="sc-sub">All test submissions with scores and discount codes</div></div>
+        <button class="save-btn" style="padding:8px 16px;font-size:13px" onclick="exportAttempts()">⬇️ Export CSV</button>
+      </div>
+      <div class="sc-body">
+        <div class="filter-bar" style="margin-bottom:16px">
+          <input type="text" id="att-search" placeholder="Search by name or email…" oninput="filterAttempts()" style="max-width:300px" />
+          <select id="att-filter" onchange="filterAttempts()" style="padding:8px 12px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;outline:none;background:#fff">
+            <option value="">All Results</option>
+            <option value="disc">Has Discount</option>
+            <option value="pass">Passed (75%+)</option>
+            <option value="fail">Below 75%</option>
+          </select>
+        </div>
+        <div style="overflow-x:auto">
+          <table class="att-table" id="attempts-table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Phone</th>
+                <th>Score</th>
+                <th>%</th>
+                <th>Discount</th>
+                <th>Time</th>
+                <th>Date</th>
+                <th>Report</th>
+              </tr>
+            </thead>
+            <tbody id="att-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ REPORT LAYOUT ═══ -->
+  <div id="tab-report" style="display:none">
+    <div class="sc">
+      <div class="sc-head"><div><div class="sc-title">🎨 Report Email Layout</div><div class="sc-sub">Customise the test report email sent to students</div></div></div>
+      <div class="sc-body">
+        <div class="field-row">
+          <div class="field">
+            <label class="lbl">Email Subject</label>
+            <input type="text" id="rpt-subject" value="Your ATEC Mock Test Report & Discount Code" />
+          </div>
+          <div class="field">
+            <label class="lbl">Institute Name</label>
+            <input type="text" id="rpt-institute" value="ATEC Educational Society, Gurdaspur" />
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label class="lbl">Institute Tagline</label>
+            <input type="text" id="rpt-tagline" value="ISO 9001:2015 Certified | Est. 2000" />
+          </div>
+          <div class="field">
+            <label class="lbl">Header Background Color</label>
+            <div style="display:flex;align-items:center;gap:8px">
+              <input type="color" id="rpt-color-picker" value="#0b1525" style="width:40px;height:34px;border:1.5px solid #e2e8f0;border-radius:7px;padding:2px;cursor:pointer" oninput="document.getElementById('rpt-color').value=this.value" />
+              <input type="text" id="rpt-color" value="#0b1525" maxlength="9" style="width:100px" oninput="document.getElementById('rpt-color-picker').value=this.value" />
+            </div>
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label class="lbl">Logo URL (optional)</label>
+            <input type="url" id="rpt-logo" placeholder="https://... direct image URL" />
+          </div>
+          <div class="field">
+            <label class="lbl">Footer / Contact Info</label>
+            <input type="text" id="rpt-footer" value="ATEC, Hardo Channi Road, Gurdaspur | +91 7009933289 | atecgsp@gmail.com" />
+          </div>
+        </div>
+        <div class="field">
+          <label class="lbl">Discount Code Validity (days)</label>
+          <input type="number" id="rpt-validity" value="7" min="1" max="90" style="max-width:100px" />
+        </div>
+
+        <!-- Live preview -->
+        <div style="margin-top:20px">
+          <div style="font-size:13px;font-weight:700;color:#475569;margin-bottom:10px">📧 Email Preview</div>
+          <div id="email-preview" style="border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;max-width:600px">
+            <div id="prev-head" style="background:#0b1525;padding:24px;text-align:center;color:#fff">
+              <div style="font-family:'Sora',sans-serif;font-size:20px;font-weight:900" id="prev-institute">ATEC Educational Society, Gurdaspur</div>
+              <div style="font-size:12px;opacity:0.6;margin-top:4px" id="prev-tagline">ISO 9001:2015 Certified | Est. 2000</div>
+            </div>
+            <div style="padding:20px">
+              <p style="font-size:14px;color:#475569">Dear <strong>Student Name</strong>,</p>
+              <p style="font-size:14px;color:#475569">Here is your ATEC Mock Test report.</p>
+              <table style="width:100%;border-collapse:collapse;font-size:14px;margin:16px 0">
+                <tr style="background:#f8fafc"><td style="padding:8px 12px;font-weight:700;color:#0b1525;border:1px solid #e2e8f0">Score</td><td style="padding:8px 12px;border:1px solid #e2e8f0">38 / 50</td></tr>
+                <tr><td style="padding:8px 12px;font-weight:700;color:#0b1525;border:1px solid #e2e8f0">Percentage</td><td style="padding:8px 12px;border:1px solid #e2e8f0">76%</td></tr>
+                <tr style="background:#f8fafc"><td style="padding:8px 12px;font-weight:700;color:#0b1525;border:1px solid #e2e8f0">Discount Earned</td><td style="padding:8px 12px;border:1px solid #e2e8f0">10%</td></tr>
+              </table>
+              <div style="background:#0b1525;border-radius:10px;padding:16px;text-align:center;margin:16px 0">
+                <div style="font-size:12px;color:rgba(255,255,255,0.7);margin-bottom:4px">Your Discount Code</div>
+                <div style="font-family:'Sora',sans-serif;font-size:20px;font-weight:900;color:#d4f01a;letter-spacing:0.1em">ATEC-75-XXXX</div>
+                <div style="font-size:11px;color:rgba(255,255,255,0.5);margin-top:4px">Valid for <span id="prev-validity">7</span> days</div>
+              </div>
+              <p style="font-size:12px;color:#94a3b8;text-align:center" id="prev-footer">ATEC, Gurdaspur | +91 7009933289</p>
+            </div>
+          </div>
+        </div>
+
+        <br/>
+        <button class="save-btn" id="report-save-btn" onclick="saveReport()">💾 Save Report Settings</button>
+        <div class="status" id="report-status"></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ═══ QUESTION MODAL ═══ -->
+<div class="modal-overlay" id="q-modal">
+  <div class="modal-box">
+    <h2 class="modal-title" id="q-modal-title">Add Question</h2>
+
+    <div class="field">
+      <label class="lbl">Question Text *</label>
+      <textarea id="qm-question" rows="3" placeholder="Enter the full question text…"></textarea>
+    </div>
+
+    <div class="field-row">
+      <div class="field"><label class="lbl">Option A *</label><input type="text" id="qm-a" placeholder="Option A" /></div>
+      <div class="field"><label class="lbl">Option B *</label><input type="text" id="qm-b" placeholder="Option B" /></div>
+    </div>
+    <div class="field-row">
+      <div class="field"><label class="lbl">Option C</label><input type="text" id="qm-c" placeholder="Option C (optional)" /></div>
+      <div class="field"><label class="lbl">Option D</label><input type="text" id="qm-d" placeholder="Option D (optional)" /></div>
+    </div>
+    <div class="field"><label class="lbl">Option E</label><input type="text" id="qm-e" placeholder="Option E (optional)" /></div>
+
+    <div class="field">
+      <label class="lbl">Correct Answer(s) * — Select ALL that apply</label>
+      <div class="correct-checkboxes">
+        <label class="cc"><input type="checkbox" id="qm-ca" value="a" /> A</label>
+        <label class="cc"><input type="checkbox" id="qm-cb" value="b" /> B</label>
+        <label class="cc"><input type="checkbox" id="qm-cc" value="c" /> C</label>
+        <label class="cc"><input type="checkbox" id="qm-cd" value="d" /> D</label>
+        <label class="cc"><input type="checkbox" id="qm-ce" value="e" /> E</label>
+      </div>
+    </div>
+
+    <div class="field-row">
+      <div class="field">
+        <label class="lbl">Category</label>
+        <select id="qm-cat">
+          <option>Hardware</option>
+          <option>Software</option>
+          <option>Networking</option>
+          <option>Security</option>
+          <option>Programming</option>
+          <option>Tally</option>
+          <option>GEN AI</option>
+          <option>Digital Logic</option>
+          <option>Commerce</option>
+          <option>General</option>
+        </select>
+      </div>
+      <div class="field">
+        <label class="lbl">Difficulty</label>
+        <select id="qm-diff">
+          <option value="easy">Easy</option>
+          <option value="medium" selected>Medium</option>
+          <option value="hard">Hard</option>
+        </select>
+      </div>
+    </div>
+    <div class="field">
+      <label class="lbl">Explanation (shown in result review)</label>
+      <textarea id="qm-explain" rows="2" placeholder="Brief explanation of the correct answer…"></textarea>
+    </div>
+    <div class="toggle-row">
+      <input type="checkbox" id="qm-active" checked />
+      <label for="qm-active">Active (included in question bank)</label>
+    </div>
+
+    <div id="qm-err" style="background:#fee2e2;color:#dc2626;border-radius:8px;padding:9px 14px;font-size:13px;margin-bottom:12px;display:none"></div>
+    <div style="display:flex;gap:10px">
+      <button class="save-btn" id="qm-save-btn" onclick="saveQuestion()">💾 Save Question</button>
+      <button style="flex:1;background:#f1f5f9;color:#475569;border:none;border-radius:10px;padding:11px;font-size:14px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif" onclick="closeQModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+</AdminLayout>
+
+<script>
+const SB_URL = (window as any).__SB_URL as string
+const SB_KEY = (window as any).__SB_KEY as string
+
+// Helpers
+function v(id: string): string { return ((document.getElementById(id) as HTMLInputElement)?.value||'').trim() }
+function sv(id: string, val: string) { const el=document.getElementById(id) as HTMLInputElement; if(el) el.value=val }
+function chk(id: string): boolean { return !!(document.getElementById(id) as HTMLInputElement)?.checked }
+function schk(id: string, val: boolean) { const el=document.getElementById(id) as HTMLInputElement; if(el) el.checked=val }
+function setText(id: string, t: string) { const el=document.getElementById(id); if(el) el.textContent=t }
+function showStatus(id: string, ok: boolean, msg: string) {
+  const el=document.getElementById(id)
+  if(!el) return
+  el.textContent=msg; el.className='status '+(ok?'ok':'err'); el.style.display='block'
+  setTimeout(()=>{el.style.display='none'},4000)
+}
+
+async function sbGet(endpoint: string): Promise<any> {
+  if(!SB_URL) return []
+  const r=await fetch(`${SB_URL}/rest/v1/${endpoint}`,{headers:{apikey:SB_KEY,Authorization:`Bearer ${SB_KEY}`}})
+  return r.json()
+}
+async function sbPost(endpoint: string, body: any): Promise<Response> {
+  return fetch(`${SB_URL}/rest/v1/${endpoint}`,{method:'POST',headers:{apikey:SB_KEY,Authorization:`Bearer ${SB_KEY}`,'Content-Type':'application/json',Prefer:'resolution=merge-duplicates,return=minimal'},body:JSON.stringify(body)})
+}
+async function sbPatch(endpoint: string, body: any): Promise<Response> {
+  return fetch(`${SB_URL}/rest/v1/${endpoint}`,{method:'PATCH',headers:{apikey:SB_KEY,Authorization:`Bearer ${SB_KEY}`,'Content-Type':'application/json'},body:JSON.stringify(body)})
+}
+async function sbDelete(endpoint: string): Promise<Response> {
+  return fetch(`${SB_URL}/rest/v1/${endpoint}`,{method:'DELETE',headers:{apikey:SB_KEY,Authorization:`Bearer ${SB_KEY}`}})
+}
+async function cfgGet(key: string): Promise<any> {
+  const d=await sbGet(`site_settings?key=eq.${key}&select=value`)
+  return d?.[0]?.value??null
+}
+
+// ── Tab switching ──────────────────────────────────────────────────────
+;(window as any).switchTab = function(tab: string) {
+  document.querySelectorAll('[data-tab]').forEach(b=>b.classList.toggle('active',(b as HTMLElement).dataset.tab===tab))
+  ;['settings','questions','attempts','report'].forEach(t=>{
+    const el=document.getElementById(`tab-${t}`)
+    if(el) el.style.display=t===tab?'':'none'
+  })
+  if(tab==='questions') loadQuestions()
+  if(tab==='attempts')  loadAttempts()
+}
+
+// ── SETTINGS ──────────────────────────────────────────────────────────
+async function loadSettings() {
+  const cfg=await cfgGet('mock_test_config')
+  if(!cfg) return
+  schk('cfg-enabled', cfg.enabled!==false)
+  schk('cfg-otp', cfg.otp_enabled!==false)
+  sv('cfg-title', cfg.title||'')
+  sv('cfg-subtitle', cfg.subtitle||'')
+  sv('cfg-instructions', cfg.instructions||'')
+  sv('cfg-timer', String(cfg.timer_minutes||20))
+  sv('cfg-qcount', String(cfg.questions_count||50))
+  sv('cfg-pass', String(cfg.pass_score||40))
+  sv('disc-75', String(cfg.discount_75||10))
+  sv('disc-85', String(cfg.discount_85||20))
+  sv('disc-95', String(cfg.discount_95||25))
+  sv('cfg-pass-msg', cfg.pass_message||'')
+  sv('cfg-fail-msg', cfg.fail_message||'')
+  sv('rpt-subject', cfg.email_subject||'')
+  sv('rpt-institute', cfg.institute_name||'')
+  sv('rpt-tagline', cfg.institute_tagline||'')
+  sv('rpt-color', cfg.report_color||'#0b1525')
+  sv('rpt-logo', cfg.report_logo_url||'')
+  sv('rpt-footer', cfg.report_footer||'')
+  sv('rpt-validity', String(cfg.discount_validity_days||7))
+  document.getElementById('rpt-color-picker') && (document.getElementById('rpt-color-picker') as HTMLInputElement).value=cfg.report_color||'#0b1525'
+  updatePreview()
+}
+
+;(window as any).saveSettings = async function() {
+  const btn=document.getElementById('settings-save-btn') as HTMLButtonElement
+  btn.disabled=true; btn.textContent='⏳ Saving…'
+  const payload={
+    enabled: chk('cfg-enabled'), otp_enabled: chk('cfg-otp'),
+    title: v('cfg-title'), subtitle: v('cfg-subtitle'),
+    instructions: v('cfg-instructions'),
+    timer_minutes: parseInt(v('cfg-timer'))||20,
+    questions_count: parseInt(v('cfg-qcount'))||50,
+    pass_score: parseInt(v('cfg-pass'))||40,
+    discount_75: parseInt(v('disc-75'))||10,
+    discount_85: parseInt(v('disc-85'))||20,
+    discount_95: parseInt(v('disc-95'))||25,
+    pass_message: v('cfg-pass-msg'), fail_message: v('cfg-fail-msg'),
+    email_subject: v('rpt-subject'), institute_name: v('rpt-institute'),
+    institute_tagline: v('rpt-tagline'), report_color: v('rpt-color'),
+    report_logo_url: v('rpt-logo'), report_footer: v('rpt-footer'),
+    discount_validity_days: parseInt(v('rpt-validity'))||7,
+  }
+  try {
+    await sbPost('site_settings', { key:'mock_test_config', value: payload })
+    showStatus('settings-status', true, '✅ Settings saved! Live on website immediately.')
+  } catch { showStatus('settings-status', false, '❌ Save failed.') }
+  btn.disabled=false; btn.textContent='💾 Save All Settings'
+}
+
+;(window as any).saveReport = async function() { (window as any).saveSettings() }
+
+// Live preview update
+function updatePreview() {
+  const col=v('rpt-color')||'#0b1525'
+  const head=document.getElementById('prev-head')
+  if(head) head.style.background=col
+  setText('prev-institute', v('rpt-institute'))
+  setText('prev-tagline', v('rpt-tagline'))
+  setText('prev-footer', v('rpt-footer'))
+  setText('prev-validity', v('rpt-validity'))
+}
+;['rpt-color','rpt-institute','rpt-tagline','rpt-footer','rpt-validity'].forEach(id=>{
+  document.getElementById(id)?.addEventListener('input', updatePreview)
+})
+
+// ── QUESTIONS ──────────────────────────────────────────────────────────
+let allQs: any[] = []
+let filteredQs: any[] = []
+let editingQId: string|null = null
+
+async function loadQuestions() {
+  const d=await sbGet('mock_test_questions?order=sort_order.asc,created_at.asc&select=*')
+  allQs=Array.isArray(d)?d:[]
+  filteredQs=[...allQs]
+  setText('q-bank-count', `${allQs.length} questions in bank (${allQs.filter(q=>q.is_active).length} active)`)
+  renderQTable(filteredQs)
+}
+
+;(window as any).filterQuestions = function() {
+  const search=v('q-search').toLowerCase()
+  const cat=(document.getElementById('q-filter-cat') as HTMLSelectElement).value
+  const diff=(document.getElementById('q-filter-diff') as HTMLSelectElement).value
+  filteredQs=allQs.filter(q=>{
+    const matchSearch=!search || q.question?.toLowerCase().includes(search) || q.category?.toLowerCase().includes(search)
+    const matchCat=!cat || q.category===cat
+    const matchDiff=!diff || q.difficulty===diff
+    return matchSearch && matchCat && matchDiff
+  })
+  renderQTable(filteredQs)
+  setText('q-display-count', `Showing ${filteredQs.length} of ${allQs.length}`)
+}
+
+function renderQTable(qs: any[]) {
+  const tbody=document.getElementById('q-tbody')!
+  tbody.innerHTML=''
+  if(!qs.length){
+    tbody.innerHTML='<tr><td colspan="7" style="text-align:center;padding:40px;color:#94a3b8">No questions found</td></tr>'
+    return
+  }
+  qs.forEach((q,i)=>{
+    const corrArr=Array.isArray(q.correct)?q.correct:[q.correct]
+    const corrText=corrArr.map((c: string)=>c.toUpperCase()).join(', ')
+    const tr=document.createElement('tr')
+    tr.innerHTML=`
+      <td style="color:#94a3b8;font-weight:600">${i+1}</td>
+      <td style="max-width:320px"><div style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:300px;font-weight:600;color:#1e293b">${q.question||''}</div></td>
+      <td><span class="cat-badge">${q.category||'—'}</span></td>
+      <td><span class="diff-badge diff-${q.difficulty||'medium'}">${q.difficulty||'medium'}</span></td>
+      <td style="font-weight:700;color:#0b1525">${corrText} <span style="font-size:11px;color:#94a3b8">(${corrArr.length>1?'multi':'single'})</span></td>
+      <td>
+        <button onclick="toggleQActive('${q.id}',${q.is_active})" style="padding:3px 10px;border-radius:20px;border:none;font-size:11px;font-weight:700;cursor:pointer;background:${q.is_active?'#dcfce7':'#f1f5f9'};color:${q.is_active?'#166534':'#64748b'}">
+          ${q.is_active?'Active':'Hidden'}
+        </button>
+      </td>
+      <td>
+        <div style="display:flex;gap:5px">
+          <button class="btn-edit" onclick="openQModal('${q.id}')">Edit</button>
+          <button class="btn-del" onclick="deleteQ('${q.id}')">Del</button>
+        </div>
+      </td>`
+    tbody.appendChild(tr)
+  })
+}
+
+;(window as any).toggleQActive = async function(id: string, current: boolean) {
+  await sbPatch(`mock_test_questions?id=eq.${id}`, { is_active: !current })
+  loadQuestions()
+}
+;(window as any).deleteQ = async function(id: string) {
+  if(!confirm('Delete this question? This cannot be undone.')) return
+  await sbDelete(`mock_test_questions?id=eq.${id}`)
+  loadQuestions()
+}
+
+;(window as any).openQModal = function(id: string|null) {
+  editingQId=id
+  setText('q-modal-title', id?'Edit Question':'Add New Question')
+  if(!id) {
+    // Clear form
+    ;['qm-question','qm-a','qm-b','qm-c','qm-d','qm-e','qm-explain'].forEach(i=>{
+      const el=document.getElementById(i) as HTMLTextAreaElement|HTMLInputElement
+      if(el) el.value=''
+    })
+    ;['qm-ca','qm-cb','qm-cc','qm-cd','qm-ce'].forEach(i=>{ const el=document.getElementById(i) as HTMLInputElement; if(el) el.checked=false })
+    schk('qm-active',true)
+    ;(document.getElementById('qm-cat') as HTMLSelectElement).value='Hardware'
+    ;(document.getElementById('qm-diff') as HTMLSelectElement).value='medium'
+  } else {
+    const q=allQs.find(x=>x.id===id)
+    if(!q) return
+    ;(document.getElementById('qm-question') as HTMLTextAreaElement).value=q.question||''
+    sv('qm-a', q.option_a||''); sv('qm-b', q.option_b||'')
+    sv('qm-c', q.option_c||''); sv('qm-d', q.option_d||''); sv('qm-e', q.option_e||'')
+    ;(document.getElementById('qm-explain') as HTMLTextAreaElement).value=q.explanation||''
+    ;(document.getElementById('qm-cat') as HTMLSelectElement).value=q.category||'Hardware'
+    ;(document.getElementById('qm-diff') as HTMLSelectElement).value=q.difficulty||'medium'
+    schk('qm-active', q.is_active!==false)
+    const corrArr: string[]=Array.isArray(q.correct)?q.correct:[q.correct]
+    ;['a','b','c','d','e'].forEach(k=>{
+      const el=document.getElementById(`qm-c${k}`) as HTMLInputElement
+      if(el) el.checked=corrArr.includes(k)
+    })
+  }
+  document.getElementById('qm-err')!.style.display='none'
+  document.getElementById('q-modal')!.classList.add('open')
+}
+
+;(window as any).closeQModal = function() {
+  document.getElementById('q-modal')!.classList.remove('open')
+  editingQId=null
+}
+
+;(window as any).saveQuestion = async function() {
+  const question=(document.getElementById('qm-question') as HTMLTextAreaElement).value.trim()
+  const opt_a=v('qm-a'), opt_b=v('qm-b')
+  const correct=['a','b','c','d','e'].filter(k=>(document.getElementById(`qm-c${k}`) as HTMLInputElement)?.checked)
+
+  const errEl=document.getElementById('qm-err')!
+  if(!question){errEl.textContent='Question text is required.';errEl.style.display='block';return}
+  if(!opt_a||!opt_b){errEl.textContent='Options A and B are required.';errEl.style.display='block';return}
+  if(!correct.length){errEl.textContent='Select at least one correct answer.';errEl.style.display='block';return}
+  errEl.style.display='none'
+
+  const payload={
+    question, option_a:opt_a, option_b:opt_b,
+    option_c:v('qm-c')||null, option_d:v('qm-d')||null, option_e:v('qm-e')||null,
+    correct, explanation:(document.getElementById('qm-explain') as HTMLTextAreaElement).value.trim(),
+    category:(document.getElementById('qm-cat') as HTMLSelectElement).value,
+    difficulty:(document.getElementById('qm-diff') as HTMLSelectElement).value,
+    is_active: chk('qm-active')
+  }
+
+  const btn=document.getElementById('qm-save-btn') as HTMLButtonElement
+  btn.disabled=true; btn.textContent='Saving…'
+
+  if(editingQId) {
+    await sbPatch(`mock_test_questions?id=eq.${editingQId}`, payload)
+  } else {
+    await sbPost('mock_test_questions', payload)
+  }
+
+  btn.disabled=false; btn.textContent='💾 Save Question'
+  ;(window as any).closeQModal()
+  loadQuestions()
+}
+
+;(window as any).exportQuestions = function() {
+  const rows=[['#','Question','A','B','C','D','Correct','Category','Difficulty'],...filteredQs.map((q,i)=>[i+1,q.question,q.option_a,q.option_b,q.option_c||'',q.option_d||'',(Array.isArray(q.correct)?q.correct:[q.correct]).join('|'),q.category,q.difficulty])]
+  const csv=rows.map(r=>r.map(c=>`"${String(c||'').replace(/"/g,'""')}"`).join(',')).join('\n')
+  const a=document.createElement('a'); a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv); a.download='atec_questions.csv'; a.click()
+}
+
+// ── ATTEMPTS ──────────────────────────────────────────────────────────
+let allAttempts: any[] = []
+
+async function loadAttempts() {
+  const d=await sbGet('mock_test_attempts?order=created_at.desc&limit=200&select=*')
+  allAttempts=Array.isArray(d)?d:[]
+  const total=allAttempts.length
+  const pass=allAttempts.filter(a=>a.percentage>=75).length
+  const avg=total?Math.round(allAttempts.reduce((s,a)=>s+Number(a.percentage),0)/total):0
+  const disc=allAttempts.filter(a=>a.discount>0).length
+  setText('st-total',String(total)); setText('st-pass',String(pass))
+  setText('st-avg',`${avg}%`); setText('st-disc',String(disc))
+  renderAttemptsTable(allAttempts)
+}
+
+;(window as any).filterAttempts = function() {
+  const search=v('att-search').toLowerCase()
+  const filter=(document.getElementById('att-filter') as HTMLSelectElement).value
+  const filtered=allAttempts.filter(a=>{
+    const ms=!search||(a.name||'').toLowerCase().includes(search)||(a.email||'').toLowerCase().includes(search)
+    const mf=!filter||(filter==='disc'&&a.discount>0)||(filter==='pass'&&a.percentage>=75)||(filter==='fail'&&a.percentage<75)
+    return ms&&mf
+  })
+  renderAttemptsTable(filtered)
+}
+
+function renderAttemptsTable(list: any[]) {
+  const tbody=document.getElementById('att-tbody')!
+  tbody.innerHTML=''
+  if(!list.length){
+    tbody.innerHTML='<tr><td colspan="9" style="text-align:center;padding:40px;color:#94a3b8">No attempts found</td></tr>'
+    return
+  }
+  list.forEach(a=>{
+    const pct=Number(a.percentage)||0
+    const pclass=pct>=95?'pct-95':pct>=85?'pct-85':pct>=75?'pct-75':'pct-fail'
+    const date=new Date(a.created_at).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'2-digit'})
+    const timeTaken=a.time_taken?`${Math.floor(a.time_taken/60)}:${String(a.time_taken%60).padStart(2,'0')}`:'—'
+    const tr=document.createElement('tr')
+    tr.innerHTML=`
+      <td style="font-weight:600;color:#1e293b">${a.name||'—'}</td>
+      <td style="color:#64748b;font-size:12px">${a.email||'—'}</td>
+      <td style="color:#64748b;font-size:12px">${a.phone||'—'}</td>
+      <td style="font-weight:700">${a.score||0}/${a.total||50}</td>
+      <td><span class="pct-badge ${pclass}">${pct}%</span></td>
+      <td>${a.discount>0?`<span class="disc-badge">${a.discount}% OFF</span>`:'<span style="color:#94a3b8;font-size:12px">None</span>'}</td>
+      <td style="font-size:12px;color:#64748b">${timeTaken}</td>
+      <td style="font-size:12px;color:#64748b">${date}</td>
+      <td><button onclick="viewReport('${a.id}')" style="background:#eff6ff;border:none;color:#0b1525;border-radius:6px;padding:4px 10px;font-size:12px;font-weight:700;cursor:pointer">View</button></td>`
+    tbody.appendChild(tr)
+  })
+}
+
+;(window as any).viewReport = function(id: string) {
+  const a=allAttempts.find(x=>x.id===id)
+  if(!a) return
+  alert(`Report for ${a.name}\nScore: ${a.score}/${a.total} (${a.percentage}%)\nDiscount: ${a.discount}%\nDate: ${new Date(a.created_at).toLocaleString('en-IN')}`)
+}
+
+;(window as any).exportAttempts = function() {
+  const rows=[['Name','Email','Phone','Score','Total','Percentage','Discount','Time (secs)','Date'],...allAttempts.map(a=>[a.name,a.email,a.phone,a.score,a.total,a.percentage,`${a.discount}%`,a.time_taken||'',new Date(a.created_at).toLocaleDateString('en-IN')])]
+  const csv=rows.map(r=>r.map(c=>`"${String(c||'').replace(/"/g,'""')}"`).join(',')).join('\n')
+  const el=document.createElement('a'); el.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv); el.download='atec_test_attempts.csv'; el.click()
+}
+
+// ── Init ──────────────────────────────────────────────────────────────
+loadSettings()
+</script>

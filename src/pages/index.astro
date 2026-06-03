@@ -508,6 +508,294 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
   </section>
 
   <!-- ══════════════════════════════════════════════════════════════
+       SCHOLARSHIP TEST CTA — UpGrad-inspired, gauge visual
+       Click → /mock-test. No DB needed, pure static section.
+  ══════════════════════════════════════════════════════════════ -->
+  <style is:global>
+    .schol-section {
+      padding: 72px 32px 80px;
+      background: #0b1525;
+      position: relative;
+      overflow: hidden;
+    }
+    .schol-section::before {
+      content: '';
+      position: absolute;
+      top: -120px; right: -120px;
+      width: 480px; height: 480px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(212,240,26,0.06) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .schol-section::after {
+      content: '';
+      position: absolute;
+      bottom: -80px; left: -80px;
+      width: 320px; height: 320px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(212,240,26,0.04) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .schol-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 64px;
+      align-items: center;
+      position: relative;
+      z-index: 2;
+    }
+    @media(max-width: 768px) {
+      .schol-inner { grid-template-columns: 1fr; gap: 40px; text-align: center; }
+      .schol-gauge-wrap { order: -1; }
+    }
+
+    /* Left: copy */
+    .schol-tag {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: rgba(212,240,26,0.1); border: 1px solid rgba(212,240,26,0.25);
+      border-radius: 20px; padding: 5px 14px;
+      font-size: 12px; font-weight: 800; color: #d4f01a;
+      text-transform: uppercase; letter-spacing: 0.08em;
+      margin-bottom: 20px;
+    }
+    .schol-h1 {
+      font-family: 'Sora', sans-serif;
+      font-size: clamp(2rem, 4vw, 3rem);
+      font-weight: 900;
+      color: #fff;
+      line-height: 1.1;
+      margin: 0 0 16px;
+    }
+    .schol-h1 span { color: #d4f01a; }
+    .schol-sub {
+      font-size: 16px;
+      color: rgba(255,255,255,0.6);
+      line-height: 1.7;
+      margin: 0 0 32px;
+      max-width: 440px;
+    }
+
+    /* Discount pills row */
+    .schol-pills {
+      display: flex; gap: 10px; flex-wrap: wrap;
+      margin-bottom: 36px;
+    }
+    @media(max-width: 768px) { .schol-pills { justify-content: center; } }
+    .schol-pill {
+      padding: 7px 16px;
+      border-radius: 20px;
+      font-size: 13px; font-weight: 800;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .schol-pill.p1 { background: rgba(251,191,36,0.15); color: #fbbf24; border: 1px solid rgba(251,191,36,0.3); }
+    .schol-pill.p2 { background: rgba(96,165,250,0.15); color: #60a5fa; border: 1px solid rgba(96,165,250,0.3); }
+    .schol-pill.p3 { background: rgba(52,211,153,0.15); color: #34d399; border: 1px solid rgba(52,211,153,0.3); }
+
+    /* CTA button */
+    .schol-cta {
+      display: inline-flex; align-items: center; gap: 10px;
+      background: #d4f01a; color: #0b1525;
+      padding: 16px 32px; border-radius: 12px;
+      font-family: 'Sora', sans-serif;
+      font-size: 16px; font-weight: 900;
+      text-decoration: none;
+      box-shadow: 0 8px 32px rgba(212,240,26,0.3);
+      transition: all 0.2s;
+    }
+    .schol-cta:hover {
+      background: #e8ff47;
+      transform: translateY(-2px);
+      box-shadow: 0 14px 40px rgba(212,240,26,0.45);
+    }
+    .schol-cta svg { flex-shrink: 0; transition: transform 0.2s; }
+    .schol-cta:hover svg { transform: translateX(4px); }
+
+    .schol-note {
+      font-size: 12px;
+      color: rgba(255,255,255,0.35);
+      margin-top: 14px;
+    }
+
+    /* Right: Gauge card */
+    .schol-gauge-wrap { display: flex; justify-content: center; }
+    .schol-gauge-card {
+      background: linear-gradient(145deg, #111e35, #0d1a2d);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 24px;
+      padding: 36px 32px 28px;
+      width: 100%; max-width: 360px;
+      position: relative;
+      box-shadow: 0 24px 64px rgba(0,0,0,0.4);
+    }
+    .gauge-question {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 20px; padding: 5px 14px;
+      font-size: 12px; color: rgba(255,255,255,0.7);
+      margin-bottom: 24px;
+    }
+    .gauge-dot { width: 6px; height: 6px; border-radius: 50%; background: #d4f01a; flex-shrink: 0; animation: gaugePulse 2s infinite; }
+    @keyframes gaugePulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+    /* SVG Gauge */
+    .gauge-svg-wrap { position: relative; width: 220px; height: 130px; margin: 0 auto 8px; }
+    .gauge-svg { width: 220px; height: 130px; }
+    .gauge-center { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -10%); text-align: center; }
+    .gauge-score { font-family: 'Sora', sans-serif; font-size: 2.6rem; font-weight: 900; color: #fff; line-height: 1; }
+    .gauge-of { font-size: 12px; color: rgba(255,255,255,0.4); margin-top: 2px; }
+
+    .gauge-labels {
+      display: flex; justify-content: space-between;
+      padding: 0 12px; margin-top: 2px;
+      font-size: 11px; color: rgba(255,255,255,0.35);
+    }
+
+    .gauge-status {
+      text-align: center; margin: 12px 0;
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 100%;
+    }
+    .gauge-status-pill {
+      background: rgba(239,68,68,0.15); color: #f87171;
+      border: 1px solid rgba(239,68,68,0.3);
+      border-radius: 20px; padding: 5px 16px;
+      font-size: 12px; font-weight: 700;
+    }
+    .gauge-status-pill.good { background: rgba(52,211,153,0.15); color: #34d399; border-color: rgba(52,211,153,0.3); }
+
+    .gauge-tagline {
+      text-align: center;
+      font-size: 13px; color: rgba(255,255,255,0.5);
+      line-height: 1.5; margin-top: 10px;
+    }
+    .gauge-tagline strong { color: #d4f01a; }
+
+    /* Steps */
+    .schol-steps {
+      display: flex; gap: 24px;
+      margin-top: 40px; flex-wrap: wrap;
+    }
+    @media(max-width: 768px) { .schol-steps { justify-content: center; } }
+    .schol-step {
+      display: flex; align-items: flex-start; gap: 12px;
+      max-width: 180px;
+    }
+    .step-num {
+      width: 32px; height: 32px; border-radius: 50%;
+      background: rgba(212,240,26,0.1); border: 1px solid rgba(212,240,26,0.25);
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Sora', sans-serif; font-weight: 900; font-size: 13px;
+      color: #d4f01a; flex-shrink: 0;
+    }
+    .step-text { font-size: 13px; color: rgba(255,255,255,0.55); line-height: 1.5; }
+    .step-text strong { color: rgba(255,255,255,0.85); display: block; margin-bottom: 2px; }
+  </style>
+
+  <section class="schol-section" id="scholarship-section">
+    <div class="schol-inner">
+
+      <!-- LEFT: Copy -->
+      <div>
+        <div class="schol-tag">
+          <span>🎓</span> Free Scholarship Test
+        </div>
+        <h2 class="schol-h1">
+          Test Your Skills.<br/>
+          <span>Earn a Course</span><br/>
+          Discount!
+        </h2>
+        <p class="schol-sub">
+          Take ATEC's free computer knowledge test. Score 75% or above and unlock instant discounts — up to 25% off any course.
+        </p>
+
+        <div class="schol-pills">
+          <span class="schol-pill p1">🥉 75% → 10% OFF</span>
+          <span class="schol-pill p2">🥈 85% → 20% OFF</span>
+          <span class="schol-pill p3">🥇 95% → 25% OFF</span>
+        </div>
+
+        <a href="/mock-test" class="schol-cta">
+          Start Scholarship Test
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </a>
+        <div class="schol-note">✓ Free · No registration required · Results instant</div>
+
+        <!-- Steps -->
+        <div class="schol-steps">
+          <div class="schol-step">
+            <div class="step-num">1</div>
+            <div class="step-text"><strong>Register</strong>Enter your name & email to begin</div>
+          </div>
+          <div class="schol-step">
+            <div class="step-num">2</div>
+            <div class="step-text"><strong>Take Test</strong>50 questions, 20 minutes</div>
+          </div>
+          <div class="schol-step">
+            <div class="step-num">3</div>
+            <div class="step-text"><strong>Get Discount</strong>Instant code on your email</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT: Gauge card -->
+      <div class="schol-gauge-wrap">
+        <div class="schol-gauge-card">
+          <div class="gauge-question">
+            <span class="gauge-dot"></span>
+            Where do you stand in Computer Skills?
+          </div>
+
+          <!-- SVG Gauge -->
+          <div class="gauge-svg-wrap">
+            <svg class="gauge-svg" viewBox="0 0 220 130" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <!-- Track -->
+              <path d="M 20 115 A 90 90 0 0 1 200 115" stroke="rgba(255,255,255,0.08)" stroke-width="14" stroke-linecap="round" fill="none"/>
+              <!-- Low section (red) -->
+              <path d="M 20 115 A 90 90 0 0 1 110 25" stroke="rgba(239,68,68,0.6)" stroke-width="14" stroke-linecap="round" fill="none" stroke-dasharray="4 2"/>
+              <!-- High section (green, dashed) -->
+              <path d="M 110 25 A 90 90 0 0 1 200 115" stroke="rgba(52,211,153,0.25)" stroke-width="14" stroke-linecap="round" fill="none" stroke-dasharray="4 2"/>
+              <!-- Fill arc animated — low score -->
+              <path id="gauge-fill-arc" d="M 20 115 A 90 90 0 0 1 80 35" stroke="#ef4444" stroke-width="14" stroke-linecap="round" fill="none">
+                <animate attributeName="stroke-dasharray" from="0 300" to="100 300" dur="1.2s" fill="freeze" />
+              </path>
+              <!-- Needle dot -->
+              <circle id="gauge-needle" cx="80" cy="35" r="6" fill="#fff" stroke="#ef4444" stroke-width="2">
+                <animateTransform attributeName="transform" type="rotate" from="0 110 115" to="0 110 115" dur="1.2s" fill="freeze"/>
+              </circle>
+              <!-- Tick marks -->
+              <line x1="20" y1="115" x2="27" y2="115" stroke="rgba(255,255,255,0.2)" stroke-width="1.5"/>
+              <line x1="110" y1="25" x2="110" y2="33" stroke="rgba(255,255,255,0.2)" stroke-width="1.5"/>
+              <line x1="200" y1="115" x2="193" y2="115" stroke="rgba(255,255,255,0.2)" stroke-width="1.5"/>
+            </svg>
+            <div class="gauge-center">
+              <div class="gauge-score" id="gauge-animated-score">0</div>
+              <div class="gauge-of">of 100</div>
+            </div>
+          </div>
+
+          <div class="gauge-labels">
+            <span>0</span>
+            <span>50</span>
+            <span>100</span>
+          </div>
+
+          <div class="gauge-status">
+            <span class="gauge-status-pill" id="gauge-status-pill">Low Readiness</span>
+          </div>
+
+          <div class="gauge-tagline">
+            Get your <strong>personalised score</strong><br/>based on skills & knowledge
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════════════
        MEET OUR FACULTY — DB-driven card carousel, like ateceducation.in
        Fetches from 'faculty' table in Supabase (runtime load — no rebuild needed).
        Fields: name, designation, expert_field, photo_url, sort_order, is_active
@@ -3061,5 +3349,62 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',()=>waitSB(loadAll))
   else waitSB(loadAll)
 
+})()
+</script>
+
+<!-- ══════════════════════════════════════════════════════════════
+     SCHOLARSHIP GAUGE — animated score counter + IntersectionObserver
+══════════════════════════════════════════════════════════════ -->
+<script>
+;(function() {
+  // Animate the gauge score counter when section scrolls into view
+  function animateGauge() {
+    const section = document.getElementById('scholarship-section')
+    if (!section) return
+
+    let animated = false
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting && !animated) {
+          animated = true
+          runGaugeAnimation()
+        }
+      })
+    }, { threshold: 0.3 })
+
+    observer.observe(section)
+  }
+
+  function runGaugeAnimation() {
+    const scoreEl = document.getElementById('gauge-animated-score')
+    const pillEl  = document.getElementById('gauge-status-pill')
+    if (!scoreEl) return
+
+    // Count from 0 to 42 (the "low readiness" demonstration score)
+    let current = 0
+    const target = 42
+    const duration = 1400
+    const step = duration / target
+    const interval = setInterval(() => {
+      current++
+      if (scoreEl) scoreEl.textContent = String(current)
+      if (current >= target) {
+        clearInterval(interval)
+        // Show "Low Readiness" message faded in
+        if (pillEl) {
+          pillEl.style.opacity = '0'
+          pillEl.style.transition = 'opacity 0.4s'
+          setTimeout(() => { if(pillEl) pillEl.style.opacity = '1' }, 200)
+        }
+      }
+    }, step)
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', animateGauge)
+  } else {
+    animateGauge()
+  }
 })()
 </script>
