@@ -703,7 +703,24 @@ function renderCatAdmin() {
           <span style="font-size:11px;font-weight:700;color:#475569;flex:1">${c.title||'New Course'}</span>
           <button class="btn-sm del" onclick="catDelCourse(${ci},${ri})">✕ Remove</button>
         </div>
-        <div style="padding:10px 12px;display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <div style="padding:10px 12px">
+          <!-- Thumbnail row — always visible at top -->
+          <div style="display:flex;gap:12px;align-items:flex-start;margin-bottom:10px;padding:10px;background:#f8fafc;border-radius:8px;border:1px solid #e2e8f0">
+            <div id="cc-thumb-preview-${ci}-${ri}" style="width:80px;height:56px;border-radius:6px;background:#0b1525;flex-shrink:0;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:10px;color:rgba(255,255,255,0.4);border:1px solid #e2e8f0">
+              ${c.thumbnail_url ? '<img src="' + (c.thumbnail_url||'').replace(/"/g,'&quot;') + '" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display=\'none\'" />' : '🖼️'}
+            </div>
+            <div style="flex:1">
+              <div style="font-size:10px;font-weight:700;color:#0b1525;text-transform:uppercase;margin-bottom:4px">🖼️ Course Thumbnail Image URL</div>
+              <input class="course-inp" id="cc-thumb-${ci}-${ri}"
+                value="${(c.thumbnail_url||'').replace(/"/g,'&quot;')}"
+                placeholder="https://... paste a direct image URL (.jpg .png .webp)"
+                style="width:100%;font-size:12px"
+                oninput="(function(inp,ci,ri){var prev=document.getElementById('cc-thumb-preview-'+ci+'-'+ri);if(prev){if(inp.value){prev.innerHTML='<img src=\''+inp.value+'\' style=\'width:100%;height:100%;object-fit:cover\' onerror=\'this.style.display=none\' />';prev.style.background='#000';}else{prev.innerHTML='🖼️';prev.style.background='#0b1525';}}}).call(this,this,${ci},${ri})" />
+              <div style="font-size:10px;color:#94a3b8;margin-top:3px">Upload to Supabase Storage → copy URL → paste here. Leave blank for dark bg with course name.</div>
+            </div>
+          </div>
+          <!-- Rest of fields in 2-col grid -->
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
           <div>
             <div style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;margin-bottom:3px">Course Title</div>
             <input class="course-inp" id="cc-title-${ci}-${ri}" value="${(c.title||'').replace(/"/g,'&quot;')}" placeholder="e.g. GEN AI for Everyone" style="width:100%" />
@@ -719,10 +736,6 @@ function renderCatAdmin() {
           <div>
             <div style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;margin-bottom:3px">Syllabus / Detail URL</div>
             <input class="course-inp" id="cc-syllabus-${ci}-${ri}" value="${(c.syllabus_url||'').replace(/"/g,'&quot;')}" placeholder="/courses/gen-ai or PDF link" style="width:100%" />
-          </div>
-          <div>
-            <div style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;margin-bottom:3px">Thumbnail URL</div>
-            <input class="course-inp" id="cc-thumb-${ci}-${ri}" value="${(c.thumbnail_url||'').replace(/"/g,'&quot;')}" placeholder="https://... image URL" style="width:100%" />
           </div>
           <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px">
             <div>
