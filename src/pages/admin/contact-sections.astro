@@ -1,0 +1,616 @@
+---
+// src/pages/admin/contact-sections.astro
+import AdminLayout from '../../layouts/AdminLayout.astro'
+---
+<AdminLayout title="Contact Sections" activeSection="contact-sections">
+
+<style>
+  .wrap { max-width:960px }
+  .page-title { font-family:'Sora',sans-serif; font-size:22px; font-weight:900; color:#1e293b; margin:0 0 4px }
+  .page-sub { font-size:13px; color:#94a3b8; margin:0 0 28px }
+
+  /* Section cards */
+  .section-card { background:#fff; border-radius:16px; border:1px solid #e2e8f0; margin-bottom:28px; overflow:hidden }
+  .section-header {
+    display:flex; align-items:center; justify-content:space-between;
+    padding:20px 28px; border-bottom:1px solid #f1f5f9; cursor:pointer; user-select:none;
+  }
+  .section-header-left { display:flex; align-items:center; gap:12px }
+  .section-badge { width:38px; height:38px; border-radius:10px; background:#eff6ff; display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0 }
+  .section-header h2 { font-family:'Sora',sans-serif; font-size:15px; font-weight:800; color:#1e293b; margin:0 0 2px }
+  .section-header p { font-size:12px; color:#94a3b8; margin:0 }
+  .section-chevron { font-size:13px; color:#94a3b8; transition:transform 0.2s; flex-shrink:0 }
+  .section-chevron.open { transform:rotate(180deg) }
+  .section-body { padding:28px; display:none }
+  .section-body.open { display:block }
+
+  /* Fields */
+  .field { display:flex; flex-direction:column; gap:5px; margin-bottom:16px }
+  .field-row { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:16px }
+  .field-row.three { grid-template-columns:1fr 1fr 1fr }
+  @media(max-width:640px){ .field-row,.field-row.three { grid-template-columns:1fr } }
+  .lbl { font-size:11px; font-weight:700; color:#64748b; text-transform:uppercase; letter-spacing:0.05em }
+  .tip { font-size:11px; color:#94a3b8; margin-top:3px; line-height:1.4 }
+  input[type=text],.inp,input[type=url],input[type=number],input[type=datetime-local],select,textarea {
+    padding:9px 13px; border:1.5px solid #e2e8f0; border-radius:9px;
+    font-size:14px; color:#1e293b; outline:none; background:#fff;
+    width:100%; box-sizing:border-box; font-family:'Inter',sans-serif; transition:border-color 0.15s;
+  }
+  input:focus,select:focus,textarea:focus { border-color:#1a3460 }
+  textarea { resize:vertical }
+
+  /* Platform/FAQ/Resource rows */
+  .item-card { border:1.5px solid #e2e8f0; border-radius:10px; padding:16px; margin-bottom:10px; background:#fafbfc }
+  .item-card-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px }
+  .item-card-label { font-size:12px; font-weight:700; color:#1a3460 }
+  .btn-del { background:#fee2e2; border:none; color:#dc2626; border-radius:6px; padding:4px 12px; font-size:12px; font-weight:700; cursor:pointer; font-family:'Inter',sans-serif }
+  .btn-del:hover { background:#fca5a5 }
+
+  /* Save button */
+  .save-btn { display:inline-flex; align-items:center; gap:8px; background:#1a3460; color:#d4f01a; border:none; border-radius:10px; padding:11px 24px; font-size:14px; font-weight:800; cursor:pointer; font-family:'Inter',sans-serif; transition:background 0.15s }
+  .save-btn:hover { background:#0f2347 }
+  .save-btn:disabled { background:#94a3b8; cursor:not-allowed }
+  .add-btn { display:flex; align-items:center; gap:6px; padding:9px 16px; background:#eff6ff; border:2px dashed #93c5fd; color:#1d4ed8; border-radius:9px; font-size:13px; font-weight:700; cursor:pointer; font-family:'Inter',sans-serif; width:100%; justify-content:center }
+  .add-btn:hover { background:#dbeafe }
+  .status { font-size:13px; font-weight:600; padding:9px 16px; border-radius:9px; display:none; margin-top:12px }
+  .status.ok { background:#dcfce7; color:#166534 }
+  .status.err { background:#fee2e2; color:#991b1b }
+
+  /* Toggle */
+  .toggle-row { display:flex; align-items:center; gap:10px; margin-bottom:14px }
+  .toggle-row input[type=checkbox] { width:16px; height:16px; accent-color:#1a3460; cursor:pointer }
+  .toggle-row label { font-size:14px; font-weight:500; color:#374151; cursor:pointer }
+
+  /* Platform color preview */
+  .platform-preview { width:36px; height:36px; border-radius:9px; border:1px solid #e2e8f0; flex-shrink:0 }
+</style>
+
+<div class="wrap">
+  <h1 class="page-title">📞 Contact Sections Manager</h1>
+  <p class="page-sub">Manage Connect With Us, Get In Touch, FAQ, and Download Resources — all update live on the homepage, no rebuild needed.</p>
+
+  <!-- ═══════════ 1. CONNECT WITH US ═══════════ -->
+  <div class="section-card">
+    <div class="section-header" onclick="toggleSection('connect')">
+      <div class="section-header-left">
+        <div class="section-badge">🔗</div>
+        <div>
+          <h2>Connect With Us — Social QR Cards</h2>
+          <p>Add social platforms with QR codes shown on the homepage</p>
+        </div>
+      </div>
+      <span class="section-chevron open" id="chev-connect">▼</span>
+    </div>
+    <div class="section-body open" id="body-connect">
+      <div class="field-row">
+        <div class="field">
+          <label class="lbl">Section Title</label>
+          <input type="text" id="con-title" value="Connect With Us" />
+        </div>
+        <div class="field">
+          <label class="lbl">Subtitle</label>
+          <input type="text" id="con-sub" value="Scan a QR or tap a card to follow us — stay updated with latest courses, events & student wins" />
+        </div>
+      </div>
+
+      <div style="font-size:12px;font-weight:700;color:#475569;text-transform:uppercase;margin-bottom:12px">Platforms</div>
+      <div id="con-platforms-list"></div>
+      <button class="add-btn" id="con-add-btn">+ Add Platform</button>
+      <br><br>
+      <button class="save-btn" id="con-save-btn">💾 Save Connect Section</button>
+      <div class="status" id="con-status"></div>
+    </div>
+  </div>
+
+  <!-- ═══════════ 2. GET IN TOUCH ═══════════ -->
+  <div class="section-card">
+    <div class="section-header" onclick="toggleSection('contact')">
+      <div class="section-header-left">
+        <div class="section-badge">📞</div>
+        <div>
+          <h2>Get In Touch — Contact Info & Map</h2>
+          <p>Address, phone numbers, email, opening hours, Google Maps embed</p>
+        </div>
+      </div>
+      <span class="section-chevron open" id="chev-contact">▼</span>
+    </div>
+    <div class="section-body open" id="body-contact">
+      <div class="field-row">
+        <div class="field">
+          <label class="lbl">Section Title</label>
+          <input type="text" id="ct-title" value="Get in Touch" />
+        </div>
+        <div class="field">
+          <label class="lbl">Section Subtitle</label>
+          <input type="text" id="ct-sub" value="We're here to help you choose the right course" />
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="lbl">Full Address</label>
+        <input type="text" id="ct-address" value="1st Floor, ATEC Avenue, Hardo Channi Road, Gurdaspur, Punjab – 143521" />
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label class="lbl">Phone 1</label>
+          <input type="text" id="ct-phone1" value="+91 9878505706" placeholder="+91 XXXXXXXXXX" />
+        </div>
+        <div class="field">
+          <label class="lbl">Phone 2 (optional)</label>
+          <input type="text" id="ct-phone2" value="+91 7009933289" placeholder="+91 XXXXXXXXXX" />
+        </div>
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label class="lbl">Email 1</label>
+          <input type="text" id="ct-email1" value="atecgsp@gmail.com" />
+        </div>
+        <div class="field">
+          <label class="lbl">Email 2 (optional)</label>
+          <input type="text" id="ct-email2" placeholder="support@atecedu.com" />
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="lbl">Opening Hours</label>
+        <input type="text" id="ct-hours" value="Mon – Sat: 9:00 AM – 7:00 PM" />
+      </div>
+
+      <div class="field">
+        <label class="lbl">Google Maps Embed URL</label>
+        <input type="url" id="ct-map" placeholder="https://www.google.com/maps/embed?pb=..." />
+        <span class="tip">Go to Google Maps → search your location → Share → Embed a map → Copy the src URL from the iframe code</span>
+      </div>
+
+      <div style="border-top:1px solid #f1f5f9;padding-top:20px;margin-top:8px">
+        <div style="font-size:13px;font-weight:700;color:#475569;margin-bottom:12px">Enquiry Form (shown on right side)</div>
+        <div class="toggle-row">
+          <input type="checkbox" id="ct-show-form" checked />
+          <label for="ct-show-form">Show enquiry form on website</label>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label class="lbl">Form Title</label>
+            <input type="text" id="ct-form-title" value="Send Us a Message" />
+          </div>
+          <div class="field">
+            <label class="lbl">Form Subtitle</label>
+            <input type="text" id="ct-form-sub" value="We'll call you back within 30 minutes" />
+          </div>
+        </div>
+      </div>
+
+      <button class="save-btn" id="ct-save-btn">💾 Save Contact Info</button>
+      <div class="status" id="ct-status"></div>
+    </div>
+  </div>
+
+  <!-- ═══════════ 3. FAQ ═══════════ -->
+  <div class="section-card">
+    <div class="section-header" onclick="toggleSection('faq')">
+      <div class="section-header-left">
+        <div class="section-badge">❓</div>
+        <div>
+          <h2>Frequently Asked Questions</h2>
+          <p>Add, edit, reorder or hide FAQ items shown on homepage</p>
+        </div>
+      </div>
+      <span class="section-chevron open" id="chev-faq">▼</span>
+    </div>
+    <div class="section-body open" id="body-faq">
+      <div class="field-row">
+        <div class="field">
+          <label class="lbl">Section Title</label>
+          <input type="text" id="fq-title" value="Frequently Asked Questions" />
+        </div>
+        <div class="field">
+          <label class="lbl">Section Subtitle</label>
+          <input type="text" id="fq-sub" value="Everything you need to know about ATEC courses" />
+        </div>
+      </div>
+
+      <div style="font-size:12px;font-weight:700;color:#475569;text-transform:uppercase;margin-bottom:12px">FAQ Items</div>
+      <div id="faq-admin-list"></div>
+      <button class="add-btn" id="fq-add-btn">+ Add FAQ Item</button>
+      <br><br>
+      <button class="save-btn" id="fq-save-btn">💾 Save FAQ</button>
+      <div class="status" id="fq-status"></div>
+    </div>
+  </div>
+
+  <!-- ═══════════ 4. DOWNLOAD RESOURCES ═══════════ -->
+  <div class="section-card">
+    <div class="section-header" onclick="toggleSection('dl')">
+      <div class="section-header-left">
+        <div class="section-badge">📥</div>
+        <div>
+          <h2>Download Resources</h2>
+          <p>Brochures, syllabus PDFs, study materials — add download links</p>
+        </div>
+      </div>
+      <span class="section-chevron open" id="chev-dl">▼</span>
+    </div>
+    <div class="section-body open" id="body-dl">
+      <div class="field-row">
+        <div class="field">
+          <label class="lbl">Section Title</label>
+          <input type="text" id="dl-title" value="Download Resources" />
+        </div>
+        <div class="field">
+          <label class="lbl">Section Subtitle</label>
+          <input type="text" id="dl-sub" value="Free course brochures, syllabus PDFs, and study materials" />
+        </div>
+      </div>
+
+      <div style="font-size:12px;font-weight:700;color:#475569;text-transform:uppercase;margin-bottom:12px">Resources</div>
+      <div id="dl-admin-list"></div>
+      <button class="add-btn" id="dl-add-btn">+ Add Resource</button>
+      <br><br>
+      <button class="save-btn" id="dl-save-btn">💾 Save Resources</button>
+      <div class="status" id="dl-status"></div>
+    </div>
+  </div>
+
+</div>
+
+</AdminLayout>
+
+<script>
+const SB_URL = (window as any).__SB_URL as string
+const SB_KEY = (window as any).__SB_KEY as string
+
+// ── Helpers ────────────────────────────────────────────────────────────
+function v(id: string): string { return ((document.getElementById(id) as HTMLInputElement)?.value||'').trim() }
+function sv(id: string, val: string) { const el=document.getElementById(id) as HTMLInputElement; if(el) el.value=val }
+function chk(id: string): boolean { return !!(document.getElementById(id) as HTMLInputElement)?.checked }
+function schk(id: string, val: boolean) { const el=document.getElementById(id) as HTMLInputElement; if(el) el.checked=val }
+
+async function sbGet(key: string): Promise<any> {
+  if(!SB_URL||!SB_KEY) return null
+  const r = await fetch(`${SB_URL}/rest/v1/site_settings?key=eq.${key}&select=value`,
+    { headers:{ apikey:SB_KEY, Authorization:`Bearer ${SB_KEY}` } })
+  const d = await r.json()
+  return d?.[0]?.value??null
+}
+async function sbSet(key: string, value: any) {
+  if(!SB_URL||!SB_KEY) throw new Error('No Supabase')
+  await fetch(`${SB_URL}/rest/v1/site_settings`,{
+    method:'POST',
+    headers:{ apikey:SB_KEY, Authorization:`Bearer ${SB_KEY}`, 'Content-Type':'application/json', Prefer:'resolution=merge-duplicates,return=minimal' },
+    body:JSON.stringify({key,value})
+  })
+}
+function showStatus(id: string, ok: boolean, msg: string) {
+  const el=document.getElementById(id)
+  if(!el) return
+  el.textContent=msg; el.className='status '+(ok?'ok':'err'); el.style.display='block'
+  setTimeout(()=>{el.style.display='none'},3500)
+}
+
+// Section toggle
+;(window as any).toggleSection = function(id: string) {
+  const body=document.getElementById(`body-${id}`)
+  const chev=document.getElementById(`chev-${id}`)
+  if(body) body.classList.toggle('open')
+  if(chev) chev.classList.toggle('open')
+}
+
+// ═══════════════════════════════════════════════════════════
+// 1. CONNECT WITH US
+// ═══════════════════════════════════════════════════════════
+const PLATFORM_OPTIONS = ['whatsapp','instagram','facebook','youtube','google','twitter','linkedin','telegram','other']
+let conPlatforms: any[] = [
+  { name:'WhatsApp', url:'https://wa.me/917009933289', platform:'whatsapp', qr_url:'', is_active:true },
+  { name:'Instagram', url:'https://www.instagram.com/ateceducation/', platform:'instagram', qr_url:'', is_active:true },
+  { name:'Facebook', url:'https://www.facebook.com/ateceducation', platform:'facebook', qr_url:'', is_active:true },
+  { name:'YouTube', url:'https://www.youtube.com/@ATECEducationalSociety', platform:'youtube', qr_url:'', is_active:true },
+  { name:'Google Reviews', url:'https://g.page/r/atec-gurdaspur', platform:'google', qr_url:'', is_active:true },
+]
+
+function renderConPlatforms() {
+  const list=document.getElementById('con-platforms-list')
+  if(!list) return
+  list.innerHTML=''
+  conPlatforms.forEach((p,i) => {
+    const card=document.createElement('div')
+    card.className='item-card'
+    card.innerHTML=`
+      <div class="item-card-header">
+        <span class="item-card-label">Platform ${i+1}</span>
+        <div style="display:flex;gap:6px;align-items:center">
+          <label style="font-size:12px;display:flex;align-items:center;gap:6px;cursor:pointer">
+            <input type="checkbox" id="cp-active-${i}" ${p.is_active!==false?'checked':''} style="width:14px;height:14px;accent-color:#1a3460" />
+            Show
+          </label>
+          <button class="btn-del" onclick="conDel(${i})">✕ Remove</button>
+        </div>
+      </div>
+      <div class="field-row three">
+        <div class="field">
+          <label class="lbl">Platform Type</label>
+          <select id="cp-platform-${i}">
+            ${PLATFORM_OPTIONS.map(o=>`<option value="${o}"${p.platform===o?' selected':''}>${o.charAt(0).toUpperCase()+o.slice(1)}</option>`).join('')}
+          </select>
+        </div>
+        <div class="field">
+          <label class="lbl">Display Name</label>
+          <input type="text" id="cp-name-${i}" value="${(p.name||'').replace(/"/g,'&quot;')}" placeholder="WhatsApp" />
+        </div>
+        <div class="field">
+          <label class="lbl">Profile / Group URL</label>
+          <input type="url" id="cp-url-${i}" value="${(p.url||'').replace(/"/g,'&quot;')}" placeholder="https://wa.me/..." />
+        </div>
+      </div>
+      <div class="field">
+        <label class="lbl">QR Code Image URL (optional — leave blank if you don't have one yet)</label>
+        <input type="url" id="cp-qr-${i}" value="${(p.qr_url||'').replace(/"/g,'&quot;')}" placeholder="https://... direct URL to your QR code image" />
+        <span class="tip">Generate a QR code at qr-code-generator.com → download → upload to Supabase Storage → paste URL here</span>
+      </div>`
+    list.appendChild(card)
+  })
+}
+
+;(window as any).conDel = (i: number) => { conPlatforms.splice(i,1); renderConPlatforms() }
+
+document.getElementById('con-add-btn')?.addEventListener('click', () => {
+  conPlatforms.push({ name:'New Platform', url:'', platform:'other', qr_url:'', is_active:true })
+  renderConPlatforms()
+})
+
+document.getElementById('con-save-btn')?.addEventListener('click', async () => {
+  const btn=document.getElementById('con-save-btn') as HTMLButtonElement
+  btn.disabled=true; btn.textContent='⏳ Saving…'
+  const saved = conPlatforms.map((_,i)=>({
+    name:       v(`cp-name-${i}`),
+    url:        v(`cp-url-${i}`),
+    platform:   (document.getElementById(`cp-platform-${i}`) as HTMLSelectElement)?.value||'other',
+    qr_url:     v(`cp-qr-${i}`),
+    is_active:  chk(`cp-active-${i}`),
+  }))
+  const payload = {
+    title:    v('con-title'),
+    subtitle: v('con-sub'),
+    platforms: saved,
+  }
+  try { await sbSet('social_connect', payload); showStatus('con-status',true,'✅ Saved! Connect section updated live.') }
+  catch { showStatus('con-status',false,'❌ Save failed. Check connection.') }
+  btn.disabled=false; btn.textContent='💾 Save Connect Section'
+})
+
+// ═══════════════════════════════════════════════════════════
+// 2. GET IN TOUCH
+// ═══════════════════════════════════════════════════════════
+document.getElementById('ct-save-btn')?.addEventListener('click', async () => {
+  const btn=document.getElementById('ct-save-btn') as HTMLButtonElement
+  btn.disabled=true; btn.textContent='⏳ Saving…'
+  const payload = {
+    title:         v('ct-title'),
+    subtitle:      v('ct-sub'),
+    address:       v('ct-address'),
+    phone1:        v('ct-phone1'),
+    phone2:        v('ct-phone2'),
+    email1:        v('ct-email1'),
+    email2:        v('ct-email2'),
+    hours:         v('ct-hours'),
+    map_embed_url: v('ct-map'),
+    show_form:     chk('ct-show-form'),
+    form_title:    v('ct-form-title'),
+    form_subtitle: v('ct-form-sub'),
+  }
+  try { await sbSet('contact_info', payload); showStatus('ct-status',true,'✅ Saved! Contact section updated live.') }
+  catch { showStatus('ct-status',false,'❌ Save failed.') }
+  btn.disabled=false; btn.textContent='💾 Save Contact Info'
+})
+
+// ═══════════════════════════════════════════════════════════
+// 3. FAQ
+// ═══════════════════════════════════════════════════════════
+let faqItems: any[] = [
+  { q:'What courses does ATEC Gurdaspur offer?', a:'ATEC offers 20+ courses including GEN AI, MERN Stack, Tally Prime, Hardware & Networking, Python, Digital Marketing, and more.', is_active:true },
+  { q:'Where is ATEC Education located in Gurdaspur?', a:'Our centre is at 1st Floor, ATEC Avenue, Hardo Channi Road, Gurdaspur, Punjab – 143521.', is_active:true },
+  { q:'What is the fee for computer courses at ATEC?', a:'Course fees range from ₹1,499 to ₹6,999. We offer flexible payment plans and frequent discounts.', is_active:true },
+  { q:'Does ATEC provide certificates?', a:'Yes. All courses provide an ISO-verified certificate. Verify online at atecedu.com/verification.', is_active:true },
+  { q:'What is the placement support like?', a:'ATEC has a dedicated placement cell with 500+ hiring partners. 100% placement assistance for eligible students.', is_active:true },
+  { q:'Are online courses available?', a:'Yes. Most courses are available online, hybrid (online + in-person), and classroom modes with live sessions.', is_active:true },
+  { q:'How do I enroll at ATEC?', a:'Click "Enroll Now" to WhatsApp us, or call +91 7009933289. New batches start every month.', is_active:true },
+]
+
+function renderFaqAdmin() {
+  const list=document.getElementById('faq-admin-list')
+  if(!list) return
+  list.innerHTML=''
+  faqItems.forEach((f,i) => {
+    const card=document.createElement('div')
+    card.className='item-card'
+    card.innerHTML=`
+      <div class="item-card-header">
+        <span class="item-card-label">Question ${i+1}</span>
+        <div style="display:flex;gap:6px;align-items:center">
+          <div style="display:flex;gap:4px">
+            <button class="btn-del" style="background:#f1f5f9;color:#475569;border:none" onclick="faqMove(${i},-1)">↑</button>
+            <button class="btn-del" style="background:#f1f5f9;color:#475569;border:none" onclick="faqMove(${i},1)">↓</button>
+          </div>
+          <label style="font-size:12px;display:flex;align-items:center;gap:6px;cursor:pointer">
+            <input type="checkbox" id="fq-active-${i}" ${f.is_active!==false?'checked':''} style="width:14px;height:14px;accent-color:#1a3460" />
+            Show
+          </label>
+          <button class="btn-del" onclick="faqDel(${i})">✕ Remove</button>
+        </div>
+      </div>
+      <div class="field">
+        <label class="lbl">Question</label>
+        <input type="text" id="fq-q-${i}" value="${(f.q||'').replace(/"/g,'&quot;')}" placeholder="Question text" />
+      </div>
+      <div class="field">
+        <label class="lbl">Answer</label>
+        <textarea id="fq-a-${i}" rows="3">${(f.a||'').replace(/</g,'&lt;')}</textarea>
+      </div>`
+    list.appendChild(card)
+  })
+}
+
+;(window as any).faqDel = (i: number) => { faqItems.splice(i,1); renderFaqAdmin() }
+;(window as any).faqMove = (i: number, d: number) => {
+  const j=i+d
+  if(j<0||j>=faqItems.length) return
+  ;[faqItems[i],faqItems[j]]=[faqItems[j],faqItems[i]]; renderFaqAdmin()
+}
+
+document.getElementById('fq-add-btn')?.addEventListener('click', () => {
+  faqItems.push({ q:'New Question', a:'Answer here…', is_active:true })
+  renderFaqAdmin()
+})
+
+document.getElementById('fq-save-btn')?.addEventListener('click', async () => {
+  const btn=document.getElementById('fq-save-btn') as HTMLButtonElement
+  btn.disabled=true; btn.textContent='⏳ Saving…'
+  const saved = faqItems.map((_,i)=>({
+    q:         v(`fq-q-${i}`),
+    a:         (document.getElementById(`fq-a-${i}`) as HTMLTextAreaElement)?.value?.trim()||'',
+    is_active: chk(`fq-active-${i}`),
+  }))
+  const payload = { title:v('fq-title'), subtitle:v('fq-sub'), faqs:saved }
+  try { await sbSet('faq_items', payload); showStatus('fq-status',true,'✅ Saved! FAQ updated live.') }
+  catch { showStatus('fq-status',false,'❌ Save failed.') }
+  btn.disabled=false; btn.textContent='💾 Save FAQ'
+})
+
+// ═══════════════════════════════════════════════════════════
+// 4. DOWNLOAD RESOURCES
+// ═══════════════════════════════════════════════════════════
+let dlItems: any[] = [
+  { title:'ATEC Course Brochure 2026', description:'Full catalogue of all courses with fees, duration, and syllabus overview.', file_url:'', category:'Brochure', thumbnail_url:'', is_active:true },
+  { title:'Hardware & Networking Syllabus', description:'Detailed week-by-week syllabus for the Hardware & Networking course.', file_url:'', category:'Syllabus', thumbnail_url:'', is_active:true },
+  { title:'Tally Prime Study Guide', description:'Comprehensive Tally Prime notes covering GST, payroll, and advanced features.', file_url:'', category:'Study Material', thumbnail_url:'', is_active:true },
+]
+
+function renderDlAdmin() {
+  const list=document.getElementById('dl-admin-list')
+  if(!list) return
+  list.innerHTML=''
+  dlItems.forEach((r,i) => {
+    const card=document.createElement('div')
+    card.className='item-card'
+    card.innerHTML=`
+      <div class="item-card-header">
+        <span class="item-card-label">Resource ${i+1}</span>
+        <div style="display:flex;gap:6px;align-items:center">
+          <label style="font-size:12px;display:flex;align-items:center;gap:6px;cursor:pointer">
+            <input type="checkbox" id="dl-active-${i}" ${r.is_active!==false?'checked':''} style="width:14px;height:14px;accent-color:#1a3460" />
+            Show
+          </label>
+          <button class="btn-del" onclick="dlDel(${i})">✕ Remove</button>
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label class="lbl">Title</label>
+          <input type="text" id="dl-t-${i}" value="${(r.title||'').replace(/"/g,'&quot;')}" placeholder="ATEC Course Brochure 2026" />
+        </div>
+        <div class="field">
+          <label class="lbl">Category</label>
+          <input type="text" id="dl-cat-${i}" value="${(r.category||'').replace(/"/g,'&quot;')}" placeholder="Brochure / Syllabus / Cheatsheet" />
+        </div>
+      </div>
+      <div class="field">
+        <label class="lbl">Description</label>
+        <input type="text" id="dl-desc-${i}" value="${(r.description||'').replace(/"/g,'&quot;')}" placeholder="Short description of what this file contains" />
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label class="lbl">File URL (PDF, DOCX, etc.)</label>
+          <input type="url" id="dl-url-${i}" value="${(r.file_url||'').replace(/"/g,'&quot;')}" placeholder="https://... direct link to the downloadable file" />
+          <span class="tip">Upload to Supabase Storage → get public URL → paste here</span>
+        </div>
+        <div class="field">
+          <label class="lbl">Thumbnail Image URL (optional)</label>
+          <input type="url" id="dl-thumb-${i}" value="${(r.thumbnail_url||'').replace(/"/g,'&quot;')}" placeholder="https://... preview image" />
+        </div>
+      </div>`
+    list.appendChild(card)
+  })
+}
+
+;(window as any).dlDel = (i: number) => { dlItems.splice(i,1); renderDlAdmin() }
+
+document.getElementById('dl-add-btn')?.addEventListener('click', () => {
+  dlItems.push({ title:'New Resource', description:'', file_url:'', category:'Brochure', thumbnail_url:'', is_active:true })
+  renderDlAdmin()
+})
+
+document.getElementById('dl-save-btn')?.addEventListener('click', async () => {
+  const btn=document.getElementById('dl-save-btn') as HTMLButtonElement
+  btn.disabled=true; btn.textContent='⏳ Saving…'
+  const saved=dlItems.map((_,i)=>({
+    title:         v(`dl-t-${i}`),
+    description:   v(`dl-desc-${i}`),
+    file_url:      v(`dl-url-${i}`),
+    category:      v(`dl-cat-${i}`),
+    thumbnail_url: v(`dl-thumb-${i}`),
+    is_active:     chk(`dl-active-${i}`),
+  }))
+  const payload={ title:v('dl-title'), subtitle:v('dl-sub'), resources:saved }
+  try { await sbSet('download_resources', payload); showStatus('dl-status',true,'✅ Saved! Resources updated live.') }
+  catch { showStatus('dl-status',false,'❌ Save failed.') }
+  btn.disabled=false; btn.textContent='💾 Save Resources'
+})
+
+// ═══════════════════════════════════════════════════════════
+// PRELOAD from DB
+// ═══════════════════════════════════════════════════════════
+async function preload() {
+  try {
+    const [conCfg, ctCfg, fqCfg, dlCfg] = await Promise.all([
+      sbGet('social_connect'),
+      sbGet('contact_info'),
+      sbGet('faq_items'),
+      sbGet('download_resources'),
+    ])
+
+    if (conCfg) {
+      sv('con-title', conCfg.title||'')
+      sv('con-sub',   conCfg.subtitle||'')
+      if(Array.isArray(conCfg.platforms)&&conCfg.platforms.length) conPlatforms=conCfg.platforms
+    }
+    renderConPlatforms()
+
+    if (ctCfg) {
+      sv('ct-title',      ctCfg.title||'')
+      sv('ct-sub',        ctCfg.subtitle||'')
+      sv('ct-address',    ctCfg.address||'')
+      sv('ct-phone1',     ctCfg.phone1||'')
+      sv('ct-phone2',     ctCfg.phone2||'')
+      sv('ct-email1',     ctCfg.email1||'')
+      sv('ct-email2',     ctCfg.email2||'')
+      sv('ct-hours',      ctCfg.hours||'')
+      sv('ct-map',        ctCfg.map_embed_url||'')
+      schk('ct-show-form',ctCfg.show_form!==false)
+      sv('ct-form-title', ctCfg.form_title||'')
+      sv('ct-form-sub',   ctCfg.form_subtitle||'')
+    }
+
+    if (fqCfg) {
+      sv('fq-title', fqCfg.title||'')
+      sv('fq-sub',   fqCfg.subtitle||'')
+      if(Array.isArray(fqCfg.faqs)&&fqCfg.faqs.length) faqItems=fqCfg.faqs
+    }
+    renderFaqAdmin()
+
+    if (dlCfg) {
+      sv('dl-title', dlCfg.title||'')
+      sv('dl-sub',   dlCfg.subtitle||'')
+      if(Array.isArray(dlCfg.resources)&&dlCfg.resources.length) dlItems=dlCfg.resources
+    }
+    renderDlAdmin()
+
+  } catch(e) { console.warn('Preload error:', e) }
+}
+
+// Init with defaults then load from DB
+renderConPlatforms()
+renderFaqAdmin()
+renderDlAdmin()
+preload()
+</script>

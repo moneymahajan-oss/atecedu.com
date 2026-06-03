@@ -156,6 +156,12 @@ const ADMIN_EMAILS = ['atecgsp@gmail.com', 'admin@atecedu.com']
 
         <!-- Courses -->
         <div class="nav-section">
+          <span class="nav-section-label">Contact & Info</span>
+          <a href="/admin/contact-sections" class:list={['nav-link', { active: activeSection === 'contact-sections' }]}>
+            <span class="icon">📞</span> Connect · FAQ · Downloads
+          </a>
+        </div>
+        <div class="nav-section">
           <span class="nav-section-label">Courses</span>
           <a href="/admin/courses" class:list={['nav-link', { active: activeSection === 'courses' }]}>
             <span class="icon">📚</span> All Courses

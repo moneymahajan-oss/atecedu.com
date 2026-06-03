@@ -1127,6 +1127,261 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
 })()
 </script>
 
+
+  <!-- ══════════════════════════════════════════════════════════════
+       CONNECT WITH US — Social media QR cards, DB-driven
+       Runtime loaded from site_settings key='social_connect'
+       Fields: platforms:[{name,url,icon_type,is_active,sort_order}]
+       Section: {title, subtitle, bg_color}
+  ══════════════════════════════════════════════════════════════ -->
+  <style is:global>
+    .connect-section { padding:72px 32px 80px; background:#fff; }
+    .connect-header { max-width:1200px; margin:0 auto 48px; text-align:center; }
+    .connect-grid {
+      max-width:1200px; margin:0 auto;
+      display:flex; gap:20px; flex-wrap:wrap; justify-content:center;
+    }
+    .connect-card {
+      width:200px; background:#fff;
+      border:1px solid #e8ecf0; border-radius:18px;
+      padding:24px 20px 20px; text-align:center;
+      box-shadow:0 3px 14px rgba(0,0,0,0.07);
+      text-decoration:none; color:inherit;
+      transition:transform 0.2s, box-shadow 0.2s;
+      display:flex; flex-direction:column; align-items:center; gap:12px;
+    }
+    .connect-card:hover { transform:translateY(-5px); box-shadow:0 12px 36px rgba(0,0,0,0.13); }
+    .connect-icon-wrap {
+      width:56px; height:56px; border-radius:16px;
+      display:flex; align-items:center; justify-content:center;
+      font-size:26px; flex-shrink:0;
+    }
+    .connect-qr {
+      width:130px; height:130px; background:#f8fafc;
+      border:1px solid #e2e8f0; border-radius:8px;
+      display:flex; align-items:center; justify-content:center;
+      overflow:hidden;
+    }
+    .connect-qr img { width:100%; height:100%; object-fit:contain; }
+    .connect-qr-placeholder { font-size:11px; color:#94a3b8; text-align:center; padding:8px; }
+    .connect-name { font-family:'Sora',sans-serif; font-size:14px; font-weight:700; color:#1c1c1c; }
+    @media(max-width:560px){ .connect-card { width:calc(50% - 10px); min-width:140px; } }
+  </style>
+
+  <section class="connect-section" id="connect-section" style="display:none;">
+    <div class="connect-header">
+      <p id="connect-sup" style="font-size:13px;font-weight:700;color:#d4f01a;text-transform:uppercase;letter-spacing:0.08em;margin:0 0 6px;background:#0f2a5c;display:inline-block;padding:3px 10px;border-radius:4px;">Follow Us</p>
+      <h2 id="connect-title" style="font-family:'Sora',sans-serif;font-size:clamp(1.6rem,3vw,2.2rem);font-weight:800;color:#1c1c1c;margin:8px 0 10px;">Connect With Us</h2>
+      <p id="connect-sub" style="font-size:15px;color:#64748b;margin:0;">Scan a QR or tap a card to follow us — stay updated with latest courses, events & student wins</p>
+    </div>
+    <div class="connect-grid" id="connect-grid"></div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════════════
+       GET IN TOUCH — Contact info + enquiry form
+       Runtime loaded from site_settings key='contact_info'
+       Fields: address, phone1, phone2, email1, email2, hours,
+               map_embed_url, show_form, form_title, form_subtitle
+  ══════════════════════════════════════════════════════════════ -->
+  <style is:global>
+    .contact-section { padding:72px 32px 80px; background:#f8f4ef; }
+    .contact-inner { max-width:1200px; margin:0 auto; }
+    .contact-layout { display:grid; grid-template-columns:1fr 1fr; gap:48px; align-items:start; }
+    @media(max-width:768px){ .contact-layout { grid-template-columns:1fr; gap:32px; } }
+    .contact-info-card {
+      background:#fff; border-radius:16px; padding:24px 26px;
+      border:1px solid #e2e8f0; box-shadow:0 2px 8px rgba(0,0,0,0.05);
+      display:flex; align-items:flex-start; gap:16px; margin-bottom:14px;
+    }
+    .contact-info-icon {
+      width:44px; height:44px; border-radius:12px; background:#eff6ff;
+      display:flex; align-items:center; justify-content:center; font-size:20px; flex-shrink:0;
+    }
+    .contact-info-label { font-family:'Sora',sans-serif; font-weight:700; font-size:14px; color:#0f2a5c; margin:0 0 4px; }
+    .contact-info-val { font-size:14px; color:#475569; line-height:1.6; margin:0; }
+    .contact-info-val a { color:#0f2a5c; text-decoration:none; }
+    .contact-info-val a:hover { text-decoration:underline; }
+    .contact-map { border-radius:16px; overflow:hidden; border:1px solid #e2e8f0; height:220px; margin-top:14px; background:#f1f5f9; display:flex; align-items:center; justify-content:center; font-size:13px; color:#94a3b8; }
+    .contact-map iframe { width:100%; height:100%; border:none; }
+    .contact-form-card {
+      background:#fff; border-radius:16px; padding:32px;
+      border:1px solid #e2e8f0; box-shadow:0 2px 8px rgba(0,0,0,0.05);
+    }
+    .contact-form-title { font-family:'Sora',sans-serif; font-weight:800; font-size:1.15rem; color:#0f2a5c; margin:0 0 4px; }
+    .contact-form-sub { font-size:13px; color:#94a3b8; margin:0 0 22px; }
+    .cf-field { margin-bottom:14px; }
+    .cf-field input, .cf-field select, .cf-field textarea {
+      width:100%; padding:10px 14px; border:1.5px solid #e2e8f0; border-radius:9px;
+      font-size:14px; color:#1e293b; outline:none; background:#fff;
+      font-family:'Inter',sans-serif; box-sizing:border-box; transition:border-color 0.15s;
+    }
+    .cf-field input:focus, .cf-field select:focus, .cf-field textarea:focus { border-color:#0f2a5c; }
+    .cf-field textarea { resize:vertical; min-height:80px; }
+    .cf-submit {
+      width:100%; background:#0f2a5c; color:#d4f01a;
+      border:none; border-radius:10px; padding:13px;
+      font-size:15px; font-weight:800; cursor:pointer;
+      font-family:'Inter',sans-serif; transition:background 0.15s;
+    }
+    .cf-submit:hover { background:#163264; }
+    .cf-submit:disabled { background:#94a3b8; cursor:not-allowed; }
+    #cf-success { background:#dcfce7; color:#166534; border:1px solid #bbf7d0; border-radius:9px; padding:14px; text-align:center; font-weight:700; display:none; margin-top:12px; }
+    #cf-error { background:#fee2e2; color:#991b1b; border-radius:9px; padding:10px 14px; font-size:13px; display:none; margin-bottom:12px; }
+  </style>
+
+  <section class="contact-section" id="contact-section" style="display:none;">
+    <div class="contact-inner">
+      <div style="text-align:center;margin-bottom:48px;">
+        <p style="font-size:13px;font-weight:700;color:#d4f01a;text-transform:uppercase;letter-spacing:0.08em;margin:0 0 6px;background:#0f2a5c;display:inline-block;padding:3px 10px;border-radius:4px;">Contact</p>
+        <h2 id="contact-title" style="font-family:'Sora',sans-serif;font-size:clamp(1.6rem,3vw,2.2rem);font-weight:800;color:#1c1c1c;margin:8px 0 10px;">Get in Touch</h2>
+        <p id="contact-sub" style="font-size:15px;color:#64748b;margin:0;">We're here to help you choose the right course</p>
+      </div>
+      <div class="contact-layout">
+        <!-- Left: info cards + map -->
+        <div id="contact-info-col">
+          <div class="contact-info-card">
+            <div class="contact-info-icon">📍</div>
+            <div><div class="contact-info-label">Visit Us</div><div class="contact-info-val" id="ci-address">1st Floor, ATEC Avenue, Hardo Channi Road, Gurdaspur, Punjab – 143521</div></div>
+          </div>
+          <div class="contact-info-card">
+            <div class="contact-info-icon">📞</div>
+            <div><div class="contact-info-label">Call Us</div><div class="contact-info-val" id="ci-phone"><a href="tel:+919878505706">+91 9878505706</a> | <a href="tel:+917009933289">7009933289</a></div></div>
+          </div>
+          <div class="contact-info-card">
+            <div class="contact-info-icon">✉️</div>
+            <div><div class="contact-info-label">Email Us</div><div class="contact-info-val" id="ci-email"><a href="mailto:atecgsp@gmail.com">atecgsp@gmail.com</a></div></div>
+          </div>
+          <div class="contact-info-card">
+            <div class="contact-info-icon">🕐</div>
+            <div><div class="contact-info-label">Hours</div><div class="contact-info-val" id="ci-hours">Mon – Sat: 9:00 AM – 7:00 PM</div></div>
+          </div>
+          <div class="contact-map" id="contact-map">
+            <!-- Filled by JS from map_embed_url in site_settings -->
+            <span>Map loading…</span>
+          </div>
+        </div>
+        <!-- Right: enquiry form -->
+        <div class="contact-form-card" id="contact-form-col">
+          <div class="contact-form-title" id="cf-form-title">Send Us a Message</div>
+          <div class="contact-form-sub" id="cf-form-sub">We'll call you back within 30 minutes</div>
+          <div id="cf-error"></div>
+          <div class="cf-field"><input type="text" id="cf-name" placeholder="Your Name *" maxlength="60" /></div>
+          <div class="cf-field"><input type="tel" id="cf-phone" placeholder="WhatsApp Number *" maxlength="15" /></div>
+          <div class="cf-field"><input type="email" id="cf-email" placeholder="Email Address (optional)" /></div>
+          <div class="cf-field"><input type="text" id="cf-course" placeholder="Interested Course" /></div>
+          <div class="cf-field"><textarea id="cf-msg" rows="3" placeholder="Your message…"></textarea></div>
+          <button class="cf-submit" id="cf-submit">Send Message →</button>
+          <div id="cf-success">✅ Message sent! We'll call you back shortly.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════════════
+       FREQUENTLY ASKED QUESTIONS
+       Runtime loaded from site_settings key='faq_items'
+       Fields: {title, subtitle, bg_color, faqs:[{q,a,is_active}]}
+  ══════════════════════════════════════════════════════════════ -->
+  <style is:global>
+    .faq-section { padding:72px 32px 80px; background:#fff; }
+    .faq-inner { max-width:860px; margin:0 auto; }
+    .faq-item {
+      border-bottom:1px solid #e8ecf0;
+      overflow:hidden;
+    }
+    .faq-item:first-child { border-top:1px solid #e8ecf0; }
+    .faq-q {
+      width:100%; background:none; border:none; cursor:pointer;
+      display:flex; align-items:center; justify-content:space-between;
+      padding:20px 4px; gap:16px; text-align:left;
+      font-family:'Inter',sans-serif;
+    }
+    .faq-q-text { font-size:16px; font-weight:600; color:#1c1c1c; flex:1; line-height:1.4; }
+    .faq-icon {
+      width:28px; height:28px; border-radius:50%;
+      background:#f1f5f9; flex-shrink:0;
+      display:flex; align-items:center; justify-content:center;
+      font-size:16px; font-weight:700; color:#0f2a5c;
+      transition:all 0.2s; line-height:1;
+    }
+    .faq-item.open .faq-icon { background:#0f2a5c; color:#d4f01a; transform:rotate(45deg); }
+    .faq-a {
+      display:none; padding:0 4px 18px;
+      font-size:15px; color:#475569; line-height:1.7;
+    }
+    .faq-item.open .faq-a { display:block; }
+  </style>
+
+  <section class="faq-section" id="faq-section" style="display:none;">
+    <div class="faq-inner">
+      <div style="text-align:center;margin-bottom:48px;">
+        <p style="font-size:13px;font-weight:700;color:#d4f01a;text-transform:uppercase;letter-spacing:0.08em;margin:0 0 6px;background:#0f2a5c;display:inline-block;padding:3px 10px;border-radius:4px;">FAQ</p>
+        <h2 id="faq-title" style="font-family:'Sora',sans-serif;font-size:clamp(1.6rem,3vw,2.2rem);font-weight:800;color:#1c1c1c;margin:8px 0 10px;">Frequently Asked Questions</h2>
+        <p id="faq-sub" style="font-size:15px;color:#64748b;margin:0;">Everything you need to know about ATEC courses</p>
+      </div>
+      <div id="faq-list"></div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════════════
+       DOWNLOAD RESOURCES
+       Runtime loaded from site_settings key='download_resources'
+       Fields: {title, subtitle, bg_color, resources:[{
+         title, description, file_url, thumbnail_url,
+         category, is_active, sort_order }]}
+  ══════════════════════════════════════════════════════════════ -->
+  <style is:global>
+    .downloads-section { padding:72px 32px 80px; background:#f8f4ef; }
+    .downloads-inner { max-width:1200px; margin:0 auto; }
+    .downloads-grid {
+      display:grid;
+      grid-template-columns:repeat(auto-fill,minmax(280px,1fr));
+      gap:20px;
+    }
+    .dl-card {
+      background:#fff; border-radius:16px;
+      border:1px solid #e2e8f0; overflow:hidden;
+      box-shadow:0 2px 8px rgba(0,0,0,0.05);
+      transition:transform 0.2s, box-shadow 0.2s;
+    }
+    .dl-card:hover { transform:translateY(-4px); box-shadow:0 10px 28px rgba(0,0,0,0.1); }
+    .dl-thumb {
+      height:140px; background:#0f2a5c;
+      display:flex; align-items:center; justify-content:center;
+      font-size:3rem; position:relative; overflow:hidden;
+    }
+    .dl-thumb img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
+    .dl-category {
+      position:absolute; top:10px; left:10px;
+      background:#d4f01a; color:#1a1a1a;
+      font-size:10px; font-weight:800; padding:2px 9px;
+      border-radius:20px; text-transform:uppercase;
+    }
+    .dl-body { padding:16px 18px 18px; }
+    .dl-title { font-family:'Sora',sans-serif; font-size:15px; font-weight:800; color:#1c1c1c; margin:0 0 6px; }
+    .dl-desc { font-size:13px; color:#64748b; margin:0 0 14px; line-height:1.5; }
+    .dl-btn {
+      display:inline-flex; align-items:center; gap:7px;
+      background:#0f2a5c; color:#d4f01a;
+      padding:9px 18px; border-radius:8px;
+      font-size:13px; font-weight:700; text-decoration:none;
+      transition:background 0.15s;
+    }
+    .dl-btn:hover { background:#163264; }
+    .dl-btn svg { flex-shrink:0; }
+  </style>
+
+  <section class="downloads-section" id="downloads-section" style="display:none;">
+    <div class="downloads-inner">
+      <div style="text-align:center;margin-bottom:48px;">
+        <p style="font-size:13px;font-weight:700;color:#d4f01a;text-transform:uppercase;letter-spacing:0.08em;margin:0 0 6px;background:#0f2a5c;display:inline-block;padding:3px 10px;border-radius:4px;">Free Downloads</p>
+        <h2 id="dl-title" style="font-family:'Sora',sans-serif;font-size:clamp(1.6rem,3vw,2.2rem);font-weight:800;color:#1c1c1c;margin:8px 0 10px;">Download Resources</h2>
+        <p id="dl-sub" style="font-size:15px;color:#64748b;margin:0;">Free course brochures, syllabus PDFs, and study materials</p>
+      </div>
+      <div class="downloads-grid" id="downloads-grid"></div>
+    </div>
+  </section>
+
 </BaseLayout>
 
 <!-- ══════════════════════════════════════════════════════════════
@@ -2535,5 +2790,276 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
   }
   if (document.readyState==='loading') document.addEventListener('DOMContentLoaded',()=>waitSB(loadCategories))
   else waitSB(loadCategories)
+})()
+</script>
+
+<!-- ══════════════════════════════════════════════════════════════
+     CONTACT SECTIONS — 4 runtime loaders
+     1. Connect With Us (social QR cards)
+     2. Get In Touch (contact info + map + form)
+     3. FAQ (accordion)
+     4. Download Resources
+     All data from site_settings in Supabase — live, no rebuild needed.
+══════════════════════════════════════════════════════════════ -->
+<script>
+;(function() {
+
+  // ── Shared helpers ─────────────────────────────────────────────────
+  function show(id) { const el=document.getElementById(id); if(el) el.style.display='' }
+  function setText(id, txt) { const el=document.getElementById(id); if(el) el.textContent=txt }
+  function setHtml(id, html) { const el=document.getElementById(id); if(el) el.innerHTML=html }
+
+  function waitSB(cb) {
+    if (window.__SB_URL) { cb(); return }
+    let n=0; const t=setInterval(()=>{ n++; if(window.__SB_URL||n>40){clearInterval(t);cb()} },50)
+  }
+
+  async function sbFetch(key) {
+    const r = await fetch(
+      `${window.__SB_URL}/rest/v1/site_settings?key=eq.${key}&select=value`,
+      { headers:{ apikey:window.__SB_KEY, Authorization:`Bearer ${window.__SB_KEY}` } }
+    )
+    const d = await r.json()
+    return d?.[0]?.value ?? null
+  }
+
+  // ── PLATFORM ICON COLOURS ──────────────────────────────────────────
+  const PLATFORM_COLORS = {
+    whatsapp:  { bg:'#25d366', icon:'💬' },
+    instagram: { bg:'linear-gradient(135deg,#833ab4,#fd1d1d,#fcb045)', icon:'📸' },
+    facebook:  { bg:'#1877f2', icon:'👥' },
+    youtube:   { bg:'#ff0000', icon:'▶️' },
+    google:    { bg:'#4285f4', icon:'⭐' },
+    twitter:   { bg:'#1da1f2', icon:'🐦' },
+    linkedin:  { bg:'#0a66c2', icon:'💼' },
+    telegram:  { bg:'#0088cc', icon:'✈️' },
+    default:   { bg:'#64748b', icon:'🔗' },
+  }
+
+  // ── 1. CONNECT WITH US ─────────────────────────────────────────────
+  const DEFAULT_CONNECT = {
+    title:'Connect With Us',
+    subtitle:'Scan a QR or tap a card to follow us — stay updated with latest courses, events & student wins',
+    platforms:[
+      { name:'WhatsApp', url:'https://wa.me/917009933289', platform:'whatsapp', qr_url:'', is_active:true },
+      { name:'Instagram', url:'https://www.instagram.com/ateceducation/', platform:'instagram', qr_url:'', is_active:true },
+      { name:'Facebook', url:'https://www.facebook.com/ateceducation', platform:'facebook', qr_url:'', is_active:true },
+      { name:'YouTube', url:'https://www.youtube.com/@ATECEducationalSociety', platform:'youtube', qr_url:'', is_active:true },
+      { name:'Google Reviews', url:'https://g.page/r/atec-gurdaspur', platform:'google', qr_url:'', is_active:true },
+    ]
+  }
+
+  function renderConnect(cfg) {
+    const c = cfg || DEFAULT_CONNECT
+    setText('connect-title', c.title || 'Connect With Us')
+    setText('connect-sub', c.subtitle || '')
+    const grid = document.getElementById('connect-grid')
+    if (!grid) return
+
+    const active = (c.platforms||[]).filter(p=>p.is_active!==false)
+    if (!active.length) return
+
+    grid.innerHTML = active.map(p => {
+      const key = (p.platform||p.name||'').toLowerCase().replace(/\s+/g,'')
+      const style = PLATFORM_COLORS[key] || PLATFORM_COLORS.default
+      const bg = style.bg
+      const icon = p.custom_icon || style.icon
+      const qrHtml = p.qr_url
+        ? `<img src="${p.qr_url}" alt="${p.name} QR" />`
+        : `<div class="connect-qr-placeholder">QR code<br/>coming soon</div>`
+      return `<a class="connect-card" href="${p.url||'#'}" target="_blank" rel="noopener" aria-label="${p.name}">
+        <div class="connect-icon-wrap" style="background:${bg}">
+          <span style="font-size:26px">${icon}</span>
+        </div>
+        <div class="connect-qr">${qrHtml}</div>
+        <div class="connect-name">${p.name}</div>
+      </a>`
+    }).join('')
+
+    show('connect-section')
+  }
+
+  // ── 2. GET IN TOUCH ────────────────────────────────────────────────
+  const DEFAULT_CONTACT = {
+    title:'Get in Touch',
+    subtitle:"We're here to help you choose the right course",
+    address:'1st Floor, ATEC Avenue, Hardo Channi Road, Gurdaspur, Punjab – 143521',
+    phone1:'+91 9878505706',
+    phone2:'+91 7009933289',
+    email1:'atecgsp@gmail.com',
+    hours:'Mon – Sat: 9:00 AM – 7:00 PM',
+    map_embed_url:'',
+    show_form:true,
+    form_title:'Send Us a Message',
+    form_subtitle:"We'll call you back within 30 minutes",
+  }
+
+  function renderContact(cfg) {
+    const c = cfg || DEFAULT_CONTACT
+    setText('contact-title', c.title || 'Get in Touch')
+    setText('contact-sub', c.subtitle || '')
+    setText('cf-form-title', c.form_title || 'Send Us a Message')
+    setText('cf-form-sub', c.form_subtitle || '')
+
+    // Build phone HTML
+    const phones = [c.phone1,c.phone2].filter(Boolean)
+    const phoneHtml = phones.map(p=>`<a href="tel:${p.replace(/\s/g,'')}">${p}</a>`).join(' | ')
+    setHtml('ci-phone', phoneHtml)
+
+    // Build email HTML
+    const emails = [c.email1,c.email2].filter(Boolean)
+    const emailHtml = emails.map(e=>`<a href="mailto:${e}">${e}</a>`).join('<br/>')
+    setHtml('ci-email', emailHtml)
+
+    setText('ci-address', c.address||'')
+    setText('ci-hours', c.hours||'')
+
+    // Map embed
+    const mapEl = document.getElementById('contact-map')
+    if (mapEl && c.map_embed_url) {
+      mapEl.innerHTML = `<iframe src="${c.map_embed_url}" allowfullscreen loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>`
+    } else if (mapEl) {
+      mapEl.innerHTML = `<a href="https://maps.google.com/?q=ATEC+Gurdaspur+Punjab" target="_blank" rel="noopener" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:#0f2a5c;font-weight:700;text-decoration:none;width:100%;height:100%">📍 Open in Google Maps</a>`
+    }
+
+    // Hide form if disabled
+    const formCol = document.getElementById('contact-form-col')
+    if (formCol && c.show_form === false) formCol.style.display = 'none'
+
+    show('contact-section')
+  }
+
+  // Contact form submit
+  document.getElementById('cf-submit')?.addEventListener('click', async function() {
+    const btn = this
+    const errEl = document.getElementById('cf-error')
+    const succEl = document.getElementById('cf-success')
+    const name  = document.getElementById('cf-name').value.trim()
+    const phone = document.getElementById('cf-phone').value.trim()
+    const email = document.getElementById('cf-email').value.trim()
+    const course= document.getElementById('cf-course').value.trim()
+    const msg   = document.getElementById('cf-msg').value.trim()
+
+    errEl.style.display='none'
+    if (!name||!phone) { errEl.textContent='Please enter your name and phone number.'; errEl.style.display='block'; return }
+
+    btn.disabled=true; btn.textContent='Sending…'
+    const URL=window.__SB_URL; const KEY=window.__SB_KEY
+    if(URL&&KEY) {
+      try {
+        await fetch(`${URL}/rest/v1/enquiries`,{
+          method:'POST',
+          headers:{apikey:KEY,Authorization:`Bearer ${KEY}`,'Content-Type':'application/json',Prefer:'return=minimal'},
+          body:JSON.stringify({name,phone,email,course_interest:course,message:msg})
+        })
+      } catch(e){}
+    }
+    btn.style.display='none'; succEl.style.display='block'
+    setTimeout(()=>{ succEl.style.display='none'; btn.style.display=''; btn.disabled=false; btn.textContent='Send Message →'; ['cf-name','cf-phone','cf-email','cf-course','cf-msg'].forEach(id=>{ const el=document.getElementById(id); if(el)el.value='' }) }, 3500)
+  })
+
+  // ── 3. FAQ ─────────────────────────────────────────────────────────
+  const DEFAULT_FAQS = [
+    { q:'What courses does ATEC Gurdaspur offer?', a:'ATEC offers 20+ courses including GEN AI, MERN Stack, Tally Prime, Hardware & Networking, Python Programming, Digital Marketing, Graphic Design, Coding for Kids, and more. Courses are available online, hybrid, and in-person.' },
+    { q:'Where is ATEC Education located in Gurdaspur?', a:'Our centre is at 1st Floor, ATEC Avenue, Hardo Channi Road, Gurdaspur, Punjab – 143521. We are easily accessible from the main city.' },
+    { q:'What is the fee for computer courses at ATEC Gurdaspur?', a:'Course fees range from ₹1,499 (basic) to ₹6,999 (advanced full-stack / AI). We offer flexible payment plans and frequent discounts on new batches.' },
+    { q:'Does ATEC provide certificates?', a:'Yes. All ATEC courses provide an ISO-verified certificate on successful completion. Certificates can be verified online at atecedu.com/verification.' },
+    { q:'What is the placement support like at ATEC?', a:'ATEC has a dedicated placement cell with 500+ hiring partners. We provide resume building, mock interviews, and direct placement assistance. Our placement rate is 100% for eligible students.' },
+    { q:'Are ATEC courses available online?', a:'Yes. Most courses are available in online, hybrid (online + in-person), and classroom modes. Online courses include live sessions, recorded videos, and doubt-clearing support.' },
+    { q:'How do I enroll at ATEC?', a:'Click "Enroll Now" at the top of this page to WhatsApp us directly. Or call +91 7009933289. New batches start every month — limited seats available.' },
+  ]
+
+  function renderFAQ(cfg) {
+    const faqs = (cfg?.faqs||DEFAULT_FAQS).filter(f=>f.is_active!==false)
+    if (!faqs.length) return
+    setText('faq-title', cfg?.title||'Frequently Asked Questions')
+    setText('faq-sub', cfg?.subtitle||'Everything you need to know about ATEC courses')
+
+    const list = document.getElementById('faq-list')
+    if (!list) return
+    list.innerHTML = faqs.map((f,i)=>`
+      <div class="faq-item" id="faq-${i}">
+        <button class="faq-q" onclick="toggleFaq(${i})" aria-expanded="false">
+          <span class="faq-q-text">${f.q}</span>
+          <span class="faq-icon">+</span>
+        </button>
+        <div class="faq-a">${f.a}</div>
+      </div>`).join('')
+    show('faq-section')
+  }
+
+  window.toggleFaq = function(i) {
+    const item = document.getElementById('faq-'+i)
+    if (!item) return
+    item.classList.toggle('open')
+  }
+
+  // ── 4. DOWNLOAD RESOURCES ──────────────────────────────────────────
+  const DEFAULT_RESOURCES = [
+    { title:'ATEC Course Brochure 2026', description:'Full catalogue of all courses with fees, duration, and syllabus overview.', file_url:'#', category:'Brochure', thumbnail_url:'', is_active:true },
+    { title:'Hardware & Networking Syllabus', description:'Detailed week-by-week syllabus for the Hardware & Networking course.', file_url:'#', category:'Syllabus', thumbnail_url:'', is_active:true },
+    { title:'Tally Prime Study Guide', description:'Comprehensive Tally Prime notes covering GST, payroll, and advanced features.', file_url:'#', category:'Study Material', thumbnail_url:'', is_active:true },
+    { title:'GEN AI Tools Cheatsheet', description:'Quick reference guide to the most useful AI tools for students and professionals.', file_url:'#', category:'Cheatsheet', thumbnail_url:'', is_active:true },
+  ]
+
+  function renderDownloads(cfg) {
+    const items = (cfg?.resources||DEFAULT_RESOURCES).filter(r=>r.is_active!==false)
+    if(!items.length) return
+    setText('dl-title', cfg?.title||'Download Resources')
+    setText('dl-sub', cfg?.subtitle||'Free course brochures, syllabus PDFs, and study materials')
+
+    const grid = document.getElementById('downloads-grid')
+    if(!grid) return
+    grid.innerHTML = items.map(r=>{
+      const emoji = r.category?.toLowerCase().includes('brochure') ? '📋'
+        : r.category?.toLowerCase().includes('syllabus') ? '📄'
+        : r.category?.toLowerCase().includes('cheat') ? '⚡'
+        : '📚'
+      const thumbHtml = r.thumbnail_url
+        ? `<img src="${r.thumbnail_url}" alt="${r.title}" loading="lazy" />`
+        : `<span style="font-size:3rem">${emoji}</span>`
+      const catHtml = r.category ? `<span class="dl-category">${r.category}</span>` : ''
+      return `<div class="dl-card">
+        <div class="dl-thumb">${thumbHtml}${catHtml}</div>
+        <div class="dl-body">
+          <div class="dl-title">${r.title}</div>
+          <div class="dl-desc">${r.description||''}</div>
+          <a class="dl-btn" href="${r.file_url||'#'}" ${r.file_url&&r.file_url!=='#'?'target="_blank" rel="noopener" download':''}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Download
+          </a>
+        </div>
+      </div>`
+    }).join('')
+    show('downloads-section')
+  }
+
+  // ── Boot all 4 loaders ────────────────────────────────────────────
+  async function loadAll() {
+    // Render defaults immediately
+    renderConnect(null)
+    renderContact(null)
+    renderFAQ(null)
+    renderDownloads(null)
+
+    // Then upgrade from DB
+    if (!window.__SB_URL || !window.__SB_KEY) return
+    try {
+      const [connectCfg, contactCfg, faqCfg, dlCfg] = await Promise.all([
+        sbFetch('social_connect'),
+        sbFetch('contact_info'),
+        sbFetch('faq_items'),
+        sbFetch('download_resources'),
+      ])
+      if (connectCfg) renderConnect(connectCfg)
+      if (contactCfg) renderContact(contactCfg)
+      if (faqCfg)     renderFAQ(faqCfg)
+      if (dlCfg)      renderDownloads(dlCfg)
+    } catch(e) { console.warn('[ATEC Contact Sections]', e) }
+  }
+
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',()=>waitSB(loadAll))
+  else waitSB(loadAll)
+
 })()
 </script>
