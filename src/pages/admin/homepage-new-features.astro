@@ -155,7 +155,7 @@ import AdminLayout from '../../layouts/AdminLayout.astro'
       <h2 class="section-title">📚 Course Category Cards</h2>
       <p class="section-desc">Each category row shows 4 course cards with title, description, fee, and mode badge. Add short descriptions to show below the course title on cards.</p>
 
-      <div class="field-row three" style="margin-bottom:20px">
+      <div class="field-row three" style="margin-bottom:16px">
         <div class="field">
           <label class="lbl">Section Title</label>
           <input type="text" id="cat-section-title" value="Courses by Category" />
@@ -168,6 +168,63 @@ import AdminLayout from '../../layouts/AdminLayout.astro'
           <input type="checkbox" id="cat-show-fee" checked style="width:16px;height:16px;accent-color:#1a3460;cursor:pointer" />
           <label for="cat-show-fee" style="font-size:13px;font-weight:600;color:#374151;cursor:pointer">Show ₹ price on cards</label>
         </div>
+      </div>
+
+      <!-- Card Color Scheme -->
+      <div style="background:#0b1525;border-radius:12px;padding:18px 20px;margin-bottom:20px;">
+        <div style="font-size:13px;font-weight:700;color:#d4f01a;margin-bottom:14px;">🎨 Card Color Scheme — applies to all course cards</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px">
+
+          <div class="field">
+            <label class="lbl" style="color:rgba(255,255,255,0.55)">Card Background</label>
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+              <div id="card-bg-preview" style="width:32px;height:32px;border-radius:6px;border:1.5px solid rgba(255,255,255,0.2);background:#0b1525;flex-shrink:0"></div>
+              <input type="text" id="card-bg-color" value="#0b1525" maxlength="9"
+                style="font-family:monospace;padding:7px 10px;border:1.5px solid rgba(255,255,255,0.15);border-radius:8px;font-size:13px;color:#fff;background:rgba(255,255,255,0.08);width:100%;outline:none"
+                oninput="document.getElementById('card-bg-preview').style.background=this.value" />
+            </div>
+            <div style="display:flex;gap:4px;flex-wrap:wrap">
+              ${['#0b1525','#111827','#1e293b','#0f172a','#1a1a2e','#0d1b2a','#fff','#f8fafc'].map(c =>
+                `<button type="button" onmousedown="event.preventDefault()" onclick="document.getElementById('card-bg-color').value='${c}';document.getElementById('card-bg-preview').style.background='${c}'"
+                  style="width:24px;height:24px;background:${c};border:1.5px solid rgba(255,255,255,0.2);border-radius:5px;cursor:pointer;padding:0"></button>`
+              ).join('')}
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="lbl" style="color:rgba(255,255,255,0.55)">Title Color</label>
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+              <div id="card-title-preview" style="width:32px;height:32px;border-radius:6px;border:1.5px solid rgba(255,255,255,0.2);background:#d4f01a;flex-shrink:0"></div>
+              <input type="text" id="card-title-color" value="#d4f01a" maxlength="9"
+                style="font-family:monospace;padding:7px 10px;border:1.5px solid rgba(255,255,255,0.15);border-radius:8px;font-size:13px;color:#fff;background:rgba(255,255,255,0.08);width:100%;outline:none"
+                oninput="document.getElementById('card-title-preview').style.background=this.value" />
+            </div>
+            <div style="display:flex;gap:4px;flex-wrap:wrap">
+              ${['#d4f01a','#ffffff','#f59e0b','#34d399','#60a5fa','#f472b6','#a78bfa','#1c1c1c'].map(c =>
+                `<button type="button" onmousedown="event.preventDefault()" onclick="document.getElementById('card-title-color').value='${c}';document.getElementById('card-title-preview').style.background='${c}'"
+                  style="width:24px;height:24px;background:${c};border:1.5px solid rgba(255,255,255,0.2);border-radius:5px;cursor:pointer;padding:0"></button>`
+              ).join('')}
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="lbl" style="color:rgba(255,255,255,0.55)">Price Color</label>
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+              <div id="card-fee-preview" style="width:32px;height:32px;border-radius:6px;border:1.5px solid rgba(255,255,255,0.2);background:#d4f01a;flex-shrink:0"></div>
+              <input type="text" id="card-fee-color" value="#d4f01a" maxlength="9"
+                style="font-family:monospace;padding:7px 10px;border:1.5px solid rgba(255,255,255,0.15);border-radius:8px;font-size:13px;color:#fff;background:rgba(255,255,255,0.08);width:100%;outline:none"
+                oninput="document.getElementById('card-fee-preview').style.background=this.value" />
+            </div>
+            <div style="display:flex;gap:4px;flex-wrap:wrap">
+              ${['#d4f01a','#ffffff','#f59e0b','#34d399','#60a5fa','#f472b6','#a78bfa','#1c1c1c'].map(c =>
+                `<button type="button" onmousedown="event.preventDefault()" onclick="document.getElementById('card-fee-color').value='${c}';document.getElementById('card-fee-preview').style.background='${c}'"
+                  style="width:24px;height:24px;background:${c};border:1.5px solid rgba(255,255,255,0.2);border-radius:5px;cursor:pointer;padding:0"></button>`
+              ).join('')}
+            </div>
+          </div>
+
+        </div>
+        <div style="font-size:11px;color:rgba(255,255,255,0.35);margin-top:10px">Description text is always rgba(255,255,255,0.72). Hit Save Categories to apply.</div>
       </div>
 
       <div id="cat-admin-list"></div>
@@ -660,11 +717,14 @@ document.getElementById('cat-save-btn')?.addEventListener('click', async () => {
   btn.disabled = true; btn.textContent = '⏳ Saving…'
   collectCats()
   const payload = {
-    section_title: gcv('cat-section-title') || 'Courses by Category',
-    section_sub:   gcv('cat-section-sub')   || 'What We Offer',
-    show_fee:      gcChk('cat-show-fee'),
-    font_name:     "'Sora',sans-serif",
-    categories:    cats,
+    section_title:    gcv('cat-section-title') || 'Courses by Category',
+    section_sub:      gcv('cat-section-sub')   || 'What We Offer',
+    show_fee:         gcChk('cat-show-fee'),
+    font_name:        "'Sora',sans-serif",
+    card_bg_color:    gcv('card-bg-color')    || '#0b1525',
+    card_title_color: gcv('card-title-color') || '#d4f01a',
+    card_fee_color:   gcv('card-fee-color')   || '#d4f01a',
+    categories:       cats,
   }
   try {
     await sbSet('course_categories', payload)
@@ -720,6 +780,21 @@ async function preload() {
       if (catCfg.section_title) sv('cat-section-title', catCfg.section_title)
       if (catCfg.section_sub)   sv('cat-section-sub',   catCfg.section_sub)
       schk('cat-show-fee', catCfg.show_fee !== false)
+      if (catCfg.card_bg_color) {
+        sv('card-bg-color', catCfg.card_bg_color)
+        const bp = document.getElementById('card-bg-preview')
+        if (bp) bp.style.background = catCfg.card_bg_color
+      }
+      if (catCfg.card_title_color) {
+        sv('card-title-color', catCfg.card_title_color)
+        const tp = document.getElementById('card-title-preview')
+        if (tp) tp.style.background = catCfg.card_title_color
+      }
+      if (catCfg.card_fee_color) {
+        sv('card-fee-color', catCfg.card_fee_color)
+        const fp = document.getElementById('card-fee-preview')
+        if (fp) fp.style.background = catCfg.card_fee_color
+      }
     }
   } catch {}
   renderCatAdmin()

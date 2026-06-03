@@ -485,11 +485,13 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
     .cat-card-thumb { width:100%; height:160px; background:#0b1525; display:block; position:relative; overflow:hidden; }
     .cat-card-thumb-inner { width:100%; height:100%; object-fit:cover; display:block; }
     .cat-card-mode { position:absolute; top:10px; left:10px; padding:3px 10px; border-radius:20px; font-size:11px; font-weight:800; text-transform:uppercase; }
-    .cat-card-body { padding:14px 16px 16px; }
-    .cat-card-title { font-family:var(--cat-font); font-size:17px; font-weight:800; color:#1c1c1c; margin:0 0 6px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-    .cat-card-desc { font-size:12px; color:#64748b; margin:4px 0 8px; line-height:1.4; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
-    .cat-card-fee { font-size:15px; font-weight:800; color:#0b1525; }
-    .cat-card-fee-orig { font-size:12px; color:#94a3b8; text-decoration:line-through; margin-left:5px; }
+    :root { --cat-card-bg:#0b1525; --cat-card-title:#d4f01a; --cat-card-fee:#d4f01a; }
+    .cat-card { background:var(--cat-card-bg,#0b1525); }
+    .cat-card-body { padding:14px 16px 16px; background:var(--cat-card-bg,#0b1525); }
+    .cat-card-title { font-family:var(--cat-font); font-size:17px; font-weight:800; color:var(--cat-card-title,#d4f01a); margin:0 0 6px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .cat-card-desc { font-size:12px; color:rgba(255,255,255,0.72); margin:4px 0 8px; line-height:1.4; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+    .cat-card-fee { font-size:16px; font-weight:900; color:var(--cat-card-fee,#d4f01a); }
+    .cat-card-fee-orig { font-size:12px; color:rgba(255,255,255,0.4); text-decoration:line-through; margin-left:5px; }
     @media(max-width:900px){ .cat-card { width:calc(50% - 10px); } }
     @media(max-width:560px){ .cat-card { width:calc(100% - 0px); min-width:0; } }
     .cat-view-all { display:inline-flex; align-items:center; gap:6px; margin-top:28px; color:#0b1525; font-weight:700; font-size:14px; text-decoration:none; border:2px solid #0b1525; padding:8px 20px; border-radius:8px; }
@@ -2931,7 +2933,7 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
       <div class="cat-card-body">
         <div class="cat-card-title">${c.title}</div>
         ${c.short_description ? `<div class="cat-card-desc">${c.short_description}</div>` : ''}
-        ${showFee && c.fee_inr ? `<div><span class="cat-card-fee">₹${Number(c.fee_inr).toLocaleString('en-IN')}</span>${c.original_fee_inr?`<span class="cat-card-fee-orig">₹${Number(c.original_fee_inr).toLocaleString('en-IN')}</span>`:''}</div>` : ''}
+        ${showFee && c.fee_inr ? `<div style="margin-top:8px;padding-top:8px;border-top:1px solid rgba(255,255,255,0.1);"><span class="cat-card-fee">₹${Number(c.fee_inr).toLocaleString('en-IN')}</span>${c.original_fee_inr?`<span class="cat-card-fee-orig">₹${Number(c.original_fee_inr).toLocaleString('en-IN')}</span>`:''}</div>` : ''}
       </div>`
     return wrap
   }
@@ -2985,13 +2987,19 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
   }
 
   function renderCategories(cfg: any) {
-    const categories = cfg?.categories || DEFAULT_CATEGORIES
-    const showFee   = cfg?.show_fee !== false
-    const title     = cfg?.section_title || 'Courses by Category'
-    const sub       = cfg?.section_sub   || ''
-    const font      = cfg?.font_name     || "'Sora',sans-serif"
+    const categories    = cfg?.categories     || DEFAULT_CATEGORIES
+    const showFee       = cfg?.show_fee !== false
+    const title         = cfg?.section_title  || 'Courses by Category'
+    const sub           = cfg?.section_sub    || ''
+    const font          = cfg?.font_name      || "'Sora',sans-serif"
+    const cardBg        = cfg?.card_bg_color    || '#0b1525'
+    const cardTitleCol  = cfg?.card_title_color || '#d4f01a'
+    const cardFeeCol    = cfg?.card_fee_color   || '#d4f01a'
 
     document.documentElement.style.setProperty('--cat-font', font)
+    document.documentElement.style.setProperty('--cat-card-bg', cardBg)
+    document.documentElement.style.setProperty('--cat-card-title', cardTitleCol)
+    document.documentElement.style.setProperty('--cat-card-fee', cardFeeCol)
 
     const titleEl = document.getElementById('cat-title')
     if (titleEl) titleEl.textContent = title
