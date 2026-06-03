@@ -1,0 +1,9 @@
+---
+// src/pages/admin/faculty.astro
+import AdminLayout from '../../layouts/AdminLayout.astro'
+import FacultyManager from '../../components/admin/FacultyManager'
+---
+
+<AdminLayout title="Faculty" activeSection="faculty">
+  <FacultyManager client:load />
+</AdminLayout>

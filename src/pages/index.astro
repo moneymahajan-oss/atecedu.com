@@ -533,6 +533,88 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
   </section>
 
   <!-- ══════════════════════════════════════════════════════════════
+       MEET OUR FACULTY — DB-driven card carousel, like ateceducation.in
+       Fetches from 'faculty' table in Supabase (runtime load — no rebuild needed).
+       Fields: name, designation, expert_field, photo_url, sort_order, is_active
+       Managed from Admin Panel → Faculty section.
+  ══════════════════════════════════════════════════════════════ -->
+  <style is:global>
+    .faculty-section { padding:72px 32px 80px; background:#f8f4ef; }
+    .faculty-header  { max-width:1200px; margin:0 auto 48px; text-align:center; }
+    .faculty-title   { font-family:'Sora',sans-serif; font-size:clamp(1.8rem,3.5vw,2.6rem); font-weight:900; color:#1c1c1c; margin:0 0 10px; }
+    .faculty-sub     { font-size:15px; color:#64748b; margin:0; }
+    /* Slider */
+    .faculty-outer   { max-width:1280px; margin:0 auto; position:relative; }
+    .faculty-viewport{ overflow:hidden; }
+    .faculty-track   {
+      display:flex; gap:24px;
+      transition:transform 0.42s cubic-bezier(0.22,1,0.36,1);
+      will-change:transform;
+    }
+    /* Card */
+    .faculty-card {
+      flex-shrink:0;
+      width:calc(25% - 18px);
+      min-width:220px;
+      border-radius:16px; overflow:hidden;
+      background:#fff; box-shadow:0 3px 14px rgba(0,0,0,0.08);
+      transition:transform 0.2s,box-shadow 0.2s;
+    }
+    .faculty-card:hover { transform:translateY(-5px); box-shadow:0 12px 36px rgba(0,0,0,0.14); }
+    .faculty-photo {
+      width:100%; height:260px;
+      object-fit:cover; object-position:top;
+      display:block; background:#e2e8f0;
+    }
+    .faculty-initial {
+      width:100%; height:260px;
+      display:flex; align-items:center; justify-content:center;
+      background:linear-gradient(135deg,#eff6ff,#dbeafe);
+      font-family:'Sora',sans-serif; font-weight:900;
+      font-size:5rem; color:#93c5fd;
+    }
+    .faculty-info    { padding:16px 18px 20px; }
+    .faculty-name    { font-family:'Sora',sans-serif; font-size:18px; font-weight:800; color:#111; margin:0 0 4px; }
+    .faculty-desig   { font-size:13px; color:#64748b; margin:0 0 6px; }
+    .faculty-field   { font-size:13px; font-weight:700; color:#1c3d7a; margin:0; }
+    /* Arrows */
+    .faculty-arrow {
+      position:absolute; top:50%; transform:translateY(-50%);
+      z-index:10; width:40px; height:40px; border-radius:50%;
+      background:#fff; border:1.5px solid #e2e8f0;
+      box-shadow:0 2px 10px rgba(0,0,0,0.1);
+      display:flex; align-items:center; justify-content:center;
+      cursor:pointer; font-size:18px; transition:all 0.18s; color:#0f2a5c;
+    }
+    .faculty-arrow:hover { background:#0f2a5c; color:#d4f01a; border-color:#0f2a5c; }
+    .faculty-arrow:disabled { opacity:0.3; cursor:not-allowed; }
+    .faculty-prev { left:-20px; }
+    .faculty-next { right:-20px; }
+    /* Dots */
+    .faculty-dots { display:flex; justify-content:center; gap:6px; margin-top:28px; }
+    .faculty-dot  { width:8px; height:8px; border-radius:50%; background:#d1d5db; border:none; cursor:pointer; padding:0; transition:all 0.2s; }
+    .faculty-dot.active { width:22px; border-radius:4px; background:#0f2a5c; }
+    @media(max-width:900px){ .faculty-card { width:calc(50% - 12px); } }
+    @media(max-width:560px){ .faculty-card { width:100%; min-width:0; } .faculty-prev,.faculty-next { display:none; } }
+  </style>
+
+  <section class="faculty-section" id="faculty-section" style="display:none;">
+    <div class="faculty-header">
+      <p style="font-size:13px;font-weight:700;color:#d4f01a;text-transform:uppercase;letter-spacing:0.08em;margin:0 0 6px;background:#0f2a5c;display:inline-block;padding:3px 10px;border-radius:4px;">Our Team</p>
+      <h2 class="faculty-title">Meet Our Faculty</h2>
+      <p class="faculty-sub">Learn from experienced trainers who blend industry exposure with classroom mastery.</p>
+    </div>
+    <div class="faculty-outer">
+      <button class="faculty-arrow faculty-prev" id="faculty-prev" aria-label="Previous" disabled>‹</button>
+      <div class="faculty-viewport">
+        <div class="faculty-track" id="faculty-track"></div>
+      </div>
+      <button class="faculty-arrow faculty-next" id="faculty-next" aria-label="Next">›</button>
+    </div>
+    <div class="faculty-dots" id="faculty-dots"></div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════════════
        STUDENT STORIES — 2-row horizontal Scaler-style marquee
        Row 1 scrolls LEFT, Row 2 scrolls RIGHT (staggered offset).
        Each card: portrait 220×290px, full photo_url background.
@@ -1071,6 +1153,153 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
 </script>
 
 </BaseLayout>
+
+<!-- ══════════════════════════════════════════════════════════════
+     FACULTY SECTION — runtime JS loader
+     Fetches from Supabase 'faculty' table on page load.
+     Shows section only if data exists (display:none → block).
+     Manages slider: 4 visible cards, left/right arrows, dots.
+══════════════════════════════════════════════════════════════ -->
+<script>
+;(function() {
+
+  let facultyList: any[] = []
+  let pos = 0
+
+  function visibleCount(): number {
+    const vp = document.querySelector('.faculty-viewport') as HTMLElement | null
+    if (!vp) return 4
+    const w = vp.offsetWidth
+    const cardMinW = 220 + 24 // min-width + gap
+    return Math.max(1, Math.floor(w / cardMinW))
+  }
+
+  function makeCard(f: any): HTMLElement {
+    const card = document.createElement('div')
+    card.className = 'faculty-card'
+    const hasPhoto = !!(f.photo_url?.trim())
+    const initial  = (f.name || '?').charAt(0).toUpperCase()
+
+    const photoEl = hasPhoto
+      ? `<img class="faculty-photo" src="${f.photo_url}" alt="${f.name}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
+      : ''
+    const fallback = `<div class="faculty-initial" style="${hasPhoto ? 'display:none' : ''}">${initial}</div>`
+
+    card.innerHTML = `
+      ${photoEl}
+      ${fallback}
+      <div class="faculty-info">
+        <div class="faculty-name">${f.name || ''}</div>
+        <div class="faculty-desig">${f.designation || ''}</div>
+        <div class="faculty-field">${f.expert_field || ''}</div>
+      </div>`
+    return card
+  }
+
+  function render(list: any[]) {
+    facultyList = list
+    pos = 0
+
+    const track = document.getElementById('faculty-track')
+    const dots  = document.getElementById('faculty-dots')
+    const sec   = document.getElementById('faculty-section')
+    if (!track || !dots || !sec) return
+
+    track.innerHTML = ''
+    dots.innerHTML  = ''
+
+    list.forEach(f => track.appendChild(makeCard(f)))
+
+    const vis      = visibleCount()
+    const maxPos   = Math.max(0, list.length - vis)
+    const dotCount = maxPos + 1
+
+    for (let i = 0; i < dotCount; i++) {
+      const d = document.createElement('button')
+      d.className = 'faculty-dot' + (i === 0 ? ' active' : '')
+      d.addEventListener('click', () => goTo(i))
+      dots.appendChild(d)
+    }
+
+    sec.style.display = ''
+    updateArrows()
+  }
+
+  function goTo(n: number) {
+    const vis    = visibleCount()
+    const maxPos = Math.max(0, facultyList.length - vis)
+    pos = Math.max(0, Math.min(n, maxPos))
+
+    const track   = document.getElementById('faculty-track') as HTMLElement | null
+    const dotsEl  = document.getElementById('faculty-dots')
+    if (!track) return
+
+    // Calculate card width from first card
+    const first = track.querySelector('.faculty-card') as HTMLElement | null
+    const gap   = 24
+    const cw    = first ? first.offsetWidth + gap : 0
+    track.style.transform = `translateX(-${pos * cw}px)`
+
+    dotsEl?.querySelectorAll('.faculty-dot').forEach((d, i) => d.classList.toggle('active', i === pos))
+    updateArrows()
+  }
+
+  function updateArrows() {
+    const vis    = visibleCount()
+    const maxPos = Math.max(0, facultyList.length - vis)
+    const prev   = document.getElementById('faculty-prev') as HTMLButtonElement | null
+    const next   = document.getElementById('faculty-next') as HTMLButtonElement | null
+    if (prev) prev.disabled = pos <= 0
+    if (next) next.disabled = pos >= maxPos
+    // Hide arrows if all cards fit
+    if (maxPos === 0) {
+      if (prev) prev.style.display = 'none'
+      if (next) next.style.display = 'none'
+    } else {
+      if (prev) prev.style.display = ''
+      if (next) next.style.display = ''
+    }
+  }
+
+  function wireArrows() {
+    document.getElementById('faculty-prev')?.addEventListener('click', () => goTo(pos - 1))
+    document.getElementById('faculty-next')?.addEventListener('click', () => goTo(pos + 1))
+    window.addEventListener('resize', () => { if (facultyList.length) goTo(pos) })
+  }
+
+  async function loadFromDB() {
+    const SB_URL = (window as any).__SB_URL as string
+    const SB_KEY = (window as any).__SB_KEY as string
+    if (!SB_URL || !SB_KEY) return
+    try {
+      const res = await fetch(
+        `${SB_URL}/rest/v1/faculty?is_active=eq.true&order=sort_order.asc.nullslast&select=name,designation,expert_field,photo_url`,
+        { headers: { apikey: SB_KEY, Authorization: `Bearer ${SB_KEY}` } }
+      )
+      if (!res.ok) return
+      const rows = await res.json()
+      if (Array.isArray(rows) && rows.length > 0) {
+        render(rows)
+      }
+    } catch(e) {
+      console.warn('[ATEC Faculty]', e)
+    }
+  }
+
+  function boot() {
+    wireArrows()
+    if ((window as any).__SB_URL) { loadFromDB(); return }
+    let n = 0
+    const t = setInterval(() => {
+      n++
+      if ((window as any).__SB_URL || n > 40) { clearInterval(t); loadFromDB() }
+    }, 50)
+  }
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot)
+  else boot()
+})()
+</script>
 
 <!-- ══════════════════════════════════════════════════════════════
      VIDEO OVERLAY + HERO LIVE SETTINGS + BOTTOM BAR
