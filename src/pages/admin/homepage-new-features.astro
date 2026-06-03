@@ -224,7 +224,7 @@ import AdminLayout from '../../layouts/AdminLayout.astro'
     <!-- Global settings -->
     <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:16px;margin-bottom:20px;">
       <div style="font-size:12px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:12px;">Global Settings</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr 120px 1fr;gap:12px;align-items:end;">
+      <div style="display:grid;grid-template-columns:1fr 1fr 120px 1fr 1fr;gap:12px;align-items:end;">
         <div class="cat-field">
           <label class="cat-lbl">Section Title</label>
           <input class="cat-inp" id="cat-section-title" value="Courses by Category" placeholder="Courses by Category" />
@@ -236,6 +236,11 @@ import AdminLayout from '../../layouts/AdminLayout.astro'
         <div class="cat-field">
           <label class="cat-lbl">Scroll Speed (s)</label>
           <input class="cat-inp" type="number" id="cat-speed" value="32" min="8" max="120" />
+        </div>
+        <div class="cat-field">
+          <label class="cat-lbl">Card Font Name</label>
+          <input class="cat-inp" id="cat-font" value="'Sora',sans-serif" placeholder="'Sora',sans-serif" />
+          <span style="font-size:10px;color:#94a3b8;margin-top:2px;">e.g. 'Poppins',sans-serif · 'Inter',sans-serif · 'Roboto',sans-serif</span>
         </div>
         <div class="cat-field">
           <label class="cat-lbl">Show Course Price?</label>
@@ -774,6 +779,7 @@ async function preload() {
       if (catCfg.section_sub)   setVal('cat-section-sub',   catCfg.section_sub)
       if (catCfg.marquee_speed) setVal('cat-speed', String(catCfg.marquee_speed))
       setChecked('cat-show-fee', catCfg.show_fee !== false)
+      if (catCfg.font_name) setVal('cat-font', catCfg.font_name)
     }
   } catch(_) {}
   renderCatAdmin()
@@ -937,6 +943,7 @@ document.getElementById('cat-save-btn')?.addEventListener('click', async () => {
     section_sub:   gcv('cat-section-sub')   || 'What We Offer',
     marquee_speed: parseInt(gcv('cat-speed')) || 32,
     show_fee:      gcChk('cat-show-fee'),
+    font_name:     gcv('cat-font') || "'Sora',sans-serif",
     categories:    cats,
   }
   try {

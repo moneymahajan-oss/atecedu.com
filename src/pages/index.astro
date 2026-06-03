@@ -373,37 +373,42 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
        Admin: /admin/homepage-new-features → Course Categories
   ══════════════════════════════════════════════════════════════ -->
   <style is:global>
+    :root { --cat-font:'Sora',sans-serif; }
     .cat-section { padding:72px 0 80px; background:#fff; overflow:hidden; }
     .cat-header { max-width:1200px; margin:0 auto 48px; padding:0 32px; text-align:center; }
     .cat-rows { display:flex; flex-direction:column; gap:0; }
-    .cat-row { padding:28px 0; border-bottom:1px solid #f1f5f9; }
+    .cat-row { padding:32px 0; border-bottom:1px solid #f1f5f9; }
     .cat-row:last-child { border-bottom:none; }
-    .cat-row-label { max-width:1200px; margin:0 auto 14px; padding:0 32px; display:flex; align-items:center; gap:10px; }
-    .cat-row-name { font-family:'Sora',sans-serif; font-size:14px; font-weight:800; text-transform:uppercase; letter-spacing:0.08em; }
-    .cat-row-count { font-size:12px; color:#94a3b8; font-weight:600; }
-    .cat-marquee-wrap { overflow:hidden; }
-    .cat-track { display:flex; gap:16px; width:max-content; padding:4px 0; }
+    .cat-row-label { max-width:1200px; margin:0 auto 18px; padding:0 32px; display:flex; align-items:baseline; gap:12px; }
+    .cat-row-name { font-family:var(--cat-font); font-size:20px; font-weight:900; text-transform:uppercase; letter-spacing:0.06em; }
+    .cat-row-count { font-size:14px; color:#94a3b8; font-weight:600; }
+    /* Marquee — padding on sides so cards peek in from edges */
+    .cat-marquee-wrap { overflow:hidden; padding:4px 0; }
+    .cat-track { display:flex; gap:20px; width:max-content; will-change:transform; }
+    /* ltr: starts at 0, moves left until half-point, then snaps back = seamless */
     .cat-track.ltr { animation:cat-ltr var(--cat-speed,32s) linear infinite; }
     .cat-track.rtl { animation:cat-rtl var(--cat-speed,32s) linear infinite; }
     .cat-track:hover { animation-play-state:paused; }
     @keyframes cat-ltr { 0%{transform:translateX(0)} 100%{transform:translateX(-50%)} }
     @keyframes cat-rtl { 0%{transform:translateX(-50%)} 100%{transform:translateX(0)} }
-    /* Course card */
+    /* Course card — sized so ~4 fit on screen */
     .cat-card {
-      flex-shrink:0; width:220px; border-radius:14px; overflow:hidden;
+      flex-shrink:0;
+      width:clamp(240px, calc(25vw - 28px), 320px);
+      border-radius:16px; overflow:hidden;
       background:#fff; border:1px solid #e8ecf0;
-      box-shadow:0 2px 8px rgba(0,0,0,0.06);
+      box-shadow:0 3px 12px rgba(0,0,0,0.07);
       text-decoration:none; color:inherit; display:block;
       transition:box-shadow 0.18s,transform 0.18s;
     }
-    .cat-card:hover { box-shadow:0 8px 28px rgba(0,0,0,0.13); transform:translateY(-3px); }
-    .cat-card-thumb { width:100%; aspect-ratio:16/9; object-fit:cover; background:#0f2a5c; display:block; position:relative; }
+    .cat-card:hover { box-shadow:0 10px 32px rgba(0,0,0,0.14); transform:translateY(-4px); }
+    .cat-card-thumb { width:100%; height:160px; background:#0f2a5c; display:block; position:relative; overflow:hidden; }
     .cat-card-thumb-inner { width:100%; height:100%; object-fit:cover; display:block; }
-    .cat-card-mode { position:absolute; top:8px; left:8px; padding:2px 8px; border-radius:20px; font-size:10px; font-weight:800; text-transform:uppercase; }
-    .cat-card-body { padding:12px 14px; }
-    .cat-card-title { font-family:'Sora',sans-serif; font-size:13px; font-weight:700; color:#1c1c1c; margin:0 0 4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-    .cat-card-fee { font-size:13px; font-weight:800; color:#0f2a5c; }
-    .cat-card-fee-orig { font-size:11px; color:#94a3b8; text-decoration:line-through; margin-left:5px; }
+    .cat-card-mode { position:absolute; top:10px; left:10px; padding:3px 10px; border-radius:20px; font-size:11px; font-weight:800; text-transform:uppercase; }
+    .cat-card-body { padding:14px 16px 16px; }
+    .cat-card-title { font-family:var(--cat-font); font-size:15px; font-weight:700; color:#1c1c1c; margin:0 0 6px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .cat-card-fee { font-size:15px; font-weight:800; color:#0f2a5c; }
+    .cat-card-fee-orig { font-size:12px; color:#94a3b8; text-decoration:line-through; margin-left:5px; }
     .cat-view-all { display:inline-flex; align-items:center; gap:6px; margin-top:28px; color:#0f2a5c; font-weight:700; font-size:14px; text-decoration:none; border:2px solid #0f2a5c; padding:8px 20px; border-radius:8px; }
     .cat-view-all:hover { background:#0f2a5c; color:#d4f01a; }
   </style>
@@ -2190,6 +2195,10 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
     const showFee   = cfg?.show_fee !== false
     const title     = cfg?.section_title || 'Courses by Category'
     const sub       = cfg?.section_sub   || ''
+    const font      = cfg?.font_name     || "'Sora',sans-serif"
+
+    // Apply font CSS variable
+    document.documentElement.style.setProperty('--cat-font', font)
 
     const titleEl = document.getElementById('cat-title')
     if (titleEl) titleEl.textContent = title
@@ -2226,9 +2235,20 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
       track.className = `cat-track ${isRtl?'rtl':'ltr'}`
       track.style.setProperty('--cat-speed', `${speed}s`)
 
-      // Double cards for seamless loop
-      const allCards = [...courses, ...courses]
-      allCards.forEach((c: any) => track.appendChild(makeCard(c, showFee)))
+      // Repeat courses until we have enough to fill 2× viewport width
+      // CSS animation translates -50% → needs track to be at least 2× visible area
+      // Card width ~280px + 20px gap = ~300px per card. Viewport ~1400px → need ~10 cards per half.
+      // We build set1 (first half) = enough cards, then duplicate for set2 (second half = identical).
+      // The -50% translateX snaps back seamlessly.
+      const MIN_CARDS_PER_HALF = Math.max(8, courses.length)
+      const repeatsNeeded = Math.ceil(MIN_CARDS_PER_HALF / courses.length)
+      const baseSet: any[] = []
+      for (let r = 0; r < repeatsNeeded; r++) {
+        courses.forEach((c: any) => baseSet.push(c))
+      }
+      // Full track = baseSet + baseSet (CSS animates first half, second half is clone)
+      const fullSet = [...baseSet, ...baseSet]
+      fullSet.forEach((c: any) => track.appendChild(makeCard(c, showFee)))
 
       mwrap.appendChild(track)
       row.appendChild(mwrap)
