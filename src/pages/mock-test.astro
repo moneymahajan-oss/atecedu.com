@@ -545,10 +545,12 @@ async function sendOTPEmail(email: string, name: string, otp: string) {
   // Always store in Supabase as backup record
   if (SB_URL && SB_KEY) {
     try {
-      await fetch(\`\${SB_URL}/rest/v1/site_settings\`, {
+      const sbUrl = SB_URL + '/rest/v1/site_settings'
+      const otpKey = 'otp_' + email.replace('@','_at_').replace(/\./g,'_dot_')
+      await fetch(sbUrl, {
         method: 'POST',
-        headers: { apikey: SB_KEY, Authorization: \`Bearer \${SB_KEY}\`, 'Content-Type': 'application/json', Prefer: 'resolution=merge-duplicates,return=minimal' },
-        body: JSON.stringify({ key: \`otp_\${email.replace('@','_at_').replace(/\./g,'_')}\`, value: { otp, expires: Date.now() + 600000, name } })
+        headers: { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY, 'Content-Type': 'application/json', Prefer: 'resolution=merge-duplicates,return=minimal' },
+        body: JSON.stringify({ key: otpKey, value: { otp, expires: Date.now() + 600000, name } })
       })
     } catch(e) {}
   }
