@@ -1,0 +1,14 @@
+---
+// src/pages/admin.astro
+// Admin page — noindex, no nav exposed, client:only for security
+import BaseLayout from '../layouts/BaseLayout.astro'
+import CertificateAdmin from '../components/admin/CertificateAdmin'
+---
+
+<BaseLayout
+  title="Admin Panel | ATEC Gurdaspur"
+  description="ATEC admin panel"
+  noindex={true}
+>
+  <CertificateAdmin client:only="react" />
+</BaseLayout>
