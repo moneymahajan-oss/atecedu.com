@@ -363,12 +363,12 @@ function Mgr() {
         h('div', {style:{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'16px'}},
           h('div', {style:{gridColumn:'1/-1'}},
             lbl('Main Heading (use | to highlight middle word: "Turning Students Into|Professionals|Since 2000")'),
-            h('input', {type:'text',value:hero.heading||'',onChange:(e:any)=>setHero((p:any)=>({...p,heading:e.target.value})),style:s,placeholder:'Use | for gradient highlight'}),
+            h('input', {type:'text',defaultValue:hero.heading||'',onBlur:(e:any)=>setHero((p:any)=>({...p,heading:e.target.value})),style:s,placeholder:'Use | for gradient highlight'}),
             h('div', {style:{fontSize:'11px',color:'#94a3b8',marginTop:'4px'}}, '💡 Tip: Put your most important word between pipes — it gets the rainbow gradient effect')
           ),
           h('div', {style:{gridColumn:'1/-1'}},
             lbl('Sub Heading / Tagline'),
-            h('textarea', {value:hero.subheading||'',onChange:(e:any)=>setHero((p:any)=>({...p,subheading:e.target.value})),rows:2,style:{...s,height:'auto',resize:'vertical'},placeholder:'Online, hybrid & classroom courses...'})
+            h('textarea', {defaultValue:hero.subheading||'',onBlur:(e:any)=>setHero((p:any)=>({...p,subheading:e.target.value})),rows:2,style:{...s,height:'auto',resize:'vertical'},placeholder:'Online, hybrid & classroom courses...'})
           ),
           h('div', {},
             lbl(`Heading Font Size: ${hero.heading_font_size||4}rem`),
@@ -384,11 +384,11 @@ function Mgr() {
             h('div', {style:{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'12px'}},
               h('div', {},
                 lbl('Button Text'),
-                h('input', {type:'text',value:hero.cta_text||'',onChange:(e:any)=>setHero((p:any)=>({...p,cta_text:e.target.value})),style:s,placeholder:'Explore Courses'})
+                h('input', {type:'text',defaultValue:hero.cta_text||'',onBlur:(e:any)=>setHero((p:any)=>({...p,cta_text:e.target.value})),style:s,placeholder:'Explore Courses'})
               ),
               h('div', {},
                 lbl('Button Link'),
-                h('input', {type:'text',value:hero.cta_link||'',onChange:(e:any)=>setHero((p:any)=>({...p,cta_link:e.target.value})),style:s,placeholder:'/courses or https://wa.me/...'})
+                h('input', {type:'text',defaultValue:hero.cta_link||'',onBlur:(e:any)=>setHero((p:any)=>({...p,cta_link:e.target.value})),style:s,placeholder:'/courses or https://wa.me/...'})
               )
             )
           ),
@@ -397,11 +397,11 @@ function Mgr() {
             h('div', {style:{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'12px'}},
               h('div', {},
                 lbl('Button Text'),
-                h('input', {type:'text',value:hero.cta2_text||'',onChange:(e:any)=>setHero((p:any)=>({...p,cta2_text:e.target.value})),style:s,placeholder:'Chat on WhatsApp'})
+                h('input', {type:'text',defaultValue:hero.cta2_text||'',onBlur:(e:any)=>setHero((p:any)=>({...p,cta2_text:e.target.value})),style:s,placeholder:'Chat on WhatsApp'})
               ),
               h('div', {},
                 lbl('WhatsApp URL'),
-                h('input', {type:'text',value:hero.cta2_link||'',onChange:(e:any)=>setHero((p:any)=>({...p,cta2_link:e.target.value})),style:s,placeholder:'https://wa.me/917009933289?text=Hi'})
+                h('input', {type:'text',defaultValue:hero.cta2_link||'',onBlur:(e:any)=>setHero((p:any)=>({...p,cta2_link:e.target.value})),style:s,placeholder:'https://wa.me/917009933289?text=Hi'})
               )
             ),
             h('div', {style:{fontSize:'11px',color:'#166534',marginTop:'8px'}}, '💡 WhatsApp link format: https://wa.me/917009933289?text=Hi%20I%20want%20to%20enroll')
@@ -474,7 +474,7 @@ function Mgr() {
         h('div', {style:{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'16px'}},
           h('div', {style:{gridColumn:'1/-1'}},
             lbl('Logo Image URL (leave blank to use letter "A" mark)'),
-            h('input', {type:'text',value:branding.logo_url||'',onChange:(e:any)=>setBranding((p:any)=>({...p,logo_url:e.target.value})),style:s,placeholder:'https://i.postimg.cc/xxx/logo.png'}),
+            h('input', {type:'text',defaultValue:branding.logo_url||'',onBlur:(e:any)=>setBranding((p:any)=>({...p,logo_url:e.target.value})),style:s,placeholder:'https://i.postimg.cc/xxx/logo.png'}),
             (() => {
               const check = isDirectImageUrl(branding.logo_url||'')
               if (!check.ok) {
@@ -515,11 +515,11 @@ function Mgr() {
           ),
           (branding.display_mode||'name')==='name' && h('div', {style:{gridColumn:'1/-1'}},
             lbl('Brand Name'),
-            h('input', {type:'text',value:branding.brand_name||'',onChange:(e:any)=>setBranding((p:any)=>({...p,brand_name:e.target.value})),style:s,placeholder:'ATEC'})
+            h('input', {type:'text',defaultValue:branding.brand_name||'',onBlur:(e:any)=>setBranding((p:any)=>({...p,brand_name:e.target.value})),style:s,placeholder:'ATEC'})
           ),
           branding.display_mode==='tagline' && h('div', {style:{gridColumn:'1/-1'}},
             lbl('Tagline'),
-            h('input', {type:'text',value:branding.brand_tagline||'',onChange:(e:any)=>setBranding((p:any)=>({...p,brand_tagline:e.target.value})),style:s,placeholder:'Educational Society'})
+            h('input', {type:'text',defaultValue:branding.brand_tagline||'',onBlur:(e:any)=>setBranding((p:any)=>({...p,brand_tagline:e.target.value})),style:s,placeholder:'Educational Society'})
           ),
           h('div', {style:{gridColumn:'1/-1',padding:'28px 20px',background:'#f8fafc',borderRadius:'10px',border:'1px solid #e2e8f0'}},
             h('div', {style:{fontSize:'11px',fontWeight:'700',color:'#94a3b8',marginBottom:'14px',textTransform:'uppercase',textAlign:'center'}}, 'Preview'),
@@ -549,10 +549,10 @@ function Mgr() {
             h('div', {key:i,style:{display:'flex',gap:'8px',alignItems:'center',marginBottom:'8px',padding:'10px',background:'#f8fafc',borderRadius:'8px',border:'1px solid #e2e8f0'}},
               h('span', {style:{color:'#94a3b8',fontSize:'12px',fontWeight:'700',width:'24px'}}, `${i+1}.`),
               h('input', {type:'text',placeholder:'Label',value:link.label||'',
-                onChange:(e:any)=>{const ns=[...nav.links]; ns[i]={...ns[i],label:e.target.value}; setNav((p:any)=>({...p,links:ns}))},
+                onBlur:(e:any)=>{const ns=[...nav.links]; ns[i]={...ns[i],label:e.target.value}; setNav((p:any)=>({...p,links:ns}))},
                 style:{...s,flex:1}}),
               h('input', {type:'text',placeholder:'/courses',value:link.href||'',
-                onChange:(e:any)=>{const ns=[...nav.links]; ns[i]={...ns[i],href:e.target.value}; setNav((p:any)=>({...p,links:ns}))},
+                onBlur:(e:any)=>{const ns=[...nav.links]; ns[i]={...ns[i],href:e.target.value}; setNav((p:any)=>({...p,links:ns}))},
                 style:{...s,flex:1}}),
               h('button', {onClick:()=>{const ns=[...nav.links]; if(i>0){[ns[i-1],ns[i]]=[ns[i],ns[i-1]]; setNav((p:any)=>({...p,links:ns}))}}, style:{padding:'6px 10px',background:'#fff',border:'1px solid #e2e8f0',borderRadius:'6px',cursor:'pointer',fontSize:'12px'}}, '↑'),
               h('button', {onClick:()=>{const ns=[...nav.links]; if(i<ns.length-1){[ns[i+1],ns[i]]=[ns[i],ns[i+1]]; setNav((p:any)=>({...p,links:ns}))}}, style:{padding:'6px 10px',background:'#fff',border:'1px solid #e2e8f0',borderRadius:'6px',cursor:'pointer',fontSize:'12px'}}, '↓'),
@@ -567,8 +567,8 @@ function Mgr() {
         h('div', {style:{borderTop:'1px solid #e2e8f0',paddingTop:'20px'}},
           h('div', {style:{fontSize:'13px',fontWeight:'700',color:'#475569',marginBottom:'12px'}}, 'Enroll Now Button (Top Right)'),
           h('div', {style:{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'12px',marginBottom:'12px'}},
-            h('div', {}, lbl('Button Text'), h('input', {type:'text',value:nav.cta_text||'',onChange:(e:any)=>setNav((p:any)=>({...p,cta_text:e.target.value})),style:s,placeholder:'Enroll Now'})),
-            h('div', {}, lbl('Button Link (WhatsApp recommended)'), h('input', {type:'text',value:nav.cta_link||'',onChange:(e:any)=>setNav((p:any)=>({...p,cta_link:e.target.value})),style:s,placeholder:'https://wa.me/917009933289'}))
+            h('div', {}, lbl('Button Text'), h('input', {type:'text',defaultValue:nav.cta_text||'',onBlur:(e:any)=>setNav((p:any)=>({...p,cta_text:e.target.value})),style:s,placeholder:'Enroll Now'})),
+            h('div', {}, lbl('Button Link (WhatsApp recommended)'), h('input', {type:'text',defaultValue:nav.cta_link||'',onBlur:(e:any)=>setNav((p:any)=>({...p,cta_link:e.target.value})),style:s,placeholder:'https://wa.me/917009933289'}))
           ),
           h('div', {style:{marginBottom:'12px'}},
             lbl('Button Color Style'),
@@ -661,14 +661,14 @@ function Mgr() {
           '✅ Strip updates live on the website after Save — no rebuild needed.'
         ),
         h('div', {style:{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'14px'}},
-          h('div', {style:{gridColumn:'1/-1'}}, lbl('Strip Text'), h('input', {type:'text',value:strip.text||'',onChange:(e:any)=>setStrip((p:any)=>({...p,text:e.target.value})),style:s,placeholder:'🎓 New Batch Starting...'})),
-          h('div', {}, lbl('Link Text'), h('input', {type:'text',value:strip.link_text||'',onChange:(e:any)=>setStrip((p:any)=>({...p,link_text:e.target.value})),style:s,placeholder:'Enroll Now'})),
-          h('div', {}, lbl('Link URL'), h('input', {type:'text',value:strip.link||'',onChange:(e:any)=>setStrip((p:any)=>({...p,link:e.target.value})),style:s,placeholder:'/courses or https://wa.me/...'})),
+          h('div', {style:{gridColumn:'1/-1'}}, lbl('Strip Text'), h('input', {type:'text',defaultValue:strip.text||'',onBlur:(e:any)=>setStrip((p:any)=>({...p,text:e.target.value})),style:s,placeholder:'🎓 New Batch Starting...'})),
+          h('div', {}, lbl('Link Text'), h('input', {type:'text',defaultValue:strip.link_text||'',onBlur:(e:any)=>setStrip((p:any)=>({...p,link_text:e.target.value})),style:s,placeholder:'Enroll Now'})),
+          h('div', {}, lbl('Link URL'), h('input', {type:'text',defaultValue:strip.link||'',onBlur:(e:any)=>setStrip((p:any)=>({...p,link:e.target.value})),style:s,placeholder:'/courses or https://wa.me/...'})),
           h('div', {},
             lbl('Background Color'),
             h('div', {style:{display:'flex',gap:'8px',alignItems:'center',marginBottom:'8px'}},
               h('div', {style:{width:'40px',height:'40px',background:strip.bg_color||'#0f2347',border:'2px solid #e2e8f0',borderRadius:'8px',flexShrink:0}}),
-              h('input', {type:'text',value:strip.bg_color||'',onChange:(e:any)=>{let val=e.target.value.toLowerCase().trim();if(val&&!val.startsWith('#'))val='#'+val;setStrip((p:any)=>({...p,bg_color:val}))},style:{...s,fontFamily:'monospace'},placeholder:'#0f2347'})
+              h('input', {type:'text',defaultValue:strip.bg_color||'',onBlur:(e:any)=>{let val=e.target.value.toLowerCase().trim();if(val&&!val.startsWith('#'))val='#'+val;setStrip((p:any)=>({...p,bg_color:val}))},style:{...s,fontFamily:'monospace'},placeholder:'#0f2347'})
             ),
             h('div', {style:{display:'flex',gap:'4px',flexWrap:'wrap'}},
               ...['#0f2347','#1c3d7a','#1e40af','#7c3aed','#dc2626','#ea580c','#ca8a04','#15803d','#0891b2','#000000','#1f2937','#7f1d1d'].map((color:string) =>
@@ -680,7 +680,7 @@ function Mgr() {
             lbl('Text Color'),
             h('div', {style:{display:'flex',gap:'8px',alignItems:'center',marginBottom:'8px'}},
               h('div', {style:{width:'40px',height:'40px',background:strip.text_color||'#ffffff',border:'2px solid #e2e8f0',borderRadius:'8px',flexShrink:0}}),
-              h('input', {type:'text',value:strip.text_color||'',onChange:(e:any)=>{let val=e.target.value.toLowerCase().trim();if(val&&!val.startsWith('#'))val='#'+val;setStrip((p:any)=>({...p,text_color:val}))},style:{...s,fontFamily:'monospace'},placeholder:'#ffffff'})
+              h('input', {type:'text',defaultValue:strip.text_color||'',onBlur:(e:any)=>{let val=e.target.value.toLowerCase().trim();if(val&&!val.startsWith('#'))val='#'+val;setStrip((p:any)=>({...p,text_color:val}))},style:{...s,fontFamily:'monospace'},placeholder:'#ffffff'})
             ),
             h('div', {style:{display:'flex',gap:'4px',flexWrap:'wrap'}},
               ...['#ffffff','#d4f01a','#facc15','#fef08a','#bfdbfe','#a7f3d0','#fecaca','#000000','#94a3b8','#f0f9ff'].map((color:string) =>
@@ -731,19 +731,19 @@ function Mgr() {
           // Student name
           h('div', {},
             lbl('Student Name *'),
-            h('input', {type:'text',value:storyForm.student_name,onChange:(e:any)=>setStoryForm((p:any)=>({...p,student_name:e.target.value})),style:s,placeholder:'Roshni Singh'})
+            h('input', {type:'text',defaultValue:storyForm.student_name,onBlur:(e:any)=>setStoryForm((p:any)=>({...p,student_name:e.target.value})),style:s,placeholder:'Roshni Singh'})
           ),
 
           // Course
           h('div', {},
             lbl('Course'),
-            h('input', {type:'text',value:storyForm.course,onChange:(e:any)=>setStoryForm((p:any)=>({...p,course:e.target.value})),style:s,placeholder:'MERN Stack / GEN AI...'})
+            h('input', {type:'text',defaultValue:storyForm.course,onBlur:(e:any)=>setStoryForm((p:any)=>({...p,course:e.target.value})),style:s,placeholder:'MERN Stack / GEN AI...'})
           ),
 
           // Company placed
           h('div', {},
             lbl('Company Placed At (optional)'),
-            h('input', {type:'text',value:storyForm.company_placed,onChange:(e:any)=>setStoryForm((p:any)=>({...p,company_placed:e.target.value})),style:s,placeholder:'TCS, Wipro, Infosys...'})
+            h('input', {type:'text',defaultValue:storyForm.company_placed,onBlur:(e:any)=>setStoryForm((p:any)=>({...p,company_placed:e.target.value})),style:s,placeholder:'TCS, Wipro, Infosys...'})
           ),
 
           // Rating
@@ -755,7 +755,7 @@ function Mgr() {
           // Photo URL
           h('div', {style:{gridColumn:'1/-1'}},
             lbl('Student Photo URL (direct image link — PostImg, Supabase Storage, etc.)'),
-            h('input', {type:'text',value:storyForm.photo_url,onChange:(e:any)=>setStoryForm((p:any)=>({...p,photo_url:e.target.value})),style:s,placeholder:'https://i.postimg.cc/xxx/student.jpg'}),
+            h('input', {type:'text',defaultValue:storyForm.photo_url,onBlur:(e:any)=>setStoryForm((p:any)=>({...p,photo_url:e.target.value})),style:s,placeholder:'https://i.postimg.cc/xxx/student.jpg'}),
             storyForm.photo_url && h('div', {style:{marginTop:'8px',display:'flex',gap:'10px',alignItems:'center'}},
               h('img', {src:storyForm.photo_url,alt:'preview',onError:(e:any)=>{e.target.style.display='none'},style:{width:'56px',height:'56px',borderRadius:'50%',objectFit:'cover',border:'2px solid #e2e8f0'}}),
               h('span', {style:{fontSize:'12px',color:'#166534'}}, '✅ Photo preview above')
@@ -765,7 +765,7 @@ function Mgr() {
           // Video URL — same smart field as hero
           h('div', {style:{gridColumn:'1/-1'}},
             lbl('Student Video URL (YouTube, Instagram Reel, Facebook, Vimeo, .mp4)'),
-            h('input', {type:'text',value:storyForm.video_url,
+            h('input', {type:'text',defaultValue:storyForm.video_url,
               onChange:(e:any)=>{
                 const val = e.target.value
                 const d = detectVideo(val)
@@ -789,7 +789,7 @@ function Mgr() {
           // Review text
           h('div', {style:{gridColumn:'1/-1'}},
             lbl('Review / Quote (shown on featured card)'),
-            h('textarea', {value:storyForm.review,onChange:(e:any)=>setStoryForm((p:any)=>({...p,review:e.target.value})),rows:3,style:{...s,resize:'vertical'},placeholder:'"ATEC changed my career completely..."'})
+            h('textarea', {defaultValue:storyForm.review,onBlur:(e:any)=>setStoryForm((p:any)=>({...p,review:e.target.value})),rows:3,style:{...s,resize:'vertical'},placeholder:'"ATEC changed my career completely..."'})
           ),
 
           // Sort order + active

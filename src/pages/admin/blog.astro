@@ -114,15 +114,15 @@ function BlogManager() {
           h('div', { key: field, style: { gridColumn: span === 2 ? '1 / -1' : 'auto' } },
             lbl(label),
             field === '_tags'
-              ? h('input', { type: 'text', value: tagsInput, onChange: (e: Event) => setTagsInput((e.target as HTMLInputElement).value), placeholder: 'hardware, career, networking', style: s })
-              : h('input', { type: type ?? 'text', value: (form as Record<string, unknown>)[field] ?? '', onChange: (e: Event) => upd(field, (e.target as HTMLInputElement).value), style: s })
+              ? h('input', { type: 'text', defaultValue: tagsInput, onBlur: (e: Event) => setTagsInput((e.target as HTMLInputElement).value), placeholder: 'hardware, career, networking', style: s })
+              : h('input', { type: type ?? 'text', defaultValue: (form as Record<string, unknown>)[field] ?? '', onBlur: (e: Event) => upd(field, (e.target as HTMLInputElement).value), style: s })
           )
         ),
         h('div', { style: { gridColumn: '1 / -1' } },
           lbl('Content (HTML allowed)'),
           h('textarea', {
             value: (form as Record<string, unknown>).content ?? '',
-            onChange: (e: Event) => upd('content', (e.target as HTMLTextAreaElement).value),
+            onBlur: (e: Event) => upd('content', (e.target as HTMLTextAreaElement).value),
             rows: 12,
             style: { ...s, height: 'auto', resize: 'vertical' }
           })

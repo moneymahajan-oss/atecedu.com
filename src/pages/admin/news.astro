@@ -59,7 +59,7 @@ function Mgr() {
           {l:'Article URL',k:'url',span:2},{l:'Thumbnail URL',k:'thumbnail_url',span:2},{l:'Sort Order',k:'sort_order',type:'number'},
         ].map(({l,k,type,span})=>
           h('div',{key:k,style:{gridColumn:span===2?'1/-1':'auto'}}, lbl(l),
-            h('input',{type:type||'text',value:form[k]??'',onChange:e=>upd(k,e.target.value),style:s})
+            h('input',{type:type||'text',defaultValue:form[k]??'',onBlur:e=>upd(k,e.target.value),style:s})
           )
         ),
         h('div',{style:{display:'flex',alignItems:'center',gap:'10px'}},
