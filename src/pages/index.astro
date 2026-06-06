@@ -1637,7 +1637,56 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
     </div>
   </section>
 
-    <section class="contact-section" id="contact-section" style="display:none;">
+  <!-- ══════════════════════════════════════════════════════════════
+       GET IN TOUCH — Contact info + enquiry form styles
+  ══════════════════════════════════════════════════════════════ -->
+  <style is:global>
+    .contact-section { padding:72px 32px 80px; background:#f8f4ef; }
+    .contact-inner { max-width:1200px; margin:0 auto; }
+    .contact-layout { display:grid; grid-template-columns:1fr 1fr; gap:48px; align-items:start; }
+    @media(max-width:768px){ .contact-layout { grid-template-columns:1fr; gap:32px; } }
+    .contact-info-card {
+      background:#fff; border-radius:16px; padding:24px 26px;
+      border:1px solid #e2e8f0; box-shadow:0 2px 8px rgba(0,0,0,0.05);
+      display:flex; align-items:flex-start; gap:16px; margin-bottom:14px;
+    }
+    .contact-info-icon {
+      width:44px; height:44px; border-radius:12px; background:#eff6ff;
+      display:flex; align-items:center; justify-content:center; font-size:20px; flex-shrink:0;
+    }
+    .contact-info-label { font-family:'Sora',sans-serif; font-weight:700; font-size:14px; color:#0b1525; margin:0 0 4px; }
+    .contact-info-val { font-size:14px; color:#475569; line-height:1.6; margin:0; }
+    .contact-info-val a { color:#0b1525; text-decoration:none; }
+    .contact-info-val a:hover { text-decoration:underline; }
+    .contact-map { border-radius:16px; overflow:hidden; border:1px solid #e2e8f0; height:220px; margin-top:14px; background:#f1f5f9; display:flex; align-items:center; justify-content:center; font-size:13px; color:#94a3b8; }
+    .contact-map iframe { width:100%; height:100%; border:none; }
+    .contact-form-card {
+      background:#fff; border-radius:16px; padding:32px;
+      border:1px solid #e2e8f0; box-shadow:0 2px 8px rgba(0,0,0,0.05);
+    }
+    .contact-form-title { font-family:'Sora',sans-serif; font-weight:800; font-size:1.15rem; color:#0b1525; margin:0 0 4px; }
+    .contact-form-sub { font-size:13px; color:#94a3b8; margin:0 0 22px; }
+    .cf-field { margin-bottom:14px; }
+    .cf-field input, .cf-field select, .cf-field textarea {
+      width:100%; padding:10px 14px; border:1.5px solid #e2e8f0; border-radius:9px;
+      font-size:14px; color:#1e293b; outline:none; background:#fff;
+      font-family:'Inter',sans-serif; box-sizing:border-box; transition:border-color 0.15s;
+    }
+    .cf-field input:focus, .cf-field select:focus, .cf-field textarea:focus { border-color:#0b1525; }
+    .cf-field textarea { resize:vertical; min-height:80px; }
+    .cf-submit {
+      width:100%; background:#0b1525; color:#d4f01a;
+      border:none; border-radius:10px; padding:13px;
+      font-size:15px; font-weight:800; cursor:pointer;
+      font-family:'Inter',sans-serif; transition:background 0.15s;
+    }
+    .cf-submit:hover { background:#0b1525; }
+    .cf-submit:disabled { background:#94a3b8; cursor:not-allowed; }
+    #cf-success { background:#dcfce7; color:#166534; border:1px solid #bbf7d0; border-radius:9px; padding:14px; text-align:center; font-weight:700; display:none; margin-top:12px; }
+    #cf-error { background:#fee2e2; color:#991b1b; border-radius:9px; padding:10px 14px; font-size:13px; display:none; margin-bottom:12px; }
+  </style>
+
+  <section class="contact-section" id="contact-section" style="display:none;">
     <div class="contact-inner">
       <div style="text-align:center;margin-bottom:48px;">
         <p style="font-size:13px;font-weight:700;color:#d4f01a;text-transform:uppercase;letter-spacing:0.08em;margin:0 0 6px;background:#0b1525;display:inline-block;padding:3px 10px;border-radius:4px;">Contact</p>
