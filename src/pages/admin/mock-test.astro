@@ -1,0 +1,1051 @@
+---
+// src/pages/admin/mock-test.astro
+import AdminLayout from '../../layouts/AdminLayout.astro'
+---
+
+<AdminLayout title="Mock Test Manager" activeSection="mock-test">
+
+<style>
+/* ── Tabs ── */
+.mt-tabs { display:flex; gap:4px; margin-bottom:24px; background:#f0f4f8; border-radius:12px; padding:4px; flex-wrap:wrap; }
+.mt-tab { padding:8px 18px; border-radius:9px; border:none; background:transparent; font-size:13px; font-weight:600; color:#64748b; cursor:pointer; font-family:'Inter',sans-serif; transition:all 0.15s; white-space:nowrap; }
+.mt-tab.active { background:#fff; color:#0b1525; box-shadow:0 1px 4px rgba(0,0,0,0.1); }
+
+/* ── Cards ── */
+.panel { background:#fff; border-radius:14px; padding:24px; margin-bottom:20px; border:1px solid #e8edf2; }
+.panel-title { font-size:16px; font-weight:700; color:#0b1525; margin:0 0 18px; display:flex; align-items:center; gap:8px; }
+.panel-title span { font-size:18px; }
+
+/* ── Stats row ── */
+.stats-row { display:grid; grid-template-columns:repeat(auto-fill,minmax(140px,1fr)); gap:12px; margin-bottom:20px; }
+.stat-card { background:#fff; border-radius:12px; padding:16px; border:1px solid #e8edf2; text-align:center; }
+.stat-num { font-family:'Sora',sans-serif; font-size:2rem; font-weight:900; color:#0b1525; line-height:1; }
+.stat-lbl { font-size:11px; color:#94a3b8; font-weight:600; margin-top:4px; text-transform:uppercase; letter-spacing:0.05em; }
+
+/* ── Form controls ── */
+.form-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+@media(max-width:640px){ .form-grid { grid-template-columns:1fr; } }
+.form-grid-3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:14px; }
+@media(max-width:640px){ .form-grid-3 { grid-template-columns:1fr; } }
+
+.field { display:flex; flex-direction:column; gap:5px; }
+.field label { font-size:12px; font-weight:700; color:#64748b; text-transform:uppercase; letter-spacing:0.05em; }
+.field input, .field select, .field textarea {
+  padding:9px 12px; border:1.5px solid #e2e8f0; border-radius:8px;
+  font-size:14px; color:#1e293b; font-family:'Inter',sans-serif;
+  outline:none; transition:border-color 0.15s; background:#fff;
+}
+.field input:focus, .field select:focus, .field textarea:focus { border-color:#0b1525; }
+.field textarea { resize:vertical; min-height:70px; }
+.field-full { grid-column:1/-1; }
+
+/* ── Correct answers checkboxes ── */
+.options-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.opt-row { display:flex; align-items:center; gap:8px; }
+.opt-row label { font-size:13px; color:#374151; font-weight:500; }
+.opt-row input[type=checkbox] { width:16px; height:16px; accent-color:#0b1525; cursor:pointer; }
+.opt-row input[type=text] { flex:1; padding:7px 10px; border:1.5px solid #e2e8f0; border-radius:7px; font-size:13px; font-family:'Inter',sans-serif; }
+.opt-row input[type=text]:focus { border-color:#0b1525; outline:none; }
+
+/* ── Buttons ── */
+.btn { padding:9px 18px; border-radius:8px; border:none; font-size:13px; font-weight:700; cursor:pointer; font-family:'Inter',sans-serif; transition:all 0.15s; display:inline-flex; align-items:center; gap:6px; }
+.btn-primary { background:#0b1525; color:#d4f01a; }
+.btn-primary:hover { background:#1a3460; }
+.btn-primary:disabled { background:#94a3b8; color:#fff; cursor:not-allowed; }
+.btn-secondary { background:#f1f5f9; color:#374151; }
+.btn-secondary:hover { background:#e2e8f0; }
+.btn-danger { background:#fee2e2; color:#dc2626; }
+.btn-danger:hover { background:#fecaca; }
+.btn-success { background:#dcfce7; color:#15803d; }
+.btn-success:hover { background:#bbf7d0; }
+.btn-sm { padding:5px 12px; font-size:12px; border-radius:6px; }
+.btn-row { display:flex; gap:8px; flex-wrap:wrap; margin-top:16px; }
+
+/* ── Table ── */
+.tbl-wrap { overflow-x:auto; border-radius:12px; border:1px solid #e8edf2; }
+table { width:100%; border-collapse:collapse; font-size:13px; }
+thead tr { background:#f8fafc; }
+th { padding:10px 14px; text-align:left; font-size:11px; font-weight:700; color:#94a3b8; text-transform:uppercase; letter-spacing:0.05em; white-space:nowrap; border-bottom:1px solid #e8edf2; }
+td { padding:10px 14px; border-bottom:1px solid #f1f5f9; vertical-align:middle; }
+tr:last-child td { border-bottom:none; }
+tr:hover td { background:#f8fafc; }
+.badge { display:inline-flex; align-items:center; padding:2px 8px; border-radius:20px; font-size:11px; font-weight:700; }
+.badge-green { background:#dcfce7; color:#15803d; }
+.badge-gray { background:#f1f5f9; color:#64748b; }
+.badge-blue { background:#dbeafe; color:#1d4ed8; }
+.badge-orange { background:#fed7aa; color:#c2410c; }
+.badge-purple { background:#e9d5ff; color:#7c3aed; }
+
+/* ── Msg ── */
+.msg { padding:10px 14px; border-radius:8px; font-size:13px; font-weight:600; margin-bottom:14px; display:none; }
+.msg.show { display:block; }
+.msg.ok { background:#f0fdf4; color:#15803d; border:1px solid #bbf7d0; }
+.msg.err { background:#fef2f2; color:#dc2626; border:1px solid #fecaca; }
+
+/* ── Question list item ── */
+.q-item { border:1px solid #e8edf2; border-radius:10px; padding:14px 16px; margin-bottom:8px; background:#fff; }
+.q-item:hover { border-color:#0b1525; }
+.q-item-top { display:flex; align-items:flex-start; gap:10px; }
+.q-item-num { width:28px; height:28px; border-radius:8px; background:#0b1525; color:#d4f01a; font-size:12px; font-weight:900; display:flex; align-items:center; justify-content:center; flex-shrink:0; font-family:'Sora',sans-serif; }
+.q-item-body { flex:1; min-width:0; }
+.q-item-text { font-size:14px; font-weight:600; color:#1e293b; margin:0 0 6px; line-height:1.4; }
+.q-item-meta { display:flex; gap:6px; flex-wrap:wrap; }
+.q-item-actions { display:flex; gap:6px; align-items:flex-start; flex-shrink:0; }
+
+/* ── Attempt row ── */
+.attempt-score { font-family:'Sora',sans-serif; font-size:1.3rem; font-weight:900; }
+.score-pass { color:#15803d; }
+.score-fail { color:#dc2626; }
+
+/* ── Config range ── */
+.range-row { display:flex; align-items:center; gap:12px; }
+.range-row input[type=range] { flex:1; accent-color:#0b1525; }
+.range-val { font-family:'Sora',sans-serif; font-size:1.1rem; font-weight:900; color:#0b1525; min-width:48px; text-align:center; }
+
+/* ── Discount tiers ── */
+.tier-row { display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; margin-bottom:16px; }
+.tier-card { border:2px solid #e2e8f0; border-radius:12px; padding:16px; text-align:center; }
+.tier-card.tier-bronze { border-color:#cd7f32; background:#fdf8f0; }
+.tier-card.tier-silver { border-color:#94a3b8; background:#f8fafc; }
+.tier-card.tier-gold   { border-color:#fbbf24; background:#fffbeb; }
+.tier-pct { font-family:'Sora',sans-serif; font-size:1.8rem; font-weight:900; color:#0b1525; }
+.tier-label { font-size:11px; font-weight:700; color:#94a3b8; text-transform:uppercase; margin-bottom:10px; }
+.tier-input { width:70px; padding:6px 8px; border:1.5px solid #e2e8f0; border-radius:8px; font-size:18px; font-weight:800; text-align:center; font-family:'Sora',sans-serif; color:#0b1525; }
+
+/* ── Category filter ── */
+.cat-filter { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:16px; }
+.cat-btn { padding:5px 14px; border-radius:20px; border:1.5px solid #e2e8f0; background:#fff; font-size:12px; font-weight:600; color:#64748b; cursor:pointer; transition:all 0.12s; font-family:'Inter',sans-serif; }
+.cat-btn:hover { border-color:#0b1525; color:#0b1525; }
+.cat-btn.active { background:#0b1525; color:#d4f01a; border-color:#0b1525; }
+
+/* ── Bulk import ── */
+.import-area { border:2px dashed #e2e8f0; border-radius:12px; padding:24px; text-align:center; background:#f8fafc; cursor:pointer; transition:border-color 0.15s; }
+.import-area:hover { border-color:#0b1525; }
+.import-area textarea { width:100%; border:none; background:transparent; font-family:'Inter',sans-serif; font-size:13px; color:#374151; resize:vertical; min-height:160px; outline:none; }
+
+/* ── Toggle ── */
+.toggle-row { display:flex; align-items:center; justify-content:space-between; padding:12px 0; border-bottom:1px solid #f1f5f9; }
+.toggle-row:last-child { border-bottom:none; }
+.toggle-info h4 { font-size:14px; font-weight:700; color:#1e293b; margin:0 0 2px; }
+.toggle-info p { font-size:12px; color:#94a3b8; margin:0; }
+.toggle { position:relative; width:44px; height:24px; flex-shrink:0; }
+.toggle input { opacity:0; width:0; height:0; }
+.toggle-slider { position:absolute; inset:0; background:#e2e8f0; border-radius:24px; cursor:pointer; transition:0.2s; }
+.toggle-slider:before { content:''; position:absolute; width:18px; height:18px; left:3px; top:3px; background:#fff; border-radius:50%; transition:0.2s; }
+.toggle input:checked + .toggle-slider { background:#0b1525; }
+.toggle input:checked + .toggle-slider:before { transform:translateX(20px); }
+
+/* ── Section hidden ── */
+.tab-section { display:none; }
+.tab-section.active { display:block; }
+
+/* ── Course mapping ── */
+.course-map-item { display:flex; align-items:center; gap:12px; padding:10px 14px; border:1px solid #e8edf2; border-radius:8px; margin-bottom:8px; background:#fff; }
+.course-map-name { font-weight:700; color:#0b1525; flex:1; }
+.course-map-count { font-size:13px; color:#64748b; }
+</style>
+
+<!-- Page header -->
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px;">
+  <div>
+    <h1 style="font-family:'Sora',sans-serif;font-size:22px;font-weight:900;color:#0b1525;margin:0;">🎯 Mock Test Manager</h1>
+    <p style="font-size:13px;color:#64748b;margin:4px 0 0;">Manage questions, scholarship discounts, and test results</p>
+  </div>
+  <a href="/mock-test" target="_blank" class="btn btn-secondary">🔗 View Public Test</a>
+</div>
+
+<!-- Stats -->
+<div class="stats-row" id="stats-row">
+  <div class="stat-card"><div class="stat-num" id="st-total-q">—</div><div class="stat-lbl">Total Questions</div></div>
+  <div class="stat-card"><div class="stat-num" id="st-active-q">—</div><div class="stat-lbl">Active Questions</div></div>
+  <div class="stat-card"><div class="stat-num" id="st-attempts">—</div><div class="stat-lbl">Test Attempts</div></div>
+  <div class="stat-card"><div class="stat-num" id="st-pass-rate">—</div><div class="stat-lbl">Pass Rate (75%+)</div></div>
+  <div class="stat-card"><div class="stat-num" id="st-discount-given">—</div><div class="stat-lbl">Discounts Given</div></div>
+  <div class="stat-card"><div class="stat-num" id="st-categories">—</div><div class="stat-lbl">Categories</div></div>
+</div>
+
+<!-- Tabs -->
+<div class="mt-tabs">
+  <button class="mt-tab active" onclick="switchTab('questions')">📝 Questions Bank</button>
+  <button class="mt-tab" onclick="switchTab('add')">➕ Add Question</button>
+  <button class="mt-tab" onclick="switchTab('bulk')">📥 Bulk Import</button>
+  <button class="mt-tab" onclick="switchTab('attempts')">📊 Student Attempts</button>
+  <button class="mt-tab" onclick="switchTab('config')">⚙️ Test Settings</button>
+  <button class="mt-tab" onclick="switchTab('courses')">📚 Course Mapping</button>
+</div>
+
+<!-- ═══════════════════════════ QUESTIONS BANK ═══════════════════════════ -->
+<div class="tab-section active" id="tab-questions">
+  <div class="panel">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:10px;">
+      <div class="panel-title"><span>📝</span> Questions Bank</div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+        <input id="q-search" type="text" placeholder="Search questions…" oninput="filterQuestions()" style="padding:7px 12px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;font-family:'Inter',sans-serif;width:220px;">
+        <select id="q-cat-filter" onchange="filterQuestions()" style="padding:7px 12px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;font-family:'Inter',sans-serif;">
+          <option value="">All Categories</option>
+        </select>
+        <select id="q-status-filter" onchange="filterQuestions()" style="padding:7px 12px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;font-family:'Inter',sans-serif;">
+          <option value="">All Status</option>
+          <option value="active">Active only</option>
+          <option value="inactive">Inactive only</option>
+        </select>
+      </div>
+    </div>
+    <div id="q-msg" class="msg"></div>
+    <div id="q-list">
+      <div style="text-align:center;padding:40px;color:#94a3b8;">Loading questions…</div>
+    </div>
+    <div id="q-count" style="font-size:12px;color:#94a3b8;margin-top:12px;text-align:right;"></div>
+  </div>
+
+  <!-- Inline Edit Panel (hidden by default) -->
+  <div class="panel" id="edit-panel" style="display:none;border:2px solid #0b1525;">
+    <div class="panel-title"><span>✏️</span> Edit Question <button onclick="closeEdit()" class="btn btn-secondary btn-sm" style="margin-left:auto;">✕ Cancel</button></div>
+    <div id="edit-msg" class="msg"></div>
+    <div id="edit-form-body"></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════ ADD QUESTION ═══════════════════════════ -->
+<div class="tab-section" id="tab-add">
+  <div class="panel">
+    <div class="panel-title"><span>➕</span> Add New Question</div>
+    <div id="add-msg" class="msg"></div>
+
+    <div class="field field-full" style="margin-bottom:14px;">
+      <label>Question Text *</label>
+      <textarea id="add-question" placeholder="Type the question here…" rows="3"></textarea>
+    </div>
+
+    <div style="margin-bottom:16px;">
+      <label style="font-size:12px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.05em;display:block;margin-bottom:10px;">Options — tick ALL correct answers (supports multiple correct)</label>
+      <div class="options-grid">
+        <div class="opt-row"><input type="checkbox" id="add-c-a"><strong style="min-width:18px;color:#0b1525">A</strong><input type="text" id="add-opt-a" placeholder="Option A text"></div>
+        <div class="opt-row"><input type="checkbox" id="add-c-b"><strong style="min-width:18px;color:#0b1525">B</strong><input type="text" id="add-opt-b" placeholder="Option B text"></div>
+        <div class="opt-row"><input type="checkbox" id="add-c-c"><strong style="min-width:18px;color:#0b1525">C</strong><input type="text" id="add-opt-c" placeholder="Option C text"></div>
+        <div class="opt-row"><input type="checkbox" id="add-c-d"><strong style="min-width:18px;color:#0b1525">D</strong><input type="text" id="add-opt-d" placeholder="Option D text"></div>
+        <div class="opt-row"><input type="checkbox" id="add-c-e"><strong style="min-width:18px;color:#0b1525">E</strong><input type="text" id="add-opt-e" placeholder="Option E (optional)"></div>
+      </div>
+      <p style="font-size:12px;color:#94a3b8;margin-top:8px;">✅ Tick the checkbox(es) next to the correct answer(s). Multiple correct answers are supported.</p>
+    </div>
+
+    <div class="form-grid" style="margin-bottom:14px;">
+      <div class="field">
+        <label>Category / Course *</label>
+        <input type="text" id="add-category" placeholder="e.g. Hardware, MERN Stack, Tally, GEN AI, General IT" list="cat-suggestions">
+        <datalist id="cat-suggestions"></datalist>
+      </div>
+      <div class="field">
+        <label>Explanation (shown after test)</label>
+        <input type="text" id="add-explanation" placeholder="Brief explanation of the correct answer">
+      </div>
+      <div class="field">
+        <label>Sort Order</label>
+        <input type="number" id="add-sort" value="0" min="0">
+      </div>
+      <div class="field" style="justify-content:flex-end;padding-bottom:2px;">
+        <label>&nbsp;</label>
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:14px;font-weight:500;color:#374151;text-transform:none;letter-spacing:0;">
+          <input type="checkbox" id="add-active" checked style="width:16px;height:16px;accent-color:#0b1525;">
+          Active (included in tests)
+        </label>
+      </div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-primary" id="add-btn" onclick="addQuestion()">➕ Add Question</button>
+      <button class="btn btn-secondary" onclick="clearAddForm()">🗑️ Clear</button>
+      <button class="btn btn-secondary" onclick="switchTab('questions')">← Back to List</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════ BULK IMPORT ═══════════════════════════ -->
+<div class="tab-section" id="tab-bulk">
+  <div class="panel">
+    <div class="panel-title"><span>📥</span> Bulk Import Questions</div>
+    <p style="font-size:13px;color:#64748b;margin:0 0 16px;">Paste questions in the format below. One question per block, separated by a blank line.</p>
+
+    <div style="background:#f8fafc;border:1px solid #e8edf2;border-radius:10px;padding:16px;margin-bottom:16px;font-size:12px;color:#374151;font-family:monospace;line-height:1.8;">
+      Q: What does CPU stand for?<br>
+      A: Central Processing Unit<br>
+      B: Computer Program Unit<br>
+      C: Core Processing Unit<br>
+      D: Control Panel Utility<br>
+      CORRECT: A<br>
+      CATEGORY: Hardware<br>
+      EXPLAIN: CPU is the brain of a computer.<br>
+      <br>
+      Q: Which of these are programming languages? (select all)<br>
+      A: Python<br>
+      B: Excel<br>
+      C: JavaScript<br>
+      D: HTML<br>
+      CORRECT: A,C<br>
+      CATEGORY: MERN Stack<br>
+    </div>
+
+    <div id="bulk-msg" class="msg"></div>
+
+    <div class="field" style="margin-bottom:14px;">
+      <label>Default Category (used if no CATEGORY line in block)</label>
+      <input type="text" id="bulk-default-cat" placeholder="General IT" value="General IT">
+    </div>
+
+    <textarea id="bulk-text" placeholder="Paste your questions here in the format shown above…"
+      style="width:100%;min-height:300px;padding:14px;border:1.5px solid #e2e8f0;border-radius:10px;font-family:monospace;font-size:13px;color:#374151;resize:vertical;outline:none;box-sizing:border-box;"></textarea>
+
+    <div class="btn-row">
+      <button class="btn btn-primary" id="bulk-parse-btn" onclick="parseBulk()">🔍 Preview Import</button>
+    </div>
+
+    <div id="bulk-preview" style="display:none;margin-top:20px;">
+      <div style="font-size:14px;font-weight:700;color:#0b1525;margin-bottom:12px;">Preview — <span id="bulk-count">0</span> questions found:</div>
+      <div id="bulk-preview-list" style="max-height:360px;overflow-y:auto;"></div>
+      <div class="btn-row" style="margin-top:16px;">
+        <button class="btn btn-primary" id="bulk-save-btn" onclick="saveBulk()">💾 Save All Questions</button>
+        <button class="btn btn-secondary" onclick="document.getElementById('bulk-preview').style.display='none'">Cancel Preview</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════ STUDENT ATTEMPTS ═══════════════════════════ -->
+<div class="tab-section" id="tab-attempts">
+  <div class="panel">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:10px;">
+      <div class="panel-title"><span>📊</span> Student Attempts</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <select id="att-filter" onchange="loadAttempts()" style="padding:7px 12px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;font-family:'Inter',sans-serif;">
+          <option value="">All attempts</option>
+          <option value="pass">Passed (75%+)</option>
+          <option value="fail">Failed (&lt;75%)</option>
+          <option value="discount">Got discount</option>
+        </select>
+        <button class="btn btn-secondary btn-sm" onclick="exportCSV()">📥 Export CSV</button>
+      </div>
+    </div>
+    <div id="att-msg" class="msg"></div>
+    <div class="tbl-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Student</th>
+            <th>Email / Phone</th>
+            <th>Course Interest</th>
+            <th>Score</th>
+            <th>%</th>
+            <th>Discount</th>
+            <th>Time</th>
+            <th>Date</th>
+            <th>Report</th>
+          </tr>
+        </thead>
+        <tbody id="att-tbody">
+          <tr><td colspan="9" style="text-align:center;padding:30px;color:#94a3b8;">Loading…</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div id="att-count" style="font-size:12px;color:#94a3b8;margin-top:10px;"></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════ CONFIG / SETTINGS ═══════════════════════════ -->
+<div class="tab-section" id="tab-config">
+  <div class="panel">
+    <div class="panel-title"><span>⚙️</span> Test Settings</div>
+    <div id="cfg-msg" class="msg"></div>
+
+    <!-- Basic config -->
+    <div class="form-grid" style="margin-bottom:20px;">
+      <div class="field">
+        <label>Test Title</label>
+        <input type="text" id="cfg-title" placeholder="ATEC Computer Knowledge Test">
+      </div>
+      <div class="field">
+        <label>Subtitle</label>
+        <input type="text" id="cfg-subtitle" placeholder="Test your IT knowledge and earn a discount!">
+      </div>
+      <div class="field">
+        <label>Instructions Line</label>
+        <input type="text" id="cfg-instructions" placeholder="50 questions | 20 minutes | Multiple correct answers possible">
+      </div>
+    </div>
+
+    <!-- Timer & questions count -->
+    <div style="background:#f8fafc;border-radius:12px;padding:20px;margin-bottom:20px;">
+      <h4 style="font-size:14px;font-weight:700;color:#0b1525;margin:0 0 16px;">⏱️ Timer & Question Count</h4>
+      <div style="margin-bottom:16px;">
+        <label style="font-size:12px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.05em;display:block;margin-bottom:8px;">Timer (minutes)</label>
+        <div class="range-row">
+          <input type="range" id="cfg-timer" min="5" max="60" value="20" oninput="document.getElementById('cfg-timer-val').textContent=this.value+' min'">
+          <div class="range-val" id="cfg-timer-val">20 min</div>
+        </div>
+      </div>
+      <div>
+        <label style="font-size:12px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.05em;display:block;margin-bottom:8px;">Questions per test (shuffled from full bank)</label>
+        <div class="range-row">
+          <input type="range" id="cfg-qcount" min="10" max="100" value="50" oninput="document.getElementById('cfg-qcount-val').textContent=this.value+' questions'">
+          <div class="range-val" id="cfg-qcount-val">50 questions</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Scholarship discount tiers -->
+    <div style="background:#fffbeb;border:2px solid #fbbf24;border-radius:12px;padding:20px;margin-bottom:20px;">
+      <h4 style="font-size:14px;font-weight:700;color:#92400e;margin:0 0 6px;">🎓 Scholarship Discount Tiers</h4>
+      <p style="font-size:12px;color:#92400e;margin:0 0 16px;">Set the discount % given when student scores at or above each threshold.</p>
+      <div class="tier-row">
+        <div class="tier-card tier-bronze">
+          <div class="tier-label">🥉 Bronze</div>
+          <div style="font-size:12px;color:#64748b;margin-bottom:8px;">Score ≥ 75%</div>
+          <input type="number" class="tier-input" id="cfg-d75" value="10" min="0" max="100">
+          <div style="font-size:13px;font-weight:700;color:#cd7f32;margin-top:4px;">% OFF</div>
+        </div>
+        <div class="tier-card tier-silver">
+          <div class="tier-label">🥈 Silver</div>
+          <div style="font-size:12px;color:#64748b;margin-bottom:8px;">Score ≥ 85%</div>
+          <input type="number" class="tier-input" id="cfg-d85" value="20" min="0" max="100">
+          <div style="font-size:13px;font-weight:700;color:#475569;margin-top:4px;">% OFF</div>
+        </div>
+        <div class="tier-card tier-gold">
+          <div class="tier-label">🥇 Gold</div>
+          <div style="font-size:12px;color:#64748b;margin-bottom:8px;">Score ≥ 95%</div>
+          <input type="number" class="tier-input" id="cfg-d95" value="25" min="0" max="100">
+          <div style="font-size:13px;font-weight:700;color:#d97706;margin-top:4px;">% OFF</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Messages -->
+    <div class="form-grid" style="margin-bottom:20px;">
+      <div class="field">
+        <label>Pass Message (shown on result screen when score ≥ 75%)</label>
+        <input type="text" id="cfg-pass-msg" placeholder="You qualify for a course discount!">
+      </div>
+      <div class="field">
+        <label>Fail Message (shown when score &lt; 75%)</label>
+        <input type="text" id="cfg-fail-msg" placeholder="Score 75%+ to unlock a discount.">
+      </div>
+    </div>
+
+    <!-- Toggles -->
+    <div style="background:#f8fafc;border-radius:12px;padding:16px;margin-bottom:20px;">
+      <h4 style="font-size:14px;font-weight:700;color:#0b1525;margin:0 0 12px;">Feature Toggles</h4>
+      <div class="toggle-row">
+        <div class="toggle-info">
+          <h4>OTP Email Verification</h4>
+          <p>Require students to verify email via OTP before starting test. Uses EmailJS (service_vaxrywu).</p>
+        </div>
+        <label class="toggle"><input type="checkbox" id="cfg-otp" checked><span class="toggle-slider"></span></label>
+      </div>
+      <div class="toggle-row">
+        <div class="toggle-info">
+          <h4>Shuffle Questions</h4>
+          <p>Each student gets a different random selection of 50 from the full question bank.</p>
+        </div>
+        <label class="toggle"><input type="checkbox" id="cfg-shuffle" checked><span class="toggle-slider"></span></label>
+      </div>
+      <div class="toggle-row">
+        <div class="toggle-info">
+          <h4>Show Explanations in Review</h4>
+          <p>After test, show the explanation for each wrong answer in the review section.</p>
+        </div>
+        <label class="toggle"><input type="checkbox" id="cfg-explain" checked><span class="toggle-slider"></span></label>
+      </div>
+      <div class="toggle-row">
+        <div class="toggle-info">
+          <h4>Auto-advance on Single-Answer Questions</h4>
+          <p>Automatically go to next question after selecting one answer on single-correct questions.</p>
+        </div>
+        <label class="toggle"><input type="checkbox" id="cfg-autoadvance" checked><span class="toggle-slider"></span></label>
+      </div>
+    </div>
+
+    <!-- EmailJS config -->
+    <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:12px;padding:20px;margin-bottom:20px;">
+      <h4 style="font-size:14px;font-weight:700;color:#1d4ed8;margin:0 0 6px;">📧 EmailJS Configuration</h4>
+      <p style="font-size:12px;color:#3b82f6;margin:0 0 14px;">Used for OTP delivery and test report emails. Get credentials from <a href="https://emailjs.com" target="_blank" style="color:#1d4ed8;">emailjs.com</a> (free: 200 emails/month).</p>
+      <div class="form-grid">
+        <div class="field">
+          <label>Service ID</label>
+          <input type="text" id="cfg-ejs-service" placeholder="service_vaxrywu">
+        </div>
+        <div class="field">
+          <label>OTP Template ID</label>
+          <input type="text" id="cfg-ejs-template" placeholder="template_xxxxxx">
+        </div>
+        <div class="field">
+          <label>Public Key</label>
+          <input type="text" id="cfg-ejs-pubkey" placeholder="4I_3wxmCi6V2pfdGE">
+        </div>
+      </div>
+      <p style="font-size:11px;color:#64748b;margin:8px 0 0;">Template variables needed: <code style="background:#dbeafe;padding:2px 6px;border-radius:4px;">to_name, to_email, otp_code, institute, valid_min</code></p>
+    </div>
+
+    <button class="btn btn-primary" id="cfg-save-btn" onclick="saveConfig()">💾 Save All Settings</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════ COURSE MAPPING ═══════════════════════════ -->
+<div class="tab-section" id="tab-courses">
+  <div class="panel">
+    <div class="panel-title"><span>📚</span> Questions by Course / Category</div>
+    <p style="font-size:13px;color:#64748b;margin:0 0 16px;">Each question belongs to a category that maps to a course. The test draws questions from all active categories equally when shuffling.</p>
+    <div id="course-map-list">
+      <div style="text-align:center;padding:30px;color:#94a3b8;">Loading…</div>
+    </div>
+    <div class="panel" style="margin-top:16px;background:#f8fafc;">
+      <h4 style="font-size:14px;font-weight:700;color:#0b1525;margin:0 0 12px;">📌 How Course-Specific Tests Work</h4>
+      <ul style="font-size:13px;color:#64748b;line-height:2;padding-left:20px;margin:0;">
+        <li>When a student selects a course on the test registration form, their 50 questions are drawn <strong>preferentially</strong> from that course's category first</li>
+        <li>If the selected course has fewer than 50 questions, remaining slots are filled from <strong>General IT</strong> questions</li>
+        <li>If no course is selected, questions are pulled randomly across <strong>all active categories</strong></li>
+        <li>Scholarship discounts apply regardless of which course category was tested</li>
+        <li>Tag questions with a category name matching your course titles (e.g. "MERN Stack", "Tally Prime", "Hardware & Networking")</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════ SCRIPTS ═══════════════════════════ -->
+<script is:inline>
+;(function() {
+
+const SB_URL = window.__SB_URL
+const SB_KEY = window.__SB_KEY
+
+let allQuestions  = []
+let allAttempts   = []
+let bulkParsed    = []
+let currentEditId = null
+let cfg           = {}
+
+// ── Init ──────────────────────────────────────────────────────────────
+async function init() {
+  await Promise.all([loadQuestions(), loadAttempts(), loadConfig()])
+  updateStats()
+}
+
+// ── Tab switching ──────────────────────────────────────────────────────
+window.switchTab = function(tab) {
+  document.querySelectorAll('.tab-section').forEach(s => s.classList.remove('active'))
+  document.querySelectorAll('.mt-tab').forEach(b => b.classList.remove('active'))
+  document.getElementById('tab-' + tab).classList.add('active')
+  const tabs = ['questions','add','bulk','attempts','config','courses']
+  const idx = tabs.indexOf(tab)
+  document.querySelectorAll('.mt-tab')[idx]?.classList.add('active')
+}
+
+// ── Supabase helpers ──────────────────────────────────────────────────
+async function sbGet(table, params = '') {
+  const r = await fetch(`${SB_URL}/rest/v1/${table}${params ? '?' + params : ''}`, {
+    headers: { apikey: SB_KEY, Authorization: `Bearer ${SB_KEY}`, Accept: 'application/json' }
+  })
+  return r.json()
+}
+async function sbPost(table, body) {
+  return fetch(`${SB_URL}/rest/v1/${table}`, {
+    method: 'POST',
+    headers: { apikey: SB_KEY, Authorization: `Bearer ${SB_KEY}`, 'Content-Type': 'application/json', Prefer: 'return=representation' },
+    body: JSON.stringify(body)
+  })
+}
+async function sbPatch(table, id, body) {
+  return fetch(`${SB_URL}/rest/v1/${table}?id=eq.${id}`, {
+    method: 'PATCH',
+    headers: { apikey: SB_KEY, Authorization: `Bearer ${SB_KEY}`, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+    body: JSON.stringify(body)
+  })
+}
+async function sbDelete(table, id) {
+  return fetch(`${SB_URL}/rest/v1/${table}?id=eq.${id}`, {
+    method: 'DELETE',
+    headers: { apikey: SB_KEY, Authorization: `Bearer ${SB_KEY}` }
+  })
+}
+function showMsg(id, text, isErr = false) {
+  const el = document.getElementById(id)
+  if (!el) return
+  el.textContent = text
+  el.className = 'msg show ' + (isErr ? 'err' : 'ok')
+  if (!isErr) setTimeout(() => el.classList.remove('show'), 4000)
+}
+
+// ── Load Questions ────────────────────────────────────────────────────
+async function loadQuestions() {
+  try {
+    const data = await sbGet('mock_test_questions', 'order=sort_order.asc,created_at.asc&select=*')
+    allQuestions = Array.isArray(data) ? data : []
+    renderQuestionList(allQuestions)
+    populateCategoryFilter()
+    populateCatSuggestions()
+  } catch(e) {
+    document.getElementById('q-list').innerHTML = '<p style="color:#dc2626;padding:20px;">Failed to load questions. Check Supabase connection.</p>'
+  }
+}
+
+function renderQuestionList(list) {
+  const el = document.getElementById('q-list')
+  if (!list.length) { el.innerHTML = '<div style="text-align:center;padding:40px;color:#94a3b8;">No questions found. Add some above!</div>'; return }
+  el.innerHTML = list.map((q, i) => {
+    const correct = Array.isArray(q.correct) ? q.correct : [q.correct]
+    const isMulti = correct.length > 1
+    return `<div class="q-item">
+      <div class="q-item-top">
+        <div class="q-item-num">${i + 1}</div>
+        <div class="q-item-body">
+          <div class="q-item-text">${escHtml(q.question)}</div>
+          <div class="q-item-meta">
+            <span class="badge badge-blue">${escHtml(q.category || 'General')}</span>
+            ${isMulti ? '<span class="badge badge-purple">Multiple correct</span>' : ''}
+            ${q.is_active ? '<span class="badge badge-green">Active</span>' : '<span class="badge badge-gray">Hidden</span>'}
+            <span class="badge badge-gray">Ans: ${correct.map(c=>c.toUpperCase()).join(', ')}</span>
+          </div>
+        </div>
+        <div class="q-item-actions">
+          <button class="btn btn-secondary btn-sm" onclick="editQuestion('${q.id}')">✏️ Edit</button>
+          <button class="btn btn-sm" style="background:${q.is_active ? '#fef9c3' : '#dcfce7'};color:${q.is_active ? '#854d0e' : '#15803d'};" onclick="toggleQ('${q.id}', ${q.is_active})">${q.is_active ? 'Hide' : 'Show'}</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteQ('${q.id}')">🗑️</button>
+        </div>
+      </div>
+    </div>`
+  }).join('')
+  document.getElementById('q-count').textContent = `Showing ${list.length} of ${allQuestions.length} questions`
+}
+
+function populateCategoryFilter() {
+  const cats = [...new Set(allQuestions.map(q => q.category).filter(Boolean))].sort()
+  const sel = document.getElementById('q-cat-filter')
+  const cur = sel.value
+  sel.innerHTML = '<option value="">All Categories</option>' + cats.map(c => `<option value="${escHtml(c)}" ${c === cur ? 'selected' : ''}>${escHtml(c)}</option>`).join('')
+}
+
+function populateCatSuggestions() {
+  const cats = [...new Set(allQuestions.map(q => q.category).filter(Boolean))].sort()
+  const dl = document.getElementById('cat-suggestions')
+  if (dl) dl.innerHTML = cats.map(c => `<option value="${escHtml(c)}">`).join('')
+}
+
+window.filterQuestions = function() {
+  const search = document.getElementById('q-search').value.toLowerCase()
+  const cat    = document.getElementById('q-cat-filter').value
+  const status = document.getElementById('q-status-filter').value
+  let list = allQuestions
+  if (search) list = list.filter(q => (q.question || '').toLowerCase().includes(search))
+  if (cat)    list = list.filter(q => q.category === cat)
+  if (status === 'active')   list = list.filter(q => q.is_active)
+  if (status === 'inactive') list = list.filter(q => !q.is_active)
+  renderQuestionList(list)
+}
+
+// ── Toggle / Delete ───────────────────────────────────────────────────
+window.toggleQ = async function(id, currentActive) {
+  await sbPatch('mock_test_questions', id, { is_active: !currentActive })
+  allQuestions = allQuestions.map(q => q.id === id ? { ...q, is_active: !currentActive } : q)
+  filterQuestions()
+  updateStats()
+}
+
+window.deleteQ = async function(id) {
+  if (!confirm('Delete this question permanently?')) return
+  await sbDelete('mock_test_questions', id)
+  allQuestions = allQuestions.filter(q => q.id !== id)
+  filterQuestions()
+  updateStats()
+  populateCategoryFilter()
+  renderCourseMap()
+}
+
+// ── Edit Question ─────────────────────────────────────────────────────
+window.editQuestion = function(id) {
+  const q = allQuestions.find(x => x.id === id)
+  if (!q) return
+  currentEditId = id
+  const correct = Array.isArray(q.correct) ? q.correct : [q.correct]
+  const opts = ['a','b','c','d','e']
+  document.getElementById('edit-form-body').innerHTML = `
+    <div class="field field-full" style="margin-bottom:14px;">
+      <label>Question Text *</label>
+      <textarea id="eq-question" rows="3">${escHtml(q.question || '')}</textarea>
+    </div>
+    <div style="margin-bottom:16px;">
+      <label style="font-size:12px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.05em;display:block;margin-bottom:10px;">Options — tick ALL correct answers</label>
+      <div class="options-grid">
+        ${opts.map(k => `
+          <div class="opt-row">
+            <input type="checkbox" id="eq-c-${k}" ${correct.includes(k) ? 'checked' : ''}>
+            <strong style="min-width:18px;color:#0b1525">${k.toUpperCase()}</strong>
+            <input type="text" id="eq-opt-${k}" placeholder="Option ${k.toUpperCase()} text" value="${escHtml(q['option_' + k] || '')}">
+          </div>`).join('')}
+      </div>
+    </div>
+    <div class="form-grid" style="margin-bottom:14px;">
+      <div class="field">
+        <label>Category *</label>
+        <input type="text" id="eq-category" value="${escHtml(q.category || '')}" list="cat-suggestions">
+      </div>
+      <div class="field">
+        <label>Explanation</label>
+        <input type="text" id="eq-explanation" value="${escHtml(q.explanation || '')}">
+      </div>
+      <div class="field">
+        <label>Sort Order</label>
+        <input type="number" id="eq-sort" value="${q.sort_order || 0}">
+      </div>
+      <div class="field" style="justify-content:flex-end;padding-bottom:2px;">
+        <label>&nbsp;</label>
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:14px;font-weight:500;color:#374151;text-transform:none;letter-spacing:0;">
+          <input type="checkbox" id="eq-active" ${q.is_active ? 'checked' : ''} style="width:16px;height:16px;accent-color:#0b1525;"> Active
+        </label>
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-primary" id="eq-save-btn" onclick="saveEdit()">💾 Save Changes</button>
+    </div>
+  `
+  document.getElementById('edit-panel').style.display = 'block'
+  document.getElementById('edit-panel').scrollIntoView({ behavior: 'smooth', block: 'start' })
+}
+
+window.closeEdit = function() {
+  document.getElementById('edit-panel').style.display = 'none'
+  currentEditId = null
+}
+
+window.saveEdit = async function() {
+  const btn = document.getElementById('eq-save-btn')
+  btn.disabled = true; btn.textContent = 'Saving…'
+  try {
+    const q = buildQuestionFromForm('eq')
+    if (!q) { btn.disabled = false; btn.textContent = '💾 Save Changes'; return }
+    await sbPatch('mock_test_questions', currentEditId, q)
+    allQuestions = allQuestions.map(x => x.id === currentEditId ? { ...x, ...q } : x)
+    showMsg('edit-msg', '✅ Question updated!')
+    filterQuestions()
+    updateStats()
+    populateCategoryFilter()
+    renderCourseMap()
+    setTimeout(closeEdit, 1200)
+  } catch(e) {
+    showMsg('edit-msg', '❌ ' + (e.message || 'Save failed'), true)
+  }
+  btn.disabled = false; btn.textContent = '💾 Save Changes'
+}
+
+// ── Add Question ──────────────────────────────────────────────────────
+window.addQuestion = async function() {
+  const btn = document.getElementById('add-btn')
+  btn.disabled = true; btn.textContent = 'Adding…'
+  try {
+    const q = buildQuestionFromForm('add')
+    if (!q) { btn.disabled = false; btn.textContent = '➕ Add Question'; return }
+    const r = await sbPost('mock_test_questions', { ...q, sort_order: q.sort_order || allQuestions.length })
+    const saved = await r.json()
+    if (saved && saved[0]) {
+      allQuestions.push(saved[0])
+      filterQuestions()
+      updateStats()
+      populateCategoryFilter()
+      populateCatSuggestions()
+      renderCourseMap()
+      showMsg('add-msg', '✅ Question added! Add another or go to Questions Bank.')
+      clearAddForm()
+    } else {
+      showMsg('add-msg', '❌ Failed to save. Check Supabase RLS policies.', true)
+    }
+  } catch(e) {
+    showMsg('add-msg', '❌ ' + (e.message || 'Error'), true)
+  }
+  btn.disabled = false; btn.textContent = '➕ Add Question'
+}
+
+function buildQuestionFromForm(prefix) {
+  const question = document.getElementById(prefix + '-question')?.value.trim()
+  if (!question) { showMsg(prefix + '-msg', '❌ Question text is required.', true); return null }
+  const opts = ['a','b','c','d','e']
+  const correct = opts.filter(k => document.getElementById(prefix + '-c-' + k)?.checked)
+  if (!correct.length) { showMsg(prefix + '-msg', '❌ Please tick at least one correct answer.', true); return null }
+  const category = document.getElementById(prefix + '-category')?.value.trim() || 'General IT'
+  return {
+    question,
+    option_a: document.getElementById(prefix + '-opt-a')?.value.trim() || null,
+    option_b: document.getElementById(prefix + '-opt-b')?.value.trim() || null,
+    option_c: document.getElementById(prefix + '-opt-c')?.value.trim() || null,
+    option_d: document.getElementById(prefix + '-opt-d')?.value.trim() || null,
+    option_e: document.getElementById(prefix + '-opt-e')?.value.trim() || null,
+    correct,
+    correct_count: correct.length,
+    category,
+    explanation: document.getElementById(prefix + '-explanation')?.value.trim() || null,
+    sort_order: parseInt(document.getElementById(prefix + '-sort')?.value || '0') || 0,
+    is_active: document.getElementById(prefix + '-active')?.checked ?? true,
+  }
+}
+
+window.clearAddForm = function() {
+  ['question','opt-a','opt-b','opt-c','opt-d','opt-e','category','explanation'].forEach(k => {
+    const el = document.getElementById('add-' + k)
+    if (el) el.value = ''
+  })
+  ;['a','b','c','d','e'].forEach(k => {
+    const cb = document.getElementById('add-c-' + k)
+    if (cb) cb.checked = false
+  })
+  document.getElementById('add-active').checked = true
+  document.getElementById('add-sort').value = '0'
+}
+
+// ── Bulk Import ───────────────────────────────────────────────────────
+window.parseBulk = function() {
+  const text = document.getElementById('bulk-text').value.trim()
+  const defCat = document.getElementById('bulk-default-cat').value.trim() || 'General IT'
+  if (!text) { showMsg('bulk-msg', '❌ Please paste some questions first.', true); return }
+
+  bulkParsed = []
+  const blocks = text.split(/\n\s*\n/).filter(b => b.trim())
+
+  blocks.forEach((block, bi) => {
+    const lines = block.trim().split('\n').map(l => l.trim()).filter(Boolean)
+    let q = { question:'', option_a:'', option_b:'', option_c:'', option_d:'', option_e:'', correct:[], category: defCat, explanation:'' }
+    lines.forEach(line => {
+      if (/^Q:/i.test(line))         q.question    = line.replace(/^Q:\s*/i,'').trim()
+      else if (/^A:/i.test(line))    q.option_a    = line.replace(/^A:\s*/i,'').trim()
+      else if (/^B:/i.test(line))    q.option_b    = line.replace(/^B:\s*/i,'').trim()
+      else if (/^C:/i.test(line))    q.option_c    = line.replace(/^C:\s*/i,'').trim()
+      else if (/^D:/i.test(line))    q.option_d    = line.replace(/^D:\s*/i,'').trim()
+      else if (/^E:/i.test(line))    q.option_e    = line.replace(/^E:\s*/i,'').trim()
+      else if (/^CORRECT:/i.test(line)) q.correct  = line.replace(/^CORRECT:\s*/i,'').split(',').map(s=>s.trim().toLowerCase()).filter(Boolean)
+      else if (/^CATEGORY:/i.test(line)) q.category = line.replace(/^CATEGORY:\s*/i,'').trim()
+      else if (/^EXPLAIN:/i.test(line))  q.explanation = line.replace(/^EXPLAIN:\s*/i,'').trim()
+    })
+    if (q.question && q.correct.length) {
+      q.correct_count = q.correct.length
+      q.is_active = true
+      q.sort_order = allQuestions.length + bi
+      bulkParsed.push(q)
+    }
+  })
+
+  if (!bulkParsed.length) { showMsg('bulk-msg', '❌ No valid questions found. Check the format.', true); return }
+
+  document.getElementById('bulk-count').textContent = bulkParsed.length
+  const previewEl = document.getElementById('bulk-preview-list')
+  previewEl.innerHTML = bulkParsed.map((q, i) => `
+    <div style="padding:12px;border:1px solid #e8edf2;border-radius:8px;margin-bottom:8px;background:#fff;">
+      <div style="font-weight:700;font-size:13px;color:#0b1525;margin-bottom:4px;">${i+1}. ${escHtml(q.question)}</div>
+      <div style="font-size:12px;color:#64748b;">${['a','b','c','d','e'].filter(k=>q['option_'+k]).map(k=>`<strong>${k.toUpperCase()}</strong>: ${escHtml(q['option_'+k])}`).join(' · ')}
+      <br>✅ Correct: ${q.correct.map(c=>c.toUpperCase()).join(', ')} · 📂 ${escHtml(q.category)}</div>
+    </div>`).join('')
+  document.getElementById('bulk-preview').style.display = 'block'
+}
+
+window.saveBulk = async function() {
+  if (!bulkParsed.length) return
+  const btn = document.getElementById('bulk-save-btn')
+  btn.disabled = true; btn.textContent = '⏳ Saving…'
+  try {
+    const r = await sbPost('mock_test_questions', bulkParsed)
+    const saved = await r.json()
+    if (Array.isArray(saved)) {
+      allQuestions = [...allQuestions, ...saved]
+      filterQuestions()
+      updateStats()
+      populateCategoryFilter()
+      populateCatSuggestions()
+      renderCourseMap()
+      document.getElementById('bulk-text').value = ''
+      document.getElementById('bulk-preview').style.display = 'none'
+      bulkParsed = []
+      showMsg('bulk-msg', `✅ ${saved.length} questions saved successfully!`)
+    } else {
+      showMsg('bulk-msg', '❌ Save failed. Check Supabase RLS policies for mock_test_questions table.', true)
+    }
+  } catch(e) {
+    showMsg('bulk-msg', '❌ ' + (e.message || 'Error'), true)
+  }
+  btn.disabled = false; btn.textContent = '💾 Save All Questions'
+}
+
+// ── Load Attempts ─────────────────────────────────────────────────────
+async function loadAttempts() {
+  try {
+    const data = await sbGet('mock_test_attempts', 'order=created_at.desc&limit=200&select=*')
+    allAttempts = Array.isArray(data) ? data : []
+    renderAttempts(allAttempts)
+  } catch(e) {}
+}
+
+window.loadAttempts = function() {
+  const f = document.getElementById('att-filter').value
+  let list = allAttempts
+  if (f === 'pass')     list = list.filter(a => a.percentage >= 75)
+  if (f === 'fail')     list = list.filter(a => a.percentage < 75)
+  if (f === 'discount') list = list.filter(a => a.discount > 0)
+  renderAttempts(list)
+}
+
+function renderAttempts(list) {
+  const tbody = document.getElementById('att-tbody')
+  if (!list.length) { tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:30px;color:#94a3b8;">No attempts found.</td></tr>'; return }
+  tbody.innerHTML = list.map(a => {
+    const pct = a.percentage ?? 0
+    const passed = pct >= 75
+    const discBadge = a.discount > 0
+      ? `<span class="badge" style="background:#fef9c3;color:#854d0e;">${a.discount}% OFF</span>`
+      : '<span class="badge badge-gray">None</span>'
+    const mins = Math.floor((a.time_taken || 0) / 60)
+    const secs = (a.time_taken || 0) % 60
+    return `<tr>
+      <td><span style="font-weight:700;color:#0b1525;">${escHtml(a.name || '—')}</span></td>
+      <td><div style="font-size:12px;">${escHtml(a.email || '—')}</div><div style="font-size:11px;color:#94a3b8;">${escHtml(a.phone || '')}</div></td>
+      <td><span style="font-size:12px;color:#64748b;">${escHtml(a.course || '—')}</span></td>
+      <td style="font-weight:700;">${a.score ?? '?'}/${a.total ?? '?'}</td>
+      <td><span class="attempt-score ${passed ? 'score-pass' : 'score-fail'}">${pct}%</span></td>
+      <td>${discBadge}</td>
+      <td style="font-size:12px;color:#64748b;">${mins}m ${secs}s</td>
+      <td style="font-size:12px;color:#94a3b8;">${a.created_at ? new Date(a.created_at).toLocaleDateString('en-IN') : '—'}</td>
+      <td>${a.report_sent ? '<span class="badge badge-green">Sent</span>' : '<span class="badge badge-gray">—</span>'}</td>
+    </tr>`
+  }).join('')
+  document.getElementById('att-count').textContent = `Showing ${list.length} of ${allAttempts.length} attempts`
+}
+
+window.exportCSV = function() {
+  const headers = ['Name','Email','Phone','Course','Score','Total','Percentage','Discount','Time(s)','Date','Report Sent']
+  const rows = allAttempts.map(a => [
+    a.name, a.email, a.phone, a.course, a.score, a.total, a.percentage,
+    a.discount, a.time_taken, a.created_at?.slice(0,10), a.report_sent ? 'Yes' : 'No'
+  ])
+  const csv = [headers, ...rows].map(r => r.map(v => `"${(v??'').toString().replace(/"/g,'""')}"`).join(',')).join('\n')
+  const blob = new Blob([csv], { type: 'text/csv' })
+  const url  = URL.createObjectURL(blob)
+  const a    = document.createElement('a')
+  a.href = url; a.download = 'atec_mock_test_attempts.csv'; a.click()
+  URL.revokeObjectURL(url)
+}
+
+// ── Config ────────────────────────────────────────────────────────────
+async function loadConfig() {
+  try {
+    const data = await sbGet('site_settings', 'key=eq.mock_test_config&select=value')
+    if (data?.[0]?.value) {
+      cfg = data[0].value
+      const c = cfg
+      setVal('cfg-title', c.title)
+      setVal('cfg-subtitle', c.subtitle)
+      setVal('cfg-instructions', c.instructions)
+      setVal('cfg-timer', c.timer_minutes || 20)
+      document.getElementById('cfg-timer-val').textContent = (c.timer_minutes || 20) + ' min'
+      setVal('cfg-qcount', c.questions_count || 50)
+      document.getElementById('cfg-qcount-val').textContent = (c.questions_count || 50) + ' questions'
+      setVal('cfg-d75', c.discount_75 || 10)
+      setVal('cfg-d85', c.discount_85 || 20)
+      setVal('cfg-d95', c.discount_95 || 25)
+      setVal('cfg-pass-msg', c.pass_message)
+      setVal('cfg-fail-msg', c.fail_message)
+      setCheck('cfg-otp', c.otp_enabled !== false)
+      setCheck('cfg-shuffle', c.shuffle !== false)
+      setCheck('cfg-explain', c.show_explanations !== false)
+      setCheck('cfg-autoadvance', c.auto_advance !== false)
+      setVal('cfg-ejs-service', c.emailjs_service)
+      setVal('cfg-ejs-template', c.emailjs_template)
+      setVal('cfg-ejs-pubkey', c.emailjs_pubkey)
+    }
+  } catch(e) {}
+}
+
+window.saveConfig = async function() {
+  const btn = document.getElementById('cfg-save-btn')
+  btn.disabled = true; btn.textContent = '⏳ Saving…'
+  try {
+    const newCfg = {
+      title:          getVal('cfg-title') || 'ATEC Computer Knowledge Test',
+      subtitle:       getVal('cfg-subtitle'),
+      instructions:   getVal('cfg-instructions'),
+      timer_minutes:  parseInt(getVal('cfg-timer')) || 20,
+      questions_count:parseInt(getVal('cfg-qcount')) || 50,
+      discount_75:    parseInt(getVal('cfg-d75')) || 10,
+      discount_85:    parseInt(getVal('cfg-d85')) || 20,
+      discount_95:    parseInt(getVal('cfg-d95')) || 25,
+      pass_message:   getVal('cfg-pass-msg'),
+      fail_message:   getVal('cfg-fail-msg'),
+      otp_enabled:    getCheck('cfg-otp'),
+      shuffle:        getCheck('cfg-shuffle'),
+      show_explanations: getCheck('cfg-explain'),
+      auto_advance:   getCheck('cfg-autoadvance'),
+      emailjs_service:  getVal('cfg-ejs-service'),
+      emailjs_template: getVal('cfg-ejs-template'),
+      emailjs_pubkey:   getVal('cfg-ejs-pubkey'),
+    }
+    await fetch(`${SB_URL}/rest/v1/site_settings`, {
+      method: 'POST',
+      headers: { apikey: SB_KEY, Authorization: `Bearer ${SB_KEY}`, 'Content-Type': 'application/json', Prefer: 'resolution=merge-duplicates,return=minimal' },
+      body: JSON.stringify({ key: 'mock_test_config', value: newCfg })
+    })
+    showMsg('cfg-msg', '✅ Settings saved! Changes apply immediately to the live test.')
+    cfg = newCfg
+  } catch(e) {
+    showMsg('cfg-msg', '❌ ' + (e.message || 'Save failed'), true)
+  }
+  btn.disabled = false; btn.textContent = '💾 Save All Settings'
+}
+
+// ── Stats ─────────────────────────────────────────────────────────────
+function updateStats() {
+  const active = allQuestions.filter(q => q.is_active).length
+  const cats   = new Set(allQuestions.map(q => q.category).filter(Boolean)).size
+  const passed = allAttempts.filter(a => (a.percentage ?? 0) >= 75).length
+  const withDiscount = allAttempts.filter(a => a.discount > 0).length
+  const passRate = allAttempts.length ? Math.round((passed / allAttempts.length) * 100) : 0
+
+  setText('st-total-q', allQuestions.length)
+  setText('st-active-q', active)
+  setText('st-attempts', allAttempts.length)
+  setText('st-pass-rate', passRate + '%')
+  setText('st-discount-given', withDiscount)
+  setText('st-categories', cats)
+
+  renderCourseMap()
+}
+
+// ── Course Map ────────────────────────────────────────────────────────
+function renderCourseMap() {
+  const map = {}
+  allQuestions.forEach(q => {
+    const cat = q.category || 'Uncategorized'
+    if (!map[cat]) map[cat] = { total: 0, active: 0 }
+    map[cat].total++
+    if (q.is_active) map[cat].active++
+  })
+  const el = document.getElementById('course-map-list')
+  if (!el) return
+  const entries = Object.entries(map).sort((a, b) => b[1].total - a[1].total)
+  if (!entries.length) { el.innerHTML = '<p style="color:#94a3b8;font-size:14px;">No questions yet. Add questions with category tags to see mapping.</p>'; return }
+  el.innerHTML = entries.map(([cat, counts]) => `
+    <div class="course-map-item">
+      <span class="badge badge-blue" style="font-size:13px;padding:4px 12px;">${escHtml(cat)}</span>
+      <span class="course-map-name"></span>
+      <span class="course-map-count">${counts.active} active / ${counts.total} total questions</span>
+      <div style="width:120px;background:#e8edf2;border-radius:20px;height:8px;overflow:hidden;">
+        <div style="width:${Math.round((counts.active/counts.total)*100)}%;height:100%;background:#0b1525;border-radius:20px;"></div>
+      </div>
+    </div>`).join('')
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────
+function setText(id, val) { const el = document.getElementById(id); if (el) el.textContent = val }
+function setVal(id, val)  { const el = document.getElementById(id); if (el && val != null) el.value = val }
+function getVal(id)       { return document.getElementById(id)?.value ?? '' }
+function setCheck(id, v)  { const el = document.getElementById(id); if (el) el.checked = !!v }
+function getCheck(id)     { return document.getElementById(id)?.checked ?? false }
+function escHtml(str)     { return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;') }
+
+// ── Boot ──────────────────────────────────────────────────────────────
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init)
+else init()
+
+})()
+</script>
+
+</AdminLayout>
