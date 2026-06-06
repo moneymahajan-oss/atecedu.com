@@ -1441,107 +1441,203 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
 
 
   <!-- ══════════════════════════════════════════════════════════════
-       CONNECT WITH US — Social media QR cards, DB-driven
-       Runtime loaded from site_settings key='social_connect'
-       Fields: platforms:[{name,url,icon_type,is_active,sort_order}]
-       Section: {title, subtitle, bg_color}
+       CONNECT WITH US — Social media brand cards with QR codes
   ══════════════════════════════════════════════════════════════ -->
   <style is:global>
-    .connect-section { padding:72px 32px 80px; background:#fff; }
-    .connect-header { max-width:1200px; margin:0 auto 48px; text-align:center; }
-    .connect-grid {
-      max-width:1200px; margin:0 auto;
-      display:flex; gap:20px; flex-wrap:wrap; justify-content:center;
+    .sc-section {
+      padding: 64px 32px 72px;
+      background: #0b1525;
+      position: relative;
+      overflow: hidden;
     }
-    .connect-card {
-      width:200px; background:#fff;
-      border:1px solid #e8ecf0; border-radius:18px;
-      padding:24px 20px 20px; text-align:center;
-      box-shadow:0 3px 14px rgba(0,0,0,0.07);
-      text-decoration:none; color:inherit;
-      transition:transform 0.2s, box-shadow 0.2s;
-      display:flex; flex-direction:column; align-items:center; gap:12px;
+    .sc-section::before {
+      content: '';
+      position: absolute;
+      top: -100px; right: -100px;
+      width: 400px; height: 400px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(212,240,26,0.05) 0%, transparent 70%);
+      pointer-events: none;
     }
-    .connect-card:hover { transform:translateY(-5px); box-shadow:0 12px 36px rgba(0,0,0,0.13); }
-    .connect-icon-wrap {
-      width:56px; height:56px; border-radius:16px;
-      display:flex; align-items:center; justify-content:center;
-      font-size:26px; flex-shrink:0;
+    .sc-header {
+      max-width: 1200px;
+      margin: 0 auto 48px;
+      text-align: center;
     }
-    .connect-qr {
-      width:130px; height:130px; background:#f8fafc;
-      border:1px solid #e2e8f0; border-radius:8px;
-      display:flex; align-items:center; justify-content:center;
-      overflow:hidden;
+    .sc-sup {
+      font-size: 12px; font-weight: 800;
+      color: #d4f01a; text-transform: uppercase;
+      letter-spacing: 0.1em; margin: 0 0 10px;
+      display: block;
     }
-    .connect-qr img { width:100%; height:100%; object-fit:contain; }
-    .connect-qr-placeholder { font-size:11px; color:#94a3b8; text-align:center; padding:8px; }
-    .connect-name { font-family:'Sora',sans-serif; font-size:14px; font-weight:700; color:#1c1c1c; }
-    @media(max-width:560px){ .connect-card { width:calc(50% - 10px); min-width:140px; } }
+    .sc-title {
+      font-family: 'Sora', sans-serif;
+      font-size: clamp(1.8rem, 3.5vw, 2.6rem);
+      font-weight: 900; color: #fff;
+      margin: 0 0 12px; line-height: 1.1;
+    }
+    .sc-sub {
+      font-size: 15px;
+      color: rgba(255,255,255,0.45);
+      margin: 0;
+    }
+    .sc-grid {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .sc-card {
+      width: 200px;
+      background: #111e35;
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 20px;
+      overflow: hidden;
+      text-decoration: none;
+      display: flex;
+      flex-direction: column;
+      transition: transform 0.22s, box-shadow 0.22s, border-color 0.22s;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    }
+    .sc-card:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 16px 48px rgba(0,0,0,0.5);
+      border-color: rgba(212,240,26,0.3);
+    }
+    .sc-top {
+      height: 80px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .sc-body {
+      padding: 16px 14px 18px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0;
+      flex: 1;
+    }
+    .sc-qr-frame {
+      width: 128px;
+      height: 128px;
+      border-radius: 10px;
+      overflow: hidden;
+      background: #fff;
+      padding: 6px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.25);
+      margin-bottom: 10px;
+    }
+    .sc-qr-frame img {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+    .sc-scan {
+      font-size: 11px;
+      color: rgba(255,255,255,0.35);
+      margin-bottom: 8px;
+      letter-spacing: 0.03em;
+    }
+    .sc-name {
+      font-family: 'Sora', sans-serif;
+      font-size: 15px;
+      font-weight: 800;
+      margin-bottom: 3px;
+      text-align: center;
+    }
+    .sc-handle {
+      font-size: 11px;
+      color: rgba(255,255,255,0.4);
+      text-align: center;
+      word-break: break-all;
+    }
+    @media(max-width: 900px) { .sc-card { width: 170px; } }
+    @media(max-width: 600px) {
+      .sc-grid { gap: 14px; }
+      .sc-card { width: calc(50% - 7px); min-width: 150px; }
+    }
   </style>
 
-  <section class="connect-section" id="connect-section" style="display:none;">
-    <div class="connect-header">
-      <p id="connect-sup" style="font-size:13px;font-weight:700;color:#d4f01a;text-transform:uppercase;letter-spacing:0.08em;margin:0 0 6px;background:#0b1525;display:inline-block;padding:3px 10px;border-radius:4px;">Follow Us</p>
-      <h2 id="connect-title" style="font-family:'Sora',sans-serif;font-size:clamp(1.6rem,3vw,2.2rem);font-weight:800;color:#1c1c1c;margin:8px 0 10px;">Connect With Us</h2>
-      <p id="connect-sub" style="font-size:15px;color:#64748b;margin:0;">Scan a QR or tap a card to follow us — stay updated with latest courses, events & student wins</p>
+  <section class="sc-section" id="connect-section">
+    <div class="sc-header">
+      <span class="sc-sup">📡 Follow Us</span>
+      <h2 class="sc-title">Connect With Us</h2>
+      <p class="sc-sub">Scan a QR or tap a card to follow — stay updated with courses, results &amp; student wins</p>
     </div>
-    <div class="connect-grid" id="connect-grid"></div>
+    <div class="sc-grid">
+            <a class="sc-card" href="https://wa.me/917009933289" target="_blank" rel="noopener" aria-label="WhatsApp">
+              <div class="sc-top" style="background:#25D366">
+                <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" width="40" height="40"><circle cx="16" cy="16" r="16" fill="#25D366"/><path d="M23.5 8.5A10.4 10.4 0 0 0 16 5.5C10.2 5.5 5.5 10.2 5.5 16c0 1.8.5 3.6 1.4 5.2L5.5 26.5l5.5-1.4A10.4 10.4 0 0 0 16 26.5c5.8 0 10.5-4.7 10.5-10.5 0-2.8-1.1-5.4-3-7.5zm-7.5 16a8.6 8.6 0 0 1-4.4-1.2l-.3-.2-3.2.8.9-3.1-.2-.3A8.5 8.5 0 1 1 16 24.5zm4.7-6.4c-.3-.1-1.6-.8-1.9-.9-.3-.1-.5-.1-.7.1-.2.3-.8.9-.9 1.1-.2.2-.3.2-.6.1-.3-.1-1.2-.4-2.2-1.4-.8-.7-1.4-1.6-1.5-1.9-.2-.3 0-.4.1-.6l.4-.5c.1-.2.2-.3.3-.5 0-.2 0-.4-.1-.5-.1-.1-.7-1.6-.9-2.2-.3-.6-.5-.5-.7-.5h-.6c-.2 0-.5.1-.8.4-.3.3-1 1-1 2.4s1 2.8 1.2 3c.1.1 2 3.1 4.9 4.3.7.3 1.2.5 1.6.6.7.2 1.3.2 1.8.1.5-.1 1.6-.7 1.8-1.3.2-.6.2-1.1.2-1.2-.1-.1-.3-.2-.6-.3z" fill="#fff"/></svg>
+              </div>
+              <div class="sc-body">
+                <div class="sc-qr-frame">
+                  <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAOgAAADoCAIAAABqyz8vAAAEMklEQVR4nO3dzW1UMRhAUQbRAaVSAEoBlEoNjw1bLxzZsm/mnHXy5u/Ki0+W/Xqe5xvUfD/9BuAzhEuScEkSLknCJUm4JAmXJOGSJFyShEuScEkSLknCJUm4JAmXpB+z//Dzz+8d72O5v78+tj5/9D2MXnf273e/7m1mvwcrLknCJUm4JAmXJOGSJFyShEvS9Bx3ZPfcdGR2Trlqnrp7Xrtb5fcaseKSJFyShEuScEkSLknCJUm4JC2b446smtud2l87cttcdpXK72XFJUm4JAmXJOGSJFyShEuScEnaPsetW7XvdtWc+KvOj2dZcUkSLknCJUm4JAmXJOGSJFyS3m6Oe2oOWj+/9jZWXJKES5JwSRIuScIlSbgkCZek7XPcr7p/dNXn2n3P2azK72XFJUm4JAmXJOGSJFyShEuScElaNset7CtddR7Cqb9fpfJ7jVhxSRIuScIlSbgkCZck4ZIkXJKm57iV/ZoVs9/n7r+vsOKSJFyShEuScEkSLknCJUm4JE3PcU/tHx05dc7AqX26q6w6z2H3645YcUkSLknCJUm4JAmXJOGSJFySlu3HnZ3z3fac2TnrbfeWnZrLnmLFJUm4JAmXJOGSJFyShEuScEnK7Mfdfb7s6Dmr5sqnnNrXO/t9zn5vVlyShEuScEkSLknCJUm4JAmXpGP3nK2as+5+zu659e7PNeu2fdIjVlyShEuScEkSLknCJUm4JAmXpGPnKsw+f2TVeQir3HZ+8Ej9vjQrLknCJUm4JAmXJOGSJFyShEvS63meqX/4qvs+d++vXeW2fcCnnm/FJUm4JAmXJOGSJFyShEuScEladq7CqX26t53nsHsOeurz7n6+83F5C8IlSbgkCZck4ZIkXJKES9KyOe7Ibfs7K3PKkdvuk1t13vAsKy5JwiVJuCQJlyThkiRckoRL0rJzFer3hO1+3dvuM5t16vcdseKSJFyShEuScEkSLknCJUm4JE3Pcetu29drLv45VlyShEuScEkSLknCJUm4JAmXpOlzFU7tB501e35tZX4567bP5Xxc3ppwSRIuScIlSbgkCZck4ZK0/Z6z3U7do7b7/NdVbptDr3o/VlyShEuScEkSLknCJUm4JAmXpO33nO2es+526jyE2e/t1PzY+bgwQbgkCZck4ZIkXJKES5JwSdo+x61YNQe97RyDkVXvZ9Uc2rkKvAXhkiRckoRLknBJEi5JwiXJHPe/3feEzc53b5v77r7XbZYVlyThkiRckoRLknBJEi5JwiVp+xz3tnnkyO5zD06dt3Bqv+xuVlyShEuScEkSLknCJUm4JAmXpGVz3Nvu9xo5NTfdbdWceOS28yKsuCQJlyThkiRckoRLknBJEi5Jr+d5Tr8HmGbFJUm4JAmXJOGSJFyShEuScEkSLknCJUm4JAmXJOGSJFyShEuScEn6Bz/Th6s3VCuRAAAAAElFTkSuQmCC" alt="WhatsApp QR Code" />
+                </div>
+                <div class="sc-scan">📷 Scan to follow</div>
+                <div class="sc-name" style="color:#25D366">WhatsApp</div>
+                <div class="sc-handle">+91 7009933289</div>
+              </div>
+            </a>
+            <a class="sc-card" href="https://www.instagram.com/ateceducation/" target="_blank" rel="noopener" aria-label="Instagram">
+              <div class="sc-top" style="background:linear-gradient(135deg,#833ab4,#fd1d1d,#fcb045)">
+                <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" width="40" height="40"><defs><radialGradient id="ig2" cx="30%" cy="107%" r="150%"><stop offset="0%" stop-color="#fdf497"/><stop offset="5%" stop-color="#fdf497"/><stop offset="45%" stop-color="#fd5949"/><stop offset="60%" stop-color="#d6249f"/><stop offset="90%" stop-color="#285AEB"/></radialGradient></defs><rect width="32" height="32" rx="8" fill="url(#ig2)"/><rect x="8" y="8" width="16" height="16" rx="4" stroke="#fff" stroke-width="1.5" fill="none"/><circle cx="16" cy="16" r="4" stroke="#fff" stroke-width="1.5" fill="none"/><circle cx="21.5" cy="10.5" r="1" fill="#fff"/></svg>
+              </div>
+              <div class="sc-body">
+                <div class="sc-qr-frame">
+                  <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAQgAAAEICAIAAAAslP2oAAAFD0lEQVR4nO3dwW2sNRhAUYLoihJoiSUtUQJ1DWukayFLtmxrzlnnTf7Jy5Wl+WL75/P5/AL816+nHwBuJAwIwoAgDAjCgCAMCMKAIAwIwoAgDAjCgCAMCMKAIAwIwoDw2+w/+Ov3v3c8x3J//vPH1NeP3teq11ll9/Pc9n5XmX1fVgwIwoAgDAjCgCAMCMKAIAwI03OMkdnPiVdZ9Tn66Pln5xurfg6j73vqeWa9/vtgxYAgDAjCgCAMCMKAIAwIwoCwbI4xsnvOcMqqfQ6794HMft+R3fOZWbt/H6wYEIQBQRgQhAFBGBCEAUEYELbPMV5x27lSt81Jvo0VA4IwIAgDgjAgCAOCMCAIA4I5xv84tW9h1u75ybfNPawYEIQBQRgQhAFBGBCEAUEYELbPMW77/Hv3PodZu19/5NS84rbfhxErBgRhQBAGBGFAEAYEYUAQBoRlc4zdn7vvtupcpm/7+pHXfx+sGBCEAUEYEIQBQRgQhAFBGBCm5xiv/D39yCvPPzsHODU3eOXnOcuKAUEYEIQBQRgQhAFBGBCEAWF6jrH77/VXnbO0+3Vm3XZv9yv7Ok6xYkAQBgRhQBAGBGFAEAYEYUD4+Xw+W7/B7nskZp06N+m25599/Vm75yq7X8eKAUEYEIQBQRgQhAFBGBCEAeHY/Ri37XOY9cq+gpFX7sE49f9rxYAgDAjCgCAMCMKAIAwIwoCwbD/GqXOiZp9n1u5zlma/76zb9lfMvr45BlxEGBCEAUEYEIQBQRgQhAFh2f0Ys1Z9br17X8Ft9zyc+vmfmjutek7nSsECwoAgDAjCgCAMCMKAIAwI0/sxTv2d/arXv+3cpG+bh7xyHpcVA4IwIAgDgjAgCAOCMCAIA8L2e75Hds8HZr1+jtNur9wvPmI/BiwgDAjCgCAMCMKAIAwIwoCwbD/GqX0Rr+yveH1u88q5Uu7HgI2EAUEYEIQBQRgQhAFBGBCm78c49Tn97s+zd9+nMWv3vde7f26zr3/b/hMrBgRhQBAGBGFAEAYEYUAQBoRl50qd2i9x6v6Nkd37Cm67d+K2uYp7vmEjYUAQBgRhQBAGBGFAEAaE6f0Ypz53f/0+71Pzh9vmHiO3/X9ZMSAIA4IwIAgDgjAgCAOCMCAsO1dq9utPnb906u/7Z62aF82+/sgr50GtYsWAIAwIwoAgDAjCgCAMCMKAcGw/xqrvO7L7HKdZr5wrtfvej5HbztGyYkAQBgRhQBAGBGFAEAYEYUA4th/jda/MH1a57TlXzbVGrBgQhAFBGBCEAUEYEIQBQRgQlu3HuM3sOUin3tfu+0NmrTqfatXznJoLWTEgCAOCMCAIA4IwIAgDgjAgTM8xRk7tuzh1L8Tu1399XjTrtvdrxYAgDAjCgCAMCMKAIAwIwoCwbI4xsvt+iVWvM3svxO77zk8958gr51atYsWAIAwIwoAgDAjCgCAMCMKAsH2OcZvXP49ftX9j1dxj9xxmlnOlYCNhQBAGBGFAEAYEYUAQBoSvm2Ps3hdx6j6HWbvnFbvt/jlbMSAIA4IwIAgDgjAgCAOCMCBsn2Pcdl7QyG33e9x2HtSpfSYj7vmGA4QBQRgQhAFBGBCEAUEYEJbNMW67p3lk1T6KWbftWxhZ9X5f+X0YsWJAEAYEYUAQBgRhQBAGBGFA+Pl8PqefAa5jxYAgDAjCgCAMCMKAIAwIwoAgDAjCgCAMCMKAIAwIwoAgDAjCgPAv5W0wbaGO5LEAAAAASUVORK5CYII=" alt="Instagram QR Code" />
+                </div>
+                <div class="sc-scan">📷 Scan to follow</div>
+                <div class="sc-name" style="color:#d6249f">Instagram</div>
+                <div class="sc-handle">@ateceducation</div>
+              </div>
+            </a>
+            <a class="sc-card" href="https://www.facebook.com/ateceducation" target="_blank" rel="noopener" aria-label="Facebook">
+              <div class="sc-top" style="background:#1877F2">
+                <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" width="40" height="40"><circle cx="16" cy="16" r="16" fill="#1877F2"/><path d="M20.5 10h-2.3c-.9 0-1.2.4-1.2 1.3V13H20l-.4 3h-2.6v8h-3v-8H12v-3h2v-1.8C14 8.8 15.3 7.5 17.8 7.5c1 0 2 .1 3 .2V10H20.5z" fill="#fff"/></svg>
+              </div>
+              <div class="sc-body">
+                <div class="sc-qr-frame">
+                  <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAQgAAAEICAIAAAAslP2oAAAFDElEQVR4nO3dwY0kJwBAUY/l6wbgTB2CM3UAG0D74oulzwEJDIzfO+9WV3fPF1LRwNfn8/kF+LdfT98A3EgYEIQBQRgQhAFBGBCEAUEYEIQBQRgQhAFBGBCEAUEYEIQB4bfZ//D7Hz933Mdyf/35Y8l1Vr3f0f2Mrr/7/m/7fHabfb9GDAjCgCAMCMKAIAwIwoAgDAjT8xgjq56Lz5p9jj77XH/V/MOq5/2z15n9XlbNe7zy9zBixIAgDAjCgCAMCMKAIAwIwoCwbB5jZPd6htusmt94fZ3G7OvO2n2fRgwIwoAgDAjCgCAMCMKAIAwI2+cxXrFqncOqeYnZ64zsXmfyXRkxIAgDgjAgCAOCMCAIA4IwIPzv5jF27/u0yqr7vO19vcKIAUEYEIQBQRgQhAFBGBCEAWH7PMbrv+M/dd7F7DqKV7xy/0YMCMKAIAwIwoAgDAjCgCAMCMvmMV753f+q/Z1Onf992/2PvPL3MGLEgCAMCMKAIAwIwoAgDAjCgPD1+XxO38N/6pVzpkdOzTO8so5iFSMGBGFAEAYEYUAQBgRhQBAGhOn1GLedA/1d7+fUORir1o2cWr+x6ns3YkAQBgRhQBAGBGFAEAYEYUCYXo+x6nn2bfsj3TYPcOr6s687svvvZPY6s4wYEIQBQRgQhAFBGBCEAUEYEJbtK/XKuQqrnnO/cv7Dqs/fvlKAMKAIA4IwIAgDgjAgCAPC9nmMVU7NP3zXcyduO2fjtvkTIwYEYUAQBgRhQBAGBGFAEAaEY+djrJr3WHU/q56Xr9ofafd8yG3zCbvnqWavb8SAIAwIwoAgDAjCgCAMCMKAMD2PscrueYPdZp+X33afu+2eJ9n9vowYEIQBQRgQhAFBGBCEAUEYEKbnMU6dx3zbOdmvnxcx+zncds767s/fiAFBGBCEAUEYEIQBQRgQhAFh+nyM2543n3LbvM3u87xPnX+ye/5kxIgBQRgQhAFBGBCEAUEYEIQBYft6jFd+x3/qOrNOnWvxyjzJqvdrxIAgDAjCgCAMCMKAIAwIwoCwbD3GK/tE7X4eP3udVU6t97htv6/Z648YMSAIA4IwIAgDgjAgCAOCMCAsO+d793qA3a/7yjzD7nmb284/OfU9GjEgCAOCMCAIA4IwIAgDgjAgbF+PcWpdxG3rPV7/HHa77RwVIwYEYUAQBgRhQBAGBGFAEAaEZesxVpl97r57fuCVfZO+6/yGfaXgIsKAIAwIwoAgDAjCgCAMCNPrMV73yjqN2dcdObVuZPZ+Rk6t0zBiQBAGBGFAEAYEYUAQBgRhQJhej/HK7/hHz79PPb8fuW1frFmn5j12fy9GDAjCgCAMCMKAIAwIwoAgDAjL9pU69bv5U/sO3bYf1KnPf9Xr3jbvYcSAIAwIwoAgDAjCgCAMCMKAsP18jFPzDLN2rzNZde7HKac+H/tKwUWEAUEYEIQBQRgQhAFBGBCuO+f7lNvOr1jl1Hkdq17XvlJwEWFAEAYEYUAQBgRhQBAGBPMY/3jlvO3Z689aNc8w8sq5HEYMCMKAIAwIwoAgDAjCgCAMCNvnMU7tC7TK6+dk3+a2dSAjRgwIwoAgDAjCgCAMCMKAIAwIy+YxbjvPYWT3vMHufZZO/ftV6092/51YjwEbCQOCMCAIA4IwIAgDgjAgfH0+n9P3ANcxYkAQBgRhQBAGBGFAEAYEYUAQBgRhQBAGBGFAEAYEYUAQBgRhQPgbYBA8SUyE10EAAAAASUVORK5CYII=" alt="Facebook QR Code" />
+                </div>
+                <div class="sc-scan">📷 Scan to follow</div>
+                <div class="sc-name" style="color:#1877F2">Facebook</div>
+                <div class="sc-handle">ATEC Educational Society</div>
+              </div>
+            </a>
+            <a class="sc-card" href="https://www.youtube.com/@ATECEducationalSociety" target="_blank" rel="noopener" aria-label="YouTube">
+              <div class="sc-top" style="background:#FF0000">
+                <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" width="40" height="40"><rect width="32" height="32" rx="7" fill="#FF0000"/><path d="M25.8 11.2a2.7 2.7 0 0 0-1.9-1.9C22.3 9 16 9 16 9s-6.3 0-7.9.3a2.7 2.7 0 0 0-1.9 1.9C6 12.8 6 16 6 16s0 3.2.2 4.8a2.7 2.7 0 0 0 1.9 1.9C9.7 23 16 23 16 23s6.3 0 7.9-.3a2.7 2.7 0 0 0 1.9-1.9C26 19.2 26 16 26 16s0-3.2-.2-4.8zm-11.7 7.8V13l5.2 3-5.2 3z" fill="#fff"/></svg>
+              </div>
+              <div class="sc-body">
+                <div class="sc-qr-frame">
+                  <img src="data:image/png;base64,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" alt="YouTube QR Code" />
+                </div>
+                <div class="sc-scan">📷 Scan to follow</div>
+                <div class="sc-name" style="color:#FF0000">YouTube</div>
+                <div class="sc-handle">@ATECEducationalSociety</div>
+              </div>
+            </a>
+            <a class="sc-card" href="https://g.page/r/atec-gurdaspur" target="_blank" rel="noopener" aria-label="Google Reviews">
+              <div class="sc-top" style="background:linear-gradient(135deg,#4285F4,#34A853,#FBBC05,#EA4335)">
+                <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" width="40" height="40"><circle cx="16" cy="16" r="16" fill="#fff" stroke="#e2e8f0" stroke-width="1"/><path d="M24.5 16.2c0-.6-.1-1.2-.2-1.7H16v3.2h4.8a4.1 4.1 0 0 1-1.8 2.7v2.2h2.9c1.7-1.6 2.6-3.9 2.6-6.4z" fill="#4285F4"/><path d="M16 25c2.4 0 4.5-.8 6-2.2l-2.9-2.2c-.8.5-1.9.9-3.1.9-2.4 0-4.4-1.6-5.1-3.8H7.9v2.3C9.4 23.1 12.5 25 16 25z" fill="#34A853"/><path d="M10.9 17.7A5.4 5.4 0 0 1 10.6 16c0-.6.1-1.2.3-1.7V12H7.9A9 9 0 0 0 7 16c0 1.5.4 2.9 1 4.1l2.9-2.4z" fill="#FBBC05"/><path d="M16 10.5c1.4 0 2.6.5 3.5 1.4l2.6-2.6A9 9 0 0 0 16 7c-3.5 0-6.6 1.9-8.1 4.7l3 2.3c.7-2.2 2.7-3.5 5.1-3.5z" fill="#EA4335"/></svg>
+              </div>
+              <div class="sc-body">
+                <div class="sc-qr-frame">
+                  <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAQgAAAEICAIAAAAslP2oAAAE/UlEQVR4nO3dvY1cNxhAUa/hTGW5KxegrlyW4nFs4DIgQIKk9px4NH87FwTeJz5+fT6fP4D/+/P0G4AbCQOCMCAIA4IwIAgDgjAgCAOCMCAIA4IwIAgDgjAgCAOCMCD8NfsP/v75a8f7WO7ff35MPX70uWafZ9bu1539e6363m4z+7msGBCEAUEYEIQBQRgQhAFBGBCm5xgju6/3j5y6jr5q/nBq3jJ6/KnPtcqq34MVA4IwIAgDgjAgCAOCMCAIA8KyOcbIquvKu6+Ln5oDrNovcWo/yaxXfg9WDAjCgCAMCMKAIAwIwoAgDAjb5xivOHX/pd3PM/v42+Yep1gxIAgDgjAgCAOCMCAIA4IwIJhjLPbKvpGRV/Z17GbFgCAMCMKAIAwIwoAgDAjCgLB9jnHb9e9XrtPvvt/U7POsctv3PGLFgCAMCMKAIAwIwoAgDAjCgLBsjnHqvO3ddt/Hafd5GiO7z9l4/fdgxYAgDAjCgCAMCMKAIAwIwoDw9fl8Tr+HK+zep3FqXjHrlf0Su1kxIAgDgjAgCAOCMCAIA4IwIEzvx7jtvOqR33X/w6n7Yr3yPlexYkAQBgRhQBAGBGFAEAYEYUDYfj7G7uvZt53nMPq8u+cnp87TODXX2v08VgwIwoAgDAjCgCAMCMKAIAwIy+4rdWrfwuzzjLx+36dX9o3stmquZcWAIAwIwoAgDAjCgCAMCMKAsH0/xqm5xMiq/6//+n6DU/fpmnVqHmLFgCAMCMKAIAwIwoAgDAjCgPDMfoxVr3vbPOS2ecJtf8dTczArBgRhQBAGBGFAEAYEYUAQBoRlc4zbnJpvjNx2n6VT84pXWDEgCAOCMCAIA4IwIAgDgjAgTN9Xavf1+Ff2M9x2fvmp80NOzWdm2Y8BCwgDgjAgCAOCMCAIA4IwIGw/H2Nk1Xxg9/X+V+6zNOuVc9NPzZGsGBCEAUEYEIQBQRgQhAFBGBCm5xir7lN023kOu+2ez6zy3V53xIoBQRgQhAFBGBCEAUEYEIQB4br9GCO3zT1O7YsYmX0/t82LVs15Vv1OrBgQhAFBGBCEAUEYEIQBQRgQlp2PMXtdefd165FT53nvPm975LZzPFY9z+7vzYoBQRgQhAFBGBCEAUEYEIQBYdl9pVY9/pW5xMjvel1/9/4T95WCBwgDgjAgCAOCMCAIA4IwIBzbj3Hq3O7d50zPum2fyW3njZyae1gxIAgDgjAgCAOCMCAIA4IwIFy3H2PWqXM2Vtk9h1nltjnJ7jmPFQOCMCAIA4IwIAgDgjAgCAPCsv0Yt9m93+O28yVWve7s3/fU97P7da0YEIQBQRgQhAFBGBCEAUEYEKbnGCOv7GfYff179323Rr7bPo3d36cVA4IwIAgDgjAgCAOCMCAIA8KyOcbI7nMkVj3PqnnIrFfOz75tHmI/BhwgDAjCgCAMCMKAIAwIwoCwfY5xm1PX40+dy3HbeeQj9mPAA4QBQRgQhAFBGBCEAUEYEL7dHGPV9fjb5hW7rbpf1iusGBCEAUEYEIQBQRgQhAFBGBC2zzFev36/6pyKWa/so1j1uu4rBQ8QBgRhQBAGBGFAEAYEYUBYNsd45f/f7z4X/PVzu0dO3Vfq1BzMigFBGBCEAUEYEIQBQRgQhAHh6/P5nH4PcB0rBgRhQBAGBGFAEAYEYUAQBgRhQBAGBGFAEAYEYUAQBgRhQBAGhP8Arhoe9WdGuhEAAAAASUVORK5CYII=" alt="Google Reviews QR Code" />
+                </div>
+                <div class="sc-scan">📷 Scan to follow</div>
+                <div class="sc-name" style="color:#4285F4">Google Reviews</div>
+                <div class="sc-handle">Rate us ★★★★★</div>
+              </div>
+            </a>
+    </div>
   </section>
 
-  <!-- ══════════════════════════════════════════════════════════════
-       GET IN TOUCH — Contact info + enquiry form
-       Runtime loaded from site_settings key='contact_info'
-       Fields: address, phone1, phone2, email1, email2, hours,
-               map_embed_url, show_form, form_title, form_subtitle
-  ══════════════════════════════════════════════════════════════ -->
-  <style is:global>
-    .contact-section { padding:72px 32px 80px; background:#f8f4ef; }
-    .contact-inner { max-width:1200px; margin:0 auto; }
-    .contact-layout { display:grid; grid-template-columns:1fr 1fr; gap:48px; align-items:start; }
-    @media(max-width:768px){ .contact-layout { grid-template-columns:1fr; gap:32px; } }
-    .contact-info-card {
-      background:#fff; border-radius:16px; padding:24px 26px;
-      border:1px solid #e2e8f0; box-shadow:0 2px 8px rgba(0,0,0,0.05);
-      display:flex; align-items:flex-start; gap:16px; margin-bottom:14px;
-    }
-    .contact-info-icon {
-      width:44px; height:44px; border-radius:12px; background:#eff6ff;
-      display:flex; align-items:center; justify-content:center; font-size:20px; flex-shrink:0;
-    }
-    .contact-info-label { font-family:'Sora',sans-serif; font-weight:700; font-size:14px; color:#0b1525; margin:0 0 4px; }
-    .contact-info-val { font-size:14px; color:#475569; line-height:1.6; margin:0; }
-    .contact-info-val a { color:#0b1525; text-decoration:none; }
-    .contact-info-val a:hover { text-decoration:underline; }
-    .contact-map { border-radius:16px; overflow:hidden; border:1px solid #e2e8f0; height:220px; margin-top:14px; background:#f1f5f9; display:flex; align-items:center; justify-content:center; font-size:13px; color:#94a3b8; }
-    .contact-map iframe { width:100%; height:100%; border:none; }
-    .contact-form-card {
-      background:#fff; border-radius:16px; padding:32px;
-      border:1px solid #e2e8f0; box-shadow:0 2px 8px rgba(0,0,0,0.05);
-    }
-    .contact-form-title { font-family:'Sora',sans-serif; font-weight:800; font-size:1.15rem; color:#0b1525; margin:0 0 4px; }
-    .contact-form-sub { font-size:13px; color:#94a3b8; margin:0 0 22px; }
-    .cf-field { margin-bottom:14px; }
-    .cf-field input, .cf-field select, .cf-field textarea {
-      width:100%; padding:10px 14px; border:1.5px solid #e2e8f0; border-radius:9px;
-      font-size:14px; color:#1e293b; outline:none; background:#fff;
-      font-family:'Inter',sans-serif; box-sizing:border-box; transition:border-color 0.15s;
-    }
-    .cf-field input:focus, .cf-field select:focus, .cf-field textarea:focus { border-color:#0b1525; }
-    .cf-field textarea { resize:vertical; min-height:80px; }
-    .cf-submit {
-      width:100%; background:#0b1525; color:#d4f01a;
-      border:none; border-radius:10px; padding:13px;
-      font-size:15px; font-weight:800; cursor:pointer;
-      font-family:'Inter',sans-serif; transition:background 0.15s;
-    }
-    .cf-submit:hover { background:#0b1525; }
-    .cf-submit:disabled { background:#94a3b8; cursor:not-allowed; }
-    #cf-success { background:#dcfce7; color:#166534; border:1px solid #bbf7d0; border-radius:9px; padding:14px; text-align:center; font-weight:700; display:none; margin-top:12px; }
-    #cf-error { background:#fee2e2; color:#991b1b; border-radius:9px; padding:10px 14px; font-size:13px; display:none; margin-bottom:12px; }
-  </style>
-
-  <section class="contact-section" id="contact-section" style="display:none;">
+    <section class="contact-section" id="contact-section" style="display:none;">
     <div class="contact-inner">
       <div style="text-align:center;margin-bottom:48px;">
         <p style="font-size:13px;font-weight:700;color:#d4f01a;text-transform:uppercase;letter-spacing:0.08em;margin:0 0 6px;background:#0b1525;display:inline-block;padding:3px 10px;border-radius:4px;">Contact</p>
@@ -3180,61 +3276,8 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
     return d?.[0]?.value ?? null
   }
 
-  // ── PLATFORM ICON COLOURS ──────────────────────────────────────────
-  const PLATFORM_COLORS = {
-    whatsapp:  { bg:'#25d366', icon:'💬' },
-    instagram: { bg:'linear-gradient(135deg,#833ab4,#fd1d1d,#fcb045)', icon:'📸' },
-    facebook:  { bg:'#1877f2', icon:'👥' },
-    youtube:   { bg:'#ff0000', icon:'▶️' },
-    google:    { bg:'#4285f4', icon:'⭐' },
-    twitter:   { bg:'#1da1f2', icon:'🐦' },
-    linkedin:  { bg:'#0a66c2', icon:'💼' },
-    telegram:  { bg:'#0088cc', icon:'✈️' },
-    default:   { bg:'#64748b', icon:'🔗' },
-  }
+  // ── 1. CONNECT WITH US (static HTML, no JS needed) ──────────────
 
-  // ── 1. CONNECT WITH US ─────────────────────────────────────────────
-  const DEFAULT_CONNECT = {
-    title:'Connect With Us',
-    subtitle:'Scan a QR or tap a card to follow us — stay updated with latest courses, events & student wins',
-    platforms:[
-      { name:'WhatsApp', url:'https://wa.me/917009933289', platform:'whatsapp', qr_url:'', is_active:true },
-      { name:'Instagram', url:'https://www.instagram.com/ateceducation/', platform:'instagram', qr_url:'', is_active:true },
-      { name:'Facebook', url:'https://www.facebook.com/ateceducation', platform:'facebook', qr_url:'', is_active:true },
-      { name:'YouTube', url:'https://www.youtube.com/@ATECEducationalSociety', platform:'youtube', qr_url:'', is_active:true },
-      { name:'Google Reviews', url:'https://g.page/r/atec-gurdaspur', platform:'google', qr_url:'', is_active:true },
-    ]
-  }
-
-  function renderConnect(cfg) {
-    const c = cfg || DEFAULT_CONNECT
-    setText('connect-title', c.title || 'Connect With Us')
-    setText('connect-sub', c.subtitle || '')
-    const grid = document.getElementById('connect-grid')
-    if (!grid) return
-
-    const active = (c.platforms||[]).filter(p=>p.is_active!==false)
-    if (!active.length) return
-
-    grid.innerHTML = active.map(p => {
-      const key = (p.platform||p.name||'').toLowerCase().replace(/\s+/g,'')
-      const style = PLATFORM_COLORS[key] || PLATFORM_COLORS.default
-      const bg = style.bg
-      const icon = p.custom_icon || style.icon
-      const qrHtml = p.qr_url
-        ? `<img src="${p.qr_url}" alt="${p.name} QR" />`
-        : `<div class="connect-qr-placeholder">QR code<br/>coming soon</div>`
-      return `<a class="connect-card" href="${p.url||'#'}" target="_blank" rel="noopener" aria-label="${p.name}">
-        <div class="connect-icon-wrap" style="background:${bg}">
-          <span style="font-size:26px">${icon}</span>
-        </div>
-        <div class="connect-qr">${qrHtml}</div>
-        <div class="connect-name">${p.name}</div>
-      </a>`
-    }).join('')
-
-    show('connect-section')
-  }
 
   // ── 2. GET IN TOUCH ────────────────────────────────────────────────
   const DEFAULT_CONTACT = {
@@ -3394,7 +3437,6 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
   // ── Boot all 4 loaders ────────────────────────────────────────────
   async function loadAll() {
     // Render defaults immediately
-    renderConnect(null)
     renderContact(null)
     renderFAQ(null)
     renderDownloads(null)
@@ -3402,13 +3444,11 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
     // Then upgrade from DB
     if (!window.__SB_URL || !window.__SB_KEY) return
     try {
-      const [connectCfg, contactCfg, faqCfg, dlCfg] = await Promise.all([
-        sbFetch('social_connect'),
+      const [contactCfg, faqCfg, dlCfg] = await Promise.all([
         sbFetch('contact_info'),
         sbFetch('faq_items'),
         sbFetch('download_resources'),
       ])
-      if (connectCfg) renderConnect(connectCfg)
       if (contactCfg) renderContact(contactCfg)
       if (faqCfg)     renderFAQ(faqCfg)
       if (dlCfg)      renderDownloads(dlCfg)
