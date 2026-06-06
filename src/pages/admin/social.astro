@@ -1,13 +1,316 @@
 ---
+// src/pages/admin/social.astro
 import AdminLayout from '../../layouts/AdminLayout.astro'
-const { pathname } = Astro.url
-const section = pathname.split('/').pop() ?? ''
 ---
-<AdminLayout title="Manager" activeSection={section}>
-  <div style="background:#fff;border-radius:16px;border:1px solid #e2e8f0;padding:40px;text-align:center;">
-    <div style="font-size:48px;margin-bottom:16px">📋</div>
-    <h2 style="font-family:Sora,sans-serif;font-weight:700;font-size:1.3rem;margin-bottom:8px">Section Ready</h2>
-    <p style="color:#64748b;font-size:14px;max-width:400px;margin:0 auto">This admin section is set up and connected to Supabase. Tell Claude "build the [section name] admin manager" to get the full CRUD component.</p>
-    <a href="/admin" style="display:inline-block;margin-top:20px;padding:10px 24px;background:#1c3d7a;color:#fff;border-radius:10px;font-weight:700;font-size:14px;text-decoration:none">← Back to Dashboard</a>
+<AdminLayout title="Social Links" activeSection="social">
+
+<style>
+  .wrap { max-width:820px }
+  .pg-title { font-family:'Sora',sans-serif; font-size:20px; font-weight:900; color:#0b1a2e; margin:0 0 2px }
+  .pg-sub { font-size:13px; color:#94a3b8; margin:0 0 20px }
+  .panel { background:#fff; border-radius:14px; border:1px solid #e2e8f0; padding:22px; margin-bottom:16px }
+  .panel-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:18px; gap:12px }
+  .panel-title { font-size:15px; font-weight:700; color:#0b1a2e; margin:0 }
+  .panel-desc { font-size:12px; color:#94a3b8; margin:3px 0 0 }
+  .f2 { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px }
+  @media(max-width:580px){ .f2 { grid-template-columns:1fr } }
+  .field { display:flex; flex-direction:column; gap:4px }
+  .lbl { font-size:11px; font-weight:700; color:#64748b; text-transform:uppercase; letter-spacing:0.04em }
+  input[type=text],input[type=url],input[type=color],select {
+    padding:8px 11px; border:1.5px solid #e2e8f0; border-radius:8px;
+    font-size:13px; color:#1e293b; outline:none; font-family:'Inter',sans-serif;
+    width:100%; box-sizing:border-box; background:#fff; transition:border-color 0.15s
+  }
+  input:focus,select:focus { border-color:#0b1a2e }
+
+  /* Platform row */
+  .plat-table-head {
+    display:grid; grid-template-columns:36px 36px 150px 1fr 1fr auto;
+    gap:8px; padding:0 12px 6px;
+    font-size:10px; font-weight:700; color:#94a3b8; text-transform:uppercase; letter-spacing:0.05em;
+  }
+  .plat-row {
+    display:grid; grid-template-columns:36px 36px 150px 1fr 1fr auto;
+    gap:8px; align-items:center; padding:8px 12px;
+    border:1px solid #e8edf2; border-radius:9px; margin-bottom:5px; background:#fafbfc;
+    transition:border-color 0.15s;
+  }
+  .plat-row:hover { border-color:#0b1a2e; background:#fff }
+  @media(max-width:640px){ .plat-table-head { display:none } .plat-row { grid-template-columns:1fr 1fr; grid-template-rows:auto auto auto; } }
+  .plat-num { width:28px; height:28px; border-radius:7px; background:#0b1a2e; color:#d4f01a; font-size:12px; font-weight:900; display:flex; align-items:center; justify-content:center; font-family:'Sora',sans-serif; flex-shrink:0 }
+  .plat-emoji { font-size:20px; text-align:center; line-height:1 }
+  .plat-del { background:#fee2e2; border:none; color:#dc2626; border-radius:6px; padding:5px 10px; font-size:11px; font-weight:700; cursor:pointer; white-space:nowrap; font-family:'Inter',sans-serif }
+  .plat-del:hover { background:#fca5a5 }
+  .plat-toggle { display:flex; align-items:center; gap:5px; font-size:12px; color:#64748b; cursor:pointer; white-space:nowrap }
+  .plat-toggle input { width:14px; height:14px; accent-color:#0b1a2e; cursor:pointer }
+
+  /* Buttons */
+  .save-btn { display:inline-flex; align-items:center; gap:7px; background:#0b1a2e; color:#d4f01a; border:none; border-radius:9px; padding:10px 20px; font-size:13px; font-weight:800; cursor:pointer; font-family:'Inter',sans-serif; transition:background 0.15s; white-space:nowrap }
+  .save-btn:hover { background:#1a3460 }
+  .save-btn:disabled { background:#94a3b8; cursor:not-allowed; color:#fff }
+  .add-btn { display:flex; align-items:center; gap:6px; padding:8px 14px; background:#f0f9ff; border:1.5px dashed #93c5fd; color:#0b1a2e; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer; font-family:'Inter',sans-serif; transition:all 0.15s; justify-content:center; width:100%; margin-top:4px }
+  .add-btn:hover { background:#dbeafe }
+  .status { font-size:12px; font-weight:600; padding:8px 14px; border-radius:8px; margin-top:10px }
+  .status.ok  { background:#dcfce7; color:#166534 }
+  .status.err { background:#fee2e2; color:#991b1b }
+
+  /* Preview strip */
+  .preview-strip { display:flex; gap:10px; flex-wrap:wrap; padding:14px; background:#0b1a2e; border-radius:10px; margin-top:16px }
+  .preview-chip { display:flex; align-items:center; gap:6px; padding:6px 12px; border-radius:20px; background:rgba(255,255,255,0.1); font-size:12px; font-weight:600; color:#fff }
+  .preview-chip .dot { width:8px; height:8px; border-radius:50%; flex-shrink:0 }
+
+  /* Info box */
+  .info-box { background:#eff6ff; border:1px solid #bfdbfe; border-radius:10px; padding:14px 16px; margin-bottom:16px; font-size:13px; color:#1d4ed8; line-height:1.6 }
+</style>
+
+<div class="wrap">
+  <h1 class="pg-title">📱 Social Media Links</h1>
+  <p class="pg-sub">Manage all social platform links, handles, and display settings. Changes go live instantly on the homepage.</p>
+
+  <div class="info-box">
+    <strong>How it works:</strong> Add your social media URLs below. The homepage "Connect With Us" section reads these live from the database — no code changes needed. Each platform shows as a branded card with a QR code (if you paste a QR image URL) or just a link card.
   </div>
+
+  <!-- ── Main Social Platforms ── -->
+  <div class="panel">
+    <div class="panel-head">
+      <div>
+        <div class="panel-title">📡 Social Platforms</div>
+        <div class="panel-desc">Shown as cards in the "Connect With Us" section on the homepage</div>
+      </div>
+      <button class="save-btn" id="social-save-btn" onclick="saveSocial()">💾 Save</button>
+    </div>
+
+    <div class="f2" style="margin-bottom:16px;">
+      <div class="field"><label class="lbl">Section Title</label><input type="text" id="sc-title" value="Connect With Us" placeholder="Connect With Us"></div>
+      <div class="field"><label class="lbl">Section Subtitle</label><input type="text" id="sc-sub" value="Stay updated with courses, results & student wins" placeholder="Subtitle text"></div>
+    </div>
+
+    <div class="plat-table-head">
+      <div></div><div>Icon</div><div>Platform</div><div>Display Name / Handle</div><div>Profile URL</div><div>Show</div>
+    </div>
+    <div id="plat-list"></div>
+    <button class="add-btn" id="plat-add-btn">+ Add Platform</button>
+    <div id="social-status" class="status" style="display:none"></div>
+
+    <!-- Live preview strip -->
+    <div style="margin-top:16px;">
+      <div style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;margin-bottom:8px;">Preview (homepage strip)</div>
+      <div class="preview-strip" id="preview-strip"></div>
+    </div>
+  </div>
+
+  <!-- ── Footer Social Icons ── -->
+  <div class="panel">
+    <div class="panel-head">
+      <div>
+        <div class="panel-title">🔗 Footer & Navbar Social Icons</div>
+        <div class="panel-desc">Small icon links shown in the site footer and navigation bar</div>
+      </div>
+      <button class="save-btn" id="footer-save-btn" onclick="saveFooter()">💾 Save</button>
+    </div>
+    <div class="f2">
+      <div class="field"><label class="lbl">WhatsApp Number</label><input type="text" id="ft-whatsapp" placeholder="+91 7009933289" value="+91 7009933289"><span style="font-size:11px;color:#94a3b8;margin-top:3px;">Used in the header "WhatsApp" button and footer</span></div>
+      <div class="field"><label class="lbl">Instagram URL</label><input type="url" id="ft-instagram" placeholder="https://www.instagram.com/ateceducation/"></div>
+      <div class="field"><label class="lbl">Facebook URL</label><input type="url" id="ft-facebook" placeholder="https://www.facebook.com/ateceducation"></div>
+      <div class="field"><label class="lbl">YouTube Channel URL</label><input type="url" id="ft-youtube" placeholder="https://www.youtube.com/@ATECEducationalSociety"></div>
+      <div class="field"><label class="lbl">LinkedIn URL (optional)</label><input type="url" id="ft-linkedin" placeholder="https://www.linkedin.com/..."></div>
+      <div class="field"><label class="lbl">Twitter / X URL (optional)</label><input type="url" id="ft-twitter" placeholder="https://twitter.com/..."></div>
+    </div>
+    <div id="footer-status" class="status" style="display:none"></div>
+  </div>
+
+  <!-- ── QR Code Guide ── -->
+  <div class="panel" style="background:#f8fafc;">
+    <div class="panel-title" style="margin-bottom:10px;">📷 How to Add QR Codes</div>
+    <ol style="font-size:13px;color:#64748b;line-height:2.2;padding-left:20px;margin:0;">
+      <li>Go to <strong>qr-code-generator.com</strong> (free)</li>
+      <li>Paste your social profile URL → Generate QR</li>
+      <li>Download as PNG</li>
+      <li>Go to <strong>Supabase → Storage → New bucket</strong> (name it <code style="background:#e2e8f0;padding:1px 5px;border-radius:4px;">qr-codes</code>, set to Public)</li>
+      <li>Upload the PNG → copy the public URL</li>
+      <li>Paste the URL in the "QR Code URL" column in the platform row above</li>
+    </ol>
+  </div>
+</div>
+
+<script>
+const SB_URL = (window as any).__SB_URL as string
+const SB_KEY = (window as any).__SB_KEY as string
+
+const PLATFORM_META: any = {
+  whatsapp:  { emoji:'💬', color:'#25D366', label:'WhatsApp' },
+  instagram: { emoji:'📸', color:'#d6249f', label:'Instagram' },
+  facebook:  { emoji:'👥', color:'#1877F2', label:'Facebook' },
+  youtube:   { emoji:'▶️', color:'#FF0000', label:'YouTube' },
+  google:    { emoji:'⭐', color:'#4285F4', label:'Google Reviews' },
+  twitter:   { emoji:'🐦', color:'#1DA1F2', label:'Twitter / X' },
+  linkedin:  { emoji:'💼', color:'#0077B5', label:'LinkedIn' },
+  telegram:  { emoji:'✈️', color:'#2CA5E0', label:'Telegram' },
+  threads:   { emoji:'🧵', color:'#000', label:'Threads' },
+  other:     { emoji:'🔗', color:'#64748b', label:'Other' },
+}
+
+const DEFAULT_PLATFORMS = [
+  { platform:'whatsapp',  name:'WhatsApp',              handle:'+91 7009933289',          url:'https://wa.me/917009933289',                    qr_url:'', is_active:true },
+  { platform:'instagram', name:'Instagram',             handle:'@ateceducation',           url:'https://www.instagram.com/ateceducation/',       qr_url:'', is_active:true },
+  { platform:'facebook',  name:'Facebook',              handle:'ATEC Educational Society', url:'https://www.facebook.com/ateceducation',         qr_url:'', is_active:true },
+  { platform:'youtube',   name:'YouTube',               handle:'@ATECEducationalSociety',  url:'https://www.youtube.com/@ATECEducationalSociety', qr_url:'', is_active:true },
+  { platform:'google',    name:'Google Reviews',        handle:'Rate us ★★★★★',           url:'https://g.page/r/atec-gurdaspur',                qr_url:'', is_active:true },
+]
+
+let platforms: any[] = JSON.parse(JSON.stringify(DEFAULT_PLATFORMS))
+
+function esc(s: string) { return String(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;') }
+function v(id: string)  { return ((document.getElementById(id) as HTMLInputElement)?.value||'').trim() }
+function sv(id: string, val: string) { const el=document.getElementById(id) as HTMLInputElement; if(el) el.value=val||'' }
+function schk(id: string, val: boolean) { const el=document.getElementById(id) as HTMLInputElement; if(el) el.checked=!!val }
+function chk(id: string) { return !!(document.getElementById(id) as HTMLInputElement)?.checked }
+
+async function sbGet(key: string) {
+  if(!SB_URL||!SB_KEY) return null
+  const r = await fetch(`${SB_URL}/rest/v1/site_settings?key=eq.${key}&select=value`, { headers:{ apikey:SB_KEY, Authorization:`Bearer ${SB_KEY}` } })
+  return (await r.json())?.[0]?.value ?? null
+}
+async function sbSet(key: string, value: any) {
+  await fetch(`${SB_URL}/rest/v1/site_settings`, {
+    method:'POST',
+    headers:{ apikey:SB_KEY, Authorization:`Bearer ${SB_KEY}`, 'Content-Type':'application/json', Prefer:'resolution=merge-duplicates,return=minimal' },
+    body:JSON.stringify({key,value})
+  })
+}
+function showStatus(id: string, ok: boolean, msg: string) {
+  const el = document.getElementById(id)!
+  el.textContent = msg; el.className = 'status ' + (ok ? 'ok' : 'err'); el.style.display = 'block'
+  setTimeout(() => el.style.display = 'none', 3000)
+}
+
+// ── Render ────────────────────────────────────────────────────────
+function renderPlatforms() {
+  const list = document.getElementById('plat-list')!
+  list.innerHTML = ''
+  platforms.forEach((p, i) => {
+    const meta = PLATFORM_META[p.platform] || PLATFORM_META.other
+    const row = document.createElement('div')
+    row.className = 'plat-row'
+    row.innerHTML = `
+      <div class="plat-num">${i+1}</div>
+      <div class="plat-emoji">${meta.emoji}</div>
+      <select id="pp-type-${i}" onchange="updatePlatMeta(${i})" style="padding:6px 8px;font-size:12px;">
+        ${Object.entries(PLATFORM_META).map(([k,m]:any)=>`<option value="${k}"${p.platform===k?' selected':''}>${m.label}</option>`).join('')}
+      </select>
+      <div style="display:grid;grid-template-rows:1fr 1fr;gap:4px;">
+        <input type="text" id="pp-name-${i}" value="${esc(p.name||'')}" placeholder="Display name" style="font-size:12px;padding:5px 8px;">
+        <input type="text" id="pp-handle-${i}" value="${esc(p.handle||'')}" placeholder="@handle or number" style="font-size:12px;padding:5px 8px;border-color:#f1f5f9;color:#94a3b8;">
+      </div>
+      <div style="display:grid;grid-template-rows:1fr 1fr;gap:4px;">
+        <input type="url" id="pp-url-${i}" value="${esc(p.url||'')}" placeholder="https://..." style="font-size:12px;padding:5px 8px;">
+        <input type="url" id="pp-qr-${i}" value="${esc(p.qr_url||'')}" placeholder="QR code image URL (optional)" style="font-size:12px;padding:5px 8px;border-color:#f1f5f9;color:#94a3b8;">
+      </div>
+      <div style="display:flex;flex-direction:column;gap:6px;align-items:center;">
+        <label class="plat-toggle"><input type="checkbox" id="pp-active-${i}" ${p.is_active!==false?'checked':''}> Show</label>
+        <button class="plat-del" onclick="platDel(${i})">✕</button>
+      </div>`
+    list.appendChild(row)
+  })
+  renderPreview()
+}
+
+function renderPreview() {
+  const strip = document.getElementById('preview-strip')!
+  strip.innerHTML = platforms.filter(p=>p.is_active!==false).map((p,i) => {
+    const meta = PLATFORM_META[p.platform] || PLATFORM_META.other
+    return `<div class="preview-chip"><div class="dot" style="background:${meta.color}"></div>${meta.emoji} ${esc(p.name||meta.label)}</div>`
+  }).join('')
+  if(!strip.innerHTML) strip.innerHTML = '<span style="color:rgba(255,255,255,0.3);font-size:12px;">No active platforms</span>'
+}
+
+;(window as any).updatePlatMeta = function(i: number) {
+  const type = (document.getElementById(`pp-type-${i}`) as HTMLSelectElement)?.value
+  const meta  = PLATFORM_META[type] || PLATFORM_META.other
+  const nameEl = document.getElementById(`pp-name-${i}`) as HTMLInputElement
+  if (nameEl && (!nameEl.value || nameEl.value === platforms[i].name)) nameEl.value = meta.label
+  // Update emoji
+  const row  = document.querySelectorAll('.plat-row')[i]
+  const emojiEl = row?.querySelector('.plat-emoji')
+  if (emojiEl) emojiEl.textContent = meta.emoji
+}
+;(window as any).platDel = (i: number) => {
+  collectPlatforms(); platforms.splice(i,1); renderPlatforms()
+}
+document.getElementById('plat-add-btn')?.addEventListener('click', () => {
+  collectPlatforms()
+  platforms.push({ platform:'other', name:'', handle:'', url:'', qr_url:'', is_active:true })
+  renderPlatforms()
+  setTimeout(() => (document.getElementById(`pp-name-${platforms.length-1}`) as HTMLInputElement)?.focus(), 50)
+})
+
+function collectPlatforms() {
+  platforms = platforms.map((_,i) => ({
+    platform:  (document.getElementById(`pp-type-${i}`) as HTMLSelectElement)?.value || 'other',
+    name:      v(`pp-name-${i}`),
+    handle:    v(`pp-handle-${i}`),
+    url:       v(`pp-url-${i}`),
+    qr_url:    v(`pp-qr-${i}`),
+    is_active: chk(`pp-active-${i}`),
+  }))
+}
+
+;(window as any).saveSocial = async function() {
+  const btn = document.getElementById('social-save-btn') as HTMLButtonElement
+  btn.disabled=true; btn.textContent='⏳'
+  collectPlatforms()
+  const payload = {
+    title:     v('sc-title') || 'Connect With Us',
+    subtitle:  v('sc-sub'),
+    platforms,
+  }
+  try {
+    await sbSet('social_links', payload)
+    renderPreview()
+    showStatus('social-status', true, '✅ Saved! Connect section updated live on homepage.')
+  } catch(e:any) { showStatus('social-status', false, '❌ ' + (e.message||'Save failed')) }
+  btn.disabled=false; btn.textContent='💾 Save'
+}
+
+// ── Footer links ────────────────────────────────────────────────
+;(window as any).saveFooter = async function() {
+  const btn = document.getElementById('footer-save-btn') as HTMLButtonElement
+  btn.disabled=true; btn.textContent='⏳'
+  const payload = {
+    whatsapp:  v('ft-whatsapp'),
+    instagram: v('ft-instagram'),
+    facebook:  v('ft-facebook'),
+    youtube:   v('ft-youtube'),
+    linkedin:  v('ft-linkedin'),
+    twitter:   v('ft-twitter'),
+  }
+  try {
+    await sbSet('footer_social', payload)
+    showStatus('footer-status', true, '✅ Saved! Footer social icons updated.')
+  } catch(e:any) { showStatus('footer-status', false, '❌ ' + (e.message||'Save failed')) }
+  btn.disabled=false; btn.textContent='💾 Save'
+}
+
+// ── Preload ────────────────────────────────────────────────────
+async function preload() {
+  try {
+    const [sl, ft] = await Promise.all([sbGet('social_links'), sbGet('footer_social')])
+    if (sl) {
+      sv('sc-title', sl.title)
+      sv('sc-sub', sl.subtitle)
+      if (Array.isArray(sl.platforms) && sl.platforms.length) platforms = sl.platforms
+    }
+    if (ft) {
+      sv('ft-whatsapp', ft.whatsapp); sv('ft-instagram', ft.instagram)
+      sv('ft-facebook', ft.facebook); sv('ft-youtube', ft.youtube)
+      sv('ft-linkedin', ft.linkedin); sv('ft-twitter', ft.twitter)
+    }
+  } catch(e) { console.warn('Preload:', e) }
+  renderPlatforms()
+}
+
+renderPlatforms()
+preload()
+</script>
 </AdminLayout>
