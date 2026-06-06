@@ -1,234 +1,405 @@
+// src/components/verification/CertificateVerifier.tsx
+// Shows: Certificate No, Batch_ID, Name, Father Name, Course Name,
+//        From Date, To Date (issue_date), No Of Hours, Grade
+// Matches the old atecedu.com PHP site output exactly.
+
 import { useState } from 'react'
-import { supabase } from '@/lib/supabase'
-import type { Certificate } from '@/lib/supabase'
-import { Search, CheckCircle2, XCircle, Loader2, ShieldCheck } from 'lucide-react'
+import { createClient } from '@supabase/supabase-js'
 
-type Result = Certificate | 'not_found' | null
+const supabase = createClient(
+  (import.meta as any).env.PUBLIC_SUPABASE_URL,
+  (import.meta as any).env.PUBLIC_SUPABASE_ANON_KEY
+)
 
-const clean = (val: string) =>
-  val.trim().replace(/[<>'"`;]/g, '').slice(0, 150)
+interface Certificate {
+  certificate_no: string
+  batch_id: string
+  student_name: string
+  father_name: string
+  course_name: string
+  course_duration: string
+  from_date: string | null
+  issue_date: string | null
+  grade: string
+  center_name: string
+  is_active: boolean
+}
+
+function clean(val: string) {
+  return val.trim().replace(/[<>'"`;]/g, '').slice(0, 150)
+}
+
+function formatDate(dateStr: string | null): string {
+  if (!dateStr) return '—'
+  try {
+    const d = new Date(dateStr)
+    const day = d.getDate()
+    const month = d.toLocaleString('en-IN', { month: 'short' })
+    const year = d.getFullYear()
+    return `${day}-${month}-${year}`
+  } catch {
+    return dateStr
+  }
+}
 
 export default function CertificateVerifier() {
-  const [fields, setFields] = useState({
-    certNo:     '',
-    batchId:    '',
-    name:       '',
-    fatherName: '',
-  })
-  const [result,  setResult]  = useState<Result>(null)
+  const [certNo, setCertNo]   = useState('')
+  const [batchId, setBatchId] = useState('')
+  const [name, setName]       = useState('')
+  const [father, setFather]   = useState('')
   const [loading, setLoading] = useState(false)
-  const [error,   setError]   = useState('')
+  const [result, setResult]   = useState<Certificate | null>(null)
+  const [notFound, setNotFound] = useState(false)
+  const [error, setError]     = useState('')
 
-  const hasInput = Object.values(fields).some(v => v.trim().length > 0)
+  async function handleVerify(e: React.FormEvent) {
+    e.preventDefault()
+    setResult(null)
+    setNotFound(false)
+    setError('')
 
-  const handleVerify = async () => {
+    const hasInput = certNo.trim() || batchId.trim() || name.trim() || father.trim()
     if (!hasInput) {
       setError('Please enter at least one field to search.')
       return
     }
-    setError('')
-    setResult(null)
+
     setLoading(true)
 
-    try {
-      let query = supabase
-        .from('certificates')
-        .select('*')
-        .eq('is_active', true)
+    let query = supabase
+      .from('certificates')
+      .select('*')
+      .eq('is_active', true)
 
-      if (fields.certNo)     query = query.ilike('certificate_no', clean(fields.certNo))
-      if (fields.batchId)    query = query.ilike('batch_id',       clean(fields.batchId))
-      if (fields.name)       query = query.ilike('student_name',   `%${clean(fields.name)}%`)
-      if (fields.fatherName) query = query.ilike('father_name',    `%${clean(fields.fatherName)}%`)
+    if (certNo.trim())   query = query.ilike('certificate_no', clean(certNo))
+    if (batchId.trim())  query = query.ilike('batch_id', clean(batchId))
+    if (name.trim())     query = query.ilike('student_name', `%${clean(name)}%`)
+    if (father.trim())   query = query.ilike('father_name', `%${clean(father)}%`)
 
-      const { data, error: dbError } = await query.limit(1).single()
+    query = query.limit(1).single()
 
-      if (dbError || !data) {
-        setResult('not_found')
-      } else {
-        setResult(data as Certificate)
-      }
-    } catch {
-      setError('Network error. Please check your connection and try again.')
-    } finally {
-      setLoading(false)
+    const { data, error: dbErr } = await query
+
+    if (dbErr || !data) {
+      setNotFound(true)
+    } else {
+      setResult(data as Certificate)
     }
+    setLoading(false)
   }
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') handleVerify()
-  }
-
-  const reset = () => {
-    setFields({ certNo: '', batchId: '', name: '', fatherName: '' })
+  function handleReset() {
+    setCertNo('')
+    setBatchId('')
+    setName('')
+    setFather('')
     setResult(null)
+    setNotFound(false)
     setError('')
   }
 
   return (
-    <div className="w-full max-w-2xl mx-auto">
+    <div style={{
+      fontFamily: "'Segoe UI', system-ui, sans-serif",
+      maxWidth: 720,
+      margin: '0 auto',
+      padding: '0 16px',
+    }}>
 
-      {/* Header */}
-      <div className="text-center mb-10">
-        <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-[#0D1B3E] mb-4">
-          <ShieldCheck className="w-7 h-7 text-[#E8F531]" />
+      {/* Icon + heading */}
+      <div style={{ textAlign: 'center', marginBottom: 32 }}>
+        <div style={{
+          width: 64, height: 64,
+          background: 'linear-gradient(135deg, #1a2744, #2d4a8a)',
+          borderRadius: '50%',
+          display: 'inline-flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          marginBottom: 16,
+          boxShadow: '0 4px 20px rgba(45,74,138,0.35)',
+        }}>
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#f0c040" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            <polyline points="9 12 11 14 15 10"/>
+          </svg>
         </div>
-        <h1 className="font-display text-3xl font-700 text-[#0D1B3E] mb-2">
+        <h1 style={{ fontSize: 26, fontWeight: 700, color: '#1a2744', margin: 0 }}>
           Certificate Verification
         </h1>
-        <p className="text-gray-500 text-sm">
+        <p style={{ color: '#64748b', fontSize: 14, margin: '8px 0 0' }}>
           Enter any detail below to instantly verify an ATEC certificate
         </p>
       </div>
 
       {/* Search form */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-card p-6 mb-6">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-5">
-          <div>
-            <label className="block text-xs font-sans font-500 text-gray-500 mb-1.5 uppercase tracking-wide">
-              Certificate Number
-            </label>
-            <input
-              className="input"
-              placeholder="e.g. ATEC-2019-001"
-              value={fields.certNo}
-              onChange={e => setFields(f => ({ ...f, certNo: e.target.value }))}
-              onKeyDown={handleKeyDown}
-            />
-          </div>
-          <div>
-            <label className="block text-xs font-sans font-500 text-gray-500 mb-1.5 uppercase tracking-wide">
-              Batch ID
-            </label>
-            <input
-              className="input"
-              placeholder="e.g. B2019-HN"
-              value={fields.batchId}
-              onChange={e => setFields(f => ({ ...f, batchId: e.target.value }))}
-              onKeyDown={handleKeyDown}
-            />
-          </div>
-          <div>
-            <label className="block text-xs font-sans font-500 text-gray-500 mb-1.5 uppercase tracking-wide">
-              Student Name
-            </label>
-            <input
-              className="input"
-              placeholder="Enter student name"
-              value={fields.name}
-              onChange={e => setFields(f => ({ ...f, name: e.target.value }))}
-              onKeyDown={handleKeyDown}
-            />
-          </div>
-          <div>
-            <label className="block text-xs font-sans font-500 text-gray-500 mb-1.5 uppercase tracking-wide">
-              Father's Name
-            </label>
-            <input
-              className="input"
-              placeholder="Enter father's name"
-              value={fields.fatherName}
-              onChange={e => setFields(f => ({ ...f, fatherName: e.target.value }))}
-              onKeyDown={handleKeyDown}
-            />
-          </div>
-        </div>
-
-        {error && (
-          <p className="text-red-500 text-sm mb-4 flex items-center gap-2">
-            <XCircle className="w-4 h-4 shrink-0" />
-            {error}
-          </p>
-        )}
-
-        <button
-          onClick={handleVerify}
-          disabled={loading || !hasInput}
-          className="w-full flex items-center justify-center gap-2 bg-[#0D1B3E] text-white font-display font-600 py-3.5 rounded-xl hover:bg-[#162550] disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
-        >
-          {loading
-            ? <><Loader2 className="w-4 h-4 animate-spin" /> Verifying...</>
-            : <><Search className="w-4 h-4" /> Verify Certificate</>
-          }
-        </button>
-      </div>
-
-      {/* Not found */}
-      {result === 'not_found' && (
-        <div className="bg-red-50 border border-red-200 rounded-2xl p-6">
-          <div className="flex items-start gap-3">
-            <XCircle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
-            <div>
-              <p className="font-display font-600 text-red-700 mb-1">Certificate Not Found</p>
-              <p className="text-sm text-red-600 leading-relaxed">
-                No matching certificate found. Please check spelling and try again.
-                For help, contact ATEC at{' '}
-                <a href="tel:+917009933289" className="underline">+91 7009933289</a>.
-              </p>
-              <button
-                onClick={reset}
-                className="mt-3 text-sm text-red-600 underline hover:no-underline"
-              >
-                Search again
-              </button>
+      {!result && (
+        <div style={{
+          background: '#fff',
+          borderRadius: 14,
+          border: '1px solid #e2e8f0',
+          padding: '28px 28px 20px',
+          boxShadow: '0 4px 24px rgba(0,0,0,0.07)',
+        }}>
+          <form onSubmit={handleVerify}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px 20px' }}>
+              <div>
+                <label style={labelStyle}>CERTIFICATE NUMBER</label>
+                <input
+                  type="text"
+                  value={certNo}
+                  onChange={e => setCertNo(e.target.value)}
+                  placeholder="e.g. C-1900300146"
+                  style={inputStyle}
+                />
+              </div>
+              <div>
+                <label style={labelStyle}>BATCH ID</label>
+                <input
+                  type="text"
+                  value={batchId}
+                  onChange={e => setBatchId(e.target.value)}
+                  placeholder="e.g. S-251547"
+                  style={inputStyle}
+                />
+              </div>
+              <div>
+                <label style={labelStyle}>STUDENT NAME</label>
+                <input
+                  type="text"
+                  value={name}
+                  onChange={e => setName(e.target.value)}
+                  placeholder="Enter student name"
+                  style={inputStyle}
+                />
+              </div>
+              <div>
+                <label style={labelStyle}>FATHER'S NAME</label>
+                <input
+                  type="text"
+                  value={father}
+                  onChange={e => setFather(e.target.value)}
+                  placeholder="Enter father's name"
+                  style={inputStyle}
+                />
+              </div>
             </div>
-          </div>
+
+            {error && (
+              <div style={{ color: '#dc2626', fontSize: 13, margin: '12px 0 0', padding: '8px 12px', background: '#fef2f2', borderRadius: 6 }}>
+                {error}
+              </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={loading}
+              style={{
+                width: '100%',
+                marginTop: 20,
+                padding: '14px',
+                background: loading ? '#94a3b8' : 'linear-gradient(135deg, #1a2744, #2d4a8a)',
+                color: '#fff',
+                border: 'none',
+                borderRadius: 8,
+                fontSize: 15,
+                fontWeight: 700,
+                cursor: loading ? 'not-allowed' : 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 8,
+                letterSpacing: 0.3,
+              }}
+            >
+              {loading ? (
+                <>
+                  <span style={{ display: 'inline-block', width: 16, height: 16, border: '2px solid rgba(255,255,255,0.4)', borderTopColor: '#fff', borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />
+                  Searching...
+                </>
+              ) : (
+                <>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                  Verify Certificate
+                </>
+              )}
+            </button>
+          </form>
+
+          <p style={{ textAlign: 'center', color: '#94a3b8', fontSize: 12, marginTop: 16, marginBottom: 0 }}>
+            Certificate data secured by Supabase · Verified by ATEC Gurdaspur since 2000
+          </p>
         </div>
       )}
 
-      {/* Success */}
-      {result && result !== 'not_found' && (
-        <div className="bg-green-50 border border-green-200 rounded-2xl p-6">
-          {/* Header */}
-          <div className="flex items-center gap-3 mb-5 pb-5 border-b border-green-200">
-            <div className="w-10 h-10 rounded-xl bg-green-100 flex items-center justify-center">
-              <CheckCircle2 className="w-5 h-5 text-green-600" />
-            </div>
-            <div>
-              <p className="font-display font-700 text-green-800 text-lg">Certificate Verified</p>
-              <p className="text-xs text-green-600">Issued by ATEC Gurdaspur</p>
-            </div>
-          </div>
-
-          {/* Details grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4">
-            {[
-              ['Student Name',    result.student_name],
-              ["Father's Name",   result.father_name],
-              ['Certificate No',  result.certificate_no],
-              ['Batch ID',        result.batch_id ?? '—'],
-              ['Course',          result.course_name],
-              ['Duration',        result.course_duration ?? '—'],
-              ['Issue Date',      result.issue_date
-                                    ? new Date(result.issue_date).toLocaleDateString('en-IN', { day:'numeric', month:'long', year:'numeric' })
-                                    : '—'],
-              ['Grade',           result.grade ?? '—'],
-              ['Marks',           result.marks_obtained && result.total_marks
-                                    ? `${result.marks_obtained} / ${result.total_marks}`
-                                    : '—'],
-              ['Centre',          result.center_name],
-            ].map(([label, value]) => (
-              <div key={label}>
-                <p className="text-xs text-green-600 font-500 uppercase tracking-wide mb-0.5">{label}</p>
-                <p className="text-sm font-sans font-500 text-green-900">{value}</p>
-              </div>
-            ))}
-          </div>
-
-          <button
-            onClick={reset}
-            className="mt-5 text-sm text-green-700 underline hover:no-underline"
-          >
-            Search another certificate
+      {/* Not found */}
+      {notFound && !result && (
+        <div style={{
+          background: '#fff',
+          border: '1px solid #fecaca',
+          borderRadius: 14,
+          padding: 32,
+          textAlign: 'center',
+          boxShadow: '0 4px 24px rgba(0,0,0,0.07)',
+        }}>
+          <div style={{ fontSize: 48, marginBottom: 12 }}>❌</div>
+          <h3 style={{ color: '#dc2626', fontWeight: 700, fontSize: 18, margin: '0 0 8px' }}>
+            Certificate Not Found
+          </h3>
+          <p style={{ color: '#64748b', fontSize: 14, margin: '0 0 20px' }}>
+            No certificate matched your search. Please check the details and try again.
+          </p>
+          <button onClick={handleReset} style={resetBtnStyle}>
+            Try Again
           </button>
         </div>
       )}
 
-      {/* Trust note */}
-      <p className="text-center text-xs text-gray-400 mt-6">
-        Certificate data secured by Supabase · Verified by ATEC Gurdaspur since 2000
-      </p>
+      {/* Result — matches old site layout exactly */}
+      {result && (
+        <div style={{
+          background: '#fff',
+          border: '1px solid #e2e8f0',
+          borderRadius: 14,
+          overflow: 'hidden',
+          boxShadow: '0 4px 24px rgba(0,0,0,0.09)',
+        }}>
+          {/* Success banner */}
+          <div style={{
+            background: 'linear-gradient(135deg, #1a2744, #2d4a8a)',
+            padding: '18px 24px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 12,
+          }}>
+            <div style={{
+              width: 40, height: 40,
+              background: 'rgba(255,255,255,0.15)',
+              borderRadius: '50%',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              flexShrink: 0,
+            }}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4ade80" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+            </div>
+            <div>
+              <div style={{ color: '#fff', fontWeight: 700, fontSize: 16 }}>Certificate Verified Successfully</div>
+              <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: 12 }}>This certificate is authentic and issued by ATEC Gurdaspur</div>
+            </div>
+          </div>
 
+          {/* Detail heading */}
+          <div style={{ padding: '20px 24px 0' }}>
+            <h2 style={{ color: '#c0392b', fontWeight: 700, fontSize: 18, margin: 0, paddingBottom: 8, borderBottom: '3px solid #c0392b', display: 'inline-block' }}>
+              Student Certificate Detail
+            </h2>
+          </div>
+
+          {/* Fields table — exact order as old site */}
+          <div style={{ padding: '12px 24px 24px' }}>
+            {[
+              { label: 'Certificate No', value: result.certificate_no },
+              { label: 'Batch_ID',       value: result.batch_id || '—' },
+              { label: 'Name',           value: result.student_name },
+              { label: 'Father Name',    value: result.father_name || '—' },
+              { label: 'Course Name',    value: result.course_name },
+              { label: 'From Date',      value: formatDate(result.from_date) },
+              { label: 'To Date',        value: formatDate(result.issue_date) },
+              { label: 'No Of Hours',    value: result.course_duration || '—' },
+              { label: 'Grade',          value: result.grade || '—' },
+            ].map((row, i) => (
+              <div
+                key={row.label}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  padding: '13px 14px',
+                  background: i % 2 === 0 ? '#f8fafc' : '#fff',
+                  borderRadius: 6,
+                  marginBottom: 2,
+                }}
+              >
+                <div style={{
+                  width: 160,
+                  flexShrink: 0,
+                  color: '#475569',
+                  fontSize: 14,
+                  fontWeight: 500,
+                }}>
+                  {row.label}
+                </div>
+                <div style={{ color: '#64748b', fontSize: 14, marginRight: 12 }}>:</div>
+                <div style={{
+                  color: '#1e293b',
+                  fontSize: 14,
+                  fontWeight: row.label === 'Name' || row.label === 'Certificate No' ? 600 : 400,
+                }}>
+                  {row.value}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Footer */}
+          <div style={{
+            borderTop: '1px solid #e2e8f0',
+            padding: '14px 24px',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: 10,
+          }}>
+            <div style={{ color: '#94a3b8', fontSize: 12 }}>
+              ATEC Gurdaspur · {result.center_name}
+            </div>
+            <button onClick={handleReset} style={resetBtnStyle}>
+              Verify Another
+            </button>
+          </div>
+        </div>
+      )}
+
+      <style>{`
+        @keyframes spin { to { transform: rotate(360deg); } }
+        input:focus { outline: none; border-color: #2d4a8a !important; box-shadow: 0 0 0 3px rgba(45,74,138,0.12); }
+      `}</style>
     </div>
   )
+}
+
+// ── Shared styles ──────────────────────────────────────────────────────────────
+const labelStyle: React.CSSProperties = {
+  display: 'block',
+  fontSize: 11,
+  fontWeight: 700,
+  color: '#94a3b8',
+  letterSpacing: 0.8,
+  marginBottom: 6,
+  textTransform: 'uppercase',
+}
+
+const inputStyle: React.CSSProperties = {
+  width: '100%',
+  padding: '10px 14px',
+  border: '1px solid #e2e8f0',
+  borderRadius: 7,
+  fontSize: 14,
+  color: '#1e293b',
+  background: '#f8fafc',
+  boxSizing: 'border-box',
+  transition: 'border-color 0.2s, box-shadow 0.2s',
+  fontFamily: 'inherit',
+}
+
+const resetBtnStyle: React.CSSProperties = {
+  padding: '9px 20px',
+  background: 'transparent',
+  border: '1px solid #cbd5e1',
+  borderRadius: 7,
+  color: '#475569',
+  fontSize: 13,
+  fontWeight: 600,
+  cursor: 'pointer',
+  fontFamily: 'inherit',
 }

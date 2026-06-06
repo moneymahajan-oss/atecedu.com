@@ -24,6 +24,7 @@ interface Certificate {
   grade: string
   marks_obtained: number | null
   total_marks: number | null
+  from_date: string | null
   issue_date: string
   center_name: string
   is_active: boolean
@@ -44,6 +45,7 @@ const EMPTY_FORM: Partial<Certificate> = {
   grade: '',
   marks_obtained: null,
   total_marks: null,
+  from_date: '',
   issue_date: '',
   center_name: 'ATEC Gurdaspur',
 }
@@ -74,9 +76,13 @@ const CSV_COLUMN_MAP: Record<string, keyof Certificate> = {
   'obtained marks': 'marks_obtained',
   'total_marks': 'total_marks',
   'total marks': 'total_marks',
+  'from_date': 'from_date',
+  'from date': 'from_date',
   'issue_date': 'issue_date',
   'date': 'issue_date',
   'issue date': 'issue_date',
+  'to_date': 'issue_date',
+  'to date': 'issue_date',
   'center_name': 'center_name',
   'center': 'center_name',
 }
@@ -217,6 +223,7 @@ export default function CertificateAdmin() {
       grade: cert.grade || '',
       marks_obtained: cert.marks_obtained,
       total_marks: cert.total_marks,
+      from_date: cert.from_date ? cert.from_date.split('T')[0] : '',
       issue_date: cert.issue_date ? cert.issue_date.split('T')[0] : '',
       center_name: cert.center_name || 'ATEC Gurdaspur',
     })
@@ -248,6 +255,7 @@ export default function CertificateAdmin() {
       grade: clean(form.grade || ''),
       marks_obtained: form.marks_obtained ? Number(form.marks_obtained) : null,
       total_marks: form.total_marks ? Number(form.total_marks) : null,
+      from_date: form.from_date || null,
       issue_date: form.issue_date || null,
       center_name: clean(form.center_name || 'ATEC Gurdaspur'),
       is_active: true,
@@ -818,7 +826,15 @@ export default function CertificateAdmin() {
                   min={0} max={1000}
                 />
               </FormField>
-              <FormField label="Issue Date">
+              <FormField label="From Date">
+                <input
+                  type="date"
+                  value={form.from_date || ''}
+                  onChange={e => setForm(f => ({ ...f, from_date: e.target.value }))}
+                  style={inputStyle}
+                />
+              </FormField>
+              <FormField label="To Date (Issue Date)">
                 <input
                   type="date"
                   value={form.issue_date || ''}
@@ -880,7 +896,8 @@ export default function CertificateAdmin() {
                   ['grade', 'Grade'],
                   ['marks_obtained / marks', 'Marks Obtained'],
                   ['total_marks', 'Total Marks'],
-                  ['issue_date / date', 'Issue Date'],
+                  ['from_date / from date', 'From Date'],
+                  ['issue_date / to_date / date', 'To Date (Issue Date)'],
                   ['center_name / center', 'Center Name'],
                 ].map(([col, label]) => (
                   <div key={col} style={{ fontSize: 11 }}>
