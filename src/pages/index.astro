@@ -537,7 +537,7 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
   ══════════════════════════════════════════════════════════════ -->
   <style is:global>
     .schol-section {
-      padding: 72px 32px 80px;
+      padding: 40px 32px 44px;
       background: #0b1525;
       position: relative;
       overflow: hidden;
@@ -565,13 +565,13 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
       margin: 0 auto;
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 64px;
+      gap: 40px;
       align-items: center;
       position: relative;
       z-index: 2;
     }
     @media(max-width: 768px) {
-      .schol-inner { grid-template-columns: 1fr; gap: 40px; text-align: center; }
+      .schol-inner { grid-template-columns: 1fr; gap: 24px; text-align: center; }
       .schol-gauge-wrap { order: -1; }
     }
 
@@ -579,39 +579,39 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
     .schol-tag {
       display: inline-flex; align-items: center; gap: 8px;
       background: rgba(212,240,26,0.1); border: 1px solid rgba(212,240,26,0.25);
-      border-radius: 20px; padding: 5px 14px;
+      border-radius: 20px; padding: 4px 12px;
       font-size: 12px; font-weight: 800; color: #d4f01a;
       text-transform: uppercase; letter-spacing: 0.08em;
-      margin-bottom: 20px;
+      margin-bottom: 12px;
     }
     .schol-h1 {
       font-family: 'Sora', sans-serif;
-      font-size: clamp(2rem, 4vw, 3rem);
+      font-size: clamp(1.6rem, 3.2vw, 2.4rem);
       font-weight: 900;
       color: #fff;
       line-height: 1.1;
-      margin: 0 0 16px;
+      margin: 0 0 10px;
     }
     .schol-h1 span { color: #d4f01a; }
     .schol-sub {
-      font-size: 16px;
+      font-size: 14px;
       color: rgba(255,255,255,0.6);
-      line-height: 1.7;
-      margin: 0 0 32px;
+      line-height: 1.6;
+      margin: 0 0 18px;
       max-width: 440px;
     }
 
     /* Discount pills row */
     .schol-pills {
-      display: flex; gap: 10px; flex-wrap: wrap;
-      margin-bottom: 36px;
+      display: flex; gap: 8px; flex-wrap: wrap;
+      margin-bottom: 20px;
     }
     @media(max-width: 768px) { .schol-pills { justify-content: center; } }
     .schol-pill {
-      padding: 7px 16px;
+      padding: 5px 13px;
       border-radius: 20px;
-      font-size: 13px; font-weight: 800;
-      display: flex; align-items: center; gap: 6px;
+      font-size: 12px; font-weight: 800;
+      display: flex; align-items: center; gap: 5px;
     }
     .schol-pill.p1 { background: rgba(251,191,36,0.15); color: #fbbf24; border: 1px solid rgba(251,191,36,0.3); }
     .schol-pill.p2 { background: rgba(96,165,250,0.15); color: #60a5fa; border: 1px solid rgba(96,165,250,0.3); }
@@ -619,13 +619,13 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
 
     /* CTA button */
     .schol-cta {
-      display: inline-flex; align-items: center; gap: 10px;
+      display: inline-flex; align-items: center; gap: 8px;
       background: #d4f01a; color: #0b1525;
-      padding: 16px 32px; border-radius: 12px;
+      padding: 12px 26px; border-radius: 10px;
       font-family: 'Sora', sans-serif;
-      font-size: 16px; font-weight: 900;
+      font-size: 15px; font-weight: 900;
       text-decoration: none;
-      box-shadow: 0 8px 32px rgba(212,240,26,0.3);
+      box-shadow: 0 6px 24px rgba(212,240,26,0.3);
       transition: all 0.2s;
     }
     .schol-cta:hover {
@@ -639,7 +639,7 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
     .schol-note {
       font-size: 12px;
       color: rgba(255,255,255,0.35);
-      margin-top: 14px;
+      margin-top: 8px;
     }
 
     /* Right: Gauge card */
@@ -647,11 +647,11 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
     .schol-gauge-card {
       background: linear-gradient(145deg, #111e35, #0d1a2d);
       border: 1px solid rgba(255,255,255,0.08);
-      border-radius: 24px;
-      padding: 36px 32px 28px;
-      width: 100%; max-width: 360px;
+      border-radius: 20px;
+      padding: 24px 24px 20px;
+      width: 100%; max-width: 340px;
       position: relative;
-      box-shadow: 0 24px 64px rgba(0,0,0,0.4);
+      box-shadow: 0 20px 56px rgba(0,0,0,0.4);
     }
     .gauge-question {
       display: inline-flex; align-items: center; gap: 6px;
@@ -699,23 +699,23 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
 
     /* Steps */
     .schol-steps {
-      display: flex; gap: 24px;
-      margin-top: 40px; flex-wrap: wrap;
+      display: flex; gap: 20px;
+      margin-top: 20px; flex-wrap: nowrap;
     }
-    @media(max-width: 768px) { .schol-steps { justify-content: center; } }
+    @media(max-width: 768px) { .schol-steps { justify-content: center; flex-wrap: wrap; } }
     .schol-step {
-      display: flex; align-items: flex-start; gap: 12px;
-      max-width: 180px;
+      display: flex; align-items: flex-start; gap: 10px;
+      flex: 1;
     }
     .step-num {
-      width: 32px; height: 32px; border-radius: 50%;
+      width: 28px; height: 28px; border-radius: 50%;
       background: rgba(212,240,26,0.1); border: 1px solid rgba(212,240,26,0.25);
       display: flex; align-items: center; justify-content: center;
-      font-family: 'Sora', sans-serif; font-weight: 900; font-size: 13px;
+      font-family: 'Sora', sans-serif; font-weight: 900; font-size: 12px;
       color: #d4f01a; flex-shrink: 0;
     }
-    .step-text { font-size: 13px; color: rgba(255,255,255,0.55); line-height: 1.5; }
-    .step-text strong { color: rgba(255,255,255,0.85); display: block; margin-bottom: 2px; }
+    .step-text { font-size: 12px; color: rgba(255,255,255,0.55); line-height: 1.45; }
+    .step-text strong { color: rgba(255,255,255,0.85); display: block; margin-bottom: 1px; }
   </style>
 
   <section class="schol-section" id="scholarship-section">
