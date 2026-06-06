@@ -3262,12 +3262,12 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
   }
 
   // ── 1. CONNECT WITH US — runtime loader from social_links ──────────
-  const PLATFORM_COLORS: any = {
+  const PLATFORM_COLORS = {
     whatsapp:'#25D366', instagram:'#d6249f', facebook:'#1877F2', youtube:'#FF0000',
     google:'#4285F4', twitter:'#1DA1F2', linkedin:'#0077B5', telegram:'#2CA5E0',
     threads:'#000', other:'#64748b',
   }
-  const PLATFORM_ICONS: any = {
+  const PLATFORM_ICONS = {
     whatsapp: `<svg viewBox="0 0 32 32" width="36" height="36"><circle cx="16" cy="16" r="16" fill="#25D366"/><path d="M23.5 8.5A10.4 10.4 0 0 0 16 5.5C10.2 5.5 5.5 10.2 5.5 16c0 1.8.5 3.6 1.4 5.2L5.5 26.5l5.5-1.4A10.4 10.4 0 0 0 16 26.5c5.8 0 10.5-4.7 10.5-10.5 0-2.8-1.1-5.4-3-7.5zm-7.5 16a8.6 8.6 0 0 1-4.4-1.2l-.3-.2-3.2.8.9-3.1-.2-.3A8.5 8.5 0 1 1 16 24.5zm4.7-6.4c-.3-.1-1.6-.8-1.9-.9-.3-.1-.5-.1-.7.1-.2.3-.8.9-.9 1.1-.2.2-.3.2-.6.1-.3-.1-1.2-.4-2.2-1.4-.8-.7-1.4-1.6-1.5-1.9-.2-.3 0-.4.1-.6l.4-.5c.1-.2.2-.3.3-.5 0-.2 0-.4-.1-.5-.1-.1-.7-1.6-.9-2.2-.3-.6-.5-.5-.7-.5h-.6c-.2 0-.5.1-.8.4-.3.3-1 1-1 2.4s1 2.8 1.2 3c.1.1 2 3.1 4.9 4.3.7.3 1.2.5 1.6.6.7.2 1.3.2 1.8.1.5-.1 1.6-.7 1.8-1.3.2-.6.2-1.1.2-1.2-.1-.1-.3-.2-.6-.3z" fill="#fff"/></svg>`,
     instagram: `<svg viewBox="0 0 32 32" width="36" height="36"><defs><radialGradient id="ig" cx="30%" cy="107%" r="150%"><stop offset="0%" stop-color="#fdf497"/><stop offset="45%" stop-color="#fd5949"/><stop offset="60%" stop-color="#d6249f"/><stop offset="90%" stop-color="#285AEB"/></radialGradient></defs><rect width="32" height="32" rx="8" fill="url(#ig)"/><rect x="8" y="8" width="16" height="16" rx="4" stroke="#fff" stroke-width="1.5" fill="none"/><circle cx="16" cy="16" r="4" stroke="#fff" stroke-width="1.5" fill="none"/><circle cx="21.5" cy="10.5" r="1" fill="#fff"/></svg>`,
     facebook: `<svg viewBox="0 0 32 32" width="36" height="36"><circle cx="16" cy="16" r="16" fill="#1877F2"/><path d="M20.5 10h-2.3c-.9 0-1.2.4-1.2 1.3V13H20l-.4 3h-2.6v8h-3v-8H12v-3h2v-1.8C14 8.8 15.3 7.5 17.8 7.5c1 0 2 .1 3 .2V10H20.5z" fill="#fff"/></svg>`,
@@ -3278,10 +3278,18 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
     other:    `<svg viewBox="0 0 32 32" width="36" height="36"><circle cx="16" cy="16" r="16" fill="#64748b"/><text x="16" y="21" text-anchor="middle" fill="#fff" font-size="14">🔗</text></svg>`,
   }
 
+  const DEFAULT_SOCIAL_PLATFORMS = [
+    { platform:'whatsapp',  name:'WhatsApp',       handle:'+91 7009933289',           url:'https://wa.me/917009933289',                     is_active:true },
+    { platform:'instagram', name:'Instagram',      handle:'@ateceducation',            url:'https://www.instagram.com/ateceducation/',        is_active:true },
+    { platform:'facebook',  name:'Facebook',       handle:'ATEC Educational Society',  url:'https://www.facebook.com/ateceducation',          is_active:true },
+    { platform:'youtube',   name:'YouTube',        handle:'@ATECEducationalSociety',   url:'https://www.youtube.com/@ATECEducationalSociety', is_active:true },
+    { platform:'google',    name:'Google Reviews', handle:'Rate us ★★★★★',            url:'https://g.page/r/atec-gurdaspur',                is_active:true },
+  ]
+
   async function loadSocialConnect() {
     try {
-      const data = await sbGet('social_links')
-      const platforms = data?.platforms || []
+      const data = await sbFetch('social_links')
+      const platforms = (data?.platforms?.length ? data.platforms : DEFAULT_SOCIAL_PLATFORMS)
       const title    = data?.title    || 'Connect With Us'
       const subtitle = data?.subtitle || 'Scan a QR or tap a card to follow — stay updated with courses, results & student wins'
 
@@ -3291,12 +3299,12 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
       if (subEl)   subEl.textContent   = subtitle
 
       const grid = document.getElementById('sc-grid-items')
-      if (!grid || !platforms.length) return
+      if (!grid) return
 
-      const active = platforms.filter((p: any) => p.is_active !== false)
+      const active = platforms.filter((p) => p.is_active !== false)
       if (!active.length) return
 
-      grid.innerHTML = active.map((p: any) => {
+      grid.innerHTML = active.map((p) => {
         const color = PLATFORM_COLORS[p.platform] || '#64748b'
         const icon  = PLATFORM_ICONS[p.platform]  || PLATFORM_ICONS.other
         const isGrad = p.platform === 'instagram'
@@ -3321,7 +3329,7 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
     } catch(e) { console.warn('Social connect load error:', e) }
   }
 
-  loadSocialConnect()
+  waitSB(loadSocialConnect)
 
   // ── 2. GET IN TOUCH ────────────────────────────────────────────────
   const DEFAULT_CONTACT = {
