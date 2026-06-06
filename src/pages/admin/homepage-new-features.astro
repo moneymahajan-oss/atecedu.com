@@ -5,302 +5,262 @@ import AdminLayout from '../../layouts/AdminLayout.astro'
 <AdminLayout title="Slider · Cards · Popup" activeSection="new-features">
 
 <style>
-  .wrap { max-width:960px; }
-  .page-title { font-family:'Sora',sans-serif; font-size:22px; font-weight:900; color:#1e293b; margin:0 0 4px }
-  .page-sub { font-size:13px; color:#94a3b8; margin:0 0 28px }
+  .wrap { max-width:920px }
+  .pg-title { font-family:'Sora',sans-serif; font-size:20px; font-weight:900; color:#0b1a2e; margin:0 0 2px }
+  .pg-sub   { font-size:13px; color:#94a3b8; margin:0 0 20px }
 
   /* Tabs */
-  .tabs { display:flex; gap:4px; background:#e8edf2; padding:4px; border-radius:12px; flex-wrap:wrap; margin-bottom:28px }
-  .tab { padding:9px 18px; border:none; border-radius:9px; font-size:13px; font-weight:600; cursor:pointer; font-family:'Inter',sans-serif; transition:all 0.15s; background:transparent; color:#64748b }
-  .tab.active { background:#fff; color:#1a3460; box-shadow:0 1px 4px rgba(0,0,0,0.1) }
+  .tabs { display:flex; gap:3px; background:#eef1f5; padding:4px; border-radius:11px; flex-wrap:wrap; margin-bottom:20px }
+  .tab  { padding:8px 16px; border:none; border-radius:8px; font-size:13px; font-weight:600; cursor:pointer; font-family:'Inter',sans-serif; transition:all 0.15s; background:transparent; color:#64748b }
+  .tab.active { background:#fff; color:#0b1a2e; box-shadow:0 1px 4px rgba(0,0,0,0.1) }
 
-  /* Section card */
-  .section-card { background:#fff; border-radius:16px; border:1px solid #e2e8f0; padding:28px; margin-bottom:24px }
-  .section-title { font-family:'Sora',sans-serif; font-size:16px; font-weight:800; color:#1e293b; margin:0 0 4px }
-  .section-desc { font-size:13px; color:#94a3b8; margin:0 0 24px }
+  /* Panel */
+  .panel { background:#fff; border-radius:14px; border:1px solid #e2e8f0; padding:22px; margin-bottom:18px }
+  .panel-head { display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:16px; gap:12px }
+  .panel-title { font-size:15px; font-weight:700; color:#0b1a2e; margin:0 }
+  .panel-desc  { font-size:12px; color:#94a3b8; margin:4px 0 0 }
 
   /* Fields */
-  .field { display:flex; flex-direction:column; gap:5px; margin-bottom:16px }
-  .field-row { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:16px }
-  .field-row.three { grid-template-columns:1fr 1fr 1fr }
-  @media(max-width:600px){ .field-row,.field-row.three { grid-template-columns:1fr } }
-  label.lbl { font-size:11px; font-weight:700; color:#64748b; text-transform:uppercase; letter-spacing:0.05em }
+  .f2  { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px }
+  .f3  { display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; margin-bottom:12px }
+  .f4  { display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:10px; margin-bottom:12px }
+  @media(max-width:620px){ .f2,.f3,.f4 { grid-template-columns:1fr } }
+  .field { display:flex; flex-direction:column; gap:4px }
+  .lbl  { font-size:11px; font-weight:700; color:#64748b; text-transform:uppercase; letter-spacing:0.04em }
   input[type=text],.inp,input[type=number],input[type=datetime-local],select,textarea {
-    padding:9px 13px; border:1.5px solid #e2e8f0; border-radius:9px;
-    font-size:14px; color:#1e293b; outline:none; background:#fff;
-    width:100%; box-sizing:border-box; font-family:'Inter',sans-serif;
-    transition:border-color 0.15s;
+    padding:8px 11px; border:1.5px solid #e2e8f0; border-radius:8px;
+    font-size:13px; color:#1e293b; outline:none; background:#fff;
+    width:100%; box-sizing:border-box; font-family:'Inter',sans-serif; transition:border-color 0.15s
   }
-  input:focus,.inp:focus,select:focus,textarea:focus { border-color:#1a3460 }
+  input:focus,.inp:focus,select:focus,textarea:focus { border-color:#0b1a2e }
   textarea { resize:vertical }
 
   /* Slide card */
-  .slide-card { border:1.5px solid #e2e8f0; border-radius:12px; margin-bottom:12px; overflow:hidden; background:#fafbfc }
-  .slide-header { display:flex; align-items:center; gap:10px; padding:12px 16px; cursor:pointer; user-select:none; background:#f7f9fc }
-  .slide-num { width:24px; height:24px; border-radius:50%; background:#1a3460; color:#d4f01a; font-size:11px; font-weight:800; display:flex; align-items:center; justify-content:center; flex-shrink:0 }
-  .slide-header-title { font-size:13px; font-weight:700; color:#1e293b; flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap }
-  .slide-actions { display:flex; gap:6px; flex-shrink:0 }
-  .btn-sm { padding:4px 10px; border-radius:6px; font-size:12px; font-weight:600; cursor:pointer; border:1px solid #e2e8f0; background:#fff; color:#4a5568; font-family:'Inter',sans-serif }
+  .slide-card { border:1px solid #e8edf2; border-radius:11px; margin-bottom:8px; overflow:hidden; background:#fafbfc }
+  .slide-card:hover { border-color:#0b1a2e }
+  .slide-header { display:flex; align-items:center; gap:10px; padding:11px 14px; cursor:pointer; user-select:none }
+  .slide-num { width:26px; height:26px; border-radius:7px; background:#0b1a2e; color:#d4f01a; font-size:11px; font-weight:900; display:flex; align-items:center; justify-content:center; flex-shrink:0; font-family:'Sora',sans-serif }
+  .slide-header-title { font-size:13px; font-weight:700; color:#1e293b; flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap }
+  .slide-actions { display:flex; gap:5px; flex-shrink:0 }
+  .btn-sm { padding:4px 9px; border-radius:6px; font-size:11px; font-weight:600; cursor:pointer; border:1px solid #e2e8f0; background:#fff; color:#475569; font-family:'Inter',sans-serif }
   .btn-sm:hover { background:#f1f5f9 }
   .btn-sm.del { background:#fee2e2; border-color:#fecaca; color:#dc2626 }
   .btn-sm.del:hover { background:#fca5a5 }
-  .slide-chevron { font-size:11px; color:#94a3b8; transition:transform 0.2s; flex-shrink:0 }
+  .slide-chevron { font-size:10px; color:#94a3b8; transition:transform 0.2s; flex-shrink:0 }
   .slide-chevron.open { transform:rotate(180deg) }
-  .slide-body { display:none; padding:20px }
+  .slide-body { display:none; padding:16px; border-top:1px solid #f1f5f9 }
   .slide-body.open { display:block }
 
   /* Mini preview */
-  .preview-box { height:120px; border-radius:10px; overflow:hidden; position:relative; margin-bottom:12px; background:#0f2a5c }
+  .preview-box { height:110px; border-radius:9px; overflow:hidden; position:relative; background:#0f2a5c }
   .preview-box img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover }
   .preview-box .ov { position:absolute; inset:0; background:rgba(0,0,0,0.4) }
-  .preview-box .ct { position:absolute; bottom:10px; left:12px; right:12px }
-  .preview-box .pb { font-size:8px; font-weight:800; color:#d4f01a; text-transform:uppercase; margin-bottom:3px }
-  .preview-box .ph { font-size:12px; font-weight:900; color:#fff; line-height:1.2; margin-bottom:5px }
-  .preview-box .pc { display:inline-block; background:#d4f01a; color:#0f2a5c; font-size:9px; font-weight:800; padding:2px 8px; border-radius:4px }
+  .preview-box .ct { position:absolute; bottom:8px; left:10px; right:10px }
+  .preview-box .pb { font-size:7px; font-weight:800; color:#d4f01a; text-transform:uppercase; margin-bottom:2px }
+  .preview-box .ph { font-size:11px; font-weight:900; color:#fff; line-height:1.2; margin-bottom:4px }
+  .preview-box .pc { display:inline-block; background:#d4f01a; color:#0f2a5c; font-size:8px; font-weight:800; padding:2px 7px; border-radius:3px }
 
-  /* Why card */
-  .why-card { border:1.5px solid #e2e8f0; border-radius:10px; padding:16px; margin-bottom:10px; background:#fafbfc }
-  .why-card-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px }
-  .why-card-label { font-size:12px; font-weight:700; color:#1a3460 }
+  /* Why card — compact single row */
+  .why-card { display:grid; grid-template-columns:50px 1fr 2fr auto; gap:8px; align-items:center; padding:9px 12px; border:1px solid #e8edf2; border-radius:9px; margin-bottom:6px; background:#fafbfc }
+  .why-card:hover { border-color:#0b1a2e }
+  .why-card-num { width:26px; height:26px; border-radius:7px; background:#0b1a2e; color:#d4f01a; font-size:10px; font-weight:900; display:flex; align-items:center; justify-content:center; font-family:'Sora',sans-serif }
+  .why-card-label { font-size:12px; font-weight:700; color:#0b1a2e }
 
-  /* Save button */
-  .save-btn { display:inline-flex; align-items:center; gap:8px; background:#1a3460; color:#d4f01a; border:none; border-radius:10px; padding:11px 24px; font-size:14px; font-weight:800; cursor:pointer; font-family:'Inter',sans-serif; transition:background 0.15s }
-  .save-btn:hover { background:#0f2347 }
-  .save-btn:disabled { background:#94a3b8; cursor:not-allowed }
+  /* Color swatch row */
+  .swatch-row { display:flex; align-items:center; gap:6px }
+  .swatch-row input[type=text] { width:88px; font-family:monospace; font-size:12px; padding:5px 8px }
+  .swatches { display:flex; gap:3px; flex-wrap:wrap }
+  .sw { width:20px; height:20px; border-radius:4px; border:1.5px solid #e2e8f0; cursor:pointer; flex-shrink:0 }
+  .sw:hover { transform:scale(1.2); border-color:#64748b }
 
-  /* Status message */
-  .status { font-size:13px; font-weight:600; padding:9px 16px; border-radius:9px; display:none; margin-top:12px }
-  .status.ok { background:#dcfce7; color:#166534 }
-  .status.err { background:#fee2e2; color:#991b1b }
+  /* Color scheme mini-card */
+  .color-group { background:#f8fafc; border:1px solid #e8edf2; border-radius:10px; padding:14px; margin-bottom:10px }
+  .color-group-title { font-size:11px; font-weight:700; color:#64748b; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:10px; padding-bottom:8px; border-bottom:1px solid #e8edf2 }
+  .color-field { display:flex; align-items:center; gap:8px; margin-bottom:8px }
+  .color-dot { width:26px; height:26px; border-radius:6px; border:1.5px solid #e2e8f0; flex-shrink:0 }
+  .color-label { font-size:12px; font-weight:600; color:#374151; width:110px; flex-shrink:0 }
 
-  /* Color picker row */
-  .color-row { display:flex; align-items:center; gap:8px }
-  .color-row input[type=color] { width:36px; height:32px; border:1px solid #e2e8f0; border-radius:7px; cursor:pointer; padding:2px; flex-shrink:0 }
-  .color-row input[type=text] { width:100px }
-
-  /* Toggle */
-  .toggle-row { display:flex; align-items:center; gap:10px; margin-bottom:14px }
-  .toggle-row input[type=checkbox] { width:16px; height:16px; accent-color:#1a3460; cursor:pointer }
-  .toggle-row label { font-size:14px; font-weight:500; color:#374151; cursor:pointer }
-
-  /* Add course row */
-  .add-btn { display:flex; align-items:center; gap:6px; padding:9px 16px; background:#eff6ff; border:2px dashed #93c5fd; color:#1d4ed8; border-radius:9px; font-size:13px; font-weight:700; cursor:pointer; width:100%; justify-content:center; font-family:'Inter',sans-serif }
-  .add-btn:hover { background:#dbeafe }
-  .tip { font-size:12px; color:#94a3b8; margin-top:4px; line-height:1.4 }
-
-  /* Cat course row */
-  .course-row { display:grid; grid-template-columns:1fr 1fr 90px 90px 30px; gap:6px; align-items:center; padding:7px 10px; border-bottom:1px solid #f1f5f9; background:#fff }
-  .course-row:nth-child(even) { background:#f8fafc }
+  /* Cat course table row */
   .course-inp { padding:5px 8px; border:1px solid #e2e8f0; border-radius:5px; font-size:12px; outline:none; background:transparent; width:100%; box-sizing:border-box }
-  .course-inp:focus { border-color:#1a3460; background:#fff }
-  .course-hdr { display:grid; grid-template-columns:1fr 1fr 90px 90px 30px; gap:6px; padding:6px 10px; background:#f1f5f9 }
-  .course-hdr span { font-size:10px; font-weight:700; color:#64748b; text-transform:uppercase; letter-spacing:0.04em }
+  .course-inp:focus { border-color:#0b1a2e; background:#fff }
+
+  /* Buttons */
+  .save-btn { display:inline-flex; align-items:center; gap:7px; background:#0b1a2e; color:#d4f01a; border:none; border-radius:9px; padding:10px 20px; font-size:13px; font-weight:800; cursor:pointer; font-family:'Inter',sans-serif; transition:background 0.15s }
+  .save-btn:hover { background:#1a3460 }
+  .save-btn:disabled { background:#94a3b8; cursor:not-allowed; color:#fff }
+  .add-btn { display:flex; align-items:center; gap:6px; padding:8px 14px; background:#f0f9ff; border:1.5px dashed #93c5fd; color:#0b1a2e; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer; font-family:'Inter',sans-serif; transition:all 0.15s; justify-content:center }
+  .add-btn:hover { background:#dbeafe }
+
+  /* Status */
+  .status { font-size:12px; font-weight:600; padding:8px 14px; border-radius:8px; display:none; margin-top:10px }
+  .status.ok  { background:#dcfce7; color:#166534; display:block }
+  .status.err { background:#fee2e2; color:#991b1b; display:block }
+
+  /* Toggle row */
+  .toggle-row { display:flex; align-items:center; gap:8px; margin-bottom:12px }
+  .toggle-row input[type=checkbox] { width:15px; height:15px; accent-color:#0b1a2e; cursor:pointer }
+  .toggle-row label { font-size:13px; font-weight:500; color:#374151; cursor:pointer }
+
+  /* Color row (picker + hex) */
+  .color-row { display:flex; align-items:center; gap:6px }
+  .color-row input[type=color] { width:32px; height:28px; border:1px solid #e2e8f0; border-radius:6px; cursor:pointer; padding:2px; flex-shrink:0 }
+  .color-row input[type=text] { width:88px; font-family:monospace; font-size:12px }
+
+  /* Panel with live preview card */
+  .preview-card { width:200px; border-radius:10px; overflow:hidden; border:1px solid #e2e8f0; box-shadow:0 2px 10px rgba(0,0,0,0.08); flex-shrink:0 }
 </style>
 
 <div class="wrap">
-  <h1 class="page-title">🎠 Slider · Cards · Popup</h1>
-  <p class="page-sub">Hero slider, Why ATEC cards, Drop Query popup, and Course Categories — all update live, no rebuild needed.</p>
+  <h1 class="pg-title">🎠 Slider · Cards · Popup</h1>
+  <p class="pg-sub">Hero slider, Why ATEC cards, Course card colors, Query popup — all save live, no rebuild needed.</p>
 
-  <!-- Tabs -->
   <div class="tabs">
     <button class="tab active" data-tab="slider"     onclick="switchTab('slider')">🎠 Hero Slider</button>
-    <button class="tab"        data-tab="why"        onclick="switchTab('why')">✅ Why ATEC</button>
-    <button class="tab"        data-tab="categories" onclick="switchTab('categories')">📚 Course Cards</button>
-    <button class="tab"        data-tab="popup"      onclick="switchTab('popup')">💬 Query Popup</button>
+    <button class="tab"        data-tab="why"         onclick="switchTab('why')">✅ Why ATEC</button>
+    <button class="tab"        data-tab="categories"  onclick="switchTab('categories')">📚 Course Cards</button>
+    <button class="tab"        data-tab="popup"       onclick="switchTab('popup')">💬 Query Popup</button>
   </div>
 
-  <!-- ═══════════════════ HERO SLIDER ═══════════════════ -->
+  <!-- ══════════ HERO SLIDER ══════════ -->
   <div id="tab-slider">
-    <div class="section-card">
-      <h2 class="section-title">🎠 Hero Slider</h2>
-      <p class="section-desc">Slides appear below the main hero. Each shows a badge, heading, subheading, CTA button, and optional background image. Add up to 6 slides.</p>
-
+    <div class="panel">
+      <div class="panel-head">
+        <div>
+          <div class="panel-title">🎠 Hero Slider</div>
+          <div class="panel-desc">Slides below the main hero. Each has badge, heading, subheading, CTA button, background image/color. Max 6.</div>
+        </div>
+        <button class="save-btn" id="slider-save-btn">💾 Save Slides</button>
+      </div>
       <div id="slider-list"></div>
-
-      <button class="add-btn" id="slider-add-btn">+ Add New Slide</button>
-      <br><br>
-      <button class="save-btn" id="slider-save-btn">💾 Save Slides</button>
+      <button class="add-btn" id="slider-add-btn" style="width:100%;margin-top:4px;">+ Add Slide</button>
       <div class="status" id="slider-status"></div>
     </div>
   </div>
 
-  <!-- ═══════════════════ WHY ATEC ═══════════════════ -->
+  <!-- ══════════ WHY ATEC ══════════ -->
   <div id="tab-why" style="display:none">
-    <div class="section-card">
-      <h2 class="section-title">✅ Why Choose ATEC — 5 Reason Cards</h2>
-      <p class="section-desc">Shown on the homepage in the dark navy section. Add up to 5 cards with emoji, title, and description.</p>
-
-      <div class="field-row">
-        <div class="field">
-          <label class="lbl">Section Title</label>
-          <input type="text" id="why-title" value="Why Choose ATEC?" placeholder="Why Choose ATEC?" />
+    <div class="panel">
+      <div class="panel-head">
+        <div>
+          <div class="panel-title">✅ Why Choose ATEC</div>
+          <div class="panel-desc">5 reason cards shown in dark navy section on homepage.</div>
         </div>
-        <div class="field">
-          <label class="lbl">Section Subtitle</label>
-          <input type="text" id="why-sub" placeholder="25+ years of excellence..." />
-        </div>
+        <button class="save-btn" id="why-save-btn">💾 Save</button>
       </div>
-
+      <div class="f2" style="margin-bottom:14px;">
+        <div class="field"><label class="lbl">Section Title</label><input type="text" id="why-title" value="Why Choose ATEC?" placeholder="Why Choose ATEC?"></div>
+        <div class="field"><label class="lbl">Subtitle</label><input type="text" id="why-sub" placeholder="25+ years of excellence..."></div>
+      </div>
+      <!-- Header -->
+      <div style="display:grid;grid-template-columns:50px 50px 1fr 2fr auto;gap:8px;padding:0 12px 6px;font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:0.04em;">
+        <div></div><div>Icon</div><div>Title</div><div>Description</div><div></div>
+      </div>
       <div id="why-cards-list"></div>
-      <button class="add-btn" id="why-add-btn">+ Add Card (max 5)</button>
-      <br><br>
-      <button class="save-btn" id="why-save-btn">💾 Save Why Cards</button>
+      <button class="add-btn" id="why-add-btn" style="width:100%;margin-top:4px;">+ Add Card (max 5)</button>
       <div class="status" id="why-status"></div>
     </div>
   </div>
 
-  <!-- ═══════════════════ COURSE CATEGORIES ═══════════════════ -->
+  <!-- ══════════ COURSE CARDS ══════════ -->
   <div id="tab-categories" style="display:none">
-    <div class="section-card">
-      <h2 class="section-title">📚 Course Category Cards</h2>
-      <p class="section-desc">Each category row shows 4 course cards with title, description, fee, and mode badge. Add short descriptions to show below the course title on cards.</p>
-
-      <div class="field-row three" style="margin-bottom:16px">
-        <div class="field">
-          <label class="lbl">Section Title</label>
-          <input type="text" id="cat-section-title" value="Courses by Category" />
+    <div class="panel">
+      <div class="panel-head">
+        <div>
+          <div class="panel-title">📚 Course Category Cards</div>
+          <div class="panel-desc">Category rows with course cards. Edit colors, then add/edit courses per category.</div>
         </div>
-        <div class="field">
-          <label class="lbl">Label Above Title</label>
-          <input type="text" id="cat-section-sub" value="What We Offer" />
-        </div>
-        <div class="field" style="display:flex;align-items:flex-end;gap:10px;padding-bottom:2px">
-          <input type="checkbox" id="cat-show-fee" checked style="width:16px;height:16px;accent-color:#1a3460;cursor:pointer" />
-          <label for="cat-show-fee" style="font-size:13px;font-weight:600;color:#374151;cursor:pointer">Show ₹ price on cards</label>
-        </div>
+        <button class="save-btn" id="cat-save-btn">💾 Save All</button>
       </div>
 
-      <!-- Card Color Scheme — redesigned full panel -->
-      <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:14px;padding:20px;margin-bottom:20px;">
-        <div style="font-size:14px;font-weight:800;color:#1e293b;margin-bottom:4px;">🎨 Card Color Scheme</div>
-        <div style="font-size:12px;color:#94a3b8;margin-bottom:18px;">All changes apply instantly on homepage after Save. Use colour picker or type a hex code.</div>
+      <!-- Section header fields -->
+      <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:12px;align-items:end;margin-bottom:16px;">
+        <div class="field"><label class="lbl">Section Title</label><input type="text" id="cat-section-title" value="Courses by Category"></div>
+        <div class="field"><label class="lbl">Label Above Title</label><input type="text" id="cat-section-sub" value="What We Offer"></div>
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;font-weight:600;color:#374151;padding-bottom:2px;">
+          <input type="checkbox" id="cat-show-fee" checked style="width:15px;height:15px;accent-color:#0b1a2e;"> Show ₹ price
+        </label>
+      </div>
 
-        <!-- Row 1: Card backgrounds -->
-        <div style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid #e2e8f0;">Card Backgrounds</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px">
-          
+      <!-- Card color scheme — compact -->
+      <div class="color-group">
+        <div class="color-group-title">🎨 Card Color Scheme</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+          <!-- Left: backgrounds + text -->
           <div>
-            <div style="font-size:11px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px">Thumbnail BG (no image)</div>
-            <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
-              <div id="card-bg-color-preview" style="width:28px;height:28px;border-radius:6px;border:1.5px solid #e2e8f0;background:#0b1525;flex-shrink:0"></div>
-              <input type="text" id="card-bg-color" value="#0b1525" maxlength="9"
-                style="font-family:monospace;padding:6px 9px;border:1.5px solid #e2e8f0;border-radius:7px;font-size:13px;color:#1e293b;width:100%;outline:none;box-sizing:border-box"
-                oninput="setColor('card-bg-color',this.value)" />
+            <div style="font-size:11px;font-weight:700;color:#94a3b8;margin-bottom:8px;">Backgrounds</div>
+            <div class="color-field">
+              <div class="color-dot" id="card-bg-color-preview" style="background:#0b1525"></div>
+              <div class="color-label">Thumbnail BG</div>
+              <input type="text" id="card-bg-color" value="#0b1525" maxlength="9" style="font-family:monospace;font-size:12px;width:80px;padding:5px 8px;" oninput="setColor('card-bg-color',this.value)">
+              <div class="swatches"><button type="button" class="sw" style="background:#0b1525" onmousedown="event.preventDefault()" onclick="setColor('card-bg-color','#0b1525')" title="#0b1525"></button><button type="button" class="sw" style="background:#111827" onmousedown="event.preventDefault()" onclick="setColor('card-bg-color','#111827')" title="#111827"></button><button type="button" class="sw" style="background:#1e293b" onmousedown="event.preventDefault()" onclick="setColor('card-bg-color','#1e293b')" title="#1e293b"></button><button type="button" class="sw" style="background:#1a1a2e" onmousedown="event.preventDefault()" onclick="setColor('card-bg-color','#1a1a2e')" title="#1a1a2e"></button><button type="button" class="sw" style="background:#374151" onmousedown="event.preventDefault()" onclick="setColor('card-bg-color','#374151')" title="#374151"></button><button type="button" class="sw" style="background:#0f172a" onmousedown="event.preventDefault()" onclick="setColor('card-bg-color','#0f172a')" title="#0f172a"></button><button type="button" class="sw" style="background:#1c1c1c" onmousedown="event.preventDefault()" onclick="setColor('card-bg-color','#1c1c1c')" title="#1c1c1c"></button><button type="button" class="sw" style="background:#000" onmousedown="event.preventDefault()" onclick="setColor('card-bg-color','#000')" title="#000"></button></div>
             </div>
-            <div style="display:flex;gap:3px;flex-wrap:wrap"><button type="button" onmousedown="event.preventDefault()" onclick="setColor('card-bg-color','#0b1525')" style="width:22px;height:22px;background:#0b1525;border:1.5px solid #e2e8f0;border-radius:4px;cursor:pointer;padding:0;flex-shrink:0"></button><button type="button" onmousedown="event.preventDefault()" onclick="setColor('card-bg-color','#111827')" style="width:22px;height:22px;background:#111827;border:1.5px solid #e2e8f0;border-radius:4px;cursor:pointer;padding:0;flex-shrink:0"></button><button type="button" onmousedown="event.preventDefault()" onclick="setColor('card-bg-color','#1e293b')" style="width:22px;height:22px;background:#1e293b;border:1.5px solid #e2e8f0;border-radius:4px;cursor:pointer;padding:0;flex-shrink:0"></button><button type="button" onmousedown="event.preventDefault()" onclick="setColor('card-bg-color','#1a1a2e')" style="width:22px;height:22px;background:#1a1a2e;border:1.5px solid #e2e8f0;border-radius:4px;cursor:pointer;padding:0;flex-shrink:0"></button><button type="button" onmousedown="event.preventDefault()" onclick="setColor('card-bg-color','#374151')" style="width:22px;height:22px;background:#374151;border:1.5px solid #e2e8f0;border-radius:4px;cursor:pointer;padding:0;flex-shrink:0"></button><button type="button" onmousedown="event.preventDefault()" onclick="setColor('card-bg-color','#0f172a')" style="width:22px;height:22px;background:#0f172a;border:1.5px solid #e2e8f0;border-radius:4px;cursor:pointer;padding:0;flex-shrink:0"></button><button type="button" onmousedown="event.preventDefault()" onclick="setColor('card-bg-color','#1c1c1c')" style="width:22px;height:22px;background:#1c1c1c;border:1.5px solid #e2e8f0;border-radius:4px;cursor:pointer;padding:0;flex-shrink:0"></button><button type="button" onmousedown="event.preventDefault()" onclick="setColor('card-bg-color','#000')" style="width:22px;height:22px;background:#000;border:1.5px solid #e2e8f0;border-radius:4px;cursor:pointer;padding:0;flex-shrink:0"></button></div>
+            <div class="color-field">
+              <div class="color-dot" id="card-body-bg-preview" style="background:#fff"></div>
+              <div class="color-label">Card Body BG</div>
+              <input type="text" id="card-body-bg" value="#ffffff" maxlength="9" style="font-family:monospace;font-size:12px;width:80px;padding:5px 8px;" oninput="setColor('card-body-bg',this.value)">
+              <div class="swatches"><button type="button" class="sw" style="background:#ffffff" onmousedown="event.preventDefault()" onclick="setColor('card-body-bg','#ffffff')" title="#ffffff"></button><button type="button" class="sw" style="background:#f9fafb" onmousedown="event.preventDefault()" onclick="setColor('card-body-bg','#f9fafb')" title="#f9fafb"></button><button type="button" class="sw" style="background:#f1f5f9" onmousedown="event.preventDefault()" onclick="setColor('card-body-bg','#f1f5f9')" title="#f1f5f9"></button><button type="button" class="sw" style="background:#fff7ed" onmousedown="event.preventDefault()" onclick="setColor('card-body-bg','#fff7ed')" title="#fff7ed"></button><button type="button" class="sw" style="background:#fef3c7" onmousedown="event.preventDefault()" onclick="setColor('card-body-bg','#fef3c7')" title="#fef3c7"></button><button type="button" class="sw" style="background:#f0fdf4" onmousedown="event.preventDefault()" onclick="setColor('card-body-bg','#f0fdf4')" title="#f0fdf4"></button><button type="button" class="sw" style="background:#eff6ff" onmousedown="event.preventDefault()" onclick="setColor('card-body-bg','#eff6ff')" title="#eff6ff"></button><button type="button" class="sw" style="background:#fdf4ff" onmousedown="event.preventDefault()" onclick="setColor('card-body-bg','#fdf4ff')" title="#fdf4ff"></button></div>
+            </div>
+            <div style="font-size:11px;font-weight:700;color:#94a3b8;margin:10px 0 8px;">Text Colors</div>
+            <div class="color-field">
+              <div class="color-dot" id="card-title-color-preview" style="background:#1c1c1c"></div>
+              <div class="color-label">Course Title</div>
+              <input type="text" id="card-title-color" value="#1c1c1c" maxlength="9" style="font-family:monospace;font-size:12px;width:80px;padding:5px 8px;" oninput="setColor('card-title-color',this.value)">
+              <div class="swatches"><button type="button" class="sw" style="background:#1c1c1c" onmousedown="event.preventDefault()" onclick="setColor('card-title-color','#1c1c1c')" title="#1c1c1c"></button><button type="button" class="sw" style="background:#111827" onmousedown="event.preventDefault()" onclick="setColor('card-title-color','#111827')" title="#111827"></button><button type="button" class="sw" style="background:#374151" onmousedown="event.preventDefault()" onclick="setColor('card-title-color','#374151')" title="#374151"></button><button type="button" class="sw" style="background:#475569" onmousedown="event.preventDefault()" onclick="setColor('card-title-color','#475569')" title="#475569"></button><button type="button" class="sw" style="background:#0b1525" onmousedown="event.preventDefault()" onclick="setColor('card-title-color','#0b1525')" title="#0b1525"></button><button type="button" class="sw" style="background:#ffffff" onmousedown="event.preventDefault()" onclick="setColor('card-title-color','#ffffff')" title="#ffffff"></button><button type="button" class="sw" style="background:#d4f01a" onmousedown="event.preventDefault()" onclick="setColor('card-title-color','#d4f01a')" title="#d4f01a"></button><button type="button" class="sw" style="background:#f59e0b" onmousedown="event.preventDefault()" onclick="setColor('card-title-color','#f59e0b')" title="#f59e0b"></button></div>
+            </div>
+            <div class="color-field">
+              <div class="color-dot" id="card-desc-color-preview" style="background:#475569"></div>
+              <div class="color-label">Description</div>
+              <input type="text" id="card-desc-color" value="#475569" maxlength="9" style="font-family:monospace;font-size:12px;width:80px;padding:5px 8px;" oninput="setColor('card-desc-color',this.value)">
+              <div class="swatches"><button type="button" class="sw" style="background:#1c1c1c" onmousedown="event.preventDefault()" onclick="setColor('card-desc-color','#1c1c1c')" title="#1c1c1c"></button><button type="button" class="sw" style="background:#111827" onmousedown="event.preventDefault()" onclick="setColor('card-desc-color','#111827')" title="#111827"></button><button type="button" class="sw" style="background:#374151" onmousedown="event.preventDefault()" onclick="setColor('card-desc-color','#374151')" title="#374151"></button><button type="button" class="sw" style="background:#475569" onmousedown="event.preventDefault()" onclick="setColor('card-desc-color','#475569')" title="#475569"></button><button type="button" class="sw" style="background:#0b1525" onmousedown="event.preventDefault()" onclick="setColor('card-desc-color','#0b1525')" title="#0b1525"></button><button type="button" class="sw" style="background:#ffffff" onmousedown="event.preventDefault()" onclick="setColor('card-desc-color','#ffffff')" title="#ffffff"></button><button type="button" class="sw" style="background:#d4f01a" onmousedown="event.preventDefault()" onclick="setColor('card-desc-color','#d4f01a')" title="#d4f01a"></button><button type="button" class="sw" style="background:#f59e0b" onmousedown="event.preventDefault()" onclick="setColor('card-desc-color','#f59e0b')" title="#f59e0b"></button></div>
+            </div>
+            <div class="color-field">
+              <div class="color-dot" id="card-fee-color-preview" style="background:#0b1525"></div>
+              <div class="color-label">Price</div>
+              <input type="text" id="card-fee-color" value="#0b1525" maxlength="9" style="font-family:monospace;font-size:12px;width:80px;padding:5px 8px;" oninput="setColor('card-fee-color',this.value)">
+              <div class="swatches"><button type="button" class="sw" style="background:#d4f01a" onmousedown="event.preventDefault()" onclick="setColor('card-fee-color','#d4f01a')" title="#d4f01a"></button><button type="button" class="sw" style="background:#ffffff" onmousedown="event.preventDefault()" onclick="setColor('card-fee-color','#ffffff')" title="#ffffff"></button><button type="button" class="sw" style="background:#f59e0b" onmousedown="event.preventDefault()" onclick="setColor('card-fee-color','#f59e0b')" title="#f59e0b"></button><button type="button" class="sw" style="background:#34d399" onmousedown="event.preventDefault()" onclick="setColor('card-fee-color','#34d399')" title="#34d399"></button><button type="button" class="sw" style="background:#60a5fa" onmousedown="event.preventDefault()" onclick="setColor('card-fee-color','#60a5fa')" title="#60a5fa"></button><button type="button" class="sw" style="background:#ea580c" onmousedown="event.preventDefault()" onclick="setColor('card-fee-color','#ea580c')" title="#ea580c"></button><button type="button" class="sw" style="background:#1c1c1c" onmousedown="event.preventDefault()" onclick="setColor('card-fee-color','#1c1c1c')" title="#1c1c1c"></button><button type="button" class="sw" style="background:#0b1525" onmousedown="event.preventDefault()" onclick="setColor('card-fee-color','#0b1525')" title="#0b1525"></button></div>
+            </div>
           </div>
-          
+          <!-- Right: button colors + live preview -->
           <div>
-            <div style="font-size:11px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px">Card Body Background</div>
-            <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
-              <div id="card-body-bg-preview" style="width:28px;height:28px;border-radius:6px;border:1.5px solid #e2e8f0;background:#ffffff;flex-shrink:0"></div>
-              <input type="text" id="card-body-bg" value="#ffffff" maxlength="9"
-                style="font-family:monospace;padding:6px 9px;border:1.5px solid #e2e8f0;border-radius:7px;font-size:13px;color:#1e293b;width:100%;outline:none;box-sizing:border-box"
-                oninput="setColor('card-body-bg',this.value)" />
+            <div style="font-size:11px;font-weight:700;color:#94a3b8;margin-bottom:8px;">Button Colors</div>
+            <div class="color-field">
+              <div class="color-dot" id="btn1-bg-preview" style="background:#ea580c"></div>
+              <div class="color-label">Enquire BG</div>
+              <input type="text" id="btn1-bg" value="#ea580c" maxlength="9" style="font-family:monospace;font-size:12px;width:80px;padding:5px 8px;" oninput="setColor('btn1-bg',this.value)">
+              <div class="swatches"><button type="button" class="sw" style="background:#ea580c" onmousedown="event.preventDefault()" onclick="setColor('btn1-bg','#ea580c')" title="#ea580c"></button><button type="button" class="sw" style="background:#0b1525" onmousedown="event.preventDefault()" onclick="setColor('btn1-bg','#0b1525')" title="#0b1525"></button><button type="button" class="sw" style="background:#16a34a" onmousedown="event.preventDefault()" onclick="setColor('btn1-bg','#16a34a')" title="#16a34a"></button><button type="button" class="sw" style="background:#7c3aed" onmousedown="event.preventDefault()" onclick="setColor('btn1-bg','#7c3aed')" title="#7c3aed"></button><button type="button" class="sw" style="background:#dc2626" onmousedown="event.preventDefault()" onclick="setColor('btn1-bg','#dc2626')" title="#dc2626"></button><button type="button" class="sw" style="background:#0891b2" onmousedown="event.preventDefault()" onclick="setColor('btn1-bg','#0891b2')" title="#0891b2"></button><button type="button" class="sw" style="background:#d4f01a" onmousedown="event.preventDefault()" onclick="setColor('btn1-bg','#d4f01a')" title="#d4f01a"></button><button type="button" class="sw" style="background:#fff" onmousedown="event.preventDefault()" onclick="setColor('btn1-bg','#fff')" title="#fff"></button></div>
             </div>
-            <div style="display:flex;gap:3px;flex-wrap:wrap"><button type="button" onmousedown="event.preventDefault()" onclick="setColor('card-body-bg','#ffffff')" style="width:22px;height:22px;background:#ffffff;border:1.5px solid #e2e8f0;border-radius:4px;cursor:pointer;padding:0;flex-shrink:0"></button><button type="button" onmousedown="event.preventDefault()" onclick="setColor('card-body-bg','#f9fafb')" style="width:22px;height:22px;background:#f9fafb;border:1.5px solid #e2e8f0;border-radius:4px;cursor:pointer;padding:0;flex-shrink:0"></button><button type="button" onmousedown="event.preventDefault()" onclick="setColor('card-body-bg','#f1f5f9')" style="width:22px;height:22px;background:#f1f5f9;border:1.5px solid #e2e8f0;border-radius:4px;cursor:pointer;padding:0;flex-shrink:0"></button><button type="button" onmousedown="event.preventDefault()" onclick="setColor('card-body-bg','#fff7ed')" style="width:22px;height:22px;background:#fff7ed;border:1.5px solid #e2e8f0;border-radius:4px;cursor:pointer;padding:0;flex-shrink:0"></button><button type="button" onmousedown="event.preventDefault()" onclick="setColor('card-body-bg','#fef3c7')" style="width:22px;height:22px;background:#fef3c7;border:1.5px solid #e2e8f0;border-radius:4px;cursor:pointer;padding:0;flex-shrink:0"></button><button type="button" onmousedown="event.preventDefault()" onclick="setColor('card-body-bg','#f0fdf4')" style="width:22px;height:22px;background:#f0fdf4;border:1.5px solid #e2e8f0;border-radius:4px;cursor:pointer;padding:0;flex-shrink:0"></button><button type="button" onmousedown="event.preventDefault()" onclick="setColor('card-body-bg','#eff6ff')" style="width:22px;height:22px;background:#eff6ff;border:1.5px solid #e2e8f0;border-radius:4px;cursor:pointer;padding:0;flex-shrink:0"></button><button type="button" onmousedown="event.preventDefault()" onclick="setColor('card-body-bg','#fdf4ff')" style="width:22px;height:22px;background:#fdf4ff;border:1.5px solid #e2e8f0;border-radius:4px;cursor:pointer;padding:0;flex-shrink:0"></button></div>
-          </div>
-        </div>
-
-        <!-- Row 2: Text colors -->
-        <div style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid #e2e8f0;">Text Colors</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:18px">
-          
-          <div>
-            <div style="font-size:11px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px">Course Title</div>
-            <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
-              <div id="card-title-color-preview" style="width:28px;height:28px;border-radius:6px;border:1.5px solid #e2e8f0;background:#1c1c1c;flex-shrink:0"></div>
-              <input type="text" id="card-title-color" value="#1c1c1c" maxlength="9"
-                style="font-family:monospace;padding:6px 9px;border:1.5px solid #e2e8f0;border-radius:7px;font-size:13px;color:#1e293b;width:100%;outline:none;box-sizing:border-box"
-                oninput="setColor('card-title-color',this.value)" />
+            <div class="color-field">
+              <div class="color-dot" id="btn1-color-preview" style="background:#fff"></div>
+              <div class="color-label">Enquire Text</div>
+              <input type="text" id="btn1-color" value="#ffffff" maxlength="9" style="font-family:monospace;font-size:12px;width:80px;padding:5px 8px;" oninput="setColor('btn1-color',this.value)">
+              <div class="swatches"><button type="button" class="sw" style="background:#fff" onmousedown="event.preventDefault()" onclick="setColor('btn1-color','#fff')" title="#fff"></button><button type="button" class="sw" style="background:#1c1c1c" onmousedown="event.preventDefault()" onclick="setColor('btn1-color','#1c1c1c')" title="#1c1c1c"></button><button type="button" class="sw" style="background:#d4f01a" onmousedown="event.preventDefault()" onclick="setColor('btn1-color','#d4f01a')" title="#d4f01a"></button><button type="button" class="sw" style="background:#0b1525" onmousedown="event.preventDefault()" onclick="setColor('btn1-color','#0b1525')" title="#0b1525"></button><button type="button" class="sw" style="background:#f59e0b" onmousedown="event.preventDefault()" onclick="setColor('btn1-color','#f59e0b')" title="#f59e0b"></button><button type="button" class="sw" style="background:#000" onmousedown="event.preventDefault()" onclick="setColor('btn1-color','#000')" title="#000"></button><button type="button" class="sw" style="background:#f1f5f9" onmousedown="event.preventDefault()" onclick="setColor('btn1-color','#f1f5f9')" title="#f1f5f9"></button><button type="button" class="sw" style="background:#fef3c7" onmousedown="event.preventDefault()" onclick="setColor('btn1-color','#fef3c7')" title="#fef3c7"></button></div>
             </div>
-            <div style="display:flex;gap:3px;flex-wrap:wrap"><button type="button" onmousedown="event.preventDefault()" onclick="setColor('card-title-color','#1c1c1c')" style="width:22px;height:22px;background:#1c1c1c;border:1.5px solid #e2e8f0;border-radius:4px;cursor:pointer;padding:0;flex-shrink:0"></button><button type="button" onmousedown="event.preventDefault()" onclick="setColor('card-title-color','#111827')" style="width:22px;height:22px;background:#111827;border:1.5px solid #e2e8f0;border-radius:4px;cursor:pointer;padding:0;flex-shrink:0"></button><button type="button" onmousedown="event.preventDefault()" onclick="setColor('card-title-color','#374151')" style="width:22px;height:22px;background:#374151;border:1.5px solid #e2e8f0;border-radius:4px;cursor:pointer;padding:0;flex-shrink:0"></button><button type="button" onmousedown="event.preventDefault()" onclick="setColor('card-title-color','#475569')" style="width:22px;height:22px;background:#475569;border:1.5px solid #e2e8f0;border-radius:4px;cursor:pointer;padding:0;flex-shrink:0"></button><button type="button" onmousedown="event.preventDefault()" onclick="setColor('card-title-color','#0b1525')" style="width:22px;height:22px;background:#0b1525;border:1.5px solid #e2e8f0;border-radius:4px;cursor:pointer;padding:0;flex-shrink:0"></button><button type="button" onmousedown="event.preventDefault()" onclick="setColor('card-title-color','#ffffff')" style="width:22px;height:22px;background:#ffffff;border:1.5px solid #e2e8f0;border-radius:4px;cursor:pointer;padding:0;flex-shrink:0"></button><button type="button" onmousedown="event.preventDefault()" onclick="setColor('card-title-color','#d4f01a')" style="width:22px;height:22px;background:#d4f01a;border:1.5px solid #e2e8f0;border-radius:4px;cursor:pointer;padding:0;flex-shrink:0"></button><button type="button" onmousedown="event.preventDefault()" onclick="setColor('card-title-color','#f59e0b')" style="width:22px;height:22px;background:#f59e0b;border:1.5px solid #e2e8f0;border-radius:4px;cursor:pointer;padding:0;flex-shrink:0"></button></div>
-          </div>
-          
-          <div>
-            <div style="font-size:11px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px">Description</div>
-            <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
-              <div id="card-desc-color-preview" style="width:28px;height:28px;border-radius:6px;border:1.5px solid #e2e8f0;background:#475569;flex-shrink:0"></div>
-              <input type="text" id="card-desc-color" value="#475569" maxlength="9"
-                style="font-family:monospace;padding:6px 9px;border:1.5px solid #e2e8f0;border-radius:7px;font-size:13px;color:#1e293b;width:100%;outline:none;box-sizing:border-box"
-                oninput="setColor('card-desc-color',this.value)" />
+            <div class="color-field">
+              <div class="color-dot" id="btn2-bg-preview" style="background:#0b1525"></div>
+              <div class="color-label">Syllabus BG</div>
+              <input type="text" id="btn2-bg" value="#0b1525" maxlength="9" style="font-family:monospace;font-size:12px;width:80px;padding:5px 8px;" oninput="setColor('btn2-bg',this.value)">
+              <div class="swatches"><button type="button" class="sw" style="background:#ea580c" onmousedown="event.preventDefault()" onclick="setColor('btn2-bg','#ea580c')" title="#ea580c"></button><button type="button" class="sw" style="background:#0b1525" onmousedown="event.preventDefault()" onclick="setColor('btn2-bg','#0b1525')" title="#0b1525"></button><button type="button" class="sw" style="background:#16a34a" onmousedown="event.preventDefault()" onclick="setColor('btn2-bg','#16a34a')" title="#16a34a"></button><button type="button" class="sw" style="background:#7c3aed" onmousedown="event.preventDefault()" onclick="setColor('btn2-bg','#7c3aed')" title="#7c3aed"></button><button type="button" class="sw" style="background:#dc2626" onmousedown="event.preventDefault()" onclick="setColor('btn2-bg','#dc2626')" title="#dc2626"></button><button type="button" class="sw" style="background:#0891b2" onmousedown="event.preventDefault()" onclick="setColor('btn2-bg','#0891b2')" title="#0891b2"></button><button type="button" class="sw" style="background:#d4f01a" onmousedown="event.preventDefault()" onclick="setColor('btn2-bg','#d4f01a')" title="#d4f01a"></button><button type="button" class="sw" style="background:#fff" onmousedown="event.preventDefault()" onclick="setColor('btn2-bg','#fff')" title="#fff"></button></div>
             </div>
-            <div style="display:flex;gap:3px;flex-wrap:wrap"><button type="button" onmousedown="event.preventDefault()" onclick="setColor('card-desc-color','#1c1c1c')" style="width:22px;height:22px;background:#1c1c1c;border:1.5px solid #e2e8f0;border-radius:4px;cursor:pointer;padding:0;flex-shrink:0"></button><button type="button" onmousedown="event.preventDefault()" onclick="setColor('card-desc-color','#111827')" style="width:22px;height:22px;background:#111827;border:1.5px solid #e2e8f0;border-radius:4px;cursor:pointer;padding:0;flex-shrink:0"></button><button type="button" onmousedown="event.preventDefault()" onclick="setColor('card-desc-color','#374151')" style="width:22px;height:22px;background:#374151;border:1.5px solid #e2e8f0;border-radius:4px;cursor:pointer;padding:0;flex-shrink:0"></button><button type="button" onmousedown="event.preventDefault()" onclick="setColor('card-desc-color','#475569')" style="width:22px;height:22px;background:#475569;border:1.5px solid #e2e8f0;border-radius:4px;cursor:pointer;padding:0;flex-shrink:0"></button><button type="button" onmousedown="event.preventDefault()" onclick="setColor('card-desc-color','#0b1525')" style="width:22px;height:22px;background:#0b1525;border:1.5px solid #e2e8f0;border-radius:4px;cursor:pointer;padding:0;flex-shrink:0"></button><button type="button" onmousedown="event.preventDefault()" onclick="setColor('card-desc-color','#ffffff')" style="width:22px;height:22px;background:#ffffff;border:1.5px solid #e2e8f0;border-radius:4px;cursor:pointer;padding:0;flex-shrink:0"></button><button type="button" onmousedown="event.preventDefault()" onclick="setColor('card-desc-color','#d4f01a')" style="width:22px;height:22px;background:#d4f01a;border:1.5px solid #e2e8f0;border-radius:4px;cursor:pointer;padding:0;flex-shrink:0"></button><button type="button" onmousedown="event.preventDefault()" onclick="setColor('card-desc-color','#f59e0b')" style="width:22px;height:22px;background:#f59e0b;border:1.5px solid #e2e8f0;border-radius:4px;cursor:pointer;padding:0;flex-shrink:0"></button></div>
-          </div>
-          
-          <div>
-            <div style="font-size:11px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px">Price</div>
-            <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
-              <div id="card-fee-color-preview" style="width:28px;height:28px;border-radius:6px;border:1.5px solid #e2e8f0;background:#0b1525;flex-shrink:0"></div>
-              <input type="text" id="card-fee-color" value="#0b1525" maxlength="9"
-                style="font-family:monospace;padding:6px 9px;border:1.5px solid #e2e8f0;border-radius:7px;font-size:13px;color:#1e293b;width:100%;outline:none;box-sizing:border-box"
-                oninput="setColor('card-fee-color',this.value)" />
+            <div class="color-field">
+              <div class="color-dot" id="btn2-color-preview" style="background:#fff"></div>
+              <div class="color-label">Syllabus Text</div>
+              <input type="text" id="btn2-color" value="#ffffff" maxlength="9" style="font-family:monospace;font-size:12px;width:80px;padding:5px 8px;" oninput="setColor('btn2-color',this.value)">
+              <div class="swatches"><button type="button" class="sw" style="background:#fff" onmousedown="event.preventDefault()" onclick="setColor('btn2-color','#fff')" title="#fff"></button><button type="button" class="sw" style="background:#d4f01a" onmousedown="event.preventDefault()" onclick="setColor('btn2-color','#d4f01a')" title="#d4f01a"></button><button type="button" class="sw" style="background:#1c1c1c" onmousedown="event.preventDefault()" onclick="setColor('btn2-color','#1c1c1c')" title="#1c1c1c"></button><button type="button" class="sw" style="background:#0b1525" onmousedown="event.preventDefault()" onclick="setColor('btn2-color','#0b1525')" title="#0b1525"></button><button type="button" class="sw" style="background:#f59e0b" onmousedown="event.preventDefault()" onclick="setColor('btn2-color','#f59e0b')" title="#f59e0b"></button><button type="button" class="sw" style="background:#000" onmousedown="event.preventDefault()" onclick="setColor('btn2-color','#000')" title="#000"></button><button type="button" class="sw" style="background:#f1f5f9" onmousedown="event.preventDefault()" onclick="setColor('btn2-color','#f1f5f9')" title="#f1f5f9"></button><button type="button" class="sw" style="background:#fef3c7" onmousedown="event.preventDefault()" onclick="setColor('btn2-color','#fef3c7')" title="#fef3c7"></button></div>
             </div>
-            <div style="display:flex;gap:3px;flex-wrap:wrap"><button type="button" onmousedown="event.preventDefault()" onclick="setColor('card-fee-color','#d4f01a')" style="width:22px;height:22px;background:#d4f01a;border:1.5px solid #e2e8f0;border-radius:4px;cursor:pointer;padding:0;flex-shrink:0"></button><button type="button" onmousedown="event.preventDefault()" onclick="setColor('card-fee-color','#ffffff')" style="width:22px;height:22px;background:#ffffff;border:1.5px solid #e2e8f0;border-radius:4px;cursor:pointer;padding:0;flex-shrink:0"></button><button type="button" onmousedown="event.preventDefault()" onclick="setColor('card-fee-color','#f59e0b')" style="width:22px;height:22px;background:#f59e0b;border:1.5px solid #e2e8f0;border-radius:4px;cursor:pointer;padding:0;flex-shrink:0"></button><button type="button" onmousedown="event.preventDefault()" onclick="setColor('card-fee-color','#34d399')" style="width:22px;height:22px;background:#34d399;border:1.5px solid #e2e8f0;border-radius:4px;cursor:pointer;padding:0;flex-shrink:0"></button><button type="button" onmousedown="event.preventDefault()" onclick="setColor('card-fee-color','#60a5fa')" style="width:22px;height:22px;background:#60a5fa;border:1.5px solid #e2e8f0;border-radius:4px;cursor:pointer;padding:0;flex-shrink:0"></button><button type="button" onmousedown="event.preventDefault()" onclick="setColor('card-fee-color','#ea580c')" style="width:22px;height:22px;background:#ea580c;border:1.5px solid #e2e8f0;border-radius:4px;cursor:pointer;padding:0;flex-shrink:0"></button><button type="button" onmousedown="event.preventDefault()" onclick="setColor('card-fee-color','#1c1c1c')" style="width:22px;height:22px;background:#1c1c1c;border:1.5px solid #e2e8f0;border-radius:4px;cursor:pointer;padding:0;flex-shrink:0"></button><button type="button" onmousedown="event.preventDefault()" onclick="setColor('card-fee-color','#0b1525')" style="width:22px;height:22px;background:#0b1525;border:1.5px solid #e2e8f0;border-radius:4px;cursor:pointer;padding:0;flex-shrink:0"></button></div>
-          </div>
-        </div>
-
-        <!-- Row 3: Button colors -->
-        <div style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid #e2e8f0;">Action Buttons</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:14px">
-          
-          <div>
-            <div style="font-size:11px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px">Enquire BG</div>
-            <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
-              <div id="btn1-bg-preview" style="width:28px;height:28px;border-radius:6px;border:1.5px solid #e2e8f0;background:#ea580c;flex-shrink:0"></div>
-              <input type="text" id="btn1-bg" value="#ea580c" maxlength="9"
-                style="font-family:monospace;padding:6px 9px;border:1.5px solid #e2e8f0;border-radius:7px;font-size:13px;color:#1e293b;width:100%;outline:none;box-sizing:border-box"
-                oninput="setColor('btn1-bg',this.value)" />
-            </div>
-            <div style="display:flex;gap:3px;flex-wrap:wrap"><button type="button" onmousedown="event.preventDefault()" onclick="setColor('btn1-bg','#ea580c')" style="width:22px;height:22px;background:#ea580c;border:1.5px solid #e2e8f0;border-radius:4px;cursor:pointer;padding:0;flex-shrink:0"></button><button type="button" onmousedown="event.preventDefault()" onclick="setColor('btn1-bg','#0b1525')" style="width:22px;height:22px;background:#0b1525;border:1.5px solid #e2e8f0;border-radius:4px;cursor:pointer;padding:0;flex-shrink:0"></button><button type="button" onmousedown="event.preventDefault()" onclick="setColor('btn1-bg','#16a34a')" style="width:22px;height:22px;background:#16a34a;border:1.5px solid #e2e8f0;border-radius:4px;cursor:pointer;padding:0;flex-shrink:0"></button><button type="button" onmousedown="event.preventDefault()" onclick="setColor('btn1-bg','#7c3aed')" style="width:22px;height:22px;background:#7c3aed;border:1.5px solid #e2e8f0;border-radius:4px;cursor:pointer;padding:0;flex-shrink:0"></button><button type="button" onmousedown="event.preventDefault()" onclick="setColor('btn1-bg','#dc2626')" style="width:22px;height:22px;background:#dc2626;border:1.5px solid #e2e8f0;border-radius:4px;cursor:pointer;padding:0;flex-shrink:0"></button><button type="button" onmousedown="event.preventDefault()" onclick="setColor('btn1-bg','#0891b2')" style="width:22px;height:22px;background:#0891b2;border:1.5px solid #e2e8f0;border-radius:4px;cursor:pointer;padding:0;flex-shrink:0"></button><button type="button" onmousedown="event.preventDefault()" onclick="setColor('btn1-bg','#d4f01a')" style="width:22px;height:22px;background:#d4f01a;border:1.5px solid #e2e8f0;border-radius:4px;cursor:pointer;padding:0;flex-shrink:0"></button><button type="button" onmousedown="event.preventDefault()" onclick="setColor('btn1-bg','#fff')" style="width:22px;height:22px;background:#fff;border:1.5px solid #e2e8f0;border-radius:4px;cursor:pointer;padding:0;flex-shrink:0"></button></div>
-          </div>
-          
-          <div>
-            <div style="font-size:11px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px">Enquire Text</div>
-            <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
-              <div id="btn1-color-preview" style="width:28px;height:28px;border-radius:6px;border:1.5px solid #e2e8f0;background:#ffffff;flex-shrink:0"></div>
-              <input type="text" id="btn1-color" value="#ffffff" maxlength="9"
-                style="font-family:monospace;padding:6px 9px;border:1.5px solid #e2e8f0;border-radius:7px;font-size:13px;color:#1e293b;width:100%;outline:none;box-sizing:border-box"
-                oninput="setColor('btn1-color',this.value)" />
-            </div>
-            <div style="display:flex;gap:3px;flex-wrap:wrap"><button type="button" onmousedown="event.preventDefault()" onclick="setColor('btn1-color','#fff')" style="width:22px;height:22px;background:#fff;border:1.5px solid #e2e8f0;border-radius:4px;cursor:pointer;padding:0;flex-shrink:0"></button><button type="button" onmousedown="event.preventDefault()" onclick="setColor('btn1-color','#1c1c1c')" style="width:22px;height:22px;background:#1c1c1c;border:1.5px solid #e2e8f0;border-radius:4px;cursor:pointer;padding:0;flex-shrink:0"></button><button type="button" onmousedown="event.preventDefault()" onclick="setColor('btn1-color','#d4f01a')" style="width:22px;height:22px;background:#d4f01a;border:1.5px solid #e2e8f0;border-radius:4px;cursor:pointer;padding:0;flex-shrink:0"></button><button type="button" onmousedown="event.preventDefault()" onclick="setColor('btn1-color','#0b1525')" style="width:22px;height:22px;background:#0b1525;border:1.5px solid #e2e8f0;border-radius:4px;cursor:pointer;padding:0;flex-shrink:0"></button><button type="button" onmousedown="event.preventDefault()" onclick="setColor('btn1-color','#f59e0b')" style="width:22px;height:22px;background:#f59e0b;border:1.5px solid #e2e8f0;border-radius:4px;cursor:pointer;padding:0;flex-shrink:0"></button><button type="button" onmousedown="event.preventDefault()" onclick="setColor('btn1-color','#000')" style="width:22px;height:22px;background:#000;border:1.5px solid #e2e8f0;border-radius:4px;cursor:pointer;padding:0;flex-shrink:0"></button><button type="button" onmousedown="event.preventDefault()" onclick="setColor('btn1-color','#f1f5f9')" style="width:22px;height:22px;background:#f1f5f9;border:1.5px solid #e2e8f0;border-radius:4px;cursor:pointer;padding:0;flex-shrink:0"></button><button type="button" onmousedown="event.preventDefault()" onclick="setColor('btn1-color','#fef3c7')" style="width:22px;height:22px;background:#fef3c7;border:1.5px solid #e2e8f0;border-radius:4px;cursor:pointer;padding:0;flex-shrink:0"></button></div>
-          </div>
-          
-          <div>
-            <div style="font-size:11px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px">Syllabus BG</div>
-            <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
-              <div id="btn2-bg-preview" style="width:28px;height:28px;border-radius:6px;border:1.5px solid #e2e8f0;background:#0b1525;flex-shrink:0"></div>
-              <input type="text" id="btn2-bg" value="#0b1525" maxlength="9"
-                style="font-family:monospace;padding:6px 9px;border:1.5px solid #e2e8f0;border-radius:7px;font-size:13px;color:#1e293b;width:100%;outline:none;box-sizing:border-box"
-                oninput="setColor('btn2-bg',this.value)" />
-            </div>
-            <div style="display:flex;gap:3px;flex-wrap:wrap"><button type="button" onmousedown="event.preventDefault()" onclick="setColor('btn2-bg','#ea580c')" style="width:22px;height:22px;background:#ea580c;border:1.5px solid #e2e8f0;border-radius:4px;cursor:pointer;padding:0;flex-shrink:0"></button><button type="button" onmousedown="event.preventDefault()" onclick="setColor('btn2-bg','#0b1525')" style="width:22px;height:22px;background:#0b1525;border:1.5px solid #e2e8f0;border-radius:4px;cursor:pointer;padding:0;flex-shrink:0"></button><button type="button" onmousedown="event.preventDefault()" onclick="setColor('btn2-bg','#16a34a')" style="width:22px;height:22px;background:#16a34a;border:1.5px solid #e2e8f0;border-radius:4px;cursor:pointer;padding:0;flex-shrink:0"></button><button type="button" onmousedown="event.preventDefault()" onclick="setColor('btn2-bg','#7c3aed')" style="width:22px;height:22px;background:#7c3aed;border:1.5px solid #e2e8f0;border-radius:4px;cursor:pointer;padding:0;flex-shrink:0"></button><button type="button" onmousedown="event.preventDefault()" onclick="setColor('btn2-bg','#dc2626')" style="width:22px;height:22px;background:#dc2626;border:1.5px solid #e2e8f0;border-radius:4px;cursor:pointer;padding:0;flex-shrink:0"></button><button type="button" onmousedown="event.preventDefault()" onclick="setColor('btn2-bg','#0891b2')" style="width:22px;height:22px;background:#0891b2;border:1.5px solid #e2e8f0;border-radius:4px;cursor:pointer;padding:0;flex-shrink:0"></button><button type="button" onmousedown="event.preventDefault()" onclick="setColor('btn2-bg','#d4f01a')" style="width:22px;height:22px;background:#d4f01a;border:1.5px solid #e2e8f0;border-radius:4px;cursor:pointer;padding:0;flex-shrink:0"></button><button type="button" onmousedown="event.preventDefault()" onclick="setColor('btn2-bg','#fff')" style="width:22px;height:22px;background:#fff;border:1.5px solid #e2e8f0;border-radius:4px;cursor:pointer;padding:0;flex-shrink:0"></button></div>
-          </div>
-          
-          <div>
-            <div style="font-size:11px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px">Syllabus Text</div>
-            <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
-              <div id="btn2-color-preview" style="width:28px;height:28px;border-radius:6px;border:1.5px solid #e2e8f0;background:#ffffff;flex-shrink:0"></div>
-              <input type="text" id="btn2-color" value="#ffffff" maxlength="9"
-                style="font-family:monospace;padding:6px 9px;border:1.5px solid #e2e8f0;border-radius:7px;font-size:13px;color:#1e293b;width:100%;outline:none;box-sizing:border-box"
-                oninput="setColor('btn2-color',this.value)" />
-            </div>
-            <div style="display:flex;gap:3px;flex-wrap:wrap"><button type="button" onmousedown="event.preventDefault()" onclick="setColor('btn2-color','#fff')" style="width:22px;height:22px;background:#fff;border:1.5px solid #e2e8f0;border-radius:4px;cursor:pointer;padding:0;flex-shrink:0"></button><button type="button" onmousedown="event.preventDefault()" onclick="setColor('btn2-color','#d4f01a')" style="width:22px;height:22px;background:#d4f01a;border:1.5px solid #e2e8f0;border-radius:4px;cursor:pointer;padding:0;flex-shrink:0"></button><button type="button" onmousedown="event.preventDefault()" onclick="setColor('btn2-color','#1c1c1c')" style="width:22px;height:22px;background:#1c1c1c;border:1.5px solid #e2e8f0;border-radius:4px;cursor:pointer;padding:0;flex-shrink:0"></button><button type="button" onmousedown="event.preventDefault()" onclick="setColor('btn2-color','#0b1525')" style="width:22px;height:22px;background:#0b1525;border:1.5px solid #e2e8f0;border-radius:4px;cursor:pointer;padding:0;flex-shrink:0"></button><button type="button" onmousedown="event.preventDefault()" onclick="setColor('btn2-color','#f59e0b')" style="width:22px;height:22px;background:#f59e0b;border:1.5px solid #e2e8f0;border-radius:4px;cursor:pointer;padding:0;flex-shrink:0"></button><button type="button" onmousedown="event.preventDefault()" onclick="setColor('btn2-color','#000')" style="width:22px;height:22px;background:#000;border:1.5px solid #e2e8f0;border-radius:4px;cursor:pointer;padding:0;flex-shrink:0"></button><button type="button" onmousedown="event.preventDefault()" onclick="setColor('btn2-color','#f1f5f9')" style="width:22px;height:22px;background:#f1f5f9;border:1.5px solid #e2e8f0;border-radius:4px;cursor:pointer;padding:0;flex-shrink:0"></button><button type="button" onmousedown="event.preventDefault()" onclick="setColor('btn2-color','#fef3c7')" style="width:22px;height:22px;background:#fef3c7;border:1.5px solid #e2e8f0;border-radius:4px;cursor:pointer;padding:0;flex-shrink:0"></button></div>
-          </div>
-        </div>
-
-        <!-- Live mini preview -->
-        <div style="margin-top:18px;padding-top:16px;border-top:1px solid #e2e8f0">
-          <div style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:10px">Live Preview</div>
-          <div id="card-live-preview" style="width:220px;border-radius:12px;overflow:hidden;border:1px solid #e2e8f0;box-shadow:0 3px 12px rgba(0,0,0,0.08)">
-            <div id="prev-thumb" style="height:120px;background:#0b1525;display:flex;align-items:center;justify-content:center;font-family:Sora,sans-serif;font-size:14px;font-weight:900;color:#d4f01a;text-align:center;padding:12px">GEN AI for Everyone</div>
-            <div id="prev-body" style="padding:12px 14px;background:#ffffff">
-              <div id="prev-title" style="font-size:14px;font-weight:800;color:#1c1c1c;margin-bottom:4px">GEN AI for Everyone</div>
-              <div id="prev-desc" style="font-size:11px;color:#475569;margin-bottom:8px">Master ChatGPT, AI automation tools</div>
-              <div id="prev-fee" style="font-size:14px;font-weight:900;color:#0b1525;margin-bottom:10px">₹4,999</div>
-              <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
-                <div id="prev-btn1" style="background:#ea580c;color:#fff;text-align:center;padding:6px;border-radius:7px;font-size:10px;font-weight:700">💬 Enquire</div>
-                <div id="prev-btn2" style="background:#0b1525;color:#fff;text-align:center;padding:6px;border-radius:7px;font-size:10px;font-weight:700">📄 Syllabus</div>
+            <!-- Live mini preview -->
+            <div style="margin-top:14px;">
+              <div style="font-size:11px;font-weight:700;color:#94a3b8;margin-bottom:8px;">Live Preview</div>
+              <div class="preview-card">
+                <div id="prev-thumb" style="height:100px;background:#0b1525;display:flex;align-items:center;justify-content:center;font-family:Sora,sans-serif;font-size:12px;font-weight:900;color:#d4f01a;text-align:center;padding:10px">GEN AI for Everyone</div>
+                <div id="prev-body" style="padding:10px 12px;background:#fff">
+                  <div id="prev-title" style="font-size:13px;font-weight:800;color:#1c1c1c;margin-bottom:3px">GEN AI for Everyone</div>
+                  <div id="prev-desc" style="font-size:10px;color:#475569;margin-bottom:6px">Master ChatGPT, AI tools</div>
+                  <div id="prev-fee" style="font-size:13px;font-weight:900;color:#0b1525;margin-bottom:8px">₹4,999</div>
+                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px">
+                    <div id="prev-btn1" style="background:#ea580c;color:#fff;text-align:center;padding:5px;border-radius:6px;font-size:9px;font-weight:700">💬 Enquire</div>
+                    <div id="prev-btn2" style="background:#0b1525;color:#fff;text-align:center;padding:5px;border-radius:6px;font-size:9px;font-weight:700">📄 Syllabus</div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -308,58 +268,36 @@ import AdminLayout from '../../layouts/AdminLayout.astro'
       </div>
 
       <div id="cat-admin-list"></div>
-      <button class="add-btn" id="cat-add-btn">+ Add Category Row</button>
-      <br><br>
-      <button class="save-btn" id="cat-save-btn">💾 Save Categories</button>
+      <button class="add-btn" id="cat-add-btn" style="width:100%;margin-top:4px;">+ Add Category Row</button>
       <div class="status" id="cat-status"></div>
     </div>
   </div>
 
-  <!-- ═══════════════════ POPUP ═══════════════════ -->
+  <!-- ══════════ POPUP ══════════ -->
   <div id="tab-popup" style="display:none">
-    <div class="section-card">
-      <h2 class="section-title">💬 Drop Us a Query Popup</h2>
-      <p class="section-desc">A popup appears to visitors after a set delay. Configure timing, title, and whether to show it once per session.</p>
-
-      <div class="toggle-row">
-        <input type="checkbox" id="popup-enabled" checked />
-        <label for="popup-enabled">Popup enabled (show to visitors)</label>
+    <div class="panel">
+      <div class="panel-head">
+        <div>
+          <div class="panel-title">💬 Drop Us a Query Popup</div>
+          <div class="panel-desc">Appears to visitors after a set delay. Configurable timing and content.</div>
+        </div>
+        <button class="save-btn" id="popup-save-btn">💾 Save</button>
       </div>
-
-      <div class="field-row">
-        <div class="field">
-          <label class="lbl">Show After (seconds)</label>
-          <input type="number" id="popup-delay" value="15" min="5" max="300" />
-          <span class="tip">Visitor must be on page this many seconds before popup appears. Default: 15</span>
-        </div>
-        <div class="field">
-          <label class="lbl">Behaviour</label>
-          <div class="toggle-row" style="margin-top:8px">
-            <input type="checkbox" id="popup-once" checked />
-            <label for="popup-once">Show only once per session (don't repeat on refresh)</label>
-          </div>
-        </div>
+      <div class="toggle-row"><input type="checkbox" id="popup-enabled" checked><label for="popup-enabled">Popup enabled (show to visitors)</label></div>
+      <div class="toggle-row"><input type="checkbox" id="popup-once" checked><label for="popup-once">Show only once per session (don't repeat on refresh)</label></div>
+      <div class="f2" style="margin-bottom:12px;">
+        <div class="field"><label class="lbl">Show After (seconds)</label><input type="number" id="popup-delay" value="15" min="5" max="300"></div>
+        <div></div>
       </div>
-
-      <div class="field-row">
-        <div class="field">
-          <label class="lbl">Popup Title</label>
-          <input type="text" id="popup-title" value="Drop Us a Query" />
-        </div>
-        <div class="field">
-          <label class="lbl">Subtitle</label>
-          <input type="text" id="popup-subtitle" value="We'll call you back within 30 minutes" />
-        </div>
+      <div class="f2">
+        <div class="field"><label class="lbl">Popup Title</label><input type="text" id="popup-title" value="Drop Us a Query"></div>
+        <div class="field"><label class="lbl">Subtitle</label><input type="text" id="popup-subtitle" value="We'll call you back within 30 minutes"></div>
       </div>
-
-      <button class="save-btn" id="popup-save-btn">💾 Save Popup Settings</button>
       <div class="status" id="popup-status"></div>
     </div>
   </div>
 
 </div>
-
-</AdminLayout>
 
 <script>
 const SB_URL = (window as any).__SB_URL as string
