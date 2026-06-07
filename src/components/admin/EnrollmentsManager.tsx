@@ -69,27 +69,28 @@ export default function EnrollmentsManager() {
   async function loadAll() {
     setLoading(true)
     try {
-      // Load enrollments with joined data
+      // Load enrollments + courses (no student_profiles join — no FK in schema cache)
       const { data: enData, error } = await supabase
         .from('enrollments')
-        .select(`
-          id, student_id, course_id, enrolled_at,
-          payment_status, payment_id, amount_paid, progress_percent,
-          courses ( title, slug ),
-          student_profiles ( full_name, phone )
-        `)
+        .select('id, student_id, course_id, enrolled_at, payment_status, payment_id, amount_paid, progress_percent, courses ( title, slug )')
         .order('enrolled_at', { ascending: false })
         .limit(300)
 
       if (error) throw error
 
-      // Load auth users list for emails — join via student_id match
+      // Load student profiles separately — match by student_id in JS
       const { data: authData } = await supabase
         .from('student_profiles')
         .select('id, full_name, phone')
         .order('full_name')
 
       setStudents(authData ?? [])
+
+      // Build profile lookup map
+      const profileMap: Record<string, { full_name: string; phone: string }> = {}
+      for (const p of authData ?? []) {
+        profileMap[p.id] = { full_name: p.full_name ?? '', phone: p.phone ?? '' }
+      }
 
       const mapped: Enrollment[] = (enData ?? []).map((e: any) => ({
         id: e.id,
@@ -100,7 +101,7 @@ export default function EnrollmentsManager() {
         payment_id: e.payment_id,
         amount_paid: e.amount_paid,
         progress_percent: e.progress_percent ?? 0,
-        student_name: e.student_profiles?.full_name ?? '(no profile)',
+        student_name: profileMap[e.student_id]?.full_name || '(no profile)',
         student_email: '',
         course_title: e.courses?.title ?? '(unknown course)',
         course_slug: e.courses?.slug ?? '',

@@ -142,11 +142,13 @@ const SUPABASE_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY || ''
       const { error } = await supabase.auth.signInWithPassword({ email, password })
 
       if (error) {
-        errEl.textContent = '⚠️ ' + (
-          error.message === 'Invalid login credentials'
-            ? 'Incorrect email or password. Try again or create a new account.'
-            : error.message
-        )
+        let msg = error.message
+        if (msg === 'Invalid login credentials') {
+          msg = 'Incorrect email or password. Try again or create a new account.'
+        } else if (msg.toLowerCase().includes('email not confirmed')) {
+          msg = 'Your email is not confirmed yet. Please check your inbox and click the confirmation link. If you did not receive it, contact the admin.'
+        }
+        errEl.textContent = '⚠️ ' + msg
         errEl.classList.add('show')
         btn.disabled    = false
         btn.textContent = 'Login to My Account'

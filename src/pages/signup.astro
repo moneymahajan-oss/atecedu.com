@@ -264,9 +264,35 @@ const SUPABASE_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY || ''
         })
       }
 
-      // Show success and redirect to dashboard
       $('step2').style.display = 'none'
-      $('success-box').classList.add('show')
+
+      // If session exists → auto-logged in (email confirmation OFF in Supabase)
+      // If no session → email confirmation is required
+      if (data.session) {
+        // Auto-login worked — redirect to dashboard
+        $('success-box').classList.add('show')
+        setTimeout(() => { window.location.href = '/dashboard' }, 1200)
+      } else {
+        // Email confirmation required — show instructions
+        const successBox = $('success-box')
+        successBox.innerHTML = `
+          <div style="font-size:48px;margin-bottom:12px">📧</div>
+          <h3 style="font-family:'Sora',sans-serif;font-weight:700;font-size:1.2rem;margin-bottom:8px">Check Your Email</h3>
+          <p style="font-size:14px;color:#6b7280;margin-bottom:8px">
+            We sent a confirmation link to <strong>${email}</strong>
+          </p>
+          <p style="font-size:13px;color:#9ca3af;margin-bottom:20px">
+            Click the link in the email to activate your account, then come back to log in.
+          </p>
+          <a href="/login" style="display:inline-block;padding:12px 28px;background:#0b1525;color:#d4f01a;border-radius:10px;font-family:'Sora',sans-serif;font-weight:700;font-size:14px;text-decoration:none">
+            Go to Login →
+          </a>
+          <p style="font-size:12px;color:#9ca3af;margin-top:16px">
+            Didn't get the email? Check spam, or ask your admin to confirm your account.
+          </p>
+        `
+        successBox.classList.add('show')
+      }
 
       setTimeout(() => {
         window.location.href = '/dashboard'
