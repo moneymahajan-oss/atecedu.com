@@ -5,13 +5,5 @@ import MyCourses from '../../components/dashboard/MyCourses'
 ---
 
 <BaseLayout title="My Courses — ATEC" noIndex={true}>
-  <div class="dashboard-page">
-    <div class="container">
-      <MyCourses client:load />
-    </div>
-  </div>
+  <MyCourses client:load />
 </BaseLayout>
-
-<style>
-.dashboard-page { padding: 40px 0 80px; background: var(--gray-50); min-height: 80vh; }
-</style>

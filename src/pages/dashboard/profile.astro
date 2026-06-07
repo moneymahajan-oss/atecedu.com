@@ -1,17 +1,9 @@
 ---
 // src/pages/dashboard/profile.astro
 import BaseLayout from '../../layouts/BaseLayout.astro'
-import ProfileEditor from '../../components/dashboard/ProfileEditor'
+import ProfilePage from '../../components/dashboard/ProfilePage'
 ---
 
 <BaseLayout title="My Profile — ATEC" noIndex={true}>
-  <div class="dashboard-page">
-    <div class="container" style="max-width:640px">
-      <ProfileEditor client:load />
-    </div>
-  </div>
+  <ProfilePage client:load />
 </BaseLayout>
-
-<style>
-.dashboard-page { padding: 40px 0 80px; background: var(--gray-50); min-height: 80vh; }
-</style>
