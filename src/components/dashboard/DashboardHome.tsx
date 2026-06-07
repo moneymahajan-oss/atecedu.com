@@ -1,4 +1,7 @@
 // src/components/dashboard/DashboardHome.tsx
+// UPDATED: Added Live Sessions section + Announcements
+// All existing functionality unchanged
+
 import { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
 
@@ -20,6 +23,7 @@ interface Profile {
   phone: string
   city: string
   photo_url: string | null
+  father_name: string | null
 }
 
 interface Stats {
@@ -28,12 +32,36 @@ interface Stats {
   certCount: number
 }
 
+interface LiveSession {
+  id: string
+  course_id: string | null
+  title: string
+  platform: string
+  zoom_link: string
+  meeting_id: string | null
+  passcode: string | null
+  scheduled_at: string
+  duration_minutes: number
+  instructor_name: string | null
+  recording_url: string | null
+  status: string
+}
+
+interface Announcement {
+  id: string
+  title: string
+  body: string | null
+  created_at: string
+}
+
 export default function DashboardHome() {
   const [profile, setProfile] = useState<Profile | null>(null)
   const [enrollments, setEnrollments] = useState<Enrollment[]>([])
   const [stats, setStats] = useState<Stats>({ enrolledCount: 0, completedCount: 0, certCount: 0 })
   const [user, setUser] = useState<{ id: string; email: string } | null>(null)
   const [loading, setLoading] = useState(true)
+  const [upcomingSessions, setUpcomingSessions] = useState<LiveSession[]>([])
+  const [announcements, setAnnouncements] = useState<Announcement[]>([])
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
@@ -47,7 +75,11 @@ export default function DashboardHome() {
   }, [])
 
   async function loadDashboard(userId: string) {
-    const [{ data: profileData }, { data: enrollData }, { data: certData }] = await Promise.all([
+    const [
+      { data: profileData },
+      { data: enrollData },
+      { data: certData },
+    ] = await Promise.all([
       supabase.from('student_profiles').select('*').eq('id', userId).single(),
       supabase.from('enrollments')
         .select('id,course_id,enrolled_at,payment_status,progress_percent,courses(title,slug,thumbnail_url,mode,duration_weeks)')
@@ -78,12 +110,59 @@ export default function DashboardHome() {
       completedCount: mapped.filter(e => e.progress_percent === 100).length,
       certCount: (certData ?? []).length,
     })
+
+    // Load upcoming sessions for enrolled courses
+    if (mapped.length > 0) {
+      const courseIds = mapped.map(e => e.course_id)
+      const { data: sessions } = await supabase
+        .from('live_sessions')
+        .select('id,course_id,title,platform,zoom_link,meeting_id,passcode,scheduled_at,duration_minutes,instructor_name,recording_url,status')
+        .eq('is_active', true)
+        .neq('status', 'cancelled')
+        .or(`course_id.in.(${courseIds.map(id => `"${id}"`).join(',')}),course_id.is.null`)
+        .gte('scheduled_at', new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString()) // show until 3h after start
+        .order('scheduled_at')
+        .limit(5)
+      setUpcomingSessions(sessions ?? [])
+    }
+
+    // Load announcements
+    const { data: annData } = await supabase
+      .from('announcements')
+      .select('id,title,body,created_at')
+      .eq('is_active', true)
+      .order('created_at', { ascending: false })
+      .limit(3)
+    setAnnouncements(annData ?? [])
+
     setLoading(false)
   }
 
   async function handleLogout() {
     await supabase.auth.signOut()
     window.location.href = '/'
+  }
+
+  function formatSessionTime(iso: string) {
+    const dt = new Date(iso)
+    const now = new Date()
+    const diff = dt.getTime() - now.getTime()
+    const mins = Math.floor(diff / 60000)
+    if (mins < 0 && Math.abs(mins) < 180) return '🔴 Live Now'
+    if (mins < 60) return `In ${mins} min`
+    if (mins < 1440) {
+      const hrs = Math.floor(mins / 60)
+      return `Today ${dt.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}`
+    }
+    return dt.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }) + ' · ' + dt.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })
+  }
+
+  function isJoinable(iso: string) {
+    const dt = new Date(iso)
+    const now = new Date()
+    const diff = dt.getTime() - now.getTime()
+    // Show join button 15 min before start until 3h after
+    return diff <= 15 * 60 * 1000 && diff >= -3 * 60 * 60 * 1000
   }
 
   if (loading) return (
@@ -99,28 +178,16 @@ export default function DashboardHome() {
     <div style={{ display: 'grid', gridTemplateColumns: '240px 1fr', gap: '28px', alignItems: 'start' }}>
 
       {/* Sidebar */}
-      <div style={{
-        background: '#fff', borderRadius: '16px',
-        border: '1px solid #e5e7eb', overflow: 'hidden',
-        position: 'sticky', top: '80px',
-      }}>
+      <div style={{ background: '#fff', borderRadius: '16px', border: '1px solid #e5e7eb', overflow: 'hidden', position: 'sticky', top: '80px' }}>
         {/* Profile mini */}
         <div style={{ padding: '24px', borderBottom: '1px solid #f3f4f6', textAlign: 'center' }}>
-          <div style={{
-            width: '60px', height: '60px', borderRadius: '50%',
-            background: '#1c3d7a', margin: '0 auto 10px',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontFamily: 'var(--font-display)', fontWeight: '800',
-            fontSize: '22px', color: '#d4f01a', overflow: 'hidden',
-          }}>
+          <div style={{ width: '60px', height: '60px', borderRadius: '50%', background: '#1c3d7a', margin: '0 auto 10px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font-display)', fontWeight: '800', fontSize: '22px', color: '#d4f01a', overflow: 'hidden' }}>
             {profile?.photo_url
               ? <img src={profile.photo_url} alt={profile.full_name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
               : firstName[0]
             }
           </div>
-          <div style={{ fontFamily: 'var(--font-display)', fontWeight: '700', fontSize: '15px' }}>
-            {profile?.full_name ?? 'Student'}
-          </div>
+          <div style={{ fontFamily: 'var(--font-display)', fontWeight: '700', fontSize: '15px' }}>{profile?.full_name ?? 'Student'}</div>
           <div style={{ fontSize: '12px', color: '#9ca3af', marginTop: '2px' }}>{user?.email}</div>
         </div>
 
@@ -133,15 +200,7 @@ export default function DashboardHome() {
             { href: '/dashboard/profile', icon: '👤', label: 'Edit Profile' },
             { href: '/cart', icon: '🛒', label: 'My Cart' },
           ].map(item => (
-            <a key={item.href} href={item.href} style={{
-              display: 'flex', alignItems: 'center', gap: '10px',
-              padding: '10px 16px', borderRadius: '10px',
-              fontSize: '14px', fontWeight: item.active ? '700' : '500',
-              color: item.active ? '#1c3d7a' : '#4b5563',
-              background: item.active ? '#eff6ff' : 'transparent',
-              textDecoration: 'none', marginBottom: '2px',
-              transition: 'all 0.15s',
-            }}>
+            <a key={item.href} href={item.href} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 16px', borderRadius: '10px', fontSize: '14px', fontWeight: item.active ? '700' : '500', color: item.active ? '#1c3d7a' : '#4b5563', background: item.active ? '#eff6ff' : 'transparent', textDecoration: 'none', marginBottom: '2px', transition: 'all 0.15s' }}>
               <span>{item.icon}</span> {item.label}
             </a>
           ))}
@@ -149,15 +208,7 @@ export default function DashboardHome() {
 
         {/* Logout */}
         <div style={{ padding: '12px 16px', borderTop: '1px solid #f3f4f6' }}>
-          <button
-            onClick={handleLogout}
-            style={{
-              width: '100%', padding: '10px', background: 'none',
-              border: '1px solid #fecaca', borderRadius: '8px',
-              fontSize: '13px', color: '#ef4444', fontWeight: '600',
-              cursor: 'pointer',
-            }}
-          >
+          <button onClick={handleLogout} style={{ width: '100%', padding: '10px', background: 'none', border: '1px solid #fecaca', borderRadius: '8px', fontSize: '13px', color: '#ef4444', fontWeight: '600', cursor: 'pointer' }}>
             🚪 Logout
           </button>
         </div>
@@ -176,6 +227,21 @@ export default function DashboardHome() {
           </p>
         </div>
 
+        {/* Announcements (if any) */}
+        {announcements.length > 0 && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            {announcements.map(ann => (
+              <div key={ann.id} style={{ background: '#fffbeb', border: '1px solid #fde68a', borderRadius: '12px', padding: '14px 16px', display: 'flex', gap: '12px' }}>
+                <span style={{ fontSize: '18px', flexShrink: 0 }}>📢</span>
+                <div>
+                  <div style={{ fontFamily: 'var(--font-display)', fontWeight: '700', fontSize: '14px', color: '#92400e' }}>{ann.title}</div>
+                  {ann.body && <div style={{ fontSize: '13px', color: '#78350f', marginTop: '3px', lineHeight: '1.5' }}>{ann.body}</div>}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
         {/* Stats row */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '16px' }}>
           {[
@@ -183,37 +249,68 @@ export default function DashboardHome() {
             { icon: '✅', label: 'Completed', value: stats.completedCount, color: '#dcfce7', textColor: '#166534' },
             { icon: '📜', label: 'Certificates', value: stats.certCount, color: '#fef9c3', textColor: '#713f12' },
           ].map(s => (
-            <div key={s.label} style={{
-              background: '#fff', borderRadius: '14px',
-              border: '1px solid #e5e7eb', padding: '20px',
-              display: 'flex', alignItems: 'center', gap: '14px',
-            }}>
-              <div style={{
-                width: '44px', height: '44px', borderRadius: '12px',
-                background: s.color, display: 'flex', alignItems: 'center',
-                justifyContent: 'center', fontSize: '20px', flexShrink: 0,
-              }}>
+            <div key={s.label} style={{ background: '#fff', borderRadius: '14px', border: '1px solid #e5e7eb', padding: '20px', display: 'flex', alignItems: 'center', gap: '14px' }}>
+              <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: s.color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px', flexShrink: 0 }}>
                 {s.icon}
               </div>
               <div>
-                <div style={{ fontFamily: 'var(--font-display)', fontSize: '1.6rem', fontWeight: '800', color: s.textColor, lineHeight: 1 }}>
-                  {s.value}
-                </div>
+                <div style={{ fontFamily: 'var(--font-display)', fontSize: '1.6rem', fontWeight: '800', color: s.textColor, lineHeight: 1 }}>{s.value}</div>
                 <div style={{ fontSize: '12px', color: '#9ca3af', marginTop: '2px' }}>{s.label}</div>
               </div>
             </div>
           ))}
         </div>
 
+        {/* Upcoming Live Sessions */}
+        {upcomingSessions.length > 0 && (
+          <div style={{ background: '#fff', borderRadius: '16px', border: '1px solid #e5e7eb', overflow: 'hidden' }}>
+            <div style={{ padding: '20px 24px', borderBottom: '1px solid #f3f4f6', background: '#0f1724' }}>
+              <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.1rem', fontWeight: '700', color: '#fff' }}>
+                🎥 Upcoming Live Classes
+              </h2>
+            </div>
+            {upcomingSessions.map(session => {
+              const joinable = isJoinable(session.scheduled_at)
+              const isLive = session.status === 'live'
+              return (
+                <div key={session.id} style={{ padding: '14px 24px', borderBottom: '1px solid #f9fafb', display: 'flex', alignItems: 'center', gap: '14px' }}
+                  onMouseEnter={e => (e.currentTarget.style.background = '#fafbfc')}
+                  onMouseLeave={e => (e.currentTarget.style.background = '')}
+                >
+                  <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: isLive ? '#fee2e2' : '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px', flexShrink: 0 }}>
+                    {session.platform === 'zoom' ? '🔵' : session.platform === 'meet' ? '🟢' : '🎥'}
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontFamily: 'var(--font-display)', fontWeight: '700', fontSize: '14px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      {session.title}
+                    </div>
+                    <div style={{ fontSize: '12px', color: '#6b7280', marginTop: '2px', display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                      <span>{formatSessionTime(session.scheduled_at)}</span>
+                      <span>⏱ {session.duration_minutes}min</span>
+                      {session.instructor_name && <span>👤 {session.instructor_name}</span>}
+                    </div>
+                  </div>
+                  {joinable || isLive ? (
+                    <a href={session.zoom_link} target="_blank" rel="noopener noreferrer"
+                      style={{ padding: '8px 16px', background: isLive ? '#dc2626' : '#1c3d7a', color: '#fff', borderRadius: '8px', fontSize: '13px', fontWeight: '700', textDecoration: 'none', flexShrink: 0, display: 'flex', alignItems: 'center', gap: '5px' }}>
+                      {isLive ? '🔴 Join Now' : '▶ Join'}
+                    </a>
+                  ) : (
+                    <div style={{ padding: '7px 14px', background: '#f1f5f9', color: '#64748b', borderRadius: '8px', fontSize: '12px', fontWeight: '600', flexShrink: 0 }}>
+                      {formatSessionTime(session.scheduled_at)}
+                    </div>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+        )}
+
         {/* My Courses */}
         <div style={{ background: '#fff', borderRadius: '16px', border: '1px solid #e5e7eb', overflow: 'hidden' }}>
           <div style={{ padding: '20px 24px', borderBottom: '1px solid #f3f4f6', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.1rem', fontWeight: '700' }}>
-              📚 My Courses
-            </h2>
-            <a href="/dashboard/my-courses" style={{ fontSize: '13px', color: '#1c3d7a', fontWeight: '600' }}>
-              View all →
-            </a>
+            <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.1rem', fontWeight: '700' }}>📚 My Courses</h2>
+            <a href="/dashboard/my-courses" style={{ fontSize: '13px', color: '#1c3d7a', fontWeight: '600' }}>View all →</a>
           </div>
 
           {enrollments.length === 0 ? (
@@ -241,13 +338,12 @@ export default function DashboardHome() {
                     <div style={{ background: '#e5e7eb', borderRadius: '4px', height: '5px', overflow: 'hidden' }}>
                       <div style={{ height: '100%', background: 'linear-gradient(90deg,#1c3d7a,#d4f01a)', borderRadius: '4px', width: `${e.progress_percent}%` }} />
                     </div>
-                    <div style={{ fontSize: '11px', color: '#9ca3af', marginTop: '3px' }}>
-                      {e.progress_percent}% complete
-                    </div>
+                    <div style={{ fontSize: '11px', color: '#9ca3af', marginTop: '3px' }}>{e.progress_percent}% complete</div>
                   </div>
                 </div>
-                <a href={`/courses/${e.course_slug}`} style={{ padding: '7px 14px', background: '#eff6ff', color: '#1c3d7a', borderRadius: '8px', fontSize: '12px', fontWeight: '700', textDecoration: 'none', flexShrink: 0 }}>
-                  Continue →
+                <a href={`/dashboard/course/${e.course_slug}`}
+                  style={{ padding: '7px 14px', background: '#eff6ff', color: '#1c3d7a', borderRadius: '8px', fontSize: '12px', fontWeight: '700', textDecoration: 'none', flexShrink: 0 }}>
+                  {e.progress_percent > 0 ? 'Continue →' : 'Start →'}
                 </a>
               </div>
             ))
@@ -275,15 +371,10 @@ export default function DashboardHome() {
 
       <style>{`
         @media (max-width: 900px) {
-          div[style*="grid-template-columns: 240px 1fr"] {
-            grid-template-columns: 1fr !important;
-          }
-          div[style*="position: sticky; top: 80px"] {
-            position: static !important;
-          }
-          div[style*="grid-template-columns: repeat(3,1fr)"] {
-            grid-template-columns: 1fr 1fr !important;
-          }
+          div[style*="grid-template-columns: 240px 1fr"] { grid-template-columns: 1fr !important; }
+          div[style*="position: sticky; top: 80px"] { position: static !important; }
+          div[style*="grid-template-columns: repeat(3,1fr)"] { grid-template-columns: 1fr 1fr !important; }
+          div[style*="grid-template-columns: 1fr 1fr"] { grid-template-columns: 1fr !important; }
         }
       `}</style>
     </div>

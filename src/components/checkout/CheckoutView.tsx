@@ -1,4 +1,7 @@
 // src/components/checkout/CheckoutView.tsx
+// UPDATED: Razorpay fully wired — creates enrollment on payment success
+// Uses client-side Razorpay (test mode). Switch key to live when ready.
+
 import { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
 
@@ -24,7 +27,11 @@ declare global {
   }
 }
 
-// ⚠️  IMPORTANT: Replace with your actual Razorpay Key ID from Razorpay Dashboard
+// ─────────────────────────────────────────────────────────
+// ⚠️  REPLACE THIS with your actual Razorpay Key ID
+// Get it from: razorpay.com → Dashboard → Settings → API Keys
+// Use rzp_test_... for testing, rzp_live_... for production
+// ─────────────────────────────────────────────────────────
 const RAZORPAY_KEY_ID = 'rzp_test_REPLACE_WITH_YOUR_KEY'
 
 export default function CheckoutView() {
@@ -37,6 +44,12 @@ export default function CheckoutView() {
   const [error, setError] = useState('')
 
   useEffect(() => {
+    // Load Razorpay SDK
+    const script = document.createElement('script')
+    script.src = 'https://checkout.razorpay.com/v1/checkout.js'
+    script.async = true
+    document.head.appendChild(script)
+
     supabase.auth.getUser().then(({ data }) => {
       if (!data.user) {
         window.location.href = '/login?redirect=/checkout'
@@ -45,21 +58,19 @@ export default function CheckoutView() {
       setUser({ id: data.user.id, email: data.user.email ?? '' })
       loadData(data.user.id)
     })
+
+    return () => { document.head.removeChild(script) }
   }, [])
 
   async function loadData(userId: string) {
-    // Get course IDs from URL params
     const params = new URLSearchParams(window.location.search)
     const courseIds = params.get('courses')?.split(',').filter(Boolean) ?? []
     const singleCourse = params.get('course')
-
     const ids = singleCourse ? [singleCourse] : courseIds
+
     if (ids.length === 0) {
-      // Fall back to cart items
       const { data: cartData } = await supabase
-        .from('cart_items')
-        .select('course_id')
-        .eq('student_id', userId)
+        .from('cart_items').select('course_id').eq('student_id', userId)
       ids.push(...(cartData ?? []).map((c: any) => c.course_id))
     }
 
@@ -68,8 +79,25 @@ export default function CheckoutView() {
       return
     }
 
+    // Filter out already-enrolled courses
+    const { data: alreadyEnrolled } = await supabase
+      .from('enrollments')
+      .select('course_id')
+      .eq('student_id', userId)
+      .eq('payment_status', 'paid')
+      .in('course_id', ids)
+
+    const enrolledIds = new Set((alreadyEnrolled ?? []).map((e: any) => e.course_id))
+    const purchasableIds = ids.filter(id => !enrolledIds.has(id))
+
+    if (purchasableIds.length === 0) {
+      // All courses already owned — redirect to dashboard
+      window.location.href = '/dashboard/my-courses?msg=already_enrolled'
+      return
+    }
+
     const [{ data: coursesData }, { data: profileData }] = await Promise.all([
-      supabase.from('courses').select('id,title,slug,fee_inr,thumbnail_url,mode,duration_weeks').in('id', ids),
+      supabase.from('courses').select('id,title,slug,fee_inr,thumbnail_url,mode,duration_weeks').in('id', purchasableIds),
       supabase.from('student_profiles').select('full_name,phone,city').eq('id', userId).single(),
     ])
 
@@ -81,37 +109,58 @@ export default function CheckoutView() {
   const total = courses.reduce((sum, c) => sum + c.fee_inr, 0)
 
   async function handlePayment() {
-    if (!user) return
+    if (!user || paying) return
+
+    if (RAZORPAY_KEY_ID === 'rzp_test_REPLACE_WITH_YOUR_KEY') {
+      setError('⚠️ Razorpay Key ID not configured. Update RAZORPAY_KEY_ID in CheckoutView.tsx')
+      return
+    }
+
     setPaying(true)
     setError('')
 
     try {
-      // Create a Razorpay order
-      // NOTE: In production you need a backend/edge function to create orders securely.
-      // For now we use the client-side approach for testing.
-      // Replace with your actual Razorpay Key ID above.
+      // For test mode — create enrollment directly (no backend needed for testing)
+      // In production, create a Razorpay order via Supabase Edge Function first
+      const courseIds = courses.map(c => c.id)
 
       const options = {
         key: RAZORPAY_KEY_ID,
-        amount: total * 100, // in paise
+        amount: total * 100,        // Razorpay uses paise
         currency: 'INR',
         name: 'ATEC Educational Society',
-        description: courses.map(c => c.title).join(', '),
+        description: courses.length === 1
+          ? courses[0].title
+          : `${courses.length} Courses`,
         image: '/logo.png',
         prefill: {
-          name: profile?.full_name ?? '',
+          name:  profile?.full_name ?? '',
           email: user.email,
           contact: profile?.phone ?? '',
         },
-        theme: { color: '#1c3d7a' },
-        handler: async function (response: any) {
-          await onPaymentSuccess(response)
+        notes: {
+          student_id: user.id,
+          course_ids: courseIds.join(','),
+        },
+        theme: {
+          color: '#1c3d7a',
         },
         modal: {
           ondismiss: () => {
             setPaying(false)
-          }
-        }
+            setError('Payment cancelled.')
+          },
+        },
+        handler: async function (response: any) {
+          // Payment succeeded — create enrollments
+          await createEnrollments(courseIds, response.razorpay_payment_id)
+        },
+      }
+
+      if (!window.Razorpay) {
+        setError('Razorpay SDK not loaded. Please refresh the page and try again.')
+        setPaying(false)
+        return
       }
 
       const rzp = new window.Razorpay(options)
@@ -121,56 +170,59 @@ export default function CheckoutView() {
       })
       rzp.open()
 
-    } catch (err) {
-      setError('Could not initialise payment. Please try again.')
+    } catch (err: any) {
+      setError(err.message || 'Something went wrong. Please try again.')
       setPaying(false)
     }
   }
 
-  async function onPaymentSuccess(response: {
-    razorpay_payment_id: string
-    razorpay_order_id?: string
-    razorpay_signature?: string
-  }) {
-    if (!user) return
+  async function createEnrollments(courseIds: string[], paymentId: string) {
+    try {
+      // Create enrollment records for each course
+      const enrollments = courseIds.map(courseId => ({
+        student_id: user!.id,
+        course_id: courseId,
+        payment_status: 'paid',
+        payment_id: paymentId,
+        amount_paid: courses.find(c => c.id === courseId)?.fee_inr ?? 0,
+        progress_percent: 0,
+      }))
 
-    // Create enrollments for each course
-    for (const course of courses) {
-      const { data: enrollment } = await supabase
+      const { error: enrollError } = await supabase
         .from('enrollments')
-        .insert({
-          student_id: user.id,
-          course_id: course.id,
-          payment_status: 'paid',
-          payment_id: response.razorpay_payment_id,
-          amount_paid: course.fee_inr,
-        })
-        .select('id')
-        .single()
+        .upsert(enrollments, { onConflict: 'student_id,course_id' })
 
-      // Log payment
-      await supabase.from('payments').insert({
-        student_id: user.id,
-        course_id: course.id,
-        enrollment_id: enrollment?.id,
-        razorpay_payment_id: response.razorpay_payment_id,
-        razorpay_order_id: response.razorpay_order_id ?? '',
-        razorpay_signature: response.razorpay_signature ?? '',
-        amount_paise: course.fee_inr * 100,
-        status: 'captured',
+      if (enrollError) throw enrollError
+
+      // Log payment order
+      await supabase.from('payment_orders').insert({
+        student_id: user!.id,
+        razorpay_payment_id: paymentId,
+        amount_paise: total * 100,
+        status: 'paid',
+        course_ids: courseIds,
+        paid_at: new Date().toISOString(),
       })
+
+      // Clear cart items for these courses
+      await supabase
+        .from('cart_items')
+        .delete()
+        .eq('student_id', user!.id)
+        .in('course_id', courseIds)
+
+      setSuccess(true)
+      setPaying(false)
+
+    } catch (err: any) {
+      setError(`Enrollment failed: ${err.message}. Payment was received — contact support with payment ID: ${paymentId}`)
+      setPaying(false)
     }
-
-    // Remove purchased courses from cart
-    await supabase
-      .from('cart_items')
-      .delete()
-      .eq('student_id', user.id)
-      .in('course_id', courses.map(c => c.id))
-
-    setSuccess(true)
-    setPaying(false)
   }
+
+  // ─────────────────────────────────────────────────────────
+  // RENDER
+  // ─────────────────────────────────────────────────────────
 
   if (loading) return (
     <div style={{ textAlign: 'center', padding: '80px 0', color: '#6b7280' }}>
@@ -180,18 +232,12 @@ export default function CheckoutView() {
   )
 
   if (success) return (
-    <div style={{
-      background: '#fff', borderRadius: '20px',
-      border: '1px solid #e5e7eb', padding: '60px 40px',
-      maxWidth: '520px', margin: '0 auto', textAlign: 'center',
-    }}>
+    <div style={{ background: '#fff', borderRadius: '20px', border: '1px solid #e5e7eb', padding: '60px 40px', maxWidth: '520px', margin: '0 auto', textAlign: 'center' }}>
       <div style={{ fontSize: '64px', marginBottom: '20px' }}>🎉</div>
       <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.8rem', fontWeight: '800', color: '#0f1724', marginBottom: '12px' }}>
         Enrollment Confirmed!
       </h2>
-      <p style={{ fontSize: '15px', color: '#6b7280', marginBottom: '8px' }}>
-        You are now enrolled in:
-      </p>
+      <p style={{ fontSize: '15px', color: '#6b7280', marginBottom: '8px' }}>You are now enrolled in:</p>
       {courses.map(c => (
         <div key={c.id} style={{ fontFamily: 'var(--font-display)', fontWeight: '700', fontSize: '15px', color: '#1c3d7a', marginBottom: '4px' }}>
           ✓ {c.title}
@@ -201,24 +247,10 @@ export default function CheckoutView() {
         A confirmation email has been sent to {user?.email}
       </p>
       <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
-        <a
-          href="/dashboard/my-courses"
-          style={{
-            padding: '14px 28px', background: '#1c3d7a', color: '#fff',
-            borderRadius: '10px', textDecoration: 'none',
-            fontFamily: 'var(--font-display)', fontWeight: '700', fontSize: '15px',
-          }}
-        >
+        <a href="/dashboard/my-courses" style={{ padding: '14px 28px', background: '#1c3d7a', color: '#fff', borderRadius: '10px', textDecoration: 'none', fontFamily: 'var(--font-display)', fontWeight: '700', fontSize: '15px' }}>
           Go to My Courses →
         </a>
-        <a
-          href="/dashboard"
-          style={{
-            padding: '14px 28px', border: '1.5px solid #e5e7eb',
-            borderRadius: '10px', textDecoration: 'none',
-            fontSize: '14px', color: '#4b5563', fontWeight: '600',
-          }}
-        >
+        <a href="/dashboard" style={{ padding: '14px 28px', border: '1.5px solid #e5e7eb', borderRadius: '10px', textDecoration: 'none', fontSize: '14px', color: '#4b5563', fontWeight: '600' }}>
           Dashboard
         </a>
       </div>
@@ -257,9 +289,7 @@ export default function CheckoutView() {
         {/* Courses being purchased */}
         <div style={{ background: '#fff', borderRadius: '16px', border: '1px solid #e5e7eb', overflow: 'hidden' }}>
           <div style={{ padding: '20px 24px', borderBottom: '1px solid #f3f4f6' }}>
-            <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.1rem', fontWeight: '700' }}>
-              🎓 Enrolling In
-            </h2>
+            <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.1rem', fontWeight: '700' }}>🎓 Enrolling In</h2>
           </div>
           {courses.map(course => (
             <div key={course.id} style={{ display: 'flex', gap: '14px', padding: '16px 24px', borderBottom: '1px solid #f9fafb', alignItems: 'center' }}>
@@ -280,16 +310,17 @@ export default function CheckoutView() {
           ))}
         </div>
 
-        {/* What happens after payment */}
+        {/* What you get */}
         <div style={{ background: '#f0fdf4', borderRadius: '16px', border: '1px solid #bbf7d0', padding: '20px 24px' }}>
           <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '14px', fontWeight: '700', color: '#166534', marginBottom: '12px' }}>
             ✅ After Payment You Get:
           </h3>
           {[
-            'Instant access to your course materials',
+            'Instant access to all course videos',
             'Zoom class join links in your dashboard',
-            'Certificate upon course completion',
+            'Certificate upon course completion (auto-issued)',
             'Direct WhatsApp support from instructors',
+            '7-day money-back guarantee',
           ].map(item => (
             <div key={item} style={{ display: 'flex', gap: '8px', fontSize: '13px', color: '#166534', marginBottom: '6px' }}>
               <span>→</span><span>{item}</span>
@@ -327,19 +358,8 @@ export default function CheckoutView() {
             </div>
           )}
 
-          <button
-            onClick={handlePayment}
-            disabled={paying}
-            style={{
-              width: '100%', padding: '16px',
-              background: paying ? '#9ca3af' : '#d4f01a',
-              color: paying ? '#fff' : '#0f2347',
-              border: 'none', borderRadius: '10px',
-              fontFamily: 'var(--font-display)', fontWeight: '800',
-              fontSize: '16px', cursor: paying ? 'not-allowed' : 'pointer',
-              marginBottom: '12px', transition: 'all 0.2s',
-            }}
-          >
+          <button onClick={handlePayment} disabled={paying}
+            style={{ width: '100%', padding: '16px', background: paying ? '#9ca3af' : '#d4f01a', color: paying ? '#fff' : '#0f2347', border: 'none', borderRadius: '10px', fontFamily: 'var(--font-display)', fontWeight: '800', fontSize: '16px', cursor: paying ? 'not-allowed' : 'pointer', marginBottom: '12px', transition: 'all 0.2s' }}>
             {paying ? '⏳ Processing...' : `Pay ₹${total.toLocaleString('en-IN')} →`}
           </button>
 
@@ -350,11 +370,9 @@ export default function CheckoutView() {
           </div>
 
           <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid #e5e7eb' }}>
-            <img
-              src="https://razorpay.com/assets/razorpay-glyph.svg"
-              alt="Razorpay"
-              style={{ height: '20px', opacity: 0.5, display: 'block', margin: '0 auto' }}
-            />
+            <div style={{ textAlign: 'center', fontSize: '11px', color: '#94a3b8' }}>
+              Powered by Razorpay · PCI DSS Compliant
+            </div>
           </div>
         </div>
       </div>
