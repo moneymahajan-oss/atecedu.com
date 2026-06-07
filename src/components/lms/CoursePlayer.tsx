@@ -63,7 +63,7 @@ export default function CoursePlayer({ courseId, courseTitle, courseSlug }: Prop
       .select('id, progress_percent')
       .eq('student_id', user.id)
       .eq('course_id', courseId)
-      .eq('payment_status', 'paid')
+      .in('payment_status', ['paid','free'])
       .maybeSingle()
 
     if (enrollError) console.error('Enrollment check error:', enrollError)
