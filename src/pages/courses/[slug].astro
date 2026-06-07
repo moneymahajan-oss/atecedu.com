@@ -333,7 +333,7 @@ const jsonLd = {
           )}
 
           <!-- ── Course Resources: Brochure + Demo Video ── -->
-          {((course as any).brochure_url || (course as any).demo_video_url) && (
+          {((course as any).brochure_url || (course as any).demo_video_url || course.promo_video_url) && (
             <section class="detail-section">
               <h2>📥 Course Resources</h2>
               <div style="display:flex;gap:12px;flex-wrap:wrap;">
@@ -343,12 +343,20 @@ const jsonLd = {
                     📄 Download Brochure / Syllabus PDF
                   </a>
                 )}
-                {(course as any).demo_video_url && (
-                  <a href={(course as any).demo_video_url} target="_blank" rel="noopener"
-                    style="display:inline-flex;align-items:center;gap:8px;padding:13px 22px;background:#dc2626;color:#fff;border-radius:10px;font-family:var(--font-display,Sora,sans-serif);font-weight:700;font-size:14px;text-decoration:none;">
-                    ▶ Watch Demo Video
-                  </a>
-                )}
+                {/* Watch button — resolves bare YouTube ID OR full URL */}
+                {((course as any).demo_video_url || course.promo_video_url) && (() => {
+                  const raw = (course as any).demo_video_url || course.promo_video_url || ''
+                  // If it looks like a bare 11-char YouTube ID (no slashes, no dots), build full URL
+                  const videoUrl = raw.startsWith('http')
+                    ? raw
+                    : ('https://www.youtube.com/watch?v=' + raw)
+                  return (
+                    <a href={videoUrl} target="_blank" rel="noopener"
+                      style="display:inline-flex;align-items:center;gap:8px;padding:13px 22px;background:#dc2626;color:#fff;border-radius:10px;font-family:var(--font-display,Sora,sans-serif);font-weight:700;font-size:14px;text-decoration:none;">
+                      ▶ Watch Demo Video
+                    </a>
+                  )
+                })()}
               </div>
             </section>
           )}
