@@ -186,12 +186,24 @@ export default function CoursePlayer({ courseId, courseTitle, courseSlug }: Prop
         : 0
       setProgress(newProgress)
 
-      // Step 5: Update enrollment progress_percent in DB
+      // Step 5: Update enrollment progress_percent in DB (+ completed_at at 100%)
+      const enrollUpdate: any = { progress_percent: newProgress }
+      if (newProgress === 100) enrollUpdate.completed_at = new Date().toISOString()
+
       await supabase
         .from('enrollments')
-        .update({ progress_percent: newProgress })
+        .update(enrollUpdate)
         .eq('student_id', userId)
         .eq('course_id', courseId)
+
+      // Congratulate and redirect to certificates when course fully complete
+      if (newProgress === 100) {
+        setTimeout(() => {
+          if (confirm('🎉 Course Completed! Congratulations!\n\nYour certificate is ready. Go to Certificates page now?')) {
+            window.location.href = '/dashboard/certificates'
+          }
+        }, 600)
+      }
 
       // Step 6: Move to next lesson
       const flat = updatedChapters.flatMap(c => c.lessons)

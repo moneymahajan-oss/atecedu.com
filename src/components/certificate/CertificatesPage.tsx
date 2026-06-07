@@ -37,7 +37,7 @@ export default function CertificatesPage() {
     setUserId(user.id)
 
     const [{ data: enrollData }, { data: profileData }, { data: certData }] = await Promise.all([
-      supabase.from('enrollments').select('course_id,completed_at,courses(title)').eq('student_id', user.id).eq('payment_status', 'paid').not('completed_at', 'is', null),
+      supabase.from('enrollments').select('course_id,completed_at,progress_percent,courses(title)').eq('student_id', user.id).in('payment_status', ['paid','free']).eq('progress_percent', 100),
       supabase.from('student_profiles').select('full_name,father_name').eq('id', user.id).single(),
       supabase.from('generated_certificates').select('*').eq('student_id', user.id).eq('is_active', true),
     ])
