@@ -44,6 +44,21 @@ const defaultLinks = [
       <!-- Desktop CTAs -->
       <div class="nav-ctas" id="nav-ctas">
         <a href="/login" class="btn btn-outline btn-sm" id="nav-login-btn">Login</a>
+        <!-- Auth user menu — shown when logged in, hidden by default -->
+        <div id="nav-user-menu" style="display:none;position:relative">
+          <button id="nav-user-btn" style="display:flex;align-items:center;gap:8px;background:none;border:1px solid #e2e8f0;border-radius:10px;padding:6px 12px;cursor:pointer;font-size:13px;font-weight:600;color:#1c3d7a;">
+            <span id="nav-user-avatar" style="width:26px;height:26px;border-radius:50%;background:#1c3d7a;color:#d4f01a;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex-shrink:0">?</span>
+            <span id="nav-user-name">Student</span>
+            <span style="font-size:10px;opacity:0.5">▾</span>
+          </button>
+          <div id="nav-user-dropdown" style="display:none;position:absolute;top:calc(100% + 8px);right:0;background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:8px;min-width:180px;box-shadow:0 8px 24px rgba(0,0,0,0.12);z-index:1000;">
+            <a href="/dashboard" style="display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:8px;text-decoration:none;color:#1e293b;font-size:13px;font-weight:500;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='none'">🏠 Dashboard</a>
+            <a href="/dashboard/my-courses" style="display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:8px;text-decoration:none;color:#1e293b;font-size:13px;font-weight:500;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='none'">📚 My Courses</a>
+            <a href="/dashboard/certificates" style="display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:8px;text-decoration:none;color:#1e293b;font-size:13px;font-weight:500;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='none'">📜 Certificates</a>
+            <div style="height:1px;background:#f1f5f9;margin:6px 0"></div>
+            <button id="nav-logout-btn" style="display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:8px;background:none;border:none;color:#ef4444;font-size:13px;font-weight:600;cursor:pointer;width:100%;text-align:left;" onmouseover="this.style.background='#fef2f2'" onmouseout="this.style.background='none'">🚪 Logout</button>
+          </div>
+        </div>
         <a href="https://wa.me/917009933289" target="_blank" rel="noopener" class="btn-enchant" id="nav-cta-btn">
           <span class="enchant-glow"></span>
           <span class="enchant-text">Enroll Now</span>
@@ -69,7 +84,11 @@ const defaultLinks = [
       ))}
     </nav>
     <div class="mobile-ctas" id="mobile-ctas">
-      <a href="/login" class="btn btn-outline" style="flex:1;justify-content:center">Login</a>
+      <a href="/login" class="btn btn-outline" id="mobile-login-btn" style="flex:1;justify-content:center">Login</a>
+      <div id="mobile-user-section" style="display:none;flex:1;flex-direction:column;gap:8px">
+        <div id="mobile-user-info" style="font-size:13px;font-weight:600;color:#1c3d7a;padding:8px 0"></div>
+        <button id="mobile-logout-btn" style="padding:10px;background:#fee2e2;border:none;border-radius:8px;color:#ef4444;font-weight:700;font-size:13px;cursor:pointer;width:100%">🚪 Logout</button>
+      </div>
       <a href="https://wa.me/917009933289" target="_blank" rel="noopener" class="btn-enchant" style="flex:1;justify-content:center">
         <span class="enchant-glow"></span>
         <span class="enchant-text">Enroll Now</span>
@@ -102,6 +121,77 @@ const defaultLinks = [
   window.addEventListener('scroll', () => {
     nav?.classList.toggle('scrolled', window.scrollY > 20)
   })
+
+  // ── AUTH SESSION — show user menu when logged in ──────────
+  ;(async () => {
+  const url2 = (window as any).__SB_URL
+  const key2 = (window as any).__SB_KEY
+  if (url2 && key2) {
+    const sb2 = createClient(url2, key2, { auth: { storageKey: 'atec-auth', autoRefreshToken: true, persistSession: true } })
+
+    function updateNavAuth(user: any) {
+      const loginBtn   = document.getElementById('nav-login-btn') as HTMLElement
+      const userMenu   = document.getElementById('nav-user-menu') as HTMLElement
+      const userBtn    = document.getElementById('nav-user-btn') as HTMLElement
+      const userName   = document.getElementById('nav-user-name') as HTMLElement
+      const userAvatar = document.getElementById('nav-user-avatar') as HTMLElement
+      const dropdown   = document.getElementById('nav-user-dropdown') as HTMLElement
+      const mobileLogin = document.getElementById('mobile-login-btn') as HTMLElement
+      const mobileUser = document.getElementById('mobile-user-section') as HTMLElement
+      const mobileInfo = document.getElementById('mobile-user-info') as HTMLElement
+
+      if (user) {
+        // Logged in — hide Login, show user menu
+        if (loginBtn) loginBtn.style.display = 'none'
+        if (userMenu) userMenu.style.display = 'block'
+        if (mobileLogin) mobileLogin.style.display = 'none'
+        if (mobileUser) mobileUser.style.display = 'flex'
+
+        // Set name/avatar
+        const email = user.email ?? ''
+        const name = user.user_metadata?.full_name || email.split('@')[0] || 'Student'
+        const initial = name[0].toUpperCase()
+        if (userName) userName.textContent = name.split(' ')[0]
+        if (userAvatar) userAvatar.textContent = initial
+        if (mobileInfo) mobileInfo.textContent = '👤 ' + name
+
+        // Toggle dropdown
+        userBtn?.addEventListener('click', (e) => {
+          e.stopPropagation()
+          if (dropdown) dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none'
+        })
+        document.addEventListener('click', () => {
+          if (dropdown) dropdown.style.display = 'none'
+        })
+
+        // Logout buttons
+        const logoutHandler = async () => {
+          await sb2.auth.signOut()
+          window.location.href = '/'
+        }
+        document.getElementById('nav-logout-btn')?.addEventListener('click', logoutHandler)
+        document.getElementById('mobile-logout-btn')?.addEventListener('click', logoutHandler)
+
+      } else {
+        // Logged out — show Login, hide user menu
+        if (loginBtn) loginBtn.style.display = ''
+        if (userMenu) userMenu.style.display = 'none'
+        if (mobileLogin) mobileLogin.style.display = ''
+        if (mobileUser) mobileUser.style.display = 'none'
+      }
+    }
+
+    // Check current session
+    const { data: { session } } = await sb2.auth.getSession()
+    updateNavAuth(session?.user ?? null)
+
+    // Listen for auth changes
+    sb2.auth.onAuthStateChange((_event, session) => {
+      updateNavAuth(session?.user ?? null)
+    })
+  }
+  })()
+  // ─────────────────────────────────────────────────────────
 
   // ── LIVE UPDATE FROM SUPABASE — no rebuild needed ──
   const url = (window as any).__SB_URL
