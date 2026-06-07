@@ -1,0 +1,8 @@
+---
+// src/pages/admin/student-progress.astro
+import AdminLayout from '../../layouts/AdminLayout.astro'
+import StudentProgressTracker from '../../components/admin/StudentProgressTracker'
+---
+<AdminLayout title="Student Progress" activeSection="student-progress">
+  <StudentProgressTracker client:load />
+</AdminLayout>

@@ -84,7 +84,7 @@ export default function CheckoutView() {
       .from('enrollments')
       .select('course_id')
       .eq('student_id', userId)
-      .eq('payment_status', 'paid')
+      .in('payment_status', ['paid','free'])
       .in('course_id', ids)
 
     const enrolledIds = new Set((alreadyEnrolled ?? []).map((e: any) => e.course_id))
@@ -108,84 +108,27 @@ export default function CheckoutView() {
 
   const total = courses.reduce((sum, c) => sum + c.fee_inr, 0)
 
+  // ── FREE ENROLLMENT MODE — Razorpay not wired yet ──────────
+  // When Razorpay key is ready, replace this function with the
+  // Razorpay flow. For now: clicking Enroll Now grants free access.
   async function handlePayment() {
     if (!user || paying) return
-
-    if (RAZORPAY_KEY_ID === 'rzp_test_REPLACE_WITH_YOUR_KEY') {
-      setError('⚠️ Razorpay Key ID not configured. Update RAZORPAY_KEY_ID in CheckoutView.tsx')
-      return
-    }
-
     setPaying(true)
     setError('')
 
     try {
-      // For test mode — create enrollment directly (no backend needed for testing)
-      // In production, create a Razorpay order via Supabase Edge Function first
       const courseIds = courses.map(c => c.id)
 
-      const options = {
-        key: RAZORPAY_KEY_ID,
-        amount: total * 100,        // Razorpay uses paise
-        currency: 'INR',
-        name: 'ATEC Educational Society',
-        description: courses.length === 1
-          ? courses[0].title
-          : `${courses.length} Courses`,
-        image: '/logo.png',
-        prefill: {
-          name:  profile?.full_name ?? '',
-          email: user.email,
-          contact: profile?.phone ?? '',
-        },
-        notes: {
-          student_id: user.id,
-          course_ids: courseIds.join(','),
-        },
-        theme: {
-          color: '#1c3d7a',
-        },
-        modal: {
-          ondismiss: () => {
-            setPaying(false)
-            setError('Payment cancelled.')
-          },
-        },
-        handler: async function (response: any) {
-          // Payment succeeded — create enrollments
-          await createEnrollments(courseIds, response.razorpay_payment_id)
-        },
-      }
-
-      if (!window.Razorpay) {
-        setError('Razorpay SDK not loaded. Please refresh the page and try again.')
-        setPaying(false)
-        return
-      }
-
-      const rzp = new window.Razorpay(options)
-      rzp.on('payment.failed', (response: any) => {
-        setError(`Payment failed: ${response.error.description}`)
-        setPaying(false)
-      })
-      rzp.open()
-
-    } catch (err: any) {
-      setError(err.message || 'Something went wrong. Please try again.')
-      setPaying(false)
-    }
-  }
-
-  async function createEnrollments(courseIds: string[], paymentId: string) {
-    try {
-      // Create enrollment records for each course
+      // Enroll all courses with payment_status='free'
+      // This is the temporary mode until Razorpay is configured
       const enrollments = courseIds.map(courseId => ({
         student_id: user!.id,
         course_id: courseId,
-        payment_status: 'paid',
-        payment_id: paymentId,
-        amount_paid: courses.find(c => c.id === courseId)?.fee_inr ?? 0,
+        payment_status: 'free',   // ← change to 'paid' after Razorpay integration
+        payment_id: 'free-access',
+        amount_paid: 0,
         progress_percent: 0,
+        enrolled_at: new Date().toISOString(),
       }))
 
       const { error: enrollError } = await supabase
@@ -194,17 +137,7 @@ export default function CheckoutView() {
 
       if (enrollError) throw enrollError
 
-      // Log payment order
-      await supabase.from('payment_orders').insert({
-        student_id: user!.id,
-        razorpay_payment_id: paymentId,
-        amount_paise: total * 100,
-        status: 'paid',
-        course_ids: courseIds,
-        paid_at: new Date().toISOString(),
-      })
-
-      // Clear cart items for these courses
+      // Clear cart
       await supabase
         .from('cart_items')
         .delete()
@@ -215,7 +148,7 @@ export default function CheckoutView() {
       setPaying(false)
 
     } catch (err: any) {
-      setError(`Enrollment failed: ${err.message}. Payment was received — contact support with payment ID: ${paymentId}`)
+      setError(err.message || 'Enrollment failed. Please try again.')
       setPaying(false)
     }
   }
@@ -333,7 +266,7 @@ export default function CheckoutView() {
       <div style={{ position: 'sticky', top: '80px' }}>
         <div style={{ background: '#fff', borderRadius: '16px', border: '1px solid #e5e7eb', padding: '24px' }}>
           <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.1rem', fontWeight: '700', marginBottom: '20px' }}>
-            💳 Payment Summary
+            🎓 Enrollment Summary
           </h2>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '20px' }}>
@@ -360,12 +293,12 @@ export default function CheckoutView() {
 
           <button onClick={handlePayment} disabled={paying}
             style={{ width: '100%', padding: '16px', background: paying ? '#9ca3af' : '#d4f01a', color: paying ? '#fff' : '#0f2347', border: 'none', borderRadius: '10px', fontFamily: 'var(--font-display)', fontWeight: '800', fontSize: '16px', cursor: paying ? 'not-allowed' : 'pointer', marginBottom: '12px', transition: 'all 0.2s' }}>
-            {paying ? '⏳ Processing...' : `Pay ₹${total.toLocaleString('en-IN')} →`}
+            {paying ? '⏳ Enrolling...' : '✅ Enroll Now — Free Access →'}
           </button>
 
           <div style={{ textAlign: 'center', fontSize: '12px', color: '#9ca3af', lineHeight: '1.6' }}>
-            🔒 Secured by Razorpay<br />
-            UPI · Cards · Net Banking · Wallets accepted<br />
+            🎁 Free access mode — Razorpay coming soon<br />
+            Enroll now, continue learning immediately<br />
             7-day money-back guarantee
           </div>
 

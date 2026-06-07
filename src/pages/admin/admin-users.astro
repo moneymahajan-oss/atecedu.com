@@ -1,0 +1,8 @@
+---
+// src/pages/admin/admin-users.astro
+import AdminLayout from '../../layouts/AdminLayout.astro'
+import AdminUsersManager from '../../components/admin/AdminUsersManager'
+---
+<AdminLayout title="Admin Users" activeSection="admin-users">
+  <AdminUsersManager client:load />
+</AdminLayout>
