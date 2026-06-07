@@ -478,6 +478,8 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
       --cat-card-fee:#0b1525; --cat-card-fee-orig:#94a3b8;
       --cat-card-btn1-bg:#ea580c; --cat-card-btn1-color:#fff;
       --cat-card-btn2-bg:#0b1525; --cat-card-btn2-color:#fff;
+      --cat-card-btn3-bg:#0284c7; --cat-card-btn3-color:#fff;
+      --cat-card-btn4-bg:#16a34a; --cat-card-btn4-color:#fff;
     }
     .cat-card {
       flex-shrink:0; width:calc(25% - 15px); min-width:220px;
@@ -504,7 +506,7 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
     .cat-card-fee { font-size:17px; font-weight:900; color:var(--cat-card-fee,#0b1525); }
     .cat-card-fee-orig { font-size:12px; color:var(--cat-card-fee-orig,#94a3b8); text-decoration:line-through; margin-left:5px; }
     /* Action buttons */
-    .cat-card-actions { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:auto; padding-top:12px; border-top:1px solid #f1f5f9; }
+
     .cat-card-btn {
       display:flex; align-items:center; justify-content:center; gap:5px;
       padding:9px 10px; border-radius:9px; font-size:12px; font-weight:700;
@@ -512,8 +514,11 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
       font-family:'Inter',sans-serif; white-space:nowrap;
     }
     .cat-card-btn:hover { opacity:0.88; transform:translateY(-1px); }
-    .cat-card-btn.enquire { background:var(--cat-card-btn1-bg,#ea580c); color:var(--cat-card-btn1-color,#fff); }
+    .cat-card-btn.enquire  { background:var(--cat-card-btn1-bg,#ea580c); color:var(--cat-card-btn1-color,#fff); }
     .cat-card-btn.syllabus { background:var(--cat-card-btn2-bg,#0b1525); color:var(--cat-card-btn2-color,#fff); }
+    .cat-card-btn.watch    { background:var(--cat-card-btn3-bg,#0284c7); color:var(--cat-card-btn3-color,#fff); }
+    .cat-card-btn.enroll   { background:var(--cat-card-btn4-bg,#16a34a); color:var(--cat-card-btn4-color,#fff); }
+    .cat-card-actions      { display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-top:auto; padding-top:12px; border-top:1px solid #f1f5f9; }
     @media(max-width:900px){ .cat-card { width:calc(50% - 10px); } }
     @media(max-width:560px){ .cat-card { width:calc(100% - 0px); min-width:0; } .cat-card-actions { grid-template-columns:1fr; } }
     .cat-view-all { display:inline-flex; align-items:center; gap:6px; margin-top:28px; color:#0b1525; font-weight:700; font-size:14px; text-decoration:none; border:2px solid #0b1525; padding:8px 20px; border-radius:8px; }
@@ -3054,12 +3059,17 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
           : '') +
         '<div class="cat-card-actions">' +
           '<a class="cat-card-btn enquire" href="' + enquireUrl + '" target="_blank" rel="noopener" onclick="event.stopPropagation()">' +
-            '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>' +
-            'Enquire' +
+            '💬 Enquire' +
           '</a>' +
           '<a class="cat-card-btn syllabus" href="' + syllabusUrl + '" onclick="event.stopPropagation()">' +
-            '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>' +
-            'View Syllabus' +
+            '📄 Syllabus' +
+          '</a>' +
+          (c.promo_video_url
+            ? '<a class="cat-card-btn watch" href="https://www.youtube.com/watch?v=' + c.promo_video_url + '" target="_blank" rel="noopener" onclick="event.stopPropagation()">▶ Watch</a>'
+            : '<span class="cat-card-btn watch" style="opacity:0.35;cursor:default;" onclick="event.stopPropagation()">▶ Watch</span>'
+          ) +
+          '<a class="cat-card-btn enroll" href="/checkout?course=' + c.id + '" onclick="event.stopPropagation()">' +
+            '🎓 Enroll' +
           '</a>' +
         '</div>' +
       '</div>'
@@ -3142,6 +3152,10 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
     document.documentElement.style.setProperty('--cat-card-btn1-color',btn1Color)
     document.documentElement.style.setProperty('--cat-card-btn2-bg',   btn2Bg)
     document.documentElement.style.setProperty('--cat-card-btn2-color',btn2Color)
+    document.documentElement.style.setProperty('--cat-card-btn3-bg',   cfg?.btn3_bg    || '#0284c7')
+    document.documentElement.style.setProperty('--cat-card-btn3-color',cfg?.btn3_color || '#ffffff')
+    document.documentElement.style.setProperty('--cat-card-btn4-bg',   cfg?.btn4_bg    || '#16a34a')
+    document.documentElement.style.setProperty('--cat-card-btn4-color',cfg?.btn4_color || '#ffffff')
 
     const titleEl = document.getElementById('cat-title')
     if (titleEl) titleEl.textContent = title
