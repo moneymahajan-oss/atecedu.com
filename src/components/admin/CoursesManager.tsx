@@ -212,7 +212,9 @@ export default function CoursesManager() {
   }
 
   async function saveLesson() {
-    if (!selectedCourse || !editChapterId) return
+    if (!selectedCourse) { alert('No course selected'); return }
+    if (!editChapterId) { alert('No chapter selected — please click + Add Lesson from a chapter'); return }
+    if (!lessonForm.title?.trim()) { alert('Lesson title is required'); return }
     setLessonSaving(true)
     const payload = {
       course_id: selectedCourse.id,
@@ -227,16 +229,25 @@ export default function CoursesManager() {
       pdf_url: lessonForm.pdf_url?.trim() || null,
       is_active: true,
     }
+    console.log('Saving lesson payload:', JSON.stringify(payload))
+    let saveError = null
     if (editLessonId) {
-      await supabase.from('course_lessons').update(payload).eq('id', editLessonId)
+      const { error } = await supabase.from('course_lessons').update(payload).eq('id', editLessonId)
+      saveError = error
     } else {
-      await supabase.from('course_lessons').insert(payload)
+      const { error } = await supabase.from('course_lessons').insert(payload)
+      saveError = error
+    }
+    if (saveError) {
+      console.error('Lesson save error:', saveError)
+      alert('Save failed: ' + saveError.message)
+      setLessonSaving(false)
+      return
     }
     setLessonSaving(false)
     setShowLessonForm(false)
-    loadLessons(selectedCourse)
+    await loadLessons(selectedCourse)
   }
-
   async function deleteLesson(lessonId: string) {
     if (!confirm('Delete this lesson?')) return
     await supabase.from('course_lessons').delete().eq('id', lessonId)
