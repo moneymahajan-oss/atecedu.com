@@ -76,6 +76,8 @@ export default function CoursesManager() {
   const [form, setForm] = useState<any>(EMPTY_FORM)
   const [saving, setSaving] = useState(false)
   const [uploadingBrochure, setUploadingBrochure] = useState(false)
+  // Syllabus editor — local working copy; synced to form.syllabus on every change
+  const [syllabusWeeks, setSyllabusWeeks] = useState<{ week: number; topic: string; subtopics: string[] }[]>([])
   const [search, setSearch] = useState('')
 
   // ── Lessons tab state ────────────────────────────────────
@@ -108,17 +110,25 @@ export default function CoursesManager() {
 
   function openAdd() {
     setForm(EMPTY_FORM); setEditId(null); setShowForm(true)
+    setSyllabusWeeks([])
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
   function openEdit(course: Course) {
     setForm({ ...EMPTY_FORM, ...course }); setEditId(course.id); setShowForm(true)
+    // Load existing syllabus into editor
+    const existing = Array.isArray((course as any).syllabus)
+      ? (course as any).syllabus
+      : (typeof (course as any).syllabus === 'string'
+          ? (() => { try { return JSON.parse((course as any).syllabus) } catch { return [] } })()
+          : [])
+    setSyllabusWeeks(existing.length ? existing : [])
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
   async function saveCourse() {
     setSaving(true)
-    // Spread form then override numeric fields; strip read-only DB columns
+    // Use syllabusWeeks directly (setState is async so form.syllabus may be stale)
     const { id, total_enrolled, rating, created_at, updated_at, ...rest } = form
     const payload = {
       ...rest,
@@ -134,6 +144,14 @@ export default function CoursesManager() {
       promo_video_url:   rest.promo_video_url?.trim()     || null,
       demo_zoom_url:     rest.demo_zoom_url?.trim()       || null,
       prerequisites:     rest.prerequisites?.trim()       || null,
+      // Syllabus from the visual editor — filter empty weeks/topics
+      syllabus: syllabusWeeks
+        .filter(w => w.topic.trim())
+        .map(w => ({
+          week: w.week,
+          topic: w.topic.trim(),
+          subtopics: w.subtopics.filter(s => s.trim()).map(s => s.trim()),
+        })),
     }
     if (!payload.slug && payload.title) {
       payload.slug = payload.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
@@ -470,6 +488,110 @@ export default function CoursesManager() {
                   <div key={t.field} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                     <input type="checkbox" checked={!!form[t.field]} onChange={e => update(t.field, e.target.checked)} style={{ width: '16px', height: '16px', accentColor: '#1c3d7a' }} />
                     <label style={{ fontSize: '13px', fontWeight: '500', color: '#374151' }}>{t.label}</label>
+                  </div>
+                ))}
+              </div>
+
+              {/* ── SYLLABUS EDITOR ── */}
+              <div style={{ gridColumn: '1 / -1', marginTop: '8px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
+                  <label style={{ fontSize: '13px', fontWeight: '700', color: '#0b1525' }}>
+                    📋 Course Syllabus (Week-by-Week)
+                  </label>
+                  <button type="button"
+                    onClick={() => {
+                      const next = [...syllabusWeeks, { week: syllabusWeeks.length + 1, topic: '', subtopics: [''] }]
+                      setSyllabusWeeks(next)
+                    }}
+                    style={{ padding: '6px 14px', background: '#0b1525', color: '#d4f01a', border: 'none', borderRadius: '8px', fontSize: '12px', fontWeight: '700', cursor: 'pointer' }}>
+                    + Add Week
+                  </button>
+                </div>
+
+                {syllabusWeeks.length === 0 && (
+                  <div style={{ padding: '20px', background: '#f8fafc', borderRadius: '10px', textAlign: 'center', fontSize: '13px', color: '#9ca3af', border: '1px dashed #e2e8f0' }}>
+                    No syllabus yet. Click "+ Add Week" to start building.
+                  </div>
+                )}
+
+                {syllabusWeeks.map((week, wi) => (
+                  <div key={wi} style={{ border: '1px solid #e2e8f0', borderRadius: '12px', padding: '14px 16px', marginBottom: '10px', background: '#fafbfc' }}>
+                    {/* Week header row */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
+                      <span style={{ background: '#0b1525', color: '#d4f01a', fontFamily: 'Sora,sans-serif', fontWeight: '800', fontSize: '11px', padding: '3px 10px', borderRadius: '6px', flexShrink: 0 }}>
+                        Week {wi + 1}
+                      </span>
+                      <input
+                        type="text"
+                        value={week.topic}
+                        placeholder="Week topic title (e.g. Introduction to AI)"
+                        onChange={e => {
+                          const next = syllabusWeeks.map((w, i) => i === wi ? { ...w, topic: e.target.value } : w)
+                          setSyllabusWeeks(next)
+                        }}
+                        style={{ flex: 1, padding: '7px 10px', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '13px', fontFamily: 'inherit' }}
+                      />
+                      <button type="button"
+                        onClick={() => {
+                          const next = syllabusWeeks.filter((_, i) => i !== wi).map((w, i) => ({ ...w, week: i + 1 }))
+                          setSyllabusWeeks(next)
+                        }}
+                        style={{ padding: '6px 10px', background: '#fee2e2', border: 'none', borderRadius: '8px', color: '#dc2626', fontSize: '12px', fontWeight: '700', cursor: 'pointer', flexShrink: 0 }}>
+                        🗑 Remove Week
+                      </button>
+                    </div>
+
+                    {/* Subtopics */}
+                    <div style={{ paddingLeft: '12px' }}>
+                      <div style={{ fontSize: '11px', fontWeight: '700', color: '#9ca3af', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Topics / Bullet Points</div>
+                      {week.subtopics.map((sub, si) => (
+                        <div key={si} style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '5px' }}>
+                          <span style={{ color: '#94a3b8', fontSize: '14px', flexShrink: 0 }}>•</span>
+                          <input
+                            type="text"
+                            value={sub}
+                            placeholder={`Topic ${si + 1}`}
+                            onChange={e => {
+                              const next = syllabusWeeks.map((w, i) => i === wi
+                                ? { ...w, subtopics: w.subtopics.map((s, j) => j === si ? e.target.value : s) }
+                                : w)
+                              setSyllabusWeeks(next)
+                            }}
+                            onKeyDown={e => {
+                              // Press Enter to add new subtopic
+                              if (e.key === 'Enter') {
+                                e.preventDefault()
+                                const next = syllabusWeeks.map((w, i) => i === wi
+                                  ? { ...w, subtopics: [...w.subtopics.slice(0, si + 1), '', ...w.subtopics.slice(si + 1)] }
+                                  : w)
+                                setSyllabusWeeks(next)
+                              }
+                            }}
+                            style={{ flex: 1, padding: '6px 10px', border: '1px solid #e2e8f0', borderRadius: '7px', fontSize: '12px', fontFamily: 'inherit' }}
+                          />
+                          <button type="button"
+                            onClick={() => {
+                              const next = syllabusWeeks.map((w, i) => i === wi
+                                ? { ...w, subtopics: w.subtopics.filter((_, j) => j !== si) }
+                                : w)
+                              setSyllabusWeeks(next)
+                            }}
+                            style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', fontSize: '14px', padding: '2px 4px', flexShrink: 0 }}>
+                            ✕
+                          </button>
+                        </div>
+                      ))}
+                      <button type="button"
+                        onClick={() => {
+                          const next = syllabusWeeks.map((w, i) => i === wi
+                            ? { ...w, subtopics: [...w.subtopics, ''] }
+                            : w)
+                          setSyllabusWeeks(next)
+                        }}
+                        style={{ marginTop: '4px', padding: '4px 12px', background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '7px', color: '#1c3d7a', fontSize: '11px', fontWeight: '700', cursor: 'pointer' }}>
+                        + Add Topic
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>
