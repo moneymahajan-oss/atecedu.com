@@ -52,7 +52,13 @@ export default function StudentProgressTracker() {
         .order('created_at', { ascending: false })
         .limit(300)
 
-      if (!profiles) { setLoading(false); return }
+      if (!profiles || profiles.length === 0) {
+        // If empty, RLS may be blocking admin reads on student_profiles.
+        // Run fix-admin-read-policies.sql in Supabase to grant admin access.
+        setMsg('No students found. If students have signed up, run the SQL fix to grant admin read access to student_profiles table.')
+        setLoading(false)
+        return
+      }
 
       // Get all enrollments with course info
       const { data: enrollData } = await supabase

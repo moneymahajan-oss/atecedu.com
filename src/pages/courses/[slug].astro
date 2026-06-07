@@ -348,23 +348,6 @@ const jsonLd = {
         <!-- Right: sticky pricing (mobile-shown in body) -->
         <div class="sticky-sidebar">
           <div class="pricing-card">
-            {(course.promo_video_url || course.thumbnail_url) && (
-              <div class="demo-video-wrap">
-                {course.promo_video_url ? (
-                  <div class="video-embed" style="border-radius:var(--radius-lg) var(--radius-lg) 0 0">
-                    <iframe
-                      src={`https://www.youtube.com/embed/${course.promo_video_url}?rel=0&modestbranding=1`}
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                      allowfullscreen title={`${course.title} demo`} loading="lazy"
-                    />
-                  </div>
-                ) : (
-                  <div class="card-thumb-wrap">
-                    <img src={course.thumbnail_url} alt={course.title} loading="lazy" class="card-thumb-img" />
-                  </div>
-                )}
-              </div>
-            )}
             <div class="pricing-body">
               <div class="pricing-price-row">
                 <span class="pricing-price">₹{course.fee_inr?.toLocaleString('en-IN')}</span>
