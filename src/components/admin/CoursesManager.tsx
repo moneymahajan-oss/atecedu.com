@@ -165,16 +165,14 @@ export default function CoursesManager() {
     if (!selectedCourse || !newChapterTitle.trim()) return
     setAddingChapter(true)
     const maxOrder = chapters.length > 0 ? Math.max(...chapters.map(c => c.sort_order)) + 1 : 0
-    const { data } = await supabase.from('course_chapters').insert({
+    await supabase.from('course_chapters').insert({
       course_id: selectedCourse.id,
       title: newChapterTitle.trim(),
       sort_order: maxOrder,
-    }).select().single()
-    if (data) {
-      setChapters(prev => [...prev, { ...data, lessons: [] }])
-      setNewChapterTitle('')
-    }
+    })
+    setNewChapterTitle('')
     setAddingChapter(false)
+    await loadLessons(selectedCourse)
   }
 
   async function deleteChapter(chapterId: string) {
