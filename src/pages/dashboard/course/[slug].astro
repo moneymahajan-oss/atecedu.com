@@ -1,14 +1,14 @@
 ---
 // src/pages/dashboard/course/[slug].astro
-// Full-screen course player — uses bare HTML, NO public Navbar (it has its own top bar)
+// Full-screen course player — bare HTML, NO public Navbar
 import { supabase } from '../../../lib/supabase'
+import CoursePlayer from '../../../components/lms/CoursePlayer'
 
 const SUPABASE_URL = import.meta.env.PUBLIC_SUPABASE_URL || ''
 const SUPABASE_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY || ''
 
 export async function getStaticPaths() {
   const { data } = await supabase.from('courses').select('slug').eq('is_active', true)
-  // Fallback slugs so build doesn't fail when DB is empty
   const fallback = [{ params: { slug: 'placeholder' } }]
   if (!data || data.length === 0) return fallback
   return data.map(c => ({ params: { slug: c.slug } }))
@@ -22,8 +22,6 @@ const { data: course } = await supabase
   .single()
 
 if (!course) return Astro.redirect('/dashboard/my-courses', 302)
-
-import CoursePlayer from '../../../components/lms/CoursePlayer'
 ---
 
 <!DOCTYPE html>
@@ -42,9 +40,8 @@ import CoursePlayer from '../../../components/lms/CoursePlayer'
   </script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    html, body { height: 100%; overflow: hidden; }
+    html, body { height: 100%; }
     body { font-family: 'Inter', sans-serif; background: #0f172a; }
-    #root { height: 100vh; }
     :root {
       --font-display: 'Sora', sans-serif;
       --font-body: 'Inter', sans-serif;
@@ -52,13 +49,11 @@ import CoursePlayer from '../../../components/lms/CoursePlayer'
   </style>
 </head>
 <body>
-  <div id="root">
-    <CoursePlayer
-      client:load
-      courseId={course.id}
-      courseTitle={course.title}
-      courseSlug={slug}
-    />
-  </div>
+  <CoursePlayer
+    client:load
+    courseId={course.id}
+    courseTitle={course.title}
+    courseSlug={slug}
+  />
 </body>
 </html>
