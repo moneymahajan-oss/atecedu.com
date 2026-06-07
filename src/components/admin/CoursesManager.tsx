@@ -98,7 +98,7 @@ export default function CoursesManager() {
   async function loadCourses() {
     const { data } = await supabase
       .from('courses')
-      .select('id,title,slug,mode,fee_inr,original_fee_inr,duration_weeks,is_active,is_featured,category,level,total_enrolled,thumbnail_url,short_description,rating')
+      .select('*')
       .order('sort_order')
       .order('created_at', { ascending: false })
     setCourses(data ?? [])
@@ -117,12 +117,22 @@ export default function CoursesManager() {
 
   async function saveCourse() {
     setSaving(true)
+    // Spread form then override numeric fields; strip read-only DB columns
+    const { id, total_enrolled, rating, created_at, updated_at, ...rest } = form
     const payload = {
-      ...form,
-      fee_inr: parseInt(form.fee_inr) || 0,
-      original_fee_inr: parseInt(form.original_fee_inr) || null,
-      duration_weeks: parseInt(form.duration_weeks) || 0,
-      sort_order: parseInt(form.sort_order) || 0,
+      ...rest,
+      fee_inr:           parseInt(rest.fee_inr) || 0,
+      original_fee_inr:  parseInt(rest.original_fee_inr) || null,
+      duration_weeks:    parseInt(rest.duration_weeks) || 0,
+      sort_order:        parseInt(rest.sort_order) || 0,
+      // Ensure empty strings are saved as NULL for optional fields
+      one_line_syllabus: rest.one_line_syllabus?.trim()   || null,
+      description_3line: rest.description_3line?.trim()   || null,
+      brochure_url:      rest.brochure_url?.trim()        || null,
+      demo_video_url:    rest.demo_video_url?.trim()      || null,
+      promo_video_url:   rest.promo_video_url?.trim()     || null,
+      demo_zoom_url:     rest.demo_zoom_url?.trim()       || null,
+      prerequisites:     rest.prerequisites?.trim()       || null,
     }
     if (!payload.slug && payload.title) {
       payload.slug = payload.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
