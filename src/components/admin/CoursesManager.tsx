@@ -148,15 +148,31 @@ export default function CoursesManager() {
   async function loadLessons(course: Course) {
     setSelectedCourse(course)
     setLessonsLoading(true)
-    const { data: chaptersData } = await supabase
+
+    const { data: chaptersData, error: chapErr } = await supabase
       .from('course_chapters')
-      .select('id,title,sort_order,course_lessons(id,chapter_id,title,description,youtube_video_id,duration_seconds,sort_order,is_free_preview,unlock_after_days,pdf_url,is_active)')
+      .select('id,title,sort_order')
       .eq('course_id', course.id)
       .order('sort_order')
+
+    if (chapErr) console.error('Chapters error:', chapErr)
+
+    const { data: lessonsData, error: lesErr } = await supabase
+      .from('course_lessons')
+      .select('id,chapter_id,title,description,youtube_video_id,duration_seconds,sort_order,is_free_preview,unlock_after_days,pdf_url,is_active')
+      .eq('course_id', course.id)
+      .eq('is_active', true)
+      .order('sort_order')
+
+    if (lesErr) console.error('Lessons error:', lesErr)
+
     const mapped: Chapter[] = (chaptersData ?? []).map((ch: any) => ({
-      id: ch.id, title: ch.title, sort_order: ch.sort_order,
-      lessons: (ch.course_lessons ?? []).sort((a: any, b: any) => a.sort_order - b.sort_order),
+      id: ch.id,
+      title: ch.title,
+      sort_order: ch.sort_order,
+      lessons: (lessonsData ?? []).filter((l: any) => l.chapter_id === ch.id),
     }))
+
     setChapters(mapped)
     setLessonsLoading(false)
   }
