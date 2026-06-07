@@ -39,6 +39,7 @@ export default function CoursePlayer({ courseId, courseTitle, courseSlug }: Prop
   const [progress, setProgress] = useState(0)
   const [openChapters, setOpenChapters] = useState<Set<string>>(new Set())
   const [saving, setSaving] = useState(false)
+  const [error, setError] = useState('')
   const progressTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   useEffect(() => {
@@ -138,71 +139,72 @@ export default function CoursePlayer({ courseId, courseTitle, courseSlug }: Prop
   async function markComplete(lesson: Lesson) {
     if (!userId || saving) return
     setSaving(true)
+    setError('')
 
-    // Try upsert first; if unique constraint missing, fall back to delete+insert
-    const payload = {
-      student_id: userId,
-      lesson_id: lesson.id,
-      course_id: courseId,
-      is_completed: true,
-      percent_watched: 100,
-      watch_seconds: lesson.duration_seconds,
-      completed_at: new Date().toISOString(),
-      last_watched: new Date().toISOString(),
-    }
-
-    let { error } = await supabase
-      .from('lesson_progress')
-      .upsert(payload, { onConflict: 'student_id,lesson_id' })
-
-    if (error) {
-      // Fallback: delete existing row then insert fresh
-      await supabase.from('lesson_progress')
+    try {
+      // Step 1: Delete any existing row for this lesson (ignore error if not exists)
+      await supabase
+        .from('lesson_progress')
         .delete()
         .eq('student_id', userId)
         .eq('lesson_id', lesson.id)
 
+      // Step 2: Insert fresh completed row
       const { error: insertErr } = await supabase
         .from('lesson_progress')
-        .insert(payload)
+        .insert({
+          student_id: userId,
+          lesson_id: lesson.id,
+          course_id: courseId,
+          is_completed: true,
+          percent_watched: 100,
+          watch_seconds: lesson.duration_seconds ?? 0,
+          completed_at: new Date().toISOString(),
+          last_watched: new Date().toISOString(),
+        })
 
       if (insertErr) {
-        console.error('Mark complete failed:', insertErr.message)
+        setError('Could not save progress: ' + insertErr.message)
         setSaving(false)
         return
       }
+
+      // Step 3: Update local UI state immediately
+      const updatedChapters = chapters.map(ch => ({
+        ...ch,
+        lessons: ch.lessons.map(l =>
+          l.id === lesson.id ? { ...l, is_completed: true, percent_watched: 100 } : l
+        )
+      }))
+      setChapters(updatedChapters)
+
+      // Step 4: Recalculate and show progress
+      const allLessons = updatedChapters.flatMap(c => c.lessons)
+      const completedCount = allLessons.filter(l => l.is_completed).length
+      const newProgress = allLessons.length > 0
+        ? Math.round((completedCount / allLessons.length) * 100)
+        : 0
+      setProgress(newProgress)
+
+      // Step 5: Update enrollment progress_percent in DB
+      await supabase
+        .from('enrollments')
+        .update({ progress_percent: newProgress })
+        .eq('student_id', userId)
+        .eq('course_id', courseId)
+
+      // Step 6: Move to next lesson
+      const flat = updatedChapters.flatMap(c => c.lessons)
+      const idx = flat.findIndex(l => l.id === lesson.id)
+      if (idx >= 0 && idx < flat.length - 1) {
+        setActiveLesson(flat[idx + 1])
+      }
+
+    } catch (e: any) {
+      setError('Unexpected error: ' + (e.message ?? String(e)))
+    } finally {
+      setSaving(false)
     }
-
-    // Update local state
-    const updatedChapters = chapters.map(ch => ({
-      ...ch,
-      lessons: ch.lessons.map(l =>
-        l.id === lesson.id ? { ...l, is_completed: true, percent_watched: 100 } : l
-      )
-    }))
-    setChapters(updatedChapters)
-
-    // Recalculate progress
-    const allLessons = updatedChapters.flatMap(c => c.lessons)
-    const completedCount = allLessons.filter(l => l.is_completed).length
-    const newProgress = allLessons.length > 0
-      ? Math.round((completedCount / allLessons.length) * 100)
-      : 0
-    setProgress(newProgress)
-
-    // Update enrollment progress in DB
-    await supabase
-      .from('enrollments')
-      .update({ progress_percent: newProgress })
-      .eq('student_id', userId)
-      .eq('course_id', courseId)
-
-    // Move to next lesson
-    const flat = updatedChapters.flatMap(c => c.lessons)
-    const idx = flat.findIndex(l => l.id === lesson.id)
-    if (idx < flat.length - 1) setActiveLesson(flat[idx + 1])
-
-    setSaving(false)
   }
 
   function toggleChapter(id: string) {
@@ -278,7 +280,12 @@ export default function CoursePlayer({ courseId, courseTitle, courseSlug }: Prop
         </div>
 
         {/* Lesson info + actions */}
-        {activeLesson && (
+        {error && (
+        <div style={{ margin: '0 20px', padding: '10px 14px', background: '#fee2e2', borderRadius: '8px', color: '#991b1b', fontSize: '13px', fontWeight: 600 }}>
+          ⚠️ {error}
+        </div>
+      )}
+      {activeLesson && (
           <div style={{ background: '#1e293b', padding: '24px', borderTop: '1px solid rgba(255,255,255,0.08)' }}>
             <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '16px', flexWrap: 'wrap' }}>
               <div>
