@@ -139,7 +139,8 @@ export default function CoursePlayer({ courseId, courseTitle, courseSlug }: Prop
     if (!userId || saving) return
     setSaving(true)
 
-    const { error } = await supabase.from('lesson_progress').upsert({
+    // Try upsert first; if unique constraint missing, fall back to delete+insert
+    const payload = {
       student_id: userId,
       lesson_id: lesson.id,
       course_id: courseId,
@@ -148,9 +149,29 @@ export default function CoursePlayer({ courseId, courseTitle, courseSlug }: Prop
       watch_seconds: lesson.duration_seconds,
       completed_at: new Date().toISOString(),
       last_watched: new Date().toISOString(),
-    }, { onConflict: 'student_id,lesson_id' })
+    }
 
-    if (error) { console.error('Mark complete error:', error); setSaving(false); return }
+    let { error } = await supabase
+      .from('lesson_progress')
+      .upsert(payload, { onConflict: 'student_id,lesson_id' })
+
+    if (error) {
+      // Fallback: delete existing row then insert fresh
+      await supabase.from('lesson_progress')
+        .delete()
+        .eq('student_id', userId)
+        .eq('lesson_id', lesson.id)
+
+      const { error: insertErr } = await supabase
+        .from('lesson_progress')
+        .insert(payload)
+
+      if (insertErr) {
+        console.error('Mark complete failed:', insertErr.message)
+        setSaving(false)
+        return
+      }
+    }
 
     // Update local state
     const updatedChapters = chapters.map(ch => ({
