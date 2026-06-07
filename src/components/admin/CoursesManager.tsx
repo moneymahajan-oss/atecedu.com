@@ -75,6 +75,7 @@ export default function CoursesManager() {
   const [editId, setEditId] = useState<string | null>(null)
   const [form, setForm] = useState<any>(EMPTY_FORM)
   const [saving, setSaving] = useState(false)
+  const [uploadingBrochure, setUploadingBrochure] = useState(false)
   const [search, setSearch] = useState('')
 
   // ── Lessons tab state ────────────────────────────────────
@@ -143,6 +144,33 @@ export default function CoursesManager() {
       await supabase.from('courses').insert(payload)
     }
     setSaving(false); setShowForm(false); loadCourses()
+  }
+
+  async function uploadBrochure(file: File) {
+    if (!file) return
+    setUploadingBrochure(true)
+    try {
+      // Sanitise filename
+      const ext  = file.name.split('.').pop() || 'pdf'
+      const name = 'brochure-' + Date.now() + '.' + ext
+      const path = (form.slug || 'course') + '/' + name
+
+      const { error } = await supabase.storage
+        .from('course-brochures')
+        .upload(path, file, { upsert: true, contentType: file.type })
+
+      if (error) throw error
+
+      const { data: urlData } = supabase.storage
+        .from('course-brochures')
+        .getPublicUrl(path)
+
+      update('brochure_url', urlData.publicUrl)
+    } catch (e: any) {
+      alert('Upload failed: ' + (e.message ?? e))
+    } finally {
+      setUploadingBrochure(false)
+    }
   }
 
   async function toggleActive(id: string, current: boolean) {
@@ -349,7 +377,7 @@ export default function CoursesManager() {
                   { label: 'YouTube Promo Video ID', field: 'promo_video_url', type: 'text', placeholder: 'e.g. dQw4w9WgXcQ' },
                   { label: 'Demo Zoom URL', field: 'demo_zoom_url', type: 'text' },
                   { label: '🎯 One-Line Syllabus  (shown as heading on course page)', field: 'one_line_syllabus', type: 'text', span: 2, placeholder: 'e.g. Master Python from basics to AI in 8 weeks' },
-                  { label: '📥 Brochure / Syllabus PDF URL (Google Drive or direct link)', field: 'brochure_url', type: 'text', span: 2, placeholder: 'https://drive.google.com/file/...' },
+
                   { label: '▶ Demo Video URL (YouTube or direct, shown as Watch button)', field: 'demo_video_url', type: 'text', span: 2, placeholder: 'https://youtu.be/...' },
                   { label: 'Prerequisites', field: 'prerequisites', type: 'text', span: 2 },
                 ].map((f: any) => (
@@ -362,8 +390,54 @@ export default function CoursesManager() {
                     />
                   </div>
                 ))}
+                {/* ── Brochure Upload Widget ── */}
                 <div style={{ gridColumn: '1 / -1' }}>
-                  <label style={{ fontSize: '12px', fontWeight: '600', color: '#475569', display: 'block', marginBottom: '5px' }}>
+                  <label style={{ fontSize: '12px', fontWeight: '600', color: '#475569', display: 'block', marginBottom: '6px' }}>
+                    📥 Brochure / Syllabus PDF
+                  </label>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+                    {/* Upload button */}
+                    <label style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '9px 18px', background: '#0b1525', color: '#d4f01a', borderRadius: 10, fontWeight: 700, fontSize: 13, cursor: uploadingBrochure ? 'not-allowed' : 'pointer', opacity: uploadingBrochure ? 0.6 : 1, fontFamily: 'inherit' }}>
+                      {uploadingBrochure ? '⏳ Uploading...' : '📤 Upload PDF'}
+                      <input
+                        type="file"
+                        accept=".pdf,.doc,.docx"
+                        style={{ display: 'none' }}
+                        disabled={uploadingBrochure}
+                        onChange={e => { const f = e.target.files?.[0]; if (f) uploadBrochure(f); e.target.value = '' }}
+                      />
+                    </label>
+                    {/* Current file link */}
+                    {form.brochure_url ? (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1, minWidth: 0 }}>
+                        <a href={form.brochure_url} target="_blank" rel="noopener"
+                          style={{ fontSize: 12, color: '#0284c7', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 280 }}>
+                          ✅ {form.brochure_url.split('/').pop()?.split('?')[0] || 'View file'}
+                        </a>
+                        <button type="button" onClick={() => update('brochure_url', '')}
+                          style={{ fontSize: 11, color: '#ef4444', background: 'none', border: '1px solid #fca5a5', borderRadius: 6, padding: '3px 8px', cursor: 'pointer' }}>
+                          ✕ Remove
+                        </button>
+                      </div>
+                    ) : (
+                      <span style={{ fontSize: 12, color: '#9ca3af' }}>No file uploaded yet</span>
+                    )}
+                  </div>
+                  {/* Fallback: also allow direct URL paste */}
+                  <div style={{ marginTop: 6, display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <span style={{ fontSize: 11, color: '#9ca3af' }}>or paste URL:</span>
+                    <input
+                      type="text"
+                      value={form.brochure_url ?? ''}
+                      placeholder="https://drive.google.com/..."
+                      onChange={e => update('brochure_url', e.target.value)}
+                      style={{ ...inputStyle, flex: 1, fontSize: 12, padding: '6px 10px' }}
+                    />
+                  </div>
+                </div>
+
+                <div style={{ gridColumn: '1 / -1' }}>
+                  <label style={{ fontSize: '12px', fontWeight: '600', color: '#475569', display: 'block', marginBottom: '6px' }}>
                     📖 3-Line Description (shown on course page — 2 to 3 sentences about what students will get)
                   </label>
                   <textarea
