@@ -1,8 +1,10 @@
 ---
 // src/pages/admin/login.astro
-const SUPABASE_URL    = import.meta.env.PUBLIC_SUPABASE_URL     || ''
-const SUPABASE_KEY    = import.meta.env.PUBLIC_SUPABASE_ANON_KEY || ''
-const ADMIN_EMAILS_STR = 'atecgsp@gmail.com,admin@atecedu.com'
+// FIXED: Checks user_roles table in DB instead of hardcoded email list
+// Any email in user_roles with is_active=true can log in
+// Fallback: atecgsp@gmail.com always allowed (superadmin safety net)
+const SUPABASE_URL = import.meta.env.PUBLIC_SUPABASE_URL || ''
+const SUPABASE_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY || ''
 ---
 
 <!DOCTYPE html>
@@ -15,27 +17,18 @@ const ADMIN_EMAILS_STR = 'atecgsp@gmail.com,admin@atecedu.com'
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@700;800&family=Inter:wght@400;500;600&display=swap" />
   <link rel="icon" type="image/png" href="/favicon.png" />
 
-  <script define:vars={{ SUPABASE_URL, SUPABASE_KEY, ADMIN_EMAILS_STR }}>
-    window.__SB_URL    = SUPABASE_URL
-    window.__SB_KEY    = SUPABASE_KEY
-    window.__SB_ADMINS = ADMIN_EMAILS_STR.split(',')
+  <script define:vars={{ SUPABASE_URL, SUPABASE_KEY }}>
+    window.__SB_URL = SUPABASE_URL
+    window.__SB_KEY = SUPABASE_KEY
   </script>
 
   <style>
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
     body{font-family:'Inter',sans-serif;background:linear-gradient(135deg,#0b1f3f 0%,#1c3d7a 100%);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
-
-    /* PAGE HIDDEN by default — shown only after session check */
-    /* This prevents the blink caused by session redirect */
-    #page { display: none; width:100%; max-width:400px; display:none; flex-direction:column;align-items:center;gap:24px }
-
-    /* Spinner shown while checking session */
-    #checking {
-      display:flex;flex-direction:column;align-items:center;gap:16px;color:rgba(255,255,255,0.6);font-size:14px;
-    }
+    #checking{display:flex;flex-direction:column;align-items:center;gap:16px;color:rgba(255,255,255,0.6);font-size:14px}
     .spinner{width:36px;height:36px;border:3px solid rgba(255,255,255,0.2);border-top-color:#d4f01a;border-radius:50%;animation:spin 0.8s linear infinite}
     @keyframes spin{to{transform:rotate(360deg)}}
-
+    #page{display:none;width:100%;max-width:400px;flex-direction:column;align-items:center;gap:24px}
     .logo{display:inline-flex;align-items:center;gap:10px;text-decoration:none}
     .logo-mark{width:44px;height:44px;border-radius:12px;background:#d4f01a;display:flex;align-items:center;justify-content:center;font-family:'Sora',sans-serif;font-weight:800;font-size:20px;color:#0f2347}
     .logo-name{font-family:'Sora',sans-serif;font-weight:800;font-size:18px;color:#fff;line-height:1.1}
@@ -61,13 +54,11 @@ const ADMIN_EMAILS_STR = 'atecgsp@gmail.com,admin@atecedu.com'
 </head>
 <body>
 
-  <!-- Shown while checking session -->
   <div id="checking">
     <div class="spinner"></div>
     <span>Checking session...</span>
   </div>
 
-  <!-- Login form — hidden until session check confirms no active session -->
   <div id="page">
     <a href="/" class="logo">
       <div class="logo-mark">A</div>
@@ -82,7 +73,7 @@ const ADMIN_EMAILS_STR = 'atecgsp@gmail.com,admin@atecedu.com'
 
       <div class="field">
         <label for="em">Admin Email</label>
-        <input type="email" id="em" placeholder="atecgsp@gmail.com" autocomplete="username" />
+        <input type="email" id="em" placeholder="your-admin@email.com" autocomplete="username" />
       </div>
 
       <div class="field">
@@ -101,44 +92,61 @@ const ADMIN_EMAILS_STR = 'atecgsp@gmail.com,admin@atecedu.com'
   <script>
     import { createClient } from '@supabase/supabase-js'
 
-    const admins  = window.__SB_ADMINS || ['atecgsp@gmail.com']
     const supabase = createClient(window.__SB_URL, window.__SB_KEY)
 
-    // Check session FIRST — redirect silently if already logged in (no blink)
-    // Only show the login form if there is NO active session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session?.user && admins.includes(session.user.email || '')) {
-        // Already logged in — redirect without showing the form
-        window.location.replace('/admin')
-        return
+    // Superadmin safety net — always allowed even if DB is down
+    const SUPERADMIN = 'atecgsp@gmail.com'
+
+    // Check if user has admin role in DB
+    async function hasAdminRole(userId: string, email: string): Promise<boolean> {
+      // Superadmin always passes
+      if (email === SUPERADMIN) return true
+      try {
+        const { data } = await supabase
+          .from('user_roles')
+          .select('role, is_active')
+          .eq('user_id', userId)
+          .single()
+        return !!(data?.is_active && data?.role)
+      } catch {
+        return false
       }
-      // Not logged in — hide spinner and show the login form
-      document.getElementById('checking').style.display = 'none'
-      document.getElementById('page').style.display = 'flex'
+    }
+
+    // Session check on load
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (session?.user) {
+        const allowed = await hasAdminRole(session.user.id, session.user.email ?? '')
+        if (allowed) {
+          window.location.replace('/admin')
+          return
+        }
+      }
+      document.getElementById('checking')!.style.display = 'none'
+      document.getElementById('page')!.style.display = 'flex'
     }).catch(() => {
-      // On error, show the login form anyway
-      document.getElementById('checking').style.display = 'none'
-      document.getElementById('page').style.display = 'flex'
+      document.getElementById('checking')!.style.display = 'none'
+      document.getElementById('page')!.style.display = 'flex'
     })
 
     // Eye toggle
-    document.getElementById('eye-btn').addEventListener('click', function () {
-      var pw = document.getElementById('pw')
+    document.getElementById('eye-btn')?.addEventListener('click', function() {
+      const pw = document.getElementById('pw') as HTMLInputElement
       pw.type = pw.type === 'password' ? 'text' : 'password'
     })
 
     // Enter key
-    document.getElementById('em').addEventListener('keydown', function (e) { if (e.key === 'Enter') doLogin() })
-    document.getElementById('pw').addEventListener('keydown', function (e) { if (e.key === 'Enter') doLogin() })
-    document.getElementById('login-btn').addEventListener('click', doLogin)
+    document.getElementById('em')?.addEventListener('keydown', (e: any) => { if (e.key === 'Enter') doLogin() })
+    document.getElementById('pw')?.addEventListener('keydown', (e: any) => { if (e.key === 'Enter') doLogin() })
+    document.getElementById('login-btn')?.addEventListener('click', doLogin)
 
     async function doLogin() {
-      var errEl = document.getElementById('err')
-      var btn   = document.getElementById('login-btn')
+      const errEl = document.getElementById('err') as HTMLElement
+      const btn   = document.getElementById('login-btn') as HTMLButtonElement
       errEl.classList.remove('show')
 
-      var email    = document.getElementById('em').value.trim()
-      var password = document.getElementById('pw').value
+      const email    = (document.getElementById('em') as HTMLInputElement).value.trim()
+      const password = (document.getElementById('pw') as HTMLInputElement).value
 
       if (!email || !password) {
         errEl.textContent = '⚠️ Please enter your email and password'
@@ -146,28 +154,32 @@ const ADMIN_EMAILS_STR = 'atecgsp@gmail.com,admin@atecedu.com'
         return
       }
 
-      if (!admins.includes(email)) {
-        errEl.textContent = '⚠️ This email is not authorised for admin access'
-        errEl.classList.add('show')
-        return
-      }
-
       btn.disabled    = true
-      btn.textContent = 'Logging in...'
+      btn.textContent = 'Checking credentials...'
 
+      // Sign in first
       const { data, error } = await supabase.auth.signInWithPassword({ email, password })
 
       if (error) {
-        errEl.textContent = '⚠️ ' + (error.message === 'Invalid login credentials' ? 'Incorrect email or password.' : error.message)
+        errEl.textContent = '⚠️ ' + (
+          error.message === 'Invalid login credentials'
+            ? 'Incorrect email or password.'
+            : error.message
+        )
         errEl.classList.add('show')
         btn.disabled    = false
         btn.textContent = 'Login to Admin Panel'
         return
       }
 
-      if (!admins.includes(data.user?.email || '')) {
+      // Now check if this user has an admin role
+      btn.textContent = 'Verifying admin access...'
+      const allowed = await hasAdminRole(data.user.id, data.user.email ?? '')
+
+      if (!allowed) {
+        // Sign them back out — they're not an admin
         await supabase.auth.signOut()
-        errEl.textContent = '⚠️ Access denied. Admin accounts only.'
+        errEl.textContent = '⚠️ Access denied. This account does not have admin privileges.'
         errEl.classList.add('show')
         btn.disabled    = false
         btn.textContent = 'Login to Admin Panel'

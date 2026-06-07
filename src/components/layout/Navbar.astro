@@ -52,6 +52,8 @@ const defaultLinks = [
             <span style="font-size:10px;opacity:0.5">▾</span>
           </button>
           <div id="nav-user-dropdown" style="display:none;position:absolute;top:calc(100% + 8px);right:0;background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:8px;min-width:180px;box-shadow:0 8px 24px rgba(0,0,0,0.12);z-index:1000;">
+            <!-- Admin Panel link — hidden by default, shown by JS if user has admin role -->
+            <a href="/admin" id="nav-admin-link" style="display:none;align-items:center;gap:8px;padding:8px 12px;border-radius:8px;text-decoration:none;color:#fff;font-size:13px;font-weight:700;background:#0b1525;margin-bottom:4px;" onmouseover="this.style.background='#1c3d7a'" onmouseout="this.style.background='#0b1525'">⚙️ Admin Panel</a>
             <a href="/dashboard" style="display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:8px;text-decoration:none;color:#1e293b;font-size:13px;font-weight:500;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='none'">🏠 Dashboard</a>
             <a href="/dashboard/my-courses" style="display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:8px;text-decoration:none;color:#1e293b;font-size:13px;font-weight:500;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='none'">📚 My Courses</a>
             <a href="/dashboard/certificates" style="display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:8px;text-decoration:none;color:#1e293b;font-size:13px;font-weight:500;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='none'">📜 Certificates</a>
@@ -165,6 +167,20 @@ const defaultLinks = [
         if (userName) userName.textContent = name.split(' ')[0]
         if (userAvatar) userAvatar.textContent = initial
         if (mobileInfo) mobileInfo.textContent = '👤 ' + name
+
+        // Check admin role and show Admin Panel link if applicable
+        sb2.from('user_roles').select('role,is_active').eq('user_id', user.id).single().then(({ data: roleData }) => {
+          const adminLink = document.getElementById('nav-admin-link') as HTMLElement | null
+          if (adminLink && roleData?.is_active && roleData?.role) {
+            adminLink.style.display = 'flex'
+          }
+        }).catch(() => {
+          // Superadmin fallback — always show admin link for atecgsp@gmail.com
+          if (user.email === 'atecgsp@gmail.com') {
+            const adminLink = document.getElementById('nav-admin-link') as HTMLElement | null
+            if (adminLink) adminLink.style.display = 'flex'
+          }
+        })
 
         // Toggle dropdown
         userBtn?.addEventListener('click', (e) => {
