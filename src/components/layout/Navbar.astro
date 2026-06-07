@@ -142,69 +142,75 @@ const defaultLinks = [
     // NO storageKey override — must match the default used by supabase.ts
     const sb2 = createClient(url2, key2, { auth: { autoRefreshToken: true, persistSession: true } })
 
-    function updateNavAuth(user: any) {
-      const loginBtn   = document.getElementById('nav-login-btn') as HTMLElement
-      const userMenu   = document.getElementById('nav-user-menu') as HTMLElement
-      const userBtn    = document.getElementById('nav-user-btn') as HTMLElement
-      const userName   = document.getElementById('nav-user-name') as HTMLElement
-      const userAvatar = document.getElementById('nav-user-avatar') as HTMLElement
-      const dropdown   = document.getElementById('nav-user-dropdown') as HTMLElement
-      const mobileLogin = document.getElementById('mobile-login-btn') as HTMLElement
-      const mobileUser = document.getElementById('mobile-user-section') as HTMLElement
-      const mobileInfo = document.getElementById('mobile-user-info') as HTMLElement
+    // Cache DOM elements once — never re-query
+    const loginBtn    = document.getElementById('nav-login-btn') as HTMLElement
+    const userMenu    = document.getElementById('nav-user-menu') as HTMLElement
+    const userBtn     = document.getElementById('nav-user-btn') as HTMLElement
+    const userName    = document.getElementById('nav-user-name') as HTMLElement
+    const userAvatar  = document.getElementById('nav-user-avatar') as HTMLElement
+    const dropdown    = document.getElementById('nav-user-dropdown') as HTMLElement
+    const mobileLogin = document.getElementById('mobile-login-btn') as HTMLElement
+    const mobileUser  = document.getElementById('mobile-user-section') as HTMLElement
+    const mobileInfo  = document.getElementById('mobile-user-info') as HTMLElement
+    const adminLink   = document.getElementById('nav-admin-link') as HTMLElement | null
 
+    // ── Dropdown toggle — registered ONCE, not inside updateNavAuth ──
+    userBtn?.addEventListener('click', (e) => {
+      e.stopPropagation()
+      if (!dropdown) return
+      const isOpen = dropdown.style.display === 'block'
+      dropdown.style.display = isOpen ? 'none' : 'block'
+    })
+    document.addEventListener('click', (e) => {
+      if (dropdown && !userBtn?.contains(e.target as Node)) {
+        dropdown.style.display = 'none'
+      }
+    })
+
+    // ── Logout — registered ONCE ──
+    const logoutHandler = async () => {
+      await sb2.auth.signOut()
+      window.location.href = '/'
+    }
+    document.getElementById('nav-logout-btn')?.addEventListener('click', logoutHandler)
+    document.getElementById('mobile-logout-btn')?.addEventListener('click', logoutHandler)
+
+    // ── Auth state function — only updates display, no event listeners ──
+    function updateNavAuth(user: any) {
       if (user) {
-        // Logged in — hide Login, show user menu
-        if (loginBtn) loginBtn.style.display = 'none'
-        if (userMenu) userMenu.style.display = 'block'
+        // Logged in
+        if (loginBtn)    loginBtn.style.display = 'none'
+        if (userMenu)    userMenu.style.display = 'block'
         if (mobileLogin) mobileLogin.style.display = 'none'
-        if (mobileUser) mobileUser.style.display = 'flex'
+        if (mobileUser)  mobileUser.style.display = 'flex'
 
         // Set name/avatar
         const email = user.email ?? ''
         const name = user.user_metadata?.full_name || email.split('@')[0] || 'Student'
-        const initial = name[0].toUpperCase()
-        if (userName) userName.textContent = name.split(' ')[0]
-        if (userAvatar) userAvatar.textContent = initial
+        if (userName)   userName.textContent = name.split(' ')[0]
+        if (userAvatar) userAvatar.textContent = name[0].toUpperCase()
         if (mobileInfo) mobileInfo.textContent = '👤 ' + name
 
-        // Check admin role and show Admin Panel link if applicable
-        sb2.from('user_roles').select('role,is_active').eq('user_id', user.id).single().then(({ data: roleData }) => {
-          const adminLink = document.getElementById('nav-admin-link') as HTMLElement | null
-          if (adminLink && roleData?.is_active && roleData?.role) {
-            adminLink.style.display = 'flex'
-          }
-        }).catch(() => {
-          // Superadmin fallback — always show admin link for atecgsp@gmail.com
-          if (user.email === 'atecgsp@gmail.com') {
-            const adminLink = document.getElementById('nav-admin-link') as HTMLElement | null
-            if (adminLink) adminLink.style.display = 'flex'
-          }
-        })
-
-        // Toggle dropdown
-        userBtn?.addEventListener('click', (e) => {
-          e.stopPropagation()
-          if (dropdown) dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none'
-        })
-        document.addEventListener('click', () => {
-          if (dropdown) dropdown.style.display = 'none'
-        })
-
-        // Logout buttons
-        const logoutHandler = async () => {
-          await sb2.auth.signOut()
-          window.location.href = '/'
+        // Admin Panel link — check DB role
+        if (adminLink) {
+          sb2.from('user_roles').select('role,is_active').eq('user_id', user.id).single()
+            .then(({ data: r }) => {
+              if (r?.is_active && r?.role) adminLink.style.display = 'flex'
+            })
+            .catch(() => {
+              // Fallback for superadmin if DB call fails
+              if (user.email === 'atecgsp@gmail.com') adminLink.style.display = 'flex'
+            })
         }
-        document.getElementById('nav-logout-btn')?.addEventListener('click', logoutHandler)
-        document.getElementById('mobile-logout-btn')?.addEventListener('click', logoutHandler)
 
       } else {
-        // Logged out — show Login, hide user menu
-        if (loginBtn) loginBtn.style.display = ''
-        if (userMenu) userMenu.style.display = 'none'
+        // Logged out
+        if (loginBtn)    loginBtn.style.display = ''
+        if (userMenu)    userMenu.style.display = 'none'
         if (mobileLogin) mobileLogin.style.display = ''
-        if (mobileUser) mobileUser.style.display = 'none'
+        if (mobileUser)  mobileUser.style.display = 'none'
+        if (adminLink)   adminLink.style.display = 'none'
+        if (dropdown)    dropdown.style.display = 'none'
       }
     }
 
