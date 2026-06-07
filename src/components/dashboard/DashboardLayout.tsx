@@ -7,7 +7,7 @@ import { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
 
 interface Props {
-  activeSection: 'home' | 'my-courses' | 'certificates' | 'profile' | 'cart'
+  activeSection: 'home' | 'my-courses' | 'certificates' | 'profile' | 'cart' | 'payments' | 'webinars'
   children: React.ReactNode
 }
 
@@ -19,7 +19,9 @@ interface Profile {
 const NAV = [
   { key: 'home',         href: '/dashboard',              icon: '🏠', label: 'Dashboard' },
   { key: 'my-courses',   href: '/dashboard/my-courses',   icon: '📚', label: 'My Courses' },
+  { key: 'webinars',     href: '/dashboard/webinars',     icon: '🎥', label: 'Live Sessions' },
   { key: 'certificates', href: '/dashboard/certificates', icon: '📜', label: 'Certificates' },
+  { key: 'payments',     href: '/dashboard/payments',     icon: '💳', label: 'Payments' },
   { key: 'profile',      href: '/dashboard/profile',      icon: '👤', label: 'Edit Profile' },
   { key: 'cart',         href: '/cart',                   icon: '🛒', label: 'My Cart' },
 ]

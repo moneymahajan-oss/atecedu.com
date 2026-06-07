@@ -1,0 +1,8 @@
+---
+// src/pages/dashboard/payments.astro
+import BaseLayout from '../../layouts/BaseLayout.astro'
+import PaymentsPage from '../../components/dashboard/PaymentsPage'
+---
+<BaseLayout title="Payments — ATEC" noIndex={true}>
+  <PaymentsPage client:load />
+</BaseLayout>

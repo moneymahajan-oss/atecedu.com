@@ -1,0 +1,8 @@
+---
+// src/pages/dashboard/webinars.astro
+import BaseLayout from '../../layouts/BaseLayout.astro'
+import WebinarsPage from '../../components/dashboard/WebinarsPage'
+---
+<BaseLayout title="Live Sessions — ATEC" noIndex={true}>
+  <WebinarsPage client:load />
+</BaseLayout>
