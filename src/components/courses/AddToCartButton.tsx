@@ -5,10 +5,11 @@ import { supabase } from '../../lib/supabase'
 interface Props {
   courseId: string
   courseTitle: string
+  courseSlug?: string
   compact?: boolean
 }
 
-export default function AddToCartButton({ courseId, courseTitle, compact = false }: Props) {
+export default function AddToCartButton({ courseId, courseTitle, courseSlug, compact = false }: Props) {
   const [user, setUser] = useState<{ id: string } | null>(null)
   const [inCart, setInCart] = useState(false)
   const [enrolled, setEnrolled] = useState(false)
@@ -34,7 +35,7 @@ export default function AddToCartButton({ courseId, courseTitle, compact = false
   async function checkStatus(userId: string) {
     const [{ data: cartData }, { data: enrollData }] = await Promise.all([
       supabase.from('cart_items').select('id').eq('student_id', userId).eq('course_id', courseId).maybeSingle(),
-      supabase.from('enrollments').select('id').eq('student_id', userId).eq('course_id', courseId).eq('payment_status', 'paid').maybeSingle(),
+      supabase.from('enrollments').select('id').eq('student_id', userId).eq('course_id', courseId).in('payment_status', ['paid','free']).maybeSingle(),
     ])
     setInCart(!!cartData)
     setEnrolled(!!enrollData)
@@ -63,7 +64,7 @@ export default function AddToCartButton({ courseId, courseTitle, compact = false
   if (enrolled) {
     return (
       <a
-        href="/dashboard/my-courses"
+        href={courseSlug ? `/dashboard/course/${courseSlug}` : '/dashboard/my-courses'}
         style={{
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           gap: '8px', width: '100%',
@@ -75,7 +76,7 @@ export default function AddToCartButton({ courseId, courseTitle, compact = false
           textDecoration: 'none',
         }}
       >
-        ✓ Go to My Course
+        ▶ Start Learning →
       </a>
     )
   }

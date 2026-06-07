@@ -191,7 +191,7 @@ const jsonLd = {
             </div>
 
             <div class="pricing-btns">
-              <AddToCartButton client:load courseId={course.id} courseTitle={course.title} />
+              <AddToCartButton client:load courseId={course.id} courseTitle={course.title} courseSlug={slug} />
             </div>
 
             <div class="pricing-includes">
@@ -376,7 +376,7 @@ const jsonLd = {
                 )}
               </div>
               <div class="pricing-btns">
-                <AddToCartButton client:load courseId={course.id} courseTitle={course.title} />
+                <AddToCartButton client:load courseId={course.id} courseTitle={course.title} courseSlug={slug} />
               </div>
               <div class="pricing-includes">
                 <div class="include-title">Includes:</div>
@@ -433,7 +433,7 @@ const jsonLd = {
     <div style="font-family:var(--font-display);font-size:18px;font-weight:800;color:var(--navy)">
       ₹{course.fee_inr?.toLocaleString('en-IN')}
     </div>
-    <AddToCartButton client:load courseId={course.id} courseTitle={course.title} compact />
+    <AddToCartButton client:load courseId={course.id} courseTitle={course.title} courseSlug={slug} compact />
   </div>
 
   <!-- JSON-LD -->
