@@ -263,18 +263,38 @@ const jsonLd = {
             </section>
           )}
 
-          <!-- Course description -->
-          {course.description && (
+          <!-- ── TIER 1: One-line syllabus banner ── -->
+          {(course as any).one_line_syllabus && (
+            <div style="background:linear-gradient(135deg,#0b1525,#1c3d7a);border-radius:14px;padding:18px 22px;margin-bottom:24px;display:flex;align-items:center;gap:12px;">
+              <span style="font-size:22px;flex-shrink:0;">🎯</span>
+              <p style="font-family:var(--font-display,Sora,sans-serif);font-size:1.05rem;font-weight:700;color:#d4f01a;margin:0;line-height:1.4;">
+                {(course as any).one_line_syllabus}
+              </p>
+            </div>
+          )}
+
+          <!-- ── TIER 2: 3-line description ── -->
+          {(course as any).description_3line && (
+            <section class="detail-section">
+              <h2>About This Course</h2>
+              <p style="font-size:15px;color:var(--text-secondary,#475569);line-height:1.9;white-space:pre-line;">
+                {(course as any).description_3line}
+              </p>
+            </section>
+          )}
+
+          <!-- Course description (rich text fallback if no description_3line) -->
+          {!(course as any).description_3line && course.description && (
             <section class="detail-section">
               <h2>About This Course</h2>
               <div class="course-description" set:html={course.description} />
             </section>
           )}
 
-          <!-- Syllabus accordion -->
+          <!-- ── TIER 3: Full syllabus accordion ── -->
           {syllabus.length > 0 && (
             <section class="detail-section">
-              <h2>Course Syllabus</h2>
+              <h2>📋 Course Syllabus</h2>
               <div class="syllabus-summary">
                 {syllabus.length} weeks · {syllabus.reduce((acc, w) => acc + (w.subtopics?.length ?? 1), 0)} topics
               </div>
@@ -308,6 +328,27 @@ const jsonLd = {
                     </div>
                   </div>
                 ))}
+              </div>
+            </section>
+          )}
+
+          <!-- ── Course Resources: Brochure + Demo Video ── -->
+          {((course as any).brochure_url || (course as any).demo_video_url) && (
+            <section class="detail-section">
+              <h2>📥 Course Resources</h2>
+              <div style="display:flex;gap:12px;flex-wrap:wrap;">
+                {(course as any).brochure_url && (
+                  <a href={(course as any).brochure_url} target="_blank" rel="noopener"
+                    style="display:inline-flex;align-items:center;gap:8px;padding:13px 22px;background:#0b1525;color:#d4f01a;border-radius:10px;font-family:var(--font-display,Sora,sans-serif);font-weight:700;font-size:14px;text-decoration:none;">
+                    📄 Download Brochure / Syllabus PDF
+                  </a>
+                )}
+                {(course as any).demo_video_url && (
+                  <a href={(course as any).demo_video_url} target="_blank" rel="noopener"
+                    style="display:inline-flex;align-items:center;gap:8px;padding:13px 22px;background:#dc2626;color:#fff;border-radius:10px;font-family:var(--font-display,Sora,sans-serif);font-weight:700;font-size:14px;text-decoration:none;">
+                    ▶ Watch Demo Video
+                  </a>
+                )}
               </div>
             </section>
           )}

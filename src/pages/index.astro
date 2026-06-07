@@ -3064,13 +3064,6 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
           '<a class="cat-card-btn syllabus" href="' + syllabusUrl + '" onclick="event.stopPropagation()">' +
             '📄 Syllabus' +
           '</a>' +
-          (c.promo_video_url
-            ? '<a class="cat-card-btn watch" href="https://www.youtube.com/watch?v=' + c.promo_video_url + '" target="_blank" rel="noopener" onclick="event.stopPropagation()">▶ Watch</a>'
-            : '<span class="cat-card-btn watch" style="opacity:0.35;cursor:default;" onclick="event.stopPropagation()">▶ Watch</span>'
-          ) +
-          '<a class="cat-card-btn enroll" href="/checkout?course=' + c.id + '" onclick="event.stopPropagation()">' +
-            '🎓 Enroll' +
-          '</a>' +
         '</div>' +
       '</div>'
     return wrap

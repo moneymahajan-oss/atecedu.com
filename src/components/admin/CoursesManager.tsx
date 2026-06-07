@@ -20,6 +20,10 @@ interface Course {
   total_enrolled: number
   thumbnail_url: string | null
   short_description: string | null
+  one_line_syllabus: string | null
+  description_3line: string | null
+  brochure_url: string | null
+  demo_video_url: string | null
   rating: number | null
 }
 
@@ -49,7 +53,7 @@ const EMPTY_FORM = {
   fee_inr: 0, original_fee_inr: 0, duration_weeks: 8,
   category: '', level: 'Beginner', language: 'Hindi/English',
   certificate_offered: true, is_active: true, is_featured: false,
-  thumbnail_url: '', promo_video_url: '', demo_zoom_url: '',
+  thumbnail_url: '', promo_video_url: '', demo_zoom_url: '', one_line_syllabus: '', description_3line: '', brochure_url: '', demo_video_url: '',
   prerequisites: '', sort_order: 0,
 }
 
@@ -334,6 +338,9 @@ export default function CoursesManager() {
                   { label: 'Thumbnail URL', field: 'thumbnail_url', type: 'text', span: 2 },
                   { label: 'YouTube Promo Video ID', field: 'promo_video_url', type: 'text', placeholder: 'e.g. dQw4w9WgXcQ' },
                   { label: 'Demo Zoom URL', field: 'demo_zoom_url', type: 'text' },
+                  { label: '🎯 One-Line Syllabus  (shown as heading on course page)', field: 'one_line_syllabus', type: 'text', span: 2, placeholder: 'e.g. Master Python from basics to AI in 8 weeks' },
+                  { label: '📥 Brochure / Syllabus PDF URL (Google Drive or direct link)', field: 'brochure_url', type: 'text', span: 2, placeholder: 'https://drive.google.com/file/...' },
+                  { label: '▶ Demo Video URL (YouTube or direct, shown as Watch button)', field: 'demo_video_url', type: 'text', span: 2, placeholder: 'https://youtu.be/...' },
                   { label: 'Prerequisites', field: 'prerequisites', type: 'text', span: 2 },
                 ].map((f: any) => (
                   <div key={f.field} style={{ gridColumn: f.span === 2 ? '1 / -1' : 'auto' }}>
@@ -345,6 +352,18 @@ export default function CoursesManager() {
                     />
                   </div>
                 ))}
+                <div style={{ gridColumn: '1 / -1' }}>
+                  <label style={{ fontSize: '12px', fontWeight: '600', color: '#475569', display: 'block', marginBottom: '5px' }}>
+                    📖 3-Line Description (shown on course page — 2 to 3 sentences about what students will get)
+                  </label>
+                  <textarea
+                    value={form.description_3line ?? ''}
+                    onChange={e => update('description_3line', e.target.value)}
+                    placeholder={'Line 1: What the course covers.\nLine 2: What students will be able to do.\nLine 3: Certificate + key benefit.'}
+                    rows={3}
+                    style={{ ...inputStyle, resize: 'vertical', fontFamily: 'inherit', lineHeight: '1.65', width: '100%' }}
+                  />
+                </div>
                 <div>
                   <label style={{ fontSize: '12px', fontWeight: '600', color: '#475569', display: 'block', marginBottom: '5px' }}>Mode</label>
                   <select value={form.mode} onChange={e => update('mode', e.target.value)} style={{ ...inputStyle }}>
