@@ -123,11 +123,22 @@ const defaultLinks = [
   })
 
   // ── AUTH SESSION — show user menu when logged in ──────────
+  // Uses same default storage key as src/lib/supabase.ts (no custom storageKey)
+  // so the session written at login is visible here.
   ;(async () => {
+  // Poll for __SB_URL in case script runs before define:vars fires
+  let _n = 0
+  await new Promise<void>(resolve => {
+    const _t = setInterval(() => {
+      _n++
+      if ((window as any).__SB_URL || _n > 40) { clearInterval(_t); resolve() }
+    }, 50)
+  })
   const url2 = (window as any).__SB_URL
   const key2 = (window as any).__SB_KEY
   if (url2 && key2) {
-    const sb2 = createClient(url2, key2, { auth: { storageKey: 'atec-auth', autoRefreshToken: true, persistSession: true } })
+    // NO storageKey override — must match the default used by supabase.ts
+    const sb2 = createClient(url2, key2, { auth: { autoRefreshToken: true, persistSession: true } })
 
     function updateNavAuth(user: any) {
       const loginBtn   = document.getElementById('nav-login-btn') as HTMLElement
