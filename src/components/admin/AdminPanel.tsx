@@ -45,7 +45,7 @@ interface BlogPost {
   thumbnail_url: string; author: string; is_published: boolean; published_at: string
 }
 interface YoutubeVideo {
-  id: string; title: string; youtube_id: string; category: string
+  id: string; title: string; video_id: string; category: string
   is_active: boolean; sort_order: number
 }
 interface PodcastEpisode {
@@ -938,7 +938,7 @@ function YoutubeTab() {
   const [editId, setEditId] = useState<string|null>(null)
   const [showForm, setShowForm] = useState(false)
   const [msg, setMsg]       = useState('')
-  const empty = { title:'', youtube_id:'', category:'', is_active:true, sort_order:0 }
+  const empty = { title:'', video_id:'', category:'', is_active:true, sort_order:0 }
   const [form, setForm]     = useState<Omit<YoutubeVideo,'id'>>(empty)
   const f = (k: keyof typeof form, v: any) => setForm(p => ({ ...p, [k]: v }))
 
@@ -957,14 +957,14 @@ function YoutubeTab() {
 
   function startAdd() { setForm(empty); setEditId(null); setShowForm(true); setMsg('') }
   function startEdit(item: YoutubeVideo) {
-    setForm({ title:item.title, youtube_id:item.youtube_id, category:item.category, is_active:item.is_active, sort_order:item.sort_order })
+    setForm({ title:item.title, video_id:item.video_id, category:item.category, is_active:item.is_active, sort_order:item.sort_order })
     setEditId(item.id); setShowForm(true); setMsg('')
   }
 
   async function save() {
     setSaving(true); setMsg('')
     try {
-      const data = { ...form, youtube_id: extractYTId(form.youtube_id) }
+      const data = { ...form, video_id: extractYTId(form.video_id) }
       if (editId) {
         const { error } = await supabase.from('youtube_videos').update(data).eq('id', editId)
         if (error) throw error
@@ -993,8 +993,8 @@ function YoutubeTab() {
       {showForm && (
         <FormPanel title={editId ? 'Edit Video' : 'Add Video'} onClose={()=>setShowForm(false)} onSave={save} saving={saving} msg={msg}>
           <Input label="Title *" value={form.title} onChange={(v:string)=>f('title',v)} placeholder="How to install Windows 11" />
-          <Input label="YouTube URL or Video ID" value={form.youtube_id} onChange={(v:string)=>f('youtube_id',v)} placeholder="https://youtu.be/... or dQw4w9WgXcQ" />
-          {form.youtube_id && <img src={`https://img.youtube.com/vi/${extractYTId(form.youtube_id)}/mqdefault.jpg`} alt="thumbnail" style={{ width:200, height:112, objectFit:'cover', borderRadius:8, marginBottom:16 }} />}
+          <Input label="YouTube URL or Video ID" value={form.video_id} onChange={(v:string)=>f('video_id',v)} placeholder="https://youtu.be/... or dQw4w9WgXcQ" />
+          {form.video_id && <img src={`https://img.youtube.com/vi/${extractYTId(form.video_id)}/mqdefault.jpg`} alt="thumbnail" style={{ width:200, height:112, objectFit:'cover', borderRadius:8, marginBottom:16 }} />}
           <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16 }}>
             <Input label="Category" value={form.category} onChange={(v:string)=>f('category',v)} placeholder="tutorial, hardware, mern…" />
             <Input label="Sort Order" type="number" value={form.sort_order} onChange={(v:string)=>f('sort_order',parseInt(v)||0)} />
@@ -1010,7 +1010,7 @@ function YoutubeTab() {
         <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(240px,1fr))', gap:16 }}>
           {list.map(item => (
             <div key={item.id} style={{ background:'#fff', borderRadius:12, overflow:'hidden', border:'1px solid #e2e8f0', opacity: item.is_active ? 1 : 0.5 }}>
-              <img src={`https://img.youtube.com/vi/${item.youtube_id}/mqdefault.jpg`} alt="" style={{ width:'100%', height:135, objectFit:'cover' }} />
+              <img src={`https://img.youtube.com/vi/${item.video_id}/mqdefault.jpg`} alt="" style={{ width:'100%', height:135, objectFit:'cover' }} />
               <div style={{ padding:12 }}>
                 <p style={{ margin:'0 0 4px', fontWeight:600, fontSize:14 }}>{item.title}</p>
                 {item.category && <p style={{ margin:'0 0 10px', fontSize:12, color:'#94a3b8' }}>{item.category}</p>}
