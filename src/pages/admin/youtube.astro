@@ -14,13 +14,13 @@ import { createRoot } from 'react-dom/client'
 const supabase = createClient(window.__SB_URL, window.__SB_KEY)
 
 interface Video {
-  id: string; video_id: string; title: string; description: string | null
+  id: string; youtube_id: string; title: string; description: string | null
   category: string; is_active: boolean; is_featured: boolean
   duration: string | null; view_count: string | null; sort_order: number
   thumbnail_url: string | null
 }
 
-const EMPTY = { video_id: '', title: '', description: '', category: 'general', duration: '', view_count: '', is_active: true, is_featured: false, sort_order: 0, thumbnail_url: '' }
+const EMPTY = { youtube_id: '', title: '', description: '', category: 'general', duration: '', view_count: '', is_active: true, is_featured: false, sort_order: 0, thumbnail_url: '' }
 
 function YTManager() {
   const [videos, setVideos] = useState<Video[]>([])
@@ -44,7 +44,7 @@ function YTManager() {
   async function save() {
     setSaving(true)
     const payload = { ...form, sort_order: parseInt(String(form.sort_order)) || 0,
-      thumbnail_url: form.thumbnail_url || `https://img.youtube.com/vi/${form.video_id}/hqdefault.jpg`
+      thumbnail_url: form.thumbnail_url || `https://img.youtube.com/vi/${form.youtube_id}/hqdefault.jpg`
     }
     if (editId) await supabase.from('youtube_videos').update(payload).eq('id', editId)
     else await supabase.from('youtube_videos').insert(payload)
@@ -78,7 +78,7 @@ function YTManager() {
       ),
       h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' } },
         ...[
-          { label: 'YouTube Video ID *', field: 'video_id', placeholder: 'e.g. dQw4w9WgXcQ' },
+          { label: 'YouTube Video ID *', field: 'youtube_id', placeholder: 'e.g. dQw4w9WgXcQ' },
           { label: 'Category', field: 'category' },
           { label: 'Title *', field: 'title', span: 2 },
           { label: 'Description', field: 'description', span: 2 },
@@ -101,9 +101,9 @@ function YTManager() {
             lbl(label)
           )
         ),
-        form.video_id && h('div', { style: { gridColumn: '1 / -1' } },
+        form.youtube_id && h('div', { style: { gridColumn: '1 / -1' } },
           lbl('Preview'),
-          h('img', { src: `https://img.youtube.com/vi/${form.video_id}/hqdefault.jpg`, alt: 'Thumbnail preview', style: { width: '200px', borderRadius: '8px', border: '1px solid #e2e8f0' } })
+          h('img', { src: `https://img.youtube.com/vi/${form.youtube_id}/hqdefault.jpg`, alt: 'Thumbnail preview', style: { width: '200px', borderRadius: '8px', border: '1px solid #e2e8f0' } })
         )
       ),
       h('div', { style: { display: 'flex', gap: '10px', marginTop: '20px' } },
@@ -122,7 +122,7 @@ function YTManager() {
           : videos.map((v: Video) =>
               h('div', { key: v.id, style: { background: '#fff', borderRadius: '12px', border: '1px solid #e2e8f0', overflow: 'hidden' } },
                 h('div', { style: { position: 'relative' } },
-                  h('img', { src: v.thumbnail_url || `https://img.youtube.com/vi/${v.video_id}/hqdefault.jpg`, alt: v.title, style: { width: '100%', height: '160px', objectFit: 'cover' } }),
+                  h('img', { src: v.thumbnail_url || `https://img.youtube.com/vi/${v.youtube_id}/hqdefault.jpg`, alt: v.title, style: { width: '100%', height: '160px', objectFit: 'cover' } }),
                   h('div', { style: { position: 'absolute', top: '8px', right: '8px', display: 'flex', gap: '4px' } },
                     v.is_featured && h('span', { style: { background: '#d4f01a', color: '#0f2347', fontSize: '10px', fontWeight: '700', padding: '2px 7px', borderRadius: '4px' } }, '⭐ Featured'),
                     h('span', { style: { background: v.is_active ? '#dcfce7' : '#fee2e2', color: v.is_active ? '#166534' : '#991b1b', fontSize: '10px', fontWeight: '700', padding: '2px 7px', borderRadius: '4px' } }, v.is_active ? 'Active' : 'Hidden')
@@ -130,12 +130,12 @@ function YTManager() {
                 ),
                 h('div', { style: { padding: '14px' } },
                   h('p', { style: { fontWeight: '700', fontSize: '13px', marginBottom: '4px', lineHeight: '1.3' } }, v.title),
-                  h('p', { style: { fontSize: '11px', color: '#94a3b8', marginBottom: '10px' } }, `ID: ${v.video_id}`),
+                  h('p', { style: { fontSize: '11px', color: '#94a3b8', marginBottom: '10px' } }, `ID: ${v.youtube_id}`),
                   h('div', { style: { display: 'flex', gap: '6px', flexWrap: 'wrap' } },
                     h('button', { onClick: () => openEdit(v), style: { padding: '5px 10px', background: '#eff6ff', color: '#1c3d7a', border: 'none', borderRadius: '6px', fontSize: '11px', fontWeight: '600', cursor: 'pointer' } }, '✏️ Edit'),
                     h('button', { onClick: () => toggle(v.id, 'is_active', v.is_active), style: { padding: '5px 10px', background: v.is_active ? '#fee2e2' : '#dcfce7', color: v.is_active ? '#991b1b' : '#166534', border: 'none', borderRadius: '6px', fontSize: '11px', fontWeight: '600', cursor: 'pointer' } }, v.is_active ? 'Hide' : 'Show'),
                     h('button', { onClick: () => toggle(v.id, 'is_featured', v.is_featured), style: { padding: '5px 10px', background: v.is_featured ? '#fef9c3' : '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '6px', fontSize: '11px', cursor: 'pointer' } }, v.is_featured ? '★ Unfeature' : '☆ Feature'),
-                    h('a', { href: `https://youtube.com/watch?v=${v.video_id}`, target: '_blank', rel: 'noopener', style: { padding: '5px 10px', background: '#f8fafc', color: '#64748b', border: '1px solid #e2e8f0', borderRadius: '6px', fontSize: '11px', fontWeight: '600', textDecoration: 'none', display: 'inline-block' } }, '▶ Watch')
+                    h('a', { href: `https://youtube.com/watch?v=${v.youtube_id}`, target: '_blank', rel: 'noopener', style: { padding: '5px 10px', background: '#f8fafc', color: '#64748b', border: '1px solid #e2e8f0', borderRadius: '6px', fontSize: '11px', fontWeight: '600', textDecoration: 'none', display: 'inline-block' } }, '▶ Watch')
                   )
                 )
               )

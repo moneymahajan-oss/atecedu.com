@@ -1240,7 +1240,7 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
       grid.innerHTML = ''
 
       rows.forEach((v: any) => {
-        const videoId = v.video_id || ''
+        const videoId = v.youtube_id || v.video_id || ''
         const thumb   = v.thumbnail_url || (videoId ? ytThumb(videoId) : '')
         const card    = document.createElement('a')
         card.href     = videoId ? `https://www.youtube.com/watch?v=${videoId}` : '#'
