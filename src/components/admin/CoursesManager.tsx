@@ -63,7 +63,23 @@ const EMPTY_LESSON = {
   pdf_url: '', is_active: true,
 }
 
-type MainTab = 'courses' | 'lessons'
+type MainTab = 'courses' | 'lessons' | 'categories'
+
+interface CatStyle {
+  key: string       // matches course.category value e.g. "AI"
+  label: string     // display name e.g. "AI & Machine Learning"
+  color: string     // heading color e.g. "#7c3aed"
+  bg_color: string  // row background e.g. "#f5f3ff"
+}
+
+const DEFAULT_CAT_STYLES: CatStyle[] = [
+  { key: 'AI',          label: 'AI & Machine Learning',   color: '#7c3aed', bg_color: '#f5f3ff' },
+  { key: 'web',         label: 'Web & Full-Stack',         color: '#0f2a5c', bg_color: '#eff6ff' },
+  { key: 'accounting',  label: 'Commerce & Accounting',    color: '#065f46', bg_color: '#ecfdf5' },
+  { key: 'hardware',    label: 'Hardware & Networking',    color: '#be123c', bg_color: '#fff1f2' },
+  { key: 'design',      label: 'Design & Multimedia',      color: '#b45309', bg_color: '#fffbeb' },
+  { key: 'linux',       label: 'Linux & Cybersecurity',    color: '#0891b2', bg_color: '#ecfeff' },
+]
 
 export default function CoursesManager() {
   const [mainTab, setMainTab] = useState<MainTab>('courses')
@@ -92,7 +108,26 @@ export default function CoursesManager() {
   const [newChapterTitle, setNewChapterTitle] = useState('')
   const [addingChapter, setAddingChapter] = useState(false)
 
-  useEffect(() => { loadCourses() }, [])
+  // ── Category Styles tab state ────────────────────────────
+  const [catStyles, setCatStyles] = useState<CatStyle[]>(DEFAULT_CAT_STYLES)
+  const [catStylesSaving, setCatStylesSaving] = useState(false)
+  const [catStylesSaved, setCatStylesSaved] = useState(false)
+  const [globalCardColors, setGlobalCardColors] = useState({
+    card_bg_color: '#0b1525',
+    card_body_bg: '#ffffff',
+    card_title_color: '#1c1c1c',
+    card_desc_color: '#475569',
+    card_fee_color: '#0b1525',
+    btn1_bg: '#ea580c',
+    btn1_color: '#ffffff',
+    btn2_bg: '#0b1525',
+    btn2_color: '#ffffff',
+    show_fee: true,
+    section_title: 'Courses by Category',
+    section_sub: 'What We Offer',
+  })
+
+  useEffect(() => { loadCourses(); loadCatStyles() }, [])
 
   // ════════════════════════════════════════════════════════
   // COURSES FUNCTIONS
@@ -199,6 +234,86 @@ export default function CoursesManager() {
   async function toggleFeatured(id: string, current: boolean) {
     await supabase.from('courses').update({ is_featured: !current }).eq('id', id)
     setCourses(prev => prev.map(c => c.id === id ? { ...c, is_featured: !current } : c))
+  }
+
+  // ════════════════════════════════════════════════════════
+  // CATEGORY STYLES FUNCTIONS
+  // ════════════════════════════════════════════════════════
+
+  async function loadCatStyles() {
+    const { data } = await supabase
+      .from('site_settings')
+      .select('value')
+      .eq('key', 'course_categories')
+      .single()
+    if (data?.value) {
+      // Load global card colors
+      setGlobalCardColors(prev => ({
+        ...prev,
+        card_bg_color:    data.value.card_bg_color    || prev.card_bg_color,
+        card_body_bg:     data.value.card_body_bg     || prev.card_body_bg,
+        card_title_color: data.value.card_title_color || prev.card_title_color,
+        card_desc_color:  data.value.card_desc_color  || prev.card_desc_color,
+        card_fee_color:   data.value.card_fee_color   || prev.card_fee_color,
+        btn1_bg:          data.value.btn1_bg          || prev.btn1_bg,
+        btn1_color:       data.value.btn1_color       || prev.btn1_color,
+        btn2_bg:          data.value.btn2_bg          || prev.btn2_bg,
+        btn2_color:       data.value.btn2_color       || prev.btn2_color,
+        show_fee:         data.value.show_fee !== false,
+        section_title:    data.value.section_title    || prev.section_title,
+        section_sub:      data.value.section_sub      || prev.section_sub,
+      }))
+      // Load category styles from existing categories if present
+      if (data.value.categories?.length) {
+        const mapped: CatStyle[] = data.value.categories.map((c: any) => ({
+          key:      c.category_key || c.name?.toLowerCase().replace(/[^a-z0-9]+/g, '') || '',
+          label:    c.name || '',
+          color:    c.color || '#0b1525',
+          bg_color: c.bg_color || '#f8fafc',
+        }))
+        if (mapped.length) setCatStyles(mapped)
+      }
+      // Also load from category_styles key if it exists (new format)
+      const { data: csData } = await supabase.from('site_settings').select('value').eq('key','category_styles').single()
+      if (csData?.value?.styles?.length) setCatStyles(csData.value.styles)
+    }
+  }
+
+  async function saveCatStyles() {
+    setCatStylesSaving(true)
+    try {
+      // 1. Save category styles (new single-source key)
+      const stylesPayload = { styles: catStyles }
+      await supabase.from('site_settings').upsert(
+        { key: 'category_styles', value: stylesPayload },
+        { onConflict: 'key' }
+      )
+      // 2. Update course_categories to preserve card colors + use new categories format
+      const { data: existing } = await supabase.from('site_settings').select('value').eq('key','course_categories').single()
+      const base = existing?.value || {}
+      const updatedPayload = {
+        ...base,
+        ...globalCardColors,
+        // Convert catStyles to the format index.astro expects
+        categories: catStyles.map(cs => ({
+          category_key: cs.key,
+          name: cs.label,
+          color: cs.color,
+          bg_color: cs.bg_color,
+          courses: [],  // courses are now read live from the courses table
+        })),
+      }
+      await supabase.from('site_settings').upsert(
+        { key: 'course_categories', value: updatedPayload },
+        { onConflict: 'key' }
+      )
+      setCatStylesSaved(true)
+      setTimeout(() => setCatStylesSaved(false), 2500)
+    } catch(e) {
+      alert('Save failed: ' + String(e))
+    } finally {
+      setCatStylesSaving(false)
+    }
   }
 
   // ════════════════════════════════════════════════════════
@@ -354,7 +469,7 @@ export default function CoursesManager() {
 
       {/* Main tabs */}
       <div style={{ display: 'flex', gap: '4px', background: '#f1f5f9', padding: '4px', borderRadius: '10px', width: 'fit-content' }}>
-        {(['courses', 'lessons'] as MainTab[]).map(tab => (
+        {(['courses', 'categories', 'lessons'] as MainTab[]).map(tab => (
           <button key={tab} onClick={() => setMainTab(tab)} style={{
             padding: '8px 20px', borderRadius: '7px', border: 'none', cursor: 'pointer',
             background: mainTab === tab ? '#fff' : 'transparent',
@@ -363,7 +478,7 @@ export default function CoursesManager() {
             fontSize: '13px',
             boxShadow: mainTab === tab ? '0 1px 4px rgba(0,0,0,0.1)' : 'none',
           }}>
-            {tab === 'courses' ? '📚 Courses' : '🎬 Lessons'}
+            {tab === 'courses' ? '📚 Courses' : tab === 'categories' ? '🎨 Category Styles' : '🎬 Lessons'}
           </button>
         ))}
       </div>
@@ -673,6 +788,149 @@ export default function CoursesManager() {
             )}
           </div>
         </>
+      )}
+
+      {/* ════════════ CATEGORY STYLES TAB ════════════ */}
+      {mainTab === 'categories' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          {/* Info banner */}
+          <div style={{ background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '12px', padding: '14px 18px', display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
+            <span style={{ fontSize: '20px', flexShrink: 0 }}>💡</span>
+            <div>
+              <div style={{ fontWeight: '700', fontSize: '13px', color: '#1e40af', marginBottom: '4px' }}>How this works</div>
+              <div style={{ fontSize: '12px', color: '#3b82f6', lineHeight: '1.6' }}>
+                The <strong>Homepage Course Cards</strong> section now reads directly from the <strong>Courses</strong> tab above.
+                Set each course's <strong>Category</strong> field (e.g. <code>AI</code>, <code>web</code>, <code>hardware</code>) in the course form.
+                Then configure how each category looks here — display name, heading color, row background.
+              </div>
+            </div>
+          </div>
+
+          {/* Global section settings */}
+          <div style={{ background: '#fff', borderRadius: '14px', border: '1px solid #e2e8f0', padding: '22px' }}>
+            <div style={{ fontFamily: 'Sora, sans-serif', fontWeight: '700', fontSize: '14px', color: '#1e293b', marginBottom: '16px' }}>🏷️ Section Header</div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+              {[
+                { label: 'Section Title', field: 'section_title', placeholder: 'Courses by Category' },
+                { label: 'Label Above Title', field: 'section_sub', placeholder: 'What We Offer' },
+              ].map(f => (
+                <div key={f.field}>
+                  <label style={{ fontSize: '12px', fontWeight: '600', color: '#475569', display: 'block', marginBottom: '5px' }}>{f.label}</label>
+                  <input type="text" value={(globalCardColors as any)[f.field] ?? ''} placeholder={f.placeholder}
+                    onChange={e => setGlobalCardColors(p => ({ ...p, [f.field]: e.target.value }))}
+                    style={inputStyle} />
+                </div>
+              ))}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <input type="checkbox" checked={globalCardColors.show_fee}
+                  onChange={e => setGlobalCardColors(p => ({ ...p, show_fee: e.target.checked }))}
+                  style={{ width: '16px', height: '16px', accentColor: '#1c3d7a' }} />
+                <label style={{ fontSize: '13px', fontWeight: '500', color: '#374151' }}>Show ₹ price on cards</label>
+              </div>
+            </div>
+          </div>
+
+          {/* Global card colors */}
+          <div style={{ background: '#fff', borderRadius: '14px', border: '1px solid #e2e8f0', padding: '22px' }}>
+            <div style={{ fontFamily: 'Sora, sans-serif', fontWeight: '700', fontSize: '14px', color: '#1e293b', marginBottom: '16px' }}>🎨 Global Card Color Scheme</div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+              {[
+                { label: 'Thumbnail BG Color', field: 'card_bg_color' },
+                { label: 'Card Body Background', field: 'card_body_bg' },
+                { label: 'Course Title Color', field: 'card_title_color' },
+                { label: 'Description Color', field: 'card_desc_color' },
+                { label: 'Price Color', field: 'card_fee_color' },
+                { label: 'Enquire Button BG', field: 'btn1_bg' },
+                { label: 'Enquire Button Text', field: 'btn1_color' },
+                { label: 'Syllabus Button BG', field: 'btn2_bg' },
+                { label: 'Syllabus Button Text', field: 'btn2_color' },
+              ].map(f => (
+                <div key={f.field} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: (globalCardColors as any)[f.field] || '#fff', border: '2px solid #e2e8f0', flexShrink: 0 }} />
+                  <div style={{ flex: 1 }}>
+                    <label style={{ fontSize: '12px', fontWeight: '600', color: '#475569', display: 'block', marginBottom: '4px' }}>{f.label}</label>
+                    <input type="text" value={(globalCardColors as any)[f.field] ?? ''}
+                      onChange={e => setGlobalCardColors(p => ({ ...p, [f.field]: e.target.value }))}
+                      style={{ ...inputStyle, fontFamily: 'monospace', fontSize: '12px' }}
+                      placeholder="#0b1525" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Per-category styles */}
+          <div style={{ background: '#fff', borderRadius: '14px', border: '1px solid #e2e8f0', padding: '22px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+              <div style={{ fontFamily: 'Sora, sans-serif', fontWeight: '700', fontSize: '14px', color: '#1e293b' }}>📂 Category Display Settings</div>
+              <button onClick={() => setCatStyles(p => [...p, { key: '', label: '', color: '#0b1525', bg_color: '#f8fafc' }])}
+                style={{ padding: '7px 16px', background: '#0b1525', color: '#d4f01a', border: 'none', borderRadius: '8px', fontSize: '12px', fontWeight: '700', cursor: 'pointer' }}>
+                + Add Category
+              </button>
+            </div>
+            <div style={{ fontSize: '12px', color: '#94a3b8', marginBottom: '16px', background: '#f8fafc', borderRadius: '8px', padding: '10px 14px', lineHeight: '1.6' }}>
+              The <strong>Category Key</strong> must exactly match what you type in the <em>Category</em> field of each course (case-sensitive).
+              Example: if courses have <code>category = "AI"</code>, set the key to <code>AI</code> here.
+            </div>
+            {catStyles.map((cs, i) => (
+              <div key={i} style={{ border: '1px solid #e2e8f0', borderRadius: '12px', padding: '16px', marginBottom: '10px', background: cs.bg_color || '#fafbfc' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 100px 100px auto', gap: '12px', alignItems: 'end' }}>
+                  <div>
+                    <label style={{ fontSize: '11px', fontWeight: '700', color: '#475569', display: 'block', marginBottom: '4px', textTransform: 'uppercase' }}>Category Key (matches course field)</label>
+                    <input type="text" value={cs.key} placeholder="e.g. AI, web, hardware"
+                      onChange={e => setCatStyles(p => p.map((x, j) => j === i ? { ...x, key: e.target.value } : x))}
+                      style={{ ...inputStyle, fontFamily: 'monospace', fontSize: '12px' }} />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: '11px', fontWeight: '700', color: '#475569', display: 'block', marginBottom: '4px', textTransform: 'uppercase' }}>Display Name</label>
+                    <input type="text" value={cs.label} placeholder="e.g. AI & Machine Learning"
+                      onChange={e => setCatStyles(p => p.map((x, j) => j === i ? { ...x, label: e.target.value } : x))}
+                      style={inputStyle} />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: '11px', fontWeight: '700', color: '#475569', display: 'block', marginBottom: '4px', textTransform: 'uppercase' }}>Heading Color</label>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <div style={{ width: '28px', height: '28px', borderRadius: '6px', background: cs.color || '#0b1525', border: '2px solid #e2e8f0', flexShrink: 0 }} />
+                      <input type="text" value={cs.color} placeholder="#7c3aed"
+                        onChange={e => setCatStyles(p => p.map((x, j) => j === i ? { ...x, color: e.target.value } : x))}
+                        style={{ ...inputStyle, fontFamily: 'monospace', fontSize: '12px' }} />
+                    </div>
+                  </div>
+                  <div>
+                    <label style={{ fontSize: '11px', fontWeight: '700', color: '#475569', display: 'block', marginBottom: '4px', textTransform: 'uppercase' }}>Row Background</label>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <div style={{ width: '28px', height: '28px', borderRadius: '6px', background: cs.bg_color || '#fff', border: '2px solid #e2e8f0', flexShrink: 0 }} />
+                      <input type="text" value={cs.bg_color} placeholder="#f5f3ff"
+                        onChange={e => setCatStyles(p => p.map((x, j) => j === i ? { ...x, bg_color: e.target.value } : x))}
+                        style={{ ...inputStyle, fontFamily: 'monospace', fontSize: '12px' }} />
+                    </div>
+                  </div>
+                  <button onClick={() => setCatStyles(p => p.filter((_, j) => j !== i))}
+                    style={{ padding: '7px 10px', background: '#fee2e2', border: 'none', borderRadius: '8px', color: '#dc2626', fontSize: '12px', cursor: 'pointer', alignSelf: 'flex-end' }}>
+                    🗑
+                  </button>
+                </div>
+              </div>
+            ))}
+            {catStyles.length === 0 && (
+              <div style={{ padding: '24px', textAlign: 'center', color: '#94a3b8', fontSize: '13px', border: '1px dashed #e2e8f0', borderRadius: '10px' }}>
+                No categories yet. Click "+ Add Category" above.
+              </div>
+            )}
+          </div>
+
+          {/* Save button */}
+          <button onClick={saveCatStyles} disabled={catStylesSaving}
+            style={{ padding: '13px', background: catStylesSaved ? '#166534' : catStylesSaving ? '#94a3b8' : '#1c3d7a', color: '#fff', border: 'none', borderRadius: '12px', fontWeight: '700', fontSize: '14px', cursor: catStylesSaving ? 'not-allowed' : 'pointer' }}>
+            {catStylesSaved ? '✅ Saved! Reload homepage to see.' : catStylesSaving ? 'Saving...' : '💾 Save Category Styles'}
+          </button>
+
+          {/* Link to courses manager */}
+          <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '12px', padding: '16px 20px', fontSize: '13px', color: '#166534' }}>
+            <strong>To add/edit courses:</strong> Switch to the <button onClick={() => setMainTab('courses')} style={{ background: 'none', border: 'none', color: '#166534', fontWeight: '700', textDecoration: 'underline', cursor: 'pointer', padding: '0', fontSize: '13px' }}>📚 Courses tab</button> above.
+            Set each course's <strong>Category</strong> field to match a Key above (e.g. <code>AI</code>). The public homepage will show those courses under that category row automatically.
+          </div>
+        </div>
       )}
 
       {/* ════════════ LESSONS TAB ════════════ */}

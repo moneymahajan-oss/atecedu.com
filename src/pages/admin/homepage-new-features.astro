@@ -66,24 +66,6 @@ import AdminLayout from '../../layouts/AdminLayout.astro'
   .why-card-num { width:26px; height:26px; border-radius:7px; background:#0b1a2e; color:#d4f01a; font-size:10px; font-weight:900; display:flex; align-items:center; justify-content:center; font-family:'Sora',sans-serif }
   .why-card-label { font-size:12px; font-weight:700; color:#0b1a2e }
 
-  /* Color swatch row */
-  .swatch-row { display:flex; align-items:center; gap:6px }
-  .swatch-row input[type=text] { width:88px; font-family:monospace; font-size:12px; padding:5px 8px }
-  .swatches { display:flex; gap:3px; flex-wrap:wrap }
-  .sw { width:20px; height:20px; border-radius:4px; border:1.5px solid #e2e8f0; cursor:pointer; flex-shrink:0 }
-  .sw:hover { transform:scale(1.2); border-color:#64748b }
-
-  /* Color scheme mini-card */
-  .color-group { background:#f8fafc; border:1px solid #e8edf2; border-radius:10px; padding:14px; margin-bottom:10px }
-  .color-group-title { font-size:11px; font-weight:700; color:#64748b; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:10px; padding-bottom:8px; border-bottom:1px solid #e8edf2 }
-  .color-field { display:flex; align-items:center; gap:8px; margin-bottom:8px }
-  .color-dot { width:26px; height:26px; border-radius:6px; border:1.5px solid #e2e8f0; flex-shrink:0 }
-  .color-label { font-size:12px; font-weight:600; color:#374151; width:110px; flex-shrink:0 }
-
-  /* Cat course table row */
-  .course-inp { padding:5px 8px; border:1px solid #e2e8f0; border-radius:5px; font-size:12px; outline:none; background:transparent; width:100%; box-sizing:border-box }
-  .course-inp:focus { border-color:#0b1a2e; background:#fff }
-
   /* Buttons */
   .save-btn { display:inline-flex; align-items:center; gap:7px; background:#0b1a2e; color:#d4f01a; border:none; border-radius:9px; padding:10px 20px; font-size:13px; font-weight:800; cursor:pointer; font-family:'Inter',sans-serif; transition:background 0.15s }
   .save-btn:hover { background:#1a3460 }
@@ -106,13 +88,17 @@ import AdminLayout from '../../layouts/AdminLayout.astro'
   .color-row input[type=color] { width:32px; height:28px; border:1px solid #e2e8f0; border-radius:6px; cursor:pointer; padding:2px; flex-shrink:0 }
   .color-row input[type=text] { width:88px; font-family:monospace; font-size:12px }
 
-  /* Panel with live preview card */
-  .preview-card { width:200px; border-radius:10px; overflow:hidden; border:1px solid #e2e8f0; box-shadow:0 2px 10px rgba(0,0,0,0.08); flex-shrink:0 }
+  /* tip text */
+  .tip { font-size:11px; color:#94a3b8; display:block; margin-top:3px }
+
+  /* field row */
+  .field-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px }
+  .field-row.three { grid-template-columns:80px 1fr 2fr }
 </style>
 
 <div class="wrap">
-  <h1 class="pg-title">🎠 Slider · Cards · Popup</h1>
-  <p class="pg-sub">Hero slider, Why ATEC cards, Course card colors, Query popup — all save live, no rebuild needed.</p>
+  <h1 class="pg-title">🎠 Slider · Why ATEC · Popup</h1>
+  <p class="pg-sub">Hero slider, Why ATEC cards, Query popup — all save live, no rebuild needed.</p>
 
   <div class="tabs">
     <button class="tab active" data-tab="slider"     onclick="switchTab('slider')">🎠 Hero Slider</button>
@@ -161,115 +147,27 @@ import AdminLayout from '../../layouts/AdminLayout.astro'
     </div>
   </div>
 
-  <!-- ══════════ COURSE CARDS ══════════ -->
+  <!-- ══════════ COURSE CARDS (MOVED) ══════════ -->
   <div id="tab-categories" style="display:none">
     <div class="panel">
-      <div class="panel-head">
-        <div>
-          <div class="panel-title">📚 Course Category Cards</div>
-          <div class="panel-desc">Category rows with course cards. Edit colors, then add/edit courses per category.</div>
-        </div>
-        <button class="save-btn" id="cat-save-btn">💾 Save All</button>
-      </div>
-
-      <!-- Section header fields -->
-      <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:12px;align-items:end;margin-bottom:16px;">
-        <div class="field"><label class="lbl">Section Title</label><input type="text" id="cat-section-title" value="Courses by Category"></div>
-        <div class="field"><label class="lbl">Label Above Title</label><input type="text" id="cat-section-sub" value="What We Offer"></div>
-        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;font-weight:600;color:#374151;padding-bottom:2px;">
-          <input type="checkbox" id="cat-show-fee" checked style="width:15px;height:15px;accent-color:#0b1a2e;"> Show ₹ price
-        </label>
-      </div>
-
-      <!-- Card color scheme — compact -->
-      <div class="color-group">
-        <div class="color-group-title">🎨 Card Color Scheme</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
-          <!-- Left: backgrounds + text -->
-          <div>
-            <div style="font-size:11px;font-weight:700;color:#94a3b8;margin-bottom:8px;">Backgrounds</div>
-            <div class="color-field">
-              <div class="color-dot" id="card-bg-color-preview" style="background:#0b1525"></div>
-              <div class="color-label">Thumbnail BG</div>
-              <input type="text" id="card-bg-color" value="#0b1525" maxlength="9" style="font-family:monospace;font-size:12px;width:80px;padding:5px 8px;" oninput="setColor('card-bg-color',this.value)">
-              <div class="swatches"><button type="button" class="sw" style="background:#0b1525" onmousedown="event.preventDefault()" onclick="setColor('card-bg-color','#0b1525')" title="#0b1525"></button><button type="button" class="sw" style="background:#111827" onmousedown="event.preventDefault()" onclick="setColor('card-bg-color','#111827')" title="#111827"></button><button type="button" class="sw" style="background:#1e293b" onmousedown="event.preventDefault()" onclick="setColor('card-bg-color','#1e293b')" title="#1e293b"></button><button type="button" class="sw" style="background:#1a1a2e" onmousedown="event.preventDefault()" onclick="setColor('card-bg-color','#1a1a2e')" title="#1a1a2e"></button><button type="button" class="sw" style="background:#374151" onmousedown="event.preventDefault()" onclick="setColor('card-bg-color','#374151')" title="#374151"></button><button type="button" class="sw" style="background:#0f172a" onmousedown="event.preventDefault()" onclick="setColor('card-bg-color','#0f172a')" title="#0f172a"></button><button type="button" class="sw" style="background:#1c1c1c" onmousedown="event.preventDefault()" onclick="setColor('card-bg-color','#1c1c1c')" title="#1c1c1c"></button><button type="button" class="sw" style="background:#000" onmousedown="event.preventDefault()" onclick="setColor('card-bg-color','#000')" title="#000"></button></div>
-            </div>
-            <div class="color-field">
-              <div class="color-dot" id="card-body-bg-preview" style="background:#fff"></div>
-              <div class="color-label">Card Body BG</div>
-              <input type="text" id="card-body-bg" value="#ffffff" maxlength="9" style="font-family:monospace;font-size:12px;width:80px;padding:5px 8px;" oninput="setColor('card-body-bg',this.value)">
-              <div class="swatches"><button type="button" class="sw" style="background:#ffffff" onmousedown="event.preventDefault()" onclick="setColor('card-body-bg','#ffffff')" title="#ffffff"></button><button type="button" class="sw" style="background:#f9fafb" onmousedown="event.preventDefault()" onclick="setColor('card-body-bg','#f9fafb')" title="#f9fafb"></button><button type="button" class="sw" style="background:#f1f5f9" onmousedown="event.preventDefault()" onclick="setColor('card-body-bg','#f1f5f9')" title="#f1f5f9"></button><button type="button" class="sw" style="background:#fff7ed" onmousedown="event.preventDefault()" onclick="setColor('card-body-bg','#fff7ed')" title="#fff7ed"></button><button type="button" class="sw" style="background:#fef3c7" onmousedown="event.preventDefault()" onclick="setColor('card-body-bg','#fef3c7')" title="#fef3c7"></button><button type="button" class="sw" style="background:#f0fdf4" onmousedown="event.preventDefault()" onclick="setColor('card-body-bg','#f0fdf4')" title="#f0fdf4"></button><button type="button" class="sw" style="background:#eff6ff" onmousedown="event.preventDefault()" onclick="setColor('card-body-bg','#eff6ff')" title="#eff6ff"></button><button type="button" class="sw" style="background:#fdf4ff" onmousedown="event.preventDefault()" onclick="setColor('card-body-bg','#fdf4ff')" title="#fdf4ff"></button></div>
-            </div>
-            <div style="font-size:11px;font-weight:700;color:#94a3b8;margin:10px 0 8px;">Text Colors</div>
-            <div class="color-field">
-              <div class="color-dot" id="card-title-color-preview" style="background:#1c1c1c"></div>
-              <div class="color-label">Course Title</div>
-              <input type="text" id="card-title-color" value="#1c1c1c" maxlength="9" style="font-family:monospace;font-size:12px;width:80px;padding:5px 8px;" oninput="setColor('card-title-color',this.value)">
-              <div class="swatches"><button type="button" class="sw" style="background:#1c1c1c" onmousedown="event.preventDefault()" onclick="setColor('card-title-color','#1c1c1c')" title="#1c1c1c"></button><button type="button" class="sw" style="background:#111827" onmousedown="event.preventDefault()" onclick="setColor('card-title-color','#111827')" title="#111827"></button><button type="button" class="sw" style="background:#374151" onmousedown="event.preventDefault()" onclick="setColor('card-title-color','#374151')" title="#374151"></button><button type="button" class="sw" style="background:#475569" onmousedown="event.preventDefault()" onclick="setColor('card-title-color','#475569')" title="#475569"></button><button type="button" class="sw" style="background:#0b1525" onmousedown="event.preventDefault()" onclick="setColor('card-title-color','#0b1525')" title="#0b1525"></button><button type="button" class="sw" style="background:#ffffff" onmousedown="event.preventDefault()" onclick="setColor('card-title-color','#ffffff')" title="#ffffff"></button><button type="button" class="sw" style="background:#d4f01a" onmousedown="event.preventDefault()" onclick="setColor('card-title-color','#d4f01a')" title="#d4f01a"></button><button type="button" class="sw" style="background:#f59e0b" onmousedown="event.preventDefault()" onclick="setColor('card-title-color','#f59e0b')" title="#f59e0b"></button></div>
-            </div>
-            <div class="color-field">
-              <div class="color-dot" id="card-desc-color-preview" style="background:#475569"></div>
-              <div class="color-label">Description</div>
-              <input type="text" id="card-desc-color" value="#475569" maxlength="9" style="font-family:monospace;font-size:12px;width:80px;padding:5px 8px;" oninput="setColor('card-desc-color',this.value)">
-              <div class="swatches"><button type="button" class="sw" style="background:#1c1c1c" onmousedown="event.preventDefault()" onclick="setColor('card-desc-color','#1c1c1c')" title="#1c1c1c"></button><button type="button" class="sw" style="background:#111827" onmousedown="event.preventDefault()" onclick="setColor('card-desc-color','#111827')" title="#111827"></button><button type="button" class="sw" style="background:#374151" onmousedown="event.preventDefault()" onclick="setColor('card-desc-color','#374151')" title="#374151"></button><button type="button" class="sw" style="background:#475569" onmousedown="event.preventDefault()" onclick="setColor('card-desc-color','#475569')" title="#475569"></button><button type="button" class="sw" style="background:#0b1525" onmousedown="event.preventDefault()" onclick="setColor('card-desc-color','#0b1525')" title="#0b1525"></button><button type="button" class="sw" style="background:#ffffff" onmousedown="event.preventDefault()" onclick="setColor('card-desc-color','#ffffff')" title="#ffffff"></button><button type="button" class="sw" style="background:#d4f01a" onmousedown="event.preventDefault()" onclick="setColor('card-desc-color','#d4f01a')" title="#d4f01a"></button><button type="button" class="sw" style="background:#f59e0b" onmousedown="event.preventDefault()" onclick="setColor('card-desc-color','#f59e0b')" title="#f59e0b"></button></div>
-            </div>
-            <div class="color-field">
-              <div class="color-dot" id="card-fee-color-preview" style="background:#0b1525"></div>
-              <div class="color-label">Price</div>
-              <input type="text" id="card-fee-color" value="#0b1525" maxlength="9" style="font-family:monospace;font-size:12px;width:80px;padding:5px 8px;" oninput="setColor('card-fee-color',this.value)">
-              <div class="swatches"><button type="button" class="sw" style="background:#d4f01a" onmousedown="event.preventDefault()" onclick="setColor('card-fee-color','#d4f01a')" title="#d4f01a"></button><button type="button" class="sw" style="background:#ffffff" onmousedown="event.preventDefault()" onclick="setColor('card-fee-color','#ffffff')" title="#ffffff"></button><button type="button" class="sw" style="background:#f59e0b" onmousedown="event.preventDefault()" onclick="setColor('card-fee-color','#f59e0b')" title="#f59e0b"></button><button type="button" class="sw" style="background:#34d399" onmousedown="event.preventDefault()" onclick="setColor('card-fee-color','#34d399')" title="#34d399"></button><button type="button" class="sw" style="background:#60a5fa" onmousedown="event.preventDefault()" onclick="setColor('card-fee-color','#60a5fa')" title="#60a5fa"></button><button type="button" class="sw" style="background:#ea580c" onmousedown="event.preventDefault()" onclick="setColor('card-fee-color','#ea580c')" title="#ea580c"></button><button type="button" class="sw" style="background:#1c1c1c" onmousedown="event.preventDefault()" onclick="setColor('card-fee-color','#1c1c1c')" title="#1c1c1c"></button><button type="button" class="sw" style="background:#0b1525" onmousedown="event.preventDefault()" onclick="setColor('card-fee-color','#0b1525')" title="#0b1525"></button></div>
-            </div>
-          </div>
-          <!-- Right: button colors + live preview -->
-          <div>
-            <div style="font-size:11px;font-weight:700;color:#94a3b8;margin-bottom:8px;">Button Colors</div>
-            <div class="color-field">
-              <div class="color-dot" id="btn1-bg-preview" style="background:#ea580c"></div>
-              <div class="color-label">Enquire BG</div>
-              <input type="text" id="btn1-bg" value="#ea580c" maxlength="9" style="font-family:monospace;font-size:12px;width:80px;padding:5px 8px;" oninput="setColor('btn1-bg',this.value)">
-              <div class="swatches"><button type="button" class="sw" style="background:#ea580c" onmousedown="event.preventDefault()" onclick="setColor('btn1-bg','#ea580c')" title="#ea580c"></button><button type="button" class="sw" style="background:#0b1525" onmousedown="event.preventDefault()" onclick="setColor('btn1-bg','#0b1525')" title="#0b1525"></button><button type="button" class="sw" style="background:#16a34a" onmousedown="event.preventDefault()" onclick="setColor('btn1-bg','#16a34a')" title="#16a34a"></button><button type="button" class="sw" style="background:#7c3aed" onmousedown="event.preventDefault()" onclick="setColor('btn1-bg','#7c3aed')" title="#7c3aed"></button><button type="button" class="sw" style="background:#dc2626" onmousedown="event.preventDefault()" onclick="setColor('btn1-bg','#dc2626')" title="#dc2626"></button><button type="button" class="sw" style="background:#0891b2" onmousedown="event.preventDefault()" onclick="setColor('btn1-bg','#0891b2')" title="#0891b2"></button><button type="button" class="sw" style="background:#d4f01a" onmousedown="event.preventDefault()" onclick="setColor('btn1-bg','#d4f01a')" title="#d4f01a"></button><button type="button" class="sw" style="background:#fff" onmousedown="event.preventDefault()" onclick="setColor('btn1-bg','#fff')" title="#fff"></button></div>
-            </div>
-            <div class="color-field">
-              <div class="color-dot" id="btn1-color-preview" style="background:#fff"></div>
-              <div class="color-label">Enquire Text</div>
-              <input type="text" id="btn1-color" value="#ffffff" maxlength="9" style="font-family:monospace;font-size:12px;width:80px;padding:5px 8px;" oninput="setColor('btn1-color',this.value)">
-              <div class="swatches"><button type="button" class="sw" style="background:#fff" onmousedown="event.preventDefault()" onclick="setColor('btn1-color','#fff')" title="#fff"></button><button type="button" class="sw" style="background:#1c1c1c" onmousedown="event.preventDefault()" onclick="setColor('btn1-color','#1c1c1c')" title="#1c1c1c"></button><button type="button" class="sw" style="background:#d4f01a" onmousedown="event.preventDefault()" onclick="setColor('btn1-color','#d4f01a')" title="#d4f01a"></button><button type="button" class="sw" style="background:#0b1525" onmousedown="event.preventDefault()" onclick="setColor('btn1-color','#0b1525')" title="#0b1525"></button><button type="button" class="sw" style="background:#f59e0b" onmousedown="event.preventDefault()" onclick="setColor('btn1-color','#f59e0b')" title="#f59e0b"></button><button type="button" class="sw" style="background:#000" onmousedown="event.preventDefault()" onclick="setColor('btn1-color','#000')" title="#000"></button><button type="button" class="sw" style="background:#f1f5f9" onmousedown="event.preventDefault()" onclick="setColor('btn1-color','#f1f5f9')" title="#f1f5f9"></button><button type="button" class="sw" style="background:#fef3c7" onmousedown="event.preventDefault()" onclick="setColor('btn1-color','#fef3c7')" title="#fef3c7"></button></div>
-            </div>
-            <div class="color-field">
-              <div class="color-dot" id="btn2-bg-preview" style="background:#0b1525"></div>
-              <div class="color-label">Syllabus BG</div>
-              <input type="text" id="btn2-bg" value="#0b1525" maxlength="9" style="font-family:monospace;font-size:12px;width:80px;padding:5px 8px;" oninput="setColor('btn2-bg',this.value)">
-              <div class="swatches"><button type="button" class="sw" style="background:#ea580c" onmousedown="event.preventDefault()" onclick="setColor('btn2-bg','#ea580c')" title="#ea580c"></button><button type="button" class="sw" style="background:#0b1525" onmousedown="event.preventDefault()" onclick="setColor('btn2-bg','#0b1525')" title="#0b1525"></button><button type="button" class="sw" style="background:#16a34a" onmousedown="event.preventDefault()" onclick="setColor('btn2-bg','#16a34a')" title="#16a34a"></button><button type="button" class="sw" style="background:#7c3aed" onmousedown="event.preventDefault()" onclick="setColor('btn2-bg','#7c3aed')" title="#7c3aed"></button><button type="button" class="sw" style="background:#dc2626" onmousedown="event.preventDefault()" onclick="setColor('btn2-bg','#dc2626')" title="#dc2626"></button><button type="button" class="sw" style="background:#0891b2" onmousedown="event.preventDefault()" onclick="setColor('btn2-bg','#0891b2')" title="#0891b2"></button><button type="button" class="sw" style="background:#d4f01a" onmousedown="event.preventDefault()" onclick="setColor('btn2-bg','#d4f01a')" title="#d4f01a"></button><button type="button" class="sw" style="background:#fff" onmousedown="event.preventDefault()" onclick="setColor('btn2-bg','#fff')" title="#fff"></button></div>
-            </div>
-            <div class="color-field">
-              <div class="color-dot" id="btn2-color-preview" style="background:#fff"></div>
-              <div class="color-label">Syllabus Text</div>
-              <input type="text" id="btn2-color" value="#ffffff" maxlength="9" style="font-family:monospace;font-size:12px;width:80px;padding:5px 8px;" oninput="setColor('btn2-color',this.value)">
-              <div class="swatches"><button type="button" class="sw" style="background:#fff" onmousedown="event.preventDefault()" onclick="setColor('btn2-color','#fff')" title="#fff"></button><button type="button" class="sw" style="background:#d4f01a" onmousedown="event.preventDefault()" onclick="setColor('btn2-color','#d4f01a')" title="#d4f01a"></button><button type="button" class="sw" style="background:#1c1c1c" onmousedown="event.preventDefault()" onclick="setColor('btn2-color','#1c1c1c')" title="#1c1c1c"></button><button type="button" class="sw" style="background:#0b1525" onmousedown="event.preventDefault()" onclick="setColor('btn2-color','#0b1525')" title="#0b1525"></button><button type="button" class="sw" style="background:#f59e0b" onmousedown="event.preventDefault()" onclick="setColor('btn2-color','#f59e0b')" title="#f59e0b"></button><button type="button" class="sw" style="background:#000" onmousedown="event.preventDefault()" onclick="setColor('btn2-color','#000')" title="#000"></button><button type="button" class="sw" style="background:#f1f5f9" onmousedown="event.preventDefault()" onclick="setColor('btn2-color','#f1f5f9')" title="#f1f5f9"></button><button type="button" class="sw" style="background:#fef3c7" onmousedown="event.preventDefault()" onclick="setColor('btn2-color','#fef3c7')" title="#fef3c7"></button></div>
-            </div>
-            <!-- Live mini preview -->
-            <div style="margin-top:14px;">
-              <div style="font-size:11px;font-weight:700;color:#94a3b8;margin-bottom:8px;">Live Preview</div>
-              <div class="preview-card">
-                <div id="prev-thumb" style="height:100px;background:#0b1525;display:flex;align-items:center;justify-content:center;font-family:Sora,sans-serif;font-size:12px;font-weight:900;color:#d4f01a;text-align:center;padding:10px">GEN AI for Everyone</div>
-                <div id="prev-body" style="padding:10px 12px;background:#fff">
-                  <div id="prev-title" style="font-size:13px;font-weight:800;color:#1c1c1c;margin-bottom:3px">GEN AI for Everyone</div>
-                  <div id="prev-desc" style="font-size:10px;color:#475569;margin-bottom:6px">Master ChatGPT, AI tools</div>
-                  <div id="prev-fee" style="font-size:13px;font-weight:900;color:#0b1525;margin-bottom:8px">₹4,999</div>
-                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px">
-                    <div id="prev-btn1" style="background:#ea580c;color:#fff;text-align:center;padding:5px;border-radius:6px;font-size:9px;font-weight:700">💬 Enquire</div>
-                    <div id="prev-btn2" style="background:#0b1525;color:#fff;text-align:center;padding:5px;border-radius:6px;font-size:9px;font-weight:700">📄 Syllabus</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+      <div style="text-align:center;padding:40px 20px;">
+        <div style="font-size:48px;margin-bottom:16px;">📚</div>
+        <h2 style="font-family:'Sora',sans-serif;font-size:18px;font-weight:800;color:#0b1a2e;margin:0 0 10px;">Course Cards Moved to Courses Manager</h2>
+        <p style="font-size:14px;color:#64748b;margin:0 0 8px;max-width:480px;margin-left:auto;margin-right:auto;line-height:1.7;">
+          The homepage course cards now read <strong>directly from the Courses table</strong> — no more duplicate data entry.
+          Add or edit any course in <strong>Courses Manager</strong> and it appears live on the homepage automatically.
+        </p>
+        <p style="font-size:13px;color:#94a3b8;margin:0 0 28px;max-width:420px;margin-left:auto;margin-right:auto;line-height:1.6;">
+          To control <em>category colors and row backgrounds</em>, go to Courses Manager → <strong>🎨 Category Styles</strong> tab.
+        </p>
+        <a href="/admin/courses" style="display:inline-flex;align-items:center;gap:10px;padding:13px 28px;background:#1c3d7a;color:#fff;border-radius:12px;font-weight:700;font-size:14px;text-decoration:none;font-family:'Sora',sans-serif;">
+          → Go to Courses Manager
+        </a>
+        <div style="margin-top:20px;padding:14px;background:#f0fdf4;border-radius:10px;border:1px solid #bbf7d0;font-size:12px;color:#166534;max-width:480px;margin-left:auto;margin-right:auto;">
+          ✅ <strong>All your existing course data is safe.</strong> Courses entered in Courses Manager now show on the homepage grouped by their <em>Category</em> field.
+          Set each course's Category field (e.g. <code>AI</code>, <code>web</code>, <code>hardware</code>) to control which row it appears in.
         </div>
       </div>
-
-      <div id="cat-admin-list"></div>
-      <button class="add-btn" id="cat-add-btn" style="width:100%;margin-top:4px;">+ Add Category Row</button>
-      <div class="status" id="cat-status"></div>
     </div>
   </div>
 
@@ -387,7 +285,6 @@ function renderSlides() {
       <div class="slide-body ${i < 2 ? 'open' : ''}" id="sl-body-${i}">
         <div style="display:grid;grid-template-columns:1fr 260px;gap:20px">
           <div>
-            <!-- Badge + heading -->
             <div class="field-row">
               <div class="field">
                 <label class="lbl">🏷️ Badge Text</label>
@@ -398,15 +295,14 @@ function renderSlides() {
                 <span class="tip" style="padding-top:8px">Badge shows as a small pill above the heading. Use emoji for visual interest.</span>
               </div>
             </div>
-            <div class="field">
+            <div class="field" style="margin-bottom:10px">
               <label class="lbl">📝 Heading</label>
               <input type="text" id="sl-heading-${i}" value="${(s.heading||'').replace(/"/g,'&quot;')}" placeholder="Industrial Training for Real World Jobs" oninput="slPreview(${i})" />
             </div>
-            <div class="field">
+            <div class="field" style="margin-bottom:10px">
               <label class="lbl">📄 Subheading / Description</label>
               <input type="text" id="sl-sub-${i}" value="${(s.subheading||'').replace(/"/g,'&quot;')}" placeholder="Short line below the heading" />
             </div>
-            <!-- CTA -->
             <div class="field-row">
               <div class="field">
                 <label class="lbl">🔘 Button Text</label>
@@ -417,13 +313,11 @@ function renderSlides() {
                 <input type="text" id="sl-link-${i}" value="${(s.cta_link||'/courses').replace(/"/g,'&quot;')}" placeholder="/courses" />
               </div>
             </div>
-            <!-- Background image -->
-            <div class="field">
+            <div class="field" style="margin-bottom:10px">
               <label class="lbl">🖼️ Background Image URL (optional)</label>
               <input type="text" id="sl-img-${i}" value="${(s.image_url||'').replace(/"/g,'&quot;')}" placeholder="https://... direct image URL (.jpg .png .webp)" oninput="slPreview(${i})" />
               <span class="tip">Paste a direct https:// image URL. Leave blank to use solid background colour.</span>
             </div>
-            <!-- Colors -->
             <div class="field-row">
               <div class="field">
                 <label class="lbl">🎨 Background Color</label>
@@ -441,7 +335,6 @@ function renderSlides() {
               </div>
             </div>
           </div>
-
           <!-- Live mini preview -->
           <div>
             <label class="lbl" style="display:block;margin-bottom:8px">Live Preview</label>
@@ -485,7 +378,6 @@ function renderSlides() {
   if (phEl) { phEl.textContent = v(`sl-heading-${i}`) || 'Heading'; phEl.style.color = tc }
   const pcEl = document.getElementById(`sl-pc-${i}`)
   if (pcEl) pcEl.textContent = v(`sl-cta-${i}`) || 'CTA'
-  // Update image
   const prevImg = prevBox?.querySelector('img') as HTMLImageElement | null
   if (img) {
     if (prevImg) { prevImg.src = img; prevImg.style.display = '' }
@@ -538,24 +430,11 @@ function renderWhyCards() {
     const card = document.createElement('div')
     card.className = 'why-card'
     card.innerHTML = `
-      <div class="why-card-header">
-        <span class="why-card-label">Card ${i+1}</span>
-        <button class="btn-sm del" onclick="delWhyCard(${i})">✕ Remove</button>
-      </div>
-      <div class="field-row three">
-        <div class="field">
-          <label class="lbl">Emoji Icon</label>
-          <input type="text" id="wc-icon-${i}" value="${c.icon||''}" placeholder="🎓" style="font-size:20px;text-align:center" />
-        </div>
-        <div class="field">
-          <label class="lbl">Title</label>
-          <input type="text" id="wc-title-${i}" value="${(c.title||'').replace(/"/g,'&quot;')}" placeholder="Expert Faculty" />
-        </div>
-        <div class="field">
-          <label class="lbl">Description</label>
-          <input type="text" id="wc-desc-${i}" value="${(c.desc||'').replace(/"/g,'&quot;')}" placeholder="Short description..." />
-        </div>
-      </div>`
+      <div class="why-card-num">${i+1}</div>
+      <input type="text" id="wc-icon-${i}" value="${c.icon||''}" placeholder="🎓" style="font-size:20px;text-align:center;width:44px;padding:4px" />
+      <input type="text" id="wc-title-${i}" value="${(c.title||'').replace(/"/g,'&quot;')}" placeholder="Expert Faculty" />
+      <input type="text" id="wc-desc-${i}" value="${(c.desc||'').replace(/"/g,'&quot;')}" placeholder="Short description..." />
+      <button class="btn-sm del" onclick="delWhyCard(${i})">✕</button>`
     list.appendChild(card)
   })
   const addBtn = document.getElementById('why-add-btn')
@@ -582,246 +461,6 @@ document.getElementById('why-save-btn')?.addEventListener('click', async () => {
 })
 
 // ═══════════════════════════════════════════════════════════
-// COURSE CATEGORIES
-// ═══════════════════════════════════════════════════════════
-const DEFAULT_CATS = [
-  { name:'AI & Machine Learning', color:'#7c3aed', bg_color:'#f5f3ff', courses:[
-    { title:'GEN AI for Everyone', slug:'gen-ai', short_description:'Master ChatGPT, Midjourney & AI automation', mode:'online', fee_inr:4999, original_fee_inr:9999 },
-    { title:'Machine Learning', slug:'machine-learning', short_description:'Python, scikit-learn, real projects', mode:'online', fee_inr:5999, original_fee_inr:11999 },
-  ]},
-  { name:'Web & Full-Stack', color:'#0f2a5c', bg_color:'#eff6ff', courses:[
-    { title:'MERN Stack', slug:'mern-stack', short_description:'MongoDB, Express, React, Node.js', mode:'online', fee_inr:5999, original_fee_inr:11999 },
-    { title:'React.js', slug:'react', short_description:'Component-based UI development', mode:'online', fee_inr:4499, original_fee_inr:8999 },
-  ]},
-  { name:'Commerce & Accounting', color:'#065f46', bg_color:'#ecfdf5', courses:[
-    { title:'Tally Prime + GST', slug:'tally-prime', short_description:'Accounting, GST filing & payroll', mode:'hybrid', fee_inr:2999, original_fee_inr:5999 },
-  ]},
-  { name:'Hardware & Networking', color:'#be123c', bg_color:'#fff1f2', courses:[
-    { title:'Hardware + Networking', slug:'hardware-networking', short_description:'Chip-level repair + CCNA networking', mode:'hybrid', fee_inr:3999, original_fee_inr:7999 },
-  ]},
-]
-let cats: any[] = JSON.parse(JSON.stringify(DEFAULT_CATS))
-
-function gcv(id: string): string { return ((document.getElementById(id) as HTMLInputElement)?.value || '').trim() }
-function gcChk(id: string): boolean { return !!(document.getElementById(id) as HTMLInputElement)?.checked }
-
-function collectCats() {
-  cats = cats.map((_: any, ci: number) => {
-    const courses: any[] = []
-    let ri = 0
-    while (document.getElementById(`cc-title-${ci}-${ri}`)) {
-      courses.push({
-        title:             gcv(`cc-title-${ci}-${ri}`),
-        slug:              gcv(`cc-slug-${ci}-${ri}`),
-        short_description: gcv(`cc-desc-${ci}-${ri}`),
-        syllabus_url:      gcv(`cc-syllabus-${ci}-${ri}`),
-        thumbnail_url:     gcv(`cc-thumb-${ci}-${ri}`),
-        mode:              (document.getElementById(`cc-mode-${ci}-${ri}`) as HTMLSelectElement)?.value || 'hybrid',
-        level:             (document.getElementById(`cc-level-${ci}-${ri}`) as HTMLSelectElement)?.value || '',
-        fee_inr:           parseInt(gcv(`cc-fee-${ci}-${ri}`)) || 0,
-        original_fee_inr:  parseInt(gcv(`cc-ofee-${ci}-${ri}`)) || 0,
-        duration_weeks:    parseInt(gcv(`cc-weeks-${ci}-${ri}`)) || 0,
-      })
-      ri++
-    }
-    return { name: gcv(`ca-name-${ci}`), color: gcv(`ca-color-hex-${ci}`) || '#0f2a5c', bg_color: gcv(`ca-bg-hex-${ci}`) || '#fff', courses }
-  })
-}
-
-function renderCatAdmin() {
-  const list = document.getElementById('cat-admin-list')
-  if (!list) return
-  list.innerHTML = ''
-  cats.forEach((cat: any, ci: number) => {
-    const color = cat.color || '#0f2a5c'
-    const bg    = cat.bg_color || '#ffffff'
-    const courseRows = (cat.courses||[]).map((c: any, ri: number) => `
-      <div style="border:1px solid #e2e8f0;border-radius:10px;margin-bottom:8px;overflow:hidden;background:#fafbfc">
-        <div style="display:flex;align-items:center;gap:6px;padding:8px 12px;background:#f1f5f9">
-          <span style="font-size:11px;font-weight:700;color:#475569;flex:1">${c.title||'New Course'}</span>
-          <button class="btn-sm del" onclick="catDelCourse(${ci},${ri})">✕ Remove</button>
-        </div>
-        <div style="padding:10px 12px">
-          <!-- Thumbnail row — always visible at top -->
-          <div style="display:flex;gap:12px;align-items:flex-start;margin-bottom:10px;padding:10px;background:#f8fafc;border-radius:8px;border:1px solid #e2e8f0">
-            <div id="cc-thumb-preview-${ci}-${ri}" style="width:80px;height:56px;border-radius:6px;background:#0b1525;flex-shrink:0;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:10px;color:rgba(255,255,255,0.4);border:1px solid #e2e8f0">
-              ${c.thumbnail_url ? '<img src="' + (c.thumbnail_url||'').replace(/"/g,'&quot;') + '" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display=\'none\'" />' : '🖼️'}
-            </div>
-            <div style="flex:1">
-              <div style="font-size:10px;font-weight:700;color:#0b1525;text-transform:uppercase;margin-bottom:4px">🖼️ Course Thumbnail Image URL</div>
-              <input class="course-inp" id="cc-thumb-${ci}-${ri}"
-                value="${(c.thumbnail_url||'').replace(/"/g,'&quot;')}"
-                placeholder="https://... paste a direct image URL (.jpg .png .webp)"
-                style="width:100%;font-size:12px"
-                oninput="(function(inp,ci,ri){var prev=document.getElementById('cc-thumb-preview-'+ci+'-'+ri);if(prev){if(inp.value){prev.innerHTML='<img src=\''+inp.value+'\' style=\'width:100%;height:100%;object-fit:cover\' onerror=\'this.style.display=none\' />';prev.style.background='#000';}else{prev.innerHTML='🖼️';prev.style.background='#0b1525';}}}).call(this,this,${ci},${ri})" />
-              <div style="font-size:10px;color:#94a3b8;margin-top:3px">Upload to Supabase Storage → copy URL → paste here. Leave blank for dark bg with course name.</div>
-            </div>
-          </div>
-          <!-- Rest of fields in 2-col grid -->
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-          <div>
-            <div style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;margin-bottom:3px">Course Title</div>
-            <input class="course-inp" id="cc-title-${ci}-${ri}" value="${(c.title||'').replace(/"/g,'&quot;')}" placeholder="e.g. GEN AI for Everyone" style="width:100%" />
-          </div>
-          <div>
-            <div style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;margin-bottom:3px">Short Description</div>
-            <input class="course-inp" id="cc-desc-${ci}-${ri}" value="${(c.short_description||'').replace(/"/g,'&quot;')}" placeholder="Shows below title on card" style="width:100%" />
-          </div>
-          <div>
-            <div style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;margin-bottom:3px">Course Slug</div>
-            <input class="course-inp" id="cc-slug-${ci}-${ri}" value="${(c.slug||'').replace(/"/g,'&quot;')}" placeholder="gen-ai" style="width:100%" />
-          </div>
-          <div>
-            <div style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;margin-bottom:3px">Syllabus / Detail URL</div>
-            <input class="course-inp" id="cc-syllabus-${ci}-${ri}" value="${(c.syllabus_url||'').replace(/"/g,'&quot;')}" placeholder="/courses/gen-ai or PDF link" style="width:100%" />
-          </div>
-          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px">
-            <div>
-              <div style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;margin-bottom:3px">Fee ₹</div>
-              <input class="course-inp" id="cc-fee-${ci}-${ri}" type="number" value="${c.fee_inr||''}" placeholder="4999" style="width:100%" />
-            </div>
-            <div>
-              <div style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;margin-bottom:3px">Orig ₹</div>
-              <input class="course-inp" id="cc-ofee-${ci}-${ri}" type="number" value="${c.original_fee_inr||''}" placeholder="9999" style="width:100%" />
-            </div>
-            <div>
-              <div style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;margin-bottom:3px">Weeks</div>
-              <input class="course-inp" id="cc-weeks-${ci}-${ri}" type="number" value="${c.duration_weeks||''}" placeholder="8" style="width:100%" />
-            </div>
-          </div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
-            <div>
-              <div style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;margin-bottom:3px">Mode</div>
-              <select class="course-inp" id="cc-mode-${ci}-${ri}" style="width:100%">
-                <option value="online"${c.mode==='online'?' selected':''}>Online</option>
-                <option value="hybrid"${c.mode==='hybrid'?' selected':''}>Hybrid</option>
-                <option value="classroom"${c.mode==='classroom'?' selected':''}>Classroom</option>
-              </select>
-            </div>
-            <div>
-              <div style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;margin-bottom:3px">Level</div>
-              <select class="course-inp" id="cc-level-${ci}-${ri}" style="width:100%">
-                <option value=""${!c.level?' selected':''}>— None —</option>
-                <option value="Beginner"${c.level==='Beginner'?' selected':''}>Beginner</option>
-                <option value="Intermediate"${c.level==='Intermediate'?' selected':''}>Intermediate</option>
-                <option value="Advanced"${c.level==='Advanced'?' selected':''}>Advanced</option>
-              </select>
-            </div>
-          </div>
-        </div>
-      </div>`).join('')
-
-    const div = document.createElement('div')
-    div.innerHTML = `
-      <div style="border:1.5px solid #e2e8f0;border-radius:12px;margin-bottom:12px;overflow:hidden;background:#fafbfc">
-        <div style="display:flex;align-items:center;gap:10px;padding:11px 16px;background:#f7f9fc;cursor:pointer" onclick="catToggle(${ci})">
-          <div style="width:22px;height:22px;border-radius:50%;background:${color};color:#fff;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0">${ci+1}</div>
-          <span style="font-size:13px;font-weight:700;color:#1e293b;flex:1">${cat.name||'Category'}</span>
-          <span style="font-size:11px;color:#94a3b8">${(cat.courses||[]).length} courses</span>
-          <div style="display:flex;gap:5px">
-            <button class="btn-sm" onclick="event.stopPropagation();catMove(${ci},-1)">↑</button>
-            <button class="btn-sm" onclick="event.stopPropagation();catMove(${ci},1)">↓</button>
-            <button class="btn-sm del" onclick="event.stopPropagation();catDel(${ci})">✕</button>
-          </div>
-          <span style="font-size:11px;color:#94a3b8" id="cat-chev-${ci}">▼</span>
-        </div>
-        <div id="ca-body-${ci}" style="display:none;padding:14px">
-          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px">
-            <div class="field">
-              <label class="lbl">Category Name</label>
-              <input type="text" id="ca-name-${ci}" value="${(cat.name||'').replace(/"/g,'&quot;')}" placeholder="AI & Machine Learning" />
-            </div>
-            <div class="field">
-              <label class="lbl">Label Color</label>
-              <div class="color-row">
-                <input type="color" id="ca-color-${ci}" value="${color}" oninput="document.getElementById('ca-color-hex-${ci}').value=this.value" />
-                <input type="text" id="ca-color-hex-${ci}" value="${color}" maxlength="9" style="width:90px" oninput="document.getElementById('ca-color-${ci}').value=this.value" />
-              </div>
-            </div>
-            <div class="field">
-              <label class="lbl">Row Background</label>
-              <div class="color-row">
-                <input type="color" id="ca-bg-${ci}" value="${bg}" oninput="document.getElementById('ca-bg-hex-${ci}').value=this.value" />
-                <input type="text" id="ca-bg-hex-${ci}" value="${bg}" maxlength="9" style="width:90px" oninput="document.getElementById('ca-bg-${ci}').value=this.value" />
-              </div>
-            </div>
-          </div>
-          <div style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;margin-bottom:8px">Courses in this row</div>
-          <div style="border:1px solid #f1f5f9;border-radius:8px;overflow:hidden">
-            <div style="font-size:11px;font-weight:700;color:#64748b;padding:6px 12px;background:#f1f5f9;border-radius:6px;margin-bottom:6px">
-              Click any course below to expand and edit all fields
-            </div>
-            <div id="cc-list-${ci}">${courseRows}</div>
-          </div>
-          <button class="add-btn" style="margin-top:8px" onclick="catAddCourse(${ci})">+ Add Course</button>
-        </div>
-      </div>`
-    list.appendChild(div)
-  })
-  if (cats.length <= 3) {
-    cats.forEach((_: any, ci: number) => {
-      const b = document.getElementById(`ca-body-${ci}`)
-      if (b) b.style.display = 'block'
-    })
-  }
-}
-
-;(window as any).catToggle = (ci: number) => {
-  const b = document.getElementById(`ca-body-${ci}`)
-  if (b) b.style.display = b.style.display === 'none' ? 'block' : 'none'
-}
-;(window as any).catDel = (ci: number) => { collectCats(); cats.splice(ci, 1); renderCatAdmin() }
-;(window as any).catMove = (ci: number, d: number) => {
-  collectCats(); const j = ci+d
-  if (j >= 0 && j < cats.length) { [cats[ci],cats[j]] = [cats[j],cats[ci]]; renderCatAdmin() }
-}
-;(window as any).catDelCourse = (ci: number, ri: number) => { collectCats(); cats[ci].courses.splice(ri,1); renderCatAdmin() }
-;(window as any).catAddCourse = (ci: number) => {
-  collectCats()
-  cats[ci].courses.push({ title:'New Course', slug:'new-course', short_description:'', mode:'hybrid', fee_inr:2999, original_fee_inr:5999, thumbnail_url:'' })
-  renderCatAdmin()
-  const b = document.getElementById(`ca-body-${ci}`)
-  if (b) b.style.display = 'block'
-}
-
-document.getElementById('cat-add-btn')?.addEventListener('click', () => {
-  collectCats()
-  cats.push({ name:'New Category', color:'#0f2a5c', bg_color:'#f8fafc', courses:[
-    { title:'Course 1', slug:'course-1', short_description:'', mode:'hybrid', fee_inr:2999, original_fee_inr:5999, thumbnail_url:'' }
-  ]})
-  renderCatAdmin()
-  const b = document.getElementById(`ca-body-${cats.length-1}`)
-  if (b) b.style.display = 'block'
-})
-
-document.getElementById('cat-save-btn')?.addEventListener('click', async () => {
-  const btn = document.getElementById('cat-save-btn') as HTMLButtonElement
-  btn.disabled = true; btn.textContent = '⏳ Saving…'
-  collectCats()
-  const payload = {
-    section_title:      gcv('cat-section-title') || 'Courses by Category',
-    section_sub:        gcv('cat-section-sub')   || 'What We Offer',
-    show_fee:           gcChk('cat-show-fee'),
-    font_name:          "'Sora',sans-serif",
-    card_bg_color:      gcv('card-bg-color')     || '#0b1525',
-    card_body_bg:       gcv('card-body-bg')      || '#ffffff',
-    card_title_color:   gcv('card-title-color')  || '#1c1c1c',
-    card_desc_color:    gcv('card-desc-color')   || '#475569',
-    card_fee_color:     gcv('card-fee-color')    || '#0b1525',
-    btn1_bg:            gcv('btn1-bg')           || '#ea580c',
-    btn1_color:         gcv('btn1-color')        || '#ffffff',
-    btn2_bg:            gcv('btn2-bg')           || '#0b1525',
-    btn2_color:         gcv('btn2-color')        || '#ffffff',
-    categories:         cats,
-  }
-  try {
-    await sbSet('course_categories', payload)
-    showStatus('cat-status', true, '✅ Saved! Reload homepage to see changes.')
-  } catch { showStatus('cat-status', false, '❌ Save failed.') }
-  btn.disabled = false; btn.textContent = '💾 Save Categories'
-})
-
-// ═══════════════════════════════════════════════════════════
 // POPUP
 // ═══════════════════════════════════════════════════════════
 document.getElementById('popup-save-btn')?.addEventListener('click', async () => {
@@ -844,34 +483,6 @@ document.getElementById('popup-save-btn')?.addEventListener('click', async () =>
 // ═══════════════════════════════════════════════════════════
 // PRELOAD from DB
 // ═══════════════════════════════════════════════════════════
-// ── setColor: updates input, preview dot, and live card preview ─────
-function setColor(id, val) {
-  if (!val) return
-  const inp = document.getElementById(id)
-  if (inp && inp.value !== val) inp.value = val
-  const prev = document.getElementById(id + '-preview')
-  if (prev) prev.style.background = val
-  // Update live card preview
-  const previewMap = {
-    'card-bg-color':    ['prev-thumb', 'bg'],
-    'card-body-bg':     ['prev-body',  'bg'],
-    'card-title-color': ['prev-title', 'color'],
-    'card-desc-color':  ['prev-desc',  'color'],
-    'card-fee-color':   ['prev-fee',   'color'],
-    'btn1-bg':          ['prev-btn1',  'bg'],
-    'btn1-color':       ['prev-btn1',  'color'],
-    'btn2-bg':          ['prev-btn2',  'bg'],
-    'btn2-color':       ['prev-btn2',  'color'],
-  }
-  const mapping = previewMap[id]
-  if (!mapping) return
-  const target = document.getElementById(mapping[0])
-  if (!target) return
-  if (mapping[1] === 'color') target.style.color = val
-  else target.style.background = val
-}
-window.setColor = setColor
-
 async function preload() {
   try {
     const slData = await sbGet('hero_sliders')
@@ -890,35 +501,6 @@ async function preload() {
   renderWhyCards()
 
   try {
-    const catCfg = await sbGet('course_categories')
-    if (catCfg?.categories?.length) {
-      cats = catCfg.categories
-      if (catCfg.section_title) sv('cat-section-title', catCfg.section_title)
-      if (catCfg.section_sub)   sv('cat-section-sub',   catCfg.section_sub)
-      schk('cat-show-fee', catCfg.show_fee !== false)
-      const colorFields = [
-        ['card-bg-color',    catCfg.card_bg_color],
-        ['card-body-bg',     catCfg.card_body_bg],
-        ['card-title-color', catCfg.card_title_color],
-        ['card-desc-color',  catCfg.card_desc_color],
-        ['card-fee-color',   catCfg.card_fee_color],
-        ['btn1-bg',          catCfg.btn1_bg],
-        ['btn1-color',       catCfg.btn1_color],
-        ['btn2-bg',          catCfg.btn2_bg],
-        ['btn2-color',       catCfg.btn2_color],
-      ]
-      colorFields.forEach(([id, val]) => {
-        if (!val) return
-        sv(id, val)
-        const prev = document.getElementById(id + '-preview')
-        if (prev) prev.style.background = val
-        setColor(id, val)
-      })
-    }
-  } catch {}
-  renderCatAdmin()
-
-  try {
     const popCfg = await sbGet('popup_settings')
     if (popCfg) {
       schk('popup-enabled', popCfg.enabled !== false)
@@ -933,6 +515,7 @@ async function preload() {
 // Render defaults immediately then load from DB
 renderSlides()
 renderWhyCards()
-renderCatAdmin()
 preload()
 </script>
+
+</AdminLayout>

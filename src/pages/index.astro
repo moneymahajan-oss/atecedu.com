@@ -3211,16 +3211,78 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
     const SB_KEY = (window as any).__SB_KEY as string
     if (!SB_URL || !SB_KEY) { renderCategories(null); return }
     try {
-      const res  = await fetch(
-        `${SB_URL}/rest/v1/site_settings?key=eq.course_categories&select=value`,
-        { headers:{ apikey:SB_KEY, Authorization:`Bearer ${SB_KEY}` } }
-      )
-      const rows = await res.json()
-      const data = rows?.[0]?.value
-      if (data?.categories?.length) {
-        renderCategories(data)
+      // ── Fetch 1: Get global card colors + section settings from course_categories ──
+      const [settingsRes, coursesRes, stylesRes] = await Promise.all([
+        fetch(`${SB_URL}/rest/v1/site_settings?key=eq.course_categories&select=value`,
+          { headers:{ apikey:SB_KEY, Authorization:`Bearer ${SB_KEY}` } }),
+        fetch(`${SB_URL}/rest/v1/courses?is_active=eq.true&select=id,title,slug,mode,duration_weeks,fee_inr,original_fee_inr,thumbnail_url,short_description,category,level&order=sort_order.asc,created_at.desc`,
+          { headers:{ apikey:SB_KEY, Authorization:`Bearer ${SB_KEY}` } }),
+        fetch(`${SB_URL}/rest/v1/site_settings?key=eq.category_styles&select=value`,
+          { headers:{ apikey:SB_KEY, Authorization:`Bearer ${SB_KEY}` } }),
+      ])
+
+      const settingsRows = await settingsRes.json()
+      const allCourses   = await coursesRes.json()
+      const stylesRows   = await stylesRes.json()
+
+      // Base config (card colors, section title etc) from course_categories
+      const base = settingsRows?.[0]?.value || {}
+
+      // Category display settings (label, color, bg_color per category key)
+      let catStyles: any[] = stylesRows?.[0]?.value?.styles || []
+      // Fallback: read from old course_categories categories array if no new format yet
+      if (!catStyles.length && base.categories?.length) {
+        catStyles = base.categories.map((c: any) => ({
+          key:      c.category_key || c.name?.toLowerCase().replace(/[^a-z0-9]+/g, '') || '',
+          label:    c.name || c.category_key || '',
+          color:    c.color || '#0b1525',
+          bg_color: c.bg_color || '#f8fafc',
+        }))
+      }
+
+      // ── Group live courses by category ──
+      const coursesByCategory: Record<string, any[]> = {}
+      if (Array.isArray(allCourses)) {
+        allCourses.forEach((course: any) => {
+          const cat = (course.category || 'other').trim()
+          if (!coursesByCategory[cat]) coursesByCategory[cat] = []
+          coursesByCategory[cat].push(course)
+        })
+      }
+
+      // ── Build the categories array renderCategories expects ──
+      // Order by catStyles order first, then any remaining unstyled categories
+      const orderedKeys = catStyles.map((cs: any) => cs.key).filter(Boolean)
+      const allKeys     = Object.keys(coursesByCategory)
+      const extraKeys   = allKeys.filter(k => !orderedKeys.includes(k))
+      const finalKeys   = [...orderedKeys.filter(k => coursesByCategory[k]?.length), ...extraKeys]
+
+      const categories = finalKeys.map((key: string) => {
+        const style = catStyles.find((cs: any) => cs.key === key)
+        return {
+          category_key: key,
+          name:     style?.label    || key,
+          color:    style?.color    || '#0b1525',
+          bg_color: style?.bg_color || '#f8fafc',
+          courses:  (coursesByCategory[key] || []).map((c: any) => ({
+            title:             c.title,
+            slug:              c.slug,
+            short_description: c.short_description || '',
+            thumbnail_url:     c.thumbnail_url || '',
+            mode:              c.mode || 'hybrid',
+            fee_inr:           c.fee_inr || 0,
+            original_fee_inr:  c.original_fee_inr || 0,
+            duration_weeks:    c.duration_weeks || 0,
+            level:             c.level || '',
+            syllabus_url:      '/courses/' + c.slug,
+          }))
+        }
+      }).filter((cat: any) => cat.courses.length > 0)
+
+      if (categories.length) {
+        renderCategories({ ...base, categories })
       } else {
-        renderCategories(null)
+        renderCategories(base.card_bg_color ? base : null)
       }
     } catch(e) {
       renderCategories(null)
