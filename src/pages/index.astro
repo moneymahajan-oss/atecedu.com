@@ -1450,121 +1450,203 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
   ══════════════════════════════════════════════════════════════ -->
   <style is:global>
     .sc-section {
-      padding: 64px 32px 72px;
-      background: #0b1525;
+      padding: 80px 32px 88px;
+      background: #070f1e;
       position: relative;
       overflow: hidden;
     }
+    /* Ambient glow blobs */
     .sc-section::before {
       content: '';
       position: absolute;
-      top: -100px; right: -100px;
-      width: 400px; height: 400px;
+      top: -140px; left: -100px;
+      width: 500px; height: 500px;
       border-radius: 50%;
-      background: radial-gradient(circle, rgba(212,240,26,0.05) 0%, transparent 70%);
+      background: radial-gradient(circle, rgba(212,240,26,0.06) 0%, transparent 65%);
+      pointer-events: none;
+    }
+    .sc-section::after {
+      content: '';
+      position: absolute;
+      bottom: -120px; right: -80px;
+      width: 420px; height: 420px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(99,102,241,0.08) 0%, transparent 65%);
       pointer-events: none;
     }
     .sc-header {
-      max-width: 1200px;
-      margin: 0 auto 48px;
+      max-width: 1280px;
+      margin: 0 auto 60px;
       text-align: center;
     }
     .sc-sup {
       font-size: 12px; font-weight: 800;
       color: #d4f01a; text-transform: uppercase;
-      letter-spacing: 0.1em; margin: 0 0 10px;
+      letter-spacing: 0.12em; margin: 0 0 12px;
       display: block;
     }
     .sc-title {
       font-family: 'Sora', sans-serif;
-      font-size: clamp(1.8rem, 3.5vw, 2.6rem);
+      font-size: clamp(2rem, 4vw, 2.8rem);
       font-weight: 900; color: #fff;
-      margin: 0 0 12px; line-height: 1.1;
+      margin: 0 0 14px; line-height: 1.1;
     }
     .sc-sub {
       font-size: 15px;
-      color: rgba(255,255,255,0.45);
-      margin: 0;
+      color: rgba(255,255,255,0.4);
+      margin: 0; max-width: 540px; margin: 0 auto;
+      line-height: 1.6;
     }
     .sc-grid {
-      max-width: 1200px;
+      max-width: 1280px;
       margin: 0 auto;
       display: flex;
-      gap: 20px;
+      gap: 24px;
       flex-wrap: wrap;
       justify-content: center;
     }
+    /* ── Card ── */
     .sc-card {
-      width: 200px;
-      background: #111e35;
-      border: 1px solid rgba(255,255,255,0.1);
-      border-radius: 20px;
+      width: 210px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 24px;
       overflow: hidden;
       text-decoration: none;
       display: flex;
       flex-direction: column;
-      transition: transform 0.22s, box-shadow 0.22s, border-color 0.22s;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+      transition: transform 0.26s cubic-bezier(.22,.68,0,1.4), box-shadow 0.26s, border-color 0.26s;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+      backdrop-filter: blur(12px);
+      position: relative;
     }
     .sc-card:hover {
-      transform: translateY(-6px);
-      box-shadow: 0 16px 48px rgba(0,0,0,0.5);
-      border-color: rgba(212,240,26,0.3);
+      transform: translateY(-10px) scale(1.02);
+      border-color: rgba(255,255,255,0.2);
     }
-    .sc-top {
-      height: 80px;
+    /* Glow ring on hover via pseudo-element */
+    .sc-card::after {
+      content: '';
+      position: absolute;
+      inset: -1px;
+      border-radius: 24px;
+      opacity: 0;
+      transition: opacity 0.3s;
+      pointer-events: none;
+    }
+    .sc-card:hover::after { opacity: 1; }
+
+    /* ── Logo zone — big, bold ── */
+    .sc-logo-zone {
+      height: 120px;
       display: flex;
       align-items: center;
       justify-content: center;
       flex-shrink: 0;
+      position: relative;
+      overflow: hidden;
     }
+    .sc-logo-zone::after {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 40px;
+      background: linear-gradient(to bottom, transparent, rgba(7,15,30,0.6));
+    }
+    .sc-logo-svg {
+      width: 72px; height: 72px;
+      filter: drop-shadow(0 4px 16px rgba(0,0,0,0.4));
+      position: relative; z-index: 1;
+    }
+
+    /* ── QR zone ── */
     .sc-body {
-      padding: 16px 14px 18px;
+      padding: 18px 16px 20px;
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 0;
       flex: 1;
+      gap: 0;
     }
-    .sc-qr-frame {
-      width: 128px;
-      height: 128px;
-      border-radius: 10px;
+    .sc-qr-wrap {
+      width: 140px;
+      height: 140px;
+      border-radius: 14px;
       overflow: hidden;
       background: #fff;
-      padding: 6px;
-      box-shadow: 0 2px 12px rgba(0,0,0,0.25);
-      margin-bottom: 10px;
+      padding: 8px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.35);
+      margin-bottom: 12px;
+      position: relative;
     }
-    .sc-qr-frame img {
+    .sc-qr-wrap img {
       width: 100%;
       height: 100%;
       display: block;
+      border-radius: 6px;
+    }
+    /* centre logo overlay on QR */
+    .sc-qr-logo {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      background: #fff;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+      overflow: hidden;
+      pointer-events: none;
     }
     .sc-scan {
       font-size: 11px;
-      color: rgba(255,255,255,0.35);
-      margin-bottom: 8px;
-      letter-spacing: 0.03em;
+      color: rgba(255,255,255,0.3);
+      margin-bottom: 10px;
+      letter-spacing: 0.04em;
+      display: flex; align-items: center; gap: 5px;
     }
     .sc-name {
       font-family: 'Sora', sans-serif;
       font-size: 15px;
       font-weight: 800;
-      margin-bottom: 3px;
+      margin-bottom: 4px;
       text-align: center;
+      letter-spacing: -0.01em;
     }
     .sc-handle {
       font-size: 11px;
-      color: rgba(255,255,255,0.4);
+      color: rgba(255,255,255,0.35);
       text-align: center;
       word-break: break-all;
+      line-height: 1.4;
     }
-    @media(max-width: 900px) { .sc-card { width: 170px; } }
-    @media(max-width: 600px) {
-      .sc-grid { gap: 14px; }
-      .sc-card { width: calc(50% - 7px); min-width: 150px; }
+    /* Tap to open pill */
+    .sc-tap {
+      margin-top: 10px;
+      padding: 5px 14px;
+      border-radius: 20px;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      background: rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.5);
+      transition: background 0.2s, color 0.2s;
     }
+    .sc-card:hover .sc-tap {
+      background: rgba(255,255,255,0.15);
+      color: rgba(255,255,255,0.85);
+    }
+
+    @media(max-width: 1100px) { .sc-card { width: 185px; } .sc-logo-zone { height: 106px; } .sc-logo-svg { width: 62px; height: 62px; } }
+    @media(max-width: 700px) {
+      .sc-grid { gap: 16px; }
+      .sc-card { width: calc(50% - 8px); min-width: 148px; }
+      .sc-logo-zone { height: 96px; }
+      .sc-logo-svg { width: 54px; height: 54px; }
+      .sc-qr-wrap { width: 120px; height: 120px; }
+    }
+    @media(max-width: 380px) { .sc-card { width: 100%; } }
   </style>
 
   <section class="sc-section" id="connect-section" style="display:none;">
@@ -3334,17 +3416,66 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
   const PLATFORM_COLORS = {
     whatsapp:'#25D366', instagram:'#d6249f', facebook:'#1877F2', youtube:'#FF0000',
     google:'#4285F4', twitter:'#1DA1F2', linkedin:'#0077B5', telegram:'#2CA5E0',
-    threads:'#000', other:'#64748b',
+    threads:'#000000', other:'#64748b',
   }
-  const PLATFORM_ICONS = {
-    whatsapp: `<svg viewBox="0 0 32 32" width="36" height="36"><circle cx="16" cy="16" r="16" fill="#25D366"/><path d="M23.5 8.5A10.4 10.4 0 0 0 16 5.5C10.2 5.5 5.5 10.2 5.5 16c0 1.8.5 3.6 1.4 5.2L5.5 26.5l5.5-1.4A10.4 10.4 0 0 0 16 26.5c5.8 0 10.5-4.7 10.5-10.5 0-2.8-1.1-5.4-3-7.5zm-7.5 16a8.6 8.6 0 0 1-4.4-1.2l-.3-.2-3.2.8.9-3.1-.2-.3A8.5 8.5 0 1 1 16 24.5zm4.7-6.4c-.3-.1-1.6-.8-1.9-.9-.3-.1-.5-.1-.7.1-.2.3-.8.9-.9 1.1-.2.2-.3.2-.6.1-.3-.1-1.2-.4-2.2-1.4-.8-.7-1.4-1.6-1.5-1.9-.2-.3 0-.4.1-.6l.4-.5c.1-.2.2-.3.3-.5 0-.2 0-.4-.1-.5-.1-.1-.7-1.6-.9-2.2-.3-.6-.5-.5-.7-.5h-.6c-.2 0-.5.1-.8.4-.3.3-1 1-1 2.4s1 2.8 1.2 3c.1.1 2 3.1 4.9 4.3.7.3 1.2.5 1.6.6.7.2 1.3.2 1.8.1.5-.1 1.6-.7 1.8-1.3.2-.6.2-1.1.2-1.2-.1-.1-.3-.2-.6-.3z" fill="#fff"/></svg>`,
-    instagram: `<svg viewBox="0 0 32 32" width="36" height="36"><defs><radialGradient id="ig" cx="30%" cy="107%" r="150%"><stop offset="0%" stop-color="#fdf497"/><stop offset="45%" stop-color="#fd5949"/><stop offset="60%" stop-color="#d6249f"/><stop offset="90%" stop-color="#285AEB"/></radialGradient></defs><rect width="32" height="32" rx="8" fill="url(#ig)"/><rect x="8" y="8" width="16" height="16" rx="4" stroke="#fff" stroke-width="1.5" fill="none"/><circle cx="16" cy="16" r="4" stroke="#fff" stroke-width="1.5" fill="none"/><circle cx="21.5" cy="10.5" r="1" fill="#fff"/></svg>`,
-    facebook: `<svg viewBox="0 0 32 32" width="36" height="36"><circle cx="16" cy="16" r="16" fill="#1877F2"/><path d="M20.5 10h-2.3c-.9 0-1.2.4-1.2 1.3V13H20l-.4 3h-2.6v8h-3v-8H12v-3h2v-1.8C14 8.8 15.3 7.5 17.8 7.5c1 0 2 .1 3 .2V10H20.5z" fill="#fff"/></svg>`,
-    youtube: `<svg viewBox="0 0 32 32" width="36" height="36"><rect width="32" height="32" rx="7" fill="#FF0000"/><path d="M25.8 11.2a2.7 2.7 0 0 0-1.9-1.9C22.3 9 16 9 16 9s-6.3 0-7.9.3a2.7 2.7 0 0 0-1.9 1.9C6 12.8 6 16 6 16s0 3.2.2 4.8a2.7 2.7 0 0 0 1.9 1.9C9.7 23 16 23 16 23s6.3 0 7.9-.3a2.7 2.7 0 0 0 1.9-1.9C26 19.2 26 16 26 16s0-3.2-.2-4.8zm-11.7 7.8V13l5.2 3-5.2 3z" fill="#fff"/></svg>`,
-    google: `<svg viewBox="0 0 32 32" width="36" height="36"><circle cx="16" cy="16" r="16" fill="#fff" stroke="#e2e8f0" stroke-width="1"/><path d="M24.5 16.2c0-.6-.1-1.2-.2-1.7H16v3.2h4.8a4.1 4.1 0 0 1-1.8 2.7v2.2h2.9c1.7-1.6 2.6-3.9 2.6-6.4z" fill="#4285F4"/><path d="M16 25c2.4 0 4.5-.8 6-2.2l-2.9-2.2c-.8.5-1.9.9-3.1.9-2.4 0-4.4-1.6-5.1-3.8H7.9v2.3C9.4 23.1 12.5 25 16 25z" fill="#34A853"/><path d="M10.9 17.7A5.4 5.4 0 0 1 10.6 16c0-.6.1-1.2.3-1.7V12H7.9A9 9 0 0 0 7 16c0 1.5.4 2.9 1 4.1l2.9-2.4z" fill="#FBBC05"/><path d="M16 10.5c1.4 0 2.6.5 3.5 1.4l2.6-2.6A9 9 0 0 0 16 7c-3.5 0-6.6 1.9-8.1 4.7l3 2.3c.7-2.2 2.7-3.5 5.1-3.5z" fill="#EA4335"/></svg>`,
-    linkedin: `<svg viewBox="0 0 32 32" width="36" height="36"><rect width="32" height="32" rx="6" fill="#0077B5"/><path d="M10 13h3v10h-3zm1.5-4.5a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3zM15 13h3v1.4c.4-.8 1.4-1.6 3-1.6 3 0 3.6 2 3.6 4.6V23h-3v-5c0-1.2 0-2.7-1.6-2.7S18 16.6 18 18v5h-3z" fill="#fff"/></svg>`,
-    telegram: `<svg viewBox="0 0 32 32" width="36" height="36"><circle cx="16" cy="16" r="16" fill="#2CA5E0"/><path d="M22.5 9.5 6 15.8l6 1.5 2 6 3-4 5 4L24 9.5zM12 16.8l8-5-6.5 6z" fill="#fff"/></svg>`,
-    other:    `<svg viewBox="0 0 32 32" width="36" height="36"><circle cx="16" cy="16" r="16" fill="#64748b"/><text x="16" y="21" text-anchor="middle" fill="#fff" font-size="14">🔗</text></svg>`,
+  const PLATFORM_GRAD = {
+    instagram: 'linear-gradient(135deg,#405de6 0%,#833ab4 30%,#c13584 55%,#fd1d1d 78%,#fcb045 100%)',
+    threads:   'linear-gradient(135deg,#1a1a1a,#3a3a3a)',
+  }
+  // Big 72×72 SVG logos — crisp, brand-accurate
+  const PLATFORM_ICONS: Record<string,string> = {
+    whatsapp: `<svg viewBox="0 0 72 72" class="sc-logo-svg"><circle cx="36" cy="36" r="36" fill="#25D366"/>
+      <path d="M51 21.2A21 21 0 0 0 36 15C24.4 15 15 24.4 15 36c0 3.7 1 7.3 2.9 10.5L15 57l10.8-2.8A21 21 0 0 0 36 57c11.6 0 21-9.4 21-21 0-5.6-2.2-10.9-6-14.8zM36 54a17.4 17.4 0 0 1-8.9-2.4l-.6-.4-6.5 1.7 1.7-6.3-.4-.6A17.3 17.3 0 1 1 36 54zm9.5-13c-.5-.3-3.2-1.6-3.7-1.8-.5-.2-1-.2-1.4.3-.5.6-1.7 1.8-2 2.2-.4.4-.7.4-1.2.1-.5-.2-2.3-.9-4.5-2.7-1.6-1.5-2.7-3.3-3-3.8-.4-.5 0-.8.3-1.1l.8-1c.3-.4.4-.6.5-1s0-.8-.2-1.1c-.2-.3-1.4-3.3-1.9-4.5-.5-1.2-1-.9-1.4-.9h-1.2c-.5 0-1.2.2-1.8.8-.6.6-2.3 2.2-2.3 5.4 0 3.2 2.4 6.3 2.7 6.7 0 0 4 6.3 9.9 8.8 1.4.6 2.5 1 3.3 1.2 1.4.5 2.7.4 3.7.2 1.1-.2 3.4-1.4 3.9-2.7.5-1.3.5-2.3.3-2.5-.1-.2-.6-.4-1.1-.6z" fill="#fff"/>
+    </svg>`,
+    instagram: `<svg viewBox="0 0 72 72" class="sc-logo-svg">
+      <defs><radialGradient id="igG" cx="30%" cy="107%" r="150%"><stop offset="0%" stop-color="#fdf497"/><stop offset="45%" stop-color="#fd5949"/><stop offset="60%" stop-color="#d6249f"/><stop offset="90%" stop-color="#285AEB"/></radialGradient></defs>
+      <rect width="72" height="72" rx="18" fill="url(#igG)"/>
+      <rect x="18" y="18" width="36" height="36" rx="9" stroke="#fff" stroke-width="3.5" fill="none"/>
+      <circle cx="36" cy="36" r="9" stroke="#fff" stroke-width="3.5" fill="none"/>
+      <circle cx="48" cy="24" r="2.5" fill="#fff"/>
+    </svg>`,
+    facebook: `<svg viewBox="0 0 72 72" class="sc-logo-svg"><circle cx="36" cy="36" r="36" fill="#1877F2"/>
+      <path d="M46 36h-5.5v-3.5c0-2 .8-2.5 2.5-2.5H46V24c-1.3-.2-3.2-.5-5.5-.5-5.4 0-9 3.3-9 9.5V36H26v6.5h5.5V58h7V42.5H44L46 36z" fill="#fff"/>
+    </svg>`,
+    youtube: `<svg viewBox="0 0 72 72" class="sc-logo-svg"><rect width="72" height="72" rx="16" fill="#FF0000"/>
+      <path d="M58 24.8a5.4 5.4 0 0 0-3.8-3.8C50.5 20 36 20 36 20s-14.5 0-18.2.9a5.4 5.4 0 0 0-3.8 3.9C13 28.7 13 36 13 36s0 7.3.9 11.2a5.4 5.4 0 0 0 3.9 3.8C21.5 52 36 52 36 52s14.5 0 18.2-.9a5.4 5.4 0 0 0 3.8-3.9C59 43.3 59 36 59 36s0-7.3-1-11.2zM30.5 43.5V28.5L44 36l-13.5 7.5z" fill="#fff"/>
+    </svg>`,
+    google: `<svg viewBox="0 0 72 72" class="sc-logo-svg"><circle cx="36" cy="36" r="36" fill="#fff"/>
+      <path d="M54.5 36.5c0-1.4-.1-2.7-.4-4H36v7.6h10.4a8.9 8.9 0 0 1-3.9 5.8v4.8h6.3C52 47 54.5 42.2 54.5 36.5z" fill="#4285F4"/>
+      <path d="M36 55c5.4 0 9.9-1.8 13.2-4.8l-6.3-4.9c-1.8 1.2-4.2 1.9-6.9 1.9-5.3 0-9.8-3.6-11.4-8.4H13v5C16.3 50.8 25.4 55 36 55z" fill="#34A853"/>
+      <path d="M24.6 38.8A11 11 0 0 1 24 36c0-.9.2-1.9.5-2.8V28h-11A22 22 0 0 0 11 36c0 3.5.8 6.8 2.3 9.8l11.3-7z" fill="#FBBC05"/>
+      <path d="M36 21.5c3 0 5.7 1 7.8 3.1l5.8-5.8A21 21 0 0 0 36 13c-11 0-20.5 6.2-24.7 15.2l11 8.5c1.6-5 6.4-8.7 13.7-8.7z" fill="#EA4335"/>
+    </svg>`,
+    linkedin: `<svg viewBox="0 0 72 72" class="sc-logo-svg"><rect width="72" height="72" rx="14" fill="#0077B5"/>
+      <path d="M22 30h7v22h-7zm3.5-10a4 4 0 1 1 0 8 4 4 0 0 1 0-8zM34 30h7v3.2c1-1.9 3.3-3.7 7-3.7 7 0 8.2 4.6 8.2 10.5V52h-7v-11c0-2.6 0-6-3.7-6-3.7 0-4.3 2.9-4.3 5.8V52h-7V30z" fill="#fff"/>
+    </svg>`,
+    telegram: `<svg viewBox="0 0 72 72" class="sc-logo-svg"><circle cx="36" cy="36" r="36" fill="#2CA5E0"/>
+      <path d="M51 22L13 38l14 4 4.5 14.5L40 47l9 8 7-33zM27 40l21-13-15 16z" fill="#fff"/>
+    </svg>`,
+    twitter: `<svg viewBox="0 0 72 72" class="sc-logo-svg"><circle cx="36" cy="36" r="36" fill="#000"/>
+      <path d="M38.5 33.3L52 18h-3.2L37 31.1 28 18H16l14.2 20.7L16 55h3.2l12.4-14.4L41.5 55H53L38.5 33.3zM33.2 38.6l-1.4-2L20.4 20.4h5l9.2 13.2 1.4 2L52 52.8h-5l-9.8-14.2z" fill="#fff"/>
+    </svg>`,
+    threads: `<svg viewBox="0 0 72 72" class="sc-logo-svg"><circle cx="36" cy="36" r="36" fill="#000"/>
+      <path d="M44.5 34.3c-.2-.1-1.4-.6-2.7-.7-.3-2.3-1.7-4.4-4.3-5.6-3.4-1.6-7.5-.6-9.8 2.4-2.2 2.9-1.8 6.8.8 9.1 2.4 2.1 5.6 2.5 8 1.2.5.7.8 1.6.8 2.5 0 2.3-1.9 4.2-4.2 4.2-2.1 0-3.8-1.5-4.2-3.5h-2c.4 2.9 2.9 5 5.7 5.1 1.9 0 3.6-.8 4.9-2.1 1.1.6 2.3.9 3.6.7 2.3-.3 4.1-1.9 4.8-4.1.5-1.7.3-3.6-.5-5.1-.2-.5-.5-1-.9-1.5v-.6zM37 42.1c-2.1.9-4.4.3-6-1.5-1.5-1.7-1.7-4.3-.4-6.2 1.3-2 3.7-2.7 5.7-1.7 1.3.6 2.2 1.7 2.6 3-.8.1-1.6.3-2.2.7-.9.5-1.4 1.4-1.4 2.3 0 .9.5 1.8 1.4 2.2.5.3 1.1.4 1.7.3-.2.4-.8.7-.8.7l-.6.2z" fill="#fff"/>
+    </svg>`,
+    other: `<svg viewBox="0 0 72 72" class="sc-logo-svg"><circle cx="36" cy="36" r="36" fill="#475569"/>
+      <path d="M36 18a18 18 0 1 0 0 36 18 18 0 0 0 0-36zm0 4a14 14 0 0 1 13.3 9.5H22.7A14 14 0 0 1 36 22zm-14 12h28a14 14 0 0 1 0 4H22a14 14 0 0 1 0-4zm.7 8h26.6A14 14 0 0 1 36 50a14 14 0 0 1-13.3-8z" fill="#fff"/>
+    </svg>`,
+  }
+
+  // ── Auto-generate QR from URL using qrserver.com (free, no key needed) ──
+  function makeQrUrl(url: string, size: number = 200): string {
+    if (!url || url === '#') return ''
+    return `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encodeURIComponent(url)}&margin=0&qzone=1&format=svg`
+  }
+
+  // Small logo for QR centre overlay (20×20 circle)
+  const QR_CENTRE_LOGOS: Record<string,string> = {
+    whatsapp: `<svg viewBox="0 0 20 20" width="16" height="16"><circle cx="10" cy="10" r="10" fill="#25D366"/><path d="M14.5 7A6.2 6.2 0 0 0 10 5C6.7 5 4 7.7 4 11c0 1.1.3 2.1.8 3L4 16l2.1-.8A6.2 6.2 0 1 0 14.5 7z" fill="#fff"/></svg>`,
+    instagram: `<svg viewBox="0 0 20 20" width="16" height="16"><defs><radialGradient id="iqG" cx="30%" cy="107%" r="150%"><stop offset="0%" stop-color="#fdf497"/><stop offset="60%" stop-color="#d6249f"/><stop offset="90%" stop-color="#285AEB"/></radialGradient></defs><rect width="20" height="20" rx="5" fill="url(#iqG)"/><rect x="5" y="5" width="10" height="10" rx="3" stroke="#fff" stroke-width="1.2" fill="none"/><circle cx="10" cy="10" r="2.5" stroke="#fff" stroke-width="1.2" fill="none"/><circle cx="13.5" cy="6.5" r=".8" fill="#fff"/></svg>`,
+    facebook: `<svg viewBox="0 0 20 20" width="16" height="16"><circle cx="10" cy="10" r="10" fill="#1877F2"/><path d="M12.5 10h-1.8V9c0-.6.3-.8.8-.8h1V6.5c-.5-.1-1-.2-1.8-.2-1.7 0-2.9 1-2.9 3V10H6v2h1.8v5.5h2.2V12h1.7l.8-2z" fill="#fff"/></svg>`,
+    youtube: `<svg viewBox="0 0 20 20" width="16" height="16"><rect width="20" height="20" rx="4" fill="red"/><path d="M15.5 7.5a1.7 1.7 0 0 0-1.2-1.2C13.2 6 10 6 10 6s-3.2 0-4.3.3A1.7 1.7 0 0 0 4.5 7.5C4 8.6 4 10 4 10s0 1.4.5 2.5c.3.6.7 1 1.2 1.2 1.1.3 4.3.3 4.3.3s3.2 0 4.3-.3c.5-.2.9-.6 1.2-1.2C16 11.4 16 10 16 10s0-1.4-.5-2.5zm-6.7 4V8.5l3.5 1.5-3.5 1.5z" fill="#fff"/></svg>`,
+    google: `<svg viewBox="0 0 20 20" width="16" height="16"><circle cx="10" cy="10" r="10" fill="#fff"/><path d="M16 10.2c0-.7 0-1.3-.2-1.9H10v3.6h3.4a2.9 2.9 0 0 1-1.2 1.9v1.6h2A7 7 0 0 0 16 10.2z" fill="#4285F4"/><path d="M10 17a6.9 6.9 0 0 0 4.2-1.5l-2-1.6c-.6.4-1.3.6-2.2.6A3.5 3.5 0 0 1 6.7 12H4.5v1.7A7 7 0 0 0 10 17z" fill="#34A853"/><path d="M6.7 12A3.5 3.5 0 0 1 6.5 10c0-.7.1-1.4.3-2H4.5V9.7A7 7 0 0 0 3 10c0 1.1.3 2.2.7 3.1L6.7 12z" fill="#FBBC05"/><path d="M10 6.5c.9 0 1.7.3 2.4 1l1.8-1.8A7 7 0 0 0 10 3a7 7 0 0 0-5.5 2.6l2 1.7C7.2 6.9 8.5 6.5 10 6.5z" fill="#EA4335"/></svg>`,
   }
 
   const DEFAULT_SOCIAL_PLATFORMS = [
@@ -3370,26 +3501,43 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
       const grid = document.getElementById('sc-grid-items')
       if (!grid) return
 
-      const active = platforms.filter((p) => p.is_active !== false)
+      const active = platforms.filter((p: any) => p.is_active !== false)
       if (!active.length) return
 
-      grid.innerHTML = active.map((p) => {
-        const color = PLATFORM_COLORS[p.platform] || '#64748b'
-        const icon  = PLATFORM_ICONS[p.platform]  || PLATFORM_ICONS.other
-        const isGrad = p.platform === 'instagram'
-        const bgStyle = isGrad
-          ? 'background:linear-gradient(135deg,#833ab4,#fd1d1d,#fcb045)'
-          : `background:${color}`
-        const qrHtml = p.qr_url
-          ? `<img src="${p.qr_url.replace(/"/g,'')}" alt="${(p.name||'').replace(/"/g,'')} QR Code" style="width:100%;height:100%;object-fit:contain;" loading="lazy">`
-          : `<div style="font-size:32px;opacity:0.3;">📱</div>`
-        return `<a class="sc-card" href="${(p.url||'#').replace(/"/g,'')}" target="_blank" rel="noopener" aria-label="${(p.name||'').replace(/"/g,'')}">
-          <div class="sc-top" style="${bgStyle}">${icon}</div>
+      grid.innerHTML = active.map((p: any) => {
+        const color   = PLATFORM_COLORS[p.platform as keyof typeof PLATFORM_COLORS] || '#64748b'
+        const grad    = PLATFORM_GRAD[p.platform as keyof typeof PLATFORM_GRAD]
+        const icon    = PLATFORM_ICONS[p.platform as keyof typeof PLATFORM_ICONS] || PLATFORM_ICONS.other
+        const bgStyle = grad ? `background:${grad}` : `background:${color}`
+
+        // Auto-generate QR from the actual URL — no manual upload needed
+        const qrSrc   = makeQrUrl(p.url || p.qr_url || '', 200)
+        const miniLogo = QR_CENTRE_LOGOS[p.platform as keyof typeof QR_CENTRE_LOGOS] || ''
+
+        const qrHtml = qrSrc
+          ? `<img src="${qrSrc}" alt="${(p.name||'').replace(/"/g,'')} QR Code" loading="lazy" style="width:100%;height:100%;display:block;border-radius:5px;" />
+             ${miniLogo ? `<div class="sc-qr-logo">${miniLogo}</div>` : ''}`
+          : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:36px;opacity:0.2;">📱</div>`
+
+        // Hover glow colour
+        const glowStyle = `box-shadow: 0 0 0 2px ${color}44, 0 16px 48px rgba(0,0,0,0.5)`
+
+        return `<a class="sc-card" href="${(p.url||'#').replace(/"/g,'')}" target="_blank" rel="noopener"
+            aria-label="${(p.name||'').replace(/"/g,'')}"
+            onmouseenter="this.style.cssText='transform:translateY(-10px) scale(1.02);${glowStyle.replace(/'/g,'&apos;')};border-color:${color}55'"
+            onmouseleave="this.style.cssText=''">
+          <div class="sc-logo-zone" style="${bgStyle}">
+            ${icon}
+          </div>
           <div class="sc-body">
-            <div class="sc-qr-frame">${qrHtml}</div>
-            <div class="sc-scan">📷 Scan to follow</div>
+            <div class="sc-qr-wrap">${qrHtml}</div>
+            <div class="sc-scan">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 14h3v3h-3zm3 3h4v4h-4z"/></svg>
+              Scan to follow
+            </div>
             <div class="sc-name" style="color:${color}">${p.name||p.platform}</div>
             <div class="sc-handle">${p.handle||''}</div>
+            <div class="sc-tap">Tap to open →</div>
           </div>
         </a>`
       }).join('')
