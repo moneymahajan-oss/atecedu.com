@@ -497,11 +497,56 @@ export default function CoursesManager() {
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+                {/* Title — full width */}
+                <div style={{ gridColumn: '1 / -1' }}>
+                  <label style={{ fontSize: '12px', fontWeight: '600', color: '#475569', display: 'block', marginBottom: '5px' }}>Course Title *</label>
+                  <input type="text" value={form.title ?? ''} onChange={e => update('title', e.target.value)} style={inputStyle}
+                    onFocus={e => (e.target.style.borderColor = '#1c3d7a')} onBlur={e => (e.target.style.borderColor = '#e2e8f0')} />
+                </div>
+                {/* Slug */}
+                <div>
+                  <label style={{ fontSize: '12px', fontWeight: '600', color: '#475569', display: 'block', marginBottom: '5px' }}>Slug (URL)</label>
+                  <input type="text" value={form.slug ?? ''} placeholder="auto-generated from title" onChange={e => update('slug', e.target.value)} style={inputStyle}
+                    onFocus={e => (e.target.style.borderColor = '#1c3d7a')} onBlur={e => (e.target.style.borderColor = '#e2e8f0')} />
+                </div>
+                {/* Category — dropdown from catStyles */}
+                <div>
+                  <label style={{ fontSize: '12px', fontWeight: '600', color: '#475569', display: 'block', marginBottom: '5px' }}>
+                    Category
+                    {catStyles.length === 0 && (
+                      <span style={{ fontSize: '11px', color: '#f59e0b', marginLeft: '8px', fontWeight: '400' }}>
+                        ⚠ No categories yet — add them in the 🎨 Category Styles tab first
+                      </span>
+                    )}
+                  </label>
+                  <select value={form.category ?? ''} onChange={e => update('category', e.target.value)} style={{ ...inputStyle, background: '#fff' }}>
+                    <option value="">— Select a category —</option>
+                    {catStyles.map(cs => (
+                      <option key={cs.key} value={cs.key}>{cs.label} ({cs.key})</option>
+                    ))}
+                    {/* If current value is not in catStyles list, still show it */}
+                    {form.category && !catStyles.find(cs => cs.key === form.category) && (
+                      <option value={form.category}>⚠ {form.category} (not in Category Styles)</option>
+                    )}
+                  </select>
+                  {form.category && catStyles.find(cs => cs.key === form.category) && (
+                    <div style={{ marginTop: '5px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <div style={{ width: '12px', height: '12px', borderRadius: '3px', background: catStyles.find(cs => cs.key === form.category)?.bg_color || '#fff', border: '1px solid #e2e8f0' }} />
+                      <div style={{ width: '12px', height: '12px', borderRadius: '3px', background: catStyles.find(cs => cs.key === form.category)?.color || '#0b1525' }} />
+                      <span style={{ fontSize: '11px', color: '#64748b' }}>
+                        Will show in <strong>{catStyles.find(cs => cs.key === form.category)?.label}</strong> row on homepage
+                      </span>
+                    </div>
+                  )}
+                </div>
+                {/* Short Description — full width */}
+                <div style={{ gridColumn: '1 / -1' }}>
+                  <label style={{ fontSize: '12px', fontWeight: '600', color: '#475569', display: 'block', marginBottom: '5px' }}>Short Description</label>
+                  <input type="text" value={form.short_description ?? ''} onChange={e => update('short_description', e.target.value)} style={inputStyle}
+                    onFocus={e => (e.target.style.borderColor = '#1c3d7a')} onBlur={e => (e.target.style.borderColor = '#e2e8f0')} />
+                </div>
+                {/* Remaining fields via map */}
                 {[
-                  { label: 'Course Title *', field: 'title', type: 'text', span: 2 },
-                  { label: 'Slug (URL)', field: 'slug', type: 'text', placeholder: 'auto-generated from title' },
-                  { label: 'Category', field: 'category', type: 'text', placeholder: 'hardware, web, accounting...' },
-                  { label: 'Short Description', field: 'short_description', type: 'text', span: 2 },
                   { label: 'Fee (₹)', field: 'fee_inr', type: 'number' },
                   { label: 'Original Fee (₹) — for strikethrough', field: 'original_fee_inr', type: 'number' },
                   { label: 'Duration (weeks)', field: 'duration_weeks', type: 'number' },
@@ -509,8 +554,7 @@ export default function CoursesManager() {
                   { label: 'Thumbnail URL', field: 'thumbnail_url', type: 'text', span: 2 },
                   { label: 'YouTube Promo Video ID', field: 'promo_video_url', type: 'text', placeholder: 'e.g. dQw4w9WgXcQ' },
                   { label: 'Demo Zoom URL', field: 'demo_zoom_url', type: 'text' },
-                  { label: '🎯 One-Line Syllabus  (shown as heading on course page)', field: 'one_line_syllabus', type: 'text', span: 2, placeholder: 'e.g. Master Python from basics to AI in 8 weeks' },
-
+                  { label: '🎯 One-Line Syllabus (shown as heading on course page)', field: 'one_line_syllabus', type: 'text', span: 2, placeholder: 'e.g. Master Python from basics to AI in 8 weeks' },
                   { label: '▶ Demo Video URL (YouTube or direct, shown as Watch button)', field: 'demo_video_url', type: 'text', span: 2, placeholder: 'https://youtu.be/...' },
                   { label: 'Prerequisites', field: 'prerequisites', type: 'text', span: 2 },
                 ].map((f: any) => (
@@ -754,7 +798,19 @@ export default function CoursesManager() {
                         <td style={{ padding: '12px 16px', maxWidth: '200px' }}>
                           <div style={{ fontWeight: '600', color: '#1e293b', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{course.title}</div>
                           <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '2px' }}>{course.slug}</div>
-                          {course.is_featured && <span style={{ background: '#fef9c3', color: '#713f12', fontSize: '10px', fontWeight: '700', padding: '1px 6px', borderRadius: '4px', marginTop: '3px', display: 'inline-block' }}>⭐ Featured</span>}
+                          <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', marginTop: '4px' }}>
+                            {course.is_featured && <span style={{ background: '#fef9c3', color: '#713f12', fontSize: '10px', fontWeight: '700', padding: '1px 6px', borderRadius: '4px', display: 'inline-block' }}>⭐ Featured</span>}
+                            {course.category ? (() => {
+                              const cs = catStyles.find(s => s.key === course.category)
+                              return (
+                                <span style={{ background: cs?.bg_color || '#f1f5f9', color: cs?.color || '#475569', fontSize: '10px', fontWeight: '700', padding: '1px 7px', borderRadius: '4px', display: 'inline-block', border: `1px solid ${cs?.color || '#e2e8f0'}33` }}>
+                                  {cs ? cs.label : `⚠ ${course.category}`}
+                                </span>
+                              )
+                            })() : (
+                              <span style={{ background: '#fef2f2', color: '#dc2626', fontSize: '10px', fontWeight: '700', padding: '1px 7px', borderRadius: '4px', display: 'inline-block' }}>No category</span>
+                            )}
+                          </div>
                         </td>
                         <td style={{ padding: '12px 16px', whiteSpace: 'nowrap' }}>
                           <span style={{ background: course.mode === 'online' ? '#dcfce7' : course.mode === 'hybrid' ? '#dbeafe' : '#fff7ed', color: course.mode === 'online' ? '#166534' : course.mode === 'hybrid' ? '#1e40af' : '#9a3412', padding: '2px 8px', borderRadius: '4px', fontWeight: '600', textTransform: 'capitalize', fontSize: '11px' }}>
@@ -797,11 +853,11 @@ export default function CoursesManager() {
           <div style={{ background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '12px', padding: '14px 18px', display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
             <span style={{ fontSize: '20px', flexShrink: 0 }}>💡</span>
             <div>
-              <div style={{ fontWeight: '700', fontSize: '13px', color: '#1e40af', marginBottom: '4px' }}>How this works</div>
+              <div style={{ fontWeight: '700', fontSize: '13px', color: '#1e40af', marginBottom: '4px' }}>This is the master category list</div>
               <div style={{ fontSize: '12px', color: '#3b82f6', lineHeight: '1.6' }}>
-                The <strong>Homepage Course Cards</strong> section now reads directly from the <strong>Courses</strong> tab above.
-                Set each course's <strong>Category</strong> field (e.g. <code>AI</code>, <code>web</code>, <code>hardware</code>) in the course form.
-                Then configure how each category looks here — display name, heading color, row background.
+                Categories defined here appear as a <strong>dropdown</strong> in the course edit form — no more free-typing.
+                The <strong>Key</strong> is stored with each course and controls which homepage row it appears in.
+                The <strong>Label</strong> is the display name shown on the homepage and in the admin dropdown.
               </div>
             </div>
           </div>
@@ -927,8 +983,9 @@ export default function CoursesManager() {
 
           {/* Link to courses manager */}
           <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '12px', padding: '16px 20px', fontSize: '13px', color: '#166534' }}>
-            <strong>To add/edit courses:</strong> Switch to the <button onClick={() => setMainTab('courses')} style={{ background: 'none', border: 'none', color: '#166534', fontWeight: '700', textDecoration: 'underline', cursor: 'pointer', padding: '0', fontSize: '13px' }}>📚 Courses tab</button> above.
-            Set each course's <strong>Category</strong> field to match a Key above (e.g. <code>AI</code>). The public homepage will show those courses under that category row automatically.
+            <strong>To add/edit courses:</strong> Switch to the <button onClick={() => setMainTab('courses')} style={{ background: 'none', border: 'none', color: '#166534', fontWeight: '700', textDecoration: 'underline', cursor: 'pointer', padding: '0', fontSize: '13px' }}>📚 Courses tab</button>.
+            The Category field there is a <strong>dropdown</strong> — it shows exactly the categories you define above.
+            Save categories here first, then they'll appear as selectable options when adding/editing any course.
           </div>
         </div>
       )}
