@@ -11,7 +11,22 @@ import { createElement as h, useState, useEffect } from 'react'
 import { createRoot } from 'react-dom/client'
 const sb = createClient(window.__SB_URL, window.__SB_KEY)
 
-const EMPTY = { certificate_no:'', student_name:'', father_name:'', course_name:'', issue_date:'', grade:'A', batch_id:'', is_active:true }
+const EMPTY = {
+  certificate_no: '',
+  batch_id: '',
+  student_name: '',
+  father_name: '',
+  mother_name: '',
+  course_name: '',
+  course_duration: '',
+  grade: 'A',
+  marks_obtained: '',
+  total_marks: '',
+  from_date: '',
+  issue_date: '',
+  center_name: 'ATEC Gurdaspur',
+  is_active: true,
+}
 
 function Mgr() {
   const [rows, setRows] = useState([])
@@ -21,112 +36,297 @@ function Mgr() {
   const [show, setShow] = useState(false)
   const [saving, setSaving] = useState(false)
   const [search, setSearch] = useState('')
+  const [saveErr, setSaveErr] = useState('')
 
   useEffect(() => { load() }, [])
+
   async function load() {
     const { data } = await sb.from('certificates').select('*').order('created_at', { ascending: false }).limit(200)
-    setRows(data ?? []); setLoading(false)
+    setRows(data ?? [])
+    setLoading(false)
   }
+
   const upd = (k, v) => setForm(p => ({...p, [k]: v}))
-  function openAdd() { setForm({...EMPTY}); setEditId(null); setShow(true); window.scrollTo({top:0}) }
-  function openEdit(r) { setForm({...EMPTY, ...r, issue_date: r.issue_date?.slice(0,10)||''}); setEditId(r.id); setShow(true); window.scrollTo({top:0}) }
-  async function save() {
-    setSaving(true)
-    if (editId) await sb.from('certificates').update(form).eq('id', editId)
-    else await sb.from('certificates').insert(form)
-    setSaving(false); setShow(false); load()
+
+  function openAdd() {
+    setForm({...EMPTY})
+    setEditId(null)
+    setSaveErr('')
+    setShow(true)
+    window.scrollTo({ top: 0 })
   }
+
+  function openEdit(r) {
+    setForm({
+      ...EMPTY,
+      ...r,
+      from_date:  r.from_date  ? r.from_date.slice(0, 10)  : '',
+      issue_date: r.issue_date ? r.issue_date.slice(0, 10) : '',
+      marks_obtained: r.marks_obtained ?? '',
+      total_marks:    r.total_marks    ?? '',
+      mother_name:    r.mother_name    ?? '',
+      course_duration: r.course_duration ?? '',
+      center_name:    r.center_name    ?? 'ATEC Gurdaspur',
+    })
+    setEditId(r.id)
+    setSaveErr('')
+    setShow(true)
+    window.scrollTo({ top: 0 })
+  }
+
+  async function save() {
+    setSaveErr('')
+    if (!form.certificate_no?.trim()) { setSaveErr('Certificate Number is required.'); return }
+    if (!form.student_name?.trim())   { setSaveErr('Student Name is required.'); return }
+    if (!form.father_name?.trim())    { setSaveErr("Father's Name is required."); return }
+    if (!form.course_name?.trim())    { setSaveErr('Course Name is required.'); return }
+
+    const payload = {
+      certificate_no:  form.certificate_no.trim(),
+      batch_id:        form.batch_id?.trim() || null,
+      student_name:    form.student_name.trim(),
+      father_name:     form.father_name.trim(),
+      mother_name:     form.mother_name?.trim() || null,
+      course_name:     form.course_name.trim(),
+      course_duration: form.course_duration?.trim() || null,
+      grade:           form.grade?.trim() || null,
+      marks_obtained:  form.marks_obtained !== '' ? Number(form.marks_obtained) : null,
+      total_marks:     form.total_marks    !== '' ? Number(form.total_marks)    : null,
+      from_date:       form.from_date  || null,
+      issue_date:      form.issue_date || null,
+      center_name:     form.center_name?.trim() || 'ATEC Gurdaspur',
+      is_active:       form.is_active,
+    }
+
+    setSaving(true)
+    try {
+      let err
+      if (editId) {
+        ;({ error: err } = await sb.from('certificates').update(payload).eq('id', editId))
+      } else {
+        ;({ error: err } = await sb.from('certificates').insert(payload))
+      }
+      if (err) {
+        setSaveErr(err.code === '23505' ? `Certificate number "${payload.certificate_no}" already exists.` : err.message)
+      } else {
+        setShow(false)
+        load()
+      }
+    } finally {
+      setSaving(false)
+    }
+  }
+
   async function deactivate(id) {
-    if (!confirm('Deactivate this certificate? (It will no longer verify)')) return
-    await sb.from('certificates').update({is_active: false}).eq('id', id)
-    setRows(p => p.map(r => r.id===id ? {...r, is_active: false} : r))
+    if (!confirm('Deactivate this certificate? (It will no longer be verifiable online)')) return
+    await sb.from('certificates').update({ is_active: false }).eq('id', id)
+    setRows(p => p.map(r => r.id === id ? {...r, is_active: false} : r))
   }
 
   const filtered = rows.filter(r => {
     const q = search.toLowerCase()
-    return !q || r.certificate_no?.toLowerCase().includes(q) || r.student_name?.toLowerCase().includes(q) || r.course_name?.toLowerCase().includes(q)
+    return !q ||
+      r.certificate_no?.toLowerCase().includes(q) ||
+      r.student_name?.toLowerCase().includes(q) ||
+      r.father_name?.toLowerCase().includes(q) ||
+      r.course_name?.toLowerCase().includes(q)
   })
 
-  const s = {width:'100%',padding:'9px 12px',border:'1px solid #e2e8f0',borderRadius:'8px',fontSize:'13px',outline:'none',boxSizing:'border-box'}
-  const lbl = t => h('label',{style:{fontSize:'12px',fontWeight:'600',color:'#475569',display:'block',marginBottom:'5px'}},t)
+  const s = { width: '100%', padding: '9px 12px', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '13px', outline: 'none', boxSizing: 'border-box' }
+  const lbl = t => h('label', { style: { fontSize: '12px', fontWeight: '600', color: '#475569', display: 'block', marginBottom: '5px' } }, t)
 
-  return h('div',{style:{display:'flex',flexDirection:'column',gap:'20px'}},
-    h('div',{style:{display:'flex',justifyContent:'space-between',alignItems:'center',flexWrap:'wrap',gap:'12px'}},
-      h('div',{},
-        h('h1',{style:{fontFamily:'Sora,sans-serif',fontSize:'1.5rem',fontWeight:'800'}},'📜 Certificates'),
-        h('p',{style:{fontSize:'13px',color:'#64748b',marginTop:'4px'}},`${rows.filter(r=>r.is_active).length} active certificates`)
+  // ── field definitions ──────────────────────────────────────────────────────
+  const textFields = [
+    { l: 'Certificate No. *', k: 'certificate_no' },
+    { l: 'Batch ID',          k: 'batch_id' },
+    { l: 'Student Name *',    k: 'student_name' },
+    { l: "Father's Name *",   k: 'father_name' },
+    { l: "Mother's Name",     k: 'mother_name' },
+    { l: 'Course Name *',     k: 'course_name' },
+    { l: 'Course Duration',   k: 'course_duration', placeholder: 'e.g. 6 Months' },
+    { l: 'Center Name',       k: 'center_name' },
+  ]
+
+  return h('div', { style: { display: 'flex', flexDirection: 'column', gap: '20px' } },
+
+    // ── header ──
+    h('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' } },
+      h('div', {},
+        h('h1', { style: { fontFamily: 'Sora,sans-serif', fontSize: '1.5rem', fontWeight: '800' } }, '📜 Certificates'),
+        h('p', { style: { fontSize: '13px', color: '#64748b', marginTop: '4px' } }, `${rows.filter(r => r.is_active).length} active · ${rows.length} total`)
       ),
-      h('button',{onClick:openAdd,style:{padding:'10px 22px',background:'#1c3d7a',color:'#fff',border:'none',borderRadius:'10px',fontWeight:'700',fontSize:'14px',cursor:'pointer'}},'+ Issue Certificate')
+      h('button', {
+        onClick: openAdd,
+        style: { padding: '10px 22px', background: '#1c3d7a', color: '#fff', border: 'none', borderRadius: '10px', fontWeight: '700', fontSize: '14px', cursor: 'pointer' }
+      }, '+ Issue Certificate')
     ),
-    show && h('div',{style:{background:'#fff',borderRadius:'16px',border:'2px solid #1c3d7a',padding:'28px'}},
-      h('div',{style:{display:'flex',justifyContent:'space-between',marginBottom:'20px'}},
-        h('h2',{style:{fontFamily:'Sora,sans-serif',fontWeight:'700',fontSize:'16px'}}, editId?'✏️ Edit Certificate':'➕ Issue New Certificate'),
-        h('button',{onClick:()=>setShow(false),style:{background:'none',border:'none',fontSize:'20px',cursor:'pointer',color:'#94a3b8'}},'✕')
+
+    // ── add / edit form ──
+    show && h('div', { style: { background: '#fff', borderRadius: '16px', border: '2px solid #1c3d7a', padding: '28px' } },
+      h('div', { style: { display: 'flex', justifyContent: 'space-between', marginBottom: '20px' } },
+        h('h2', { style: { fontFamily: 'Sora,sans-serif', fontWeight: '700', fontSize: '16px' } },
+          editId ? '✏️ Edit Certificate' : '➕ Issue New Certificate'
+        ),
+        h('button', {
+          onClick: () => setShow(false),
+          style: { background: 'none', border: 'none', fontSize: '20px', cursor: 'pointer', color: '#94a3b8' }
+        }, '✕')
       ),
-      h('div',{style:{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'14px'}},
-        ...[
-          {l:'Certificate No. *',k:'certificate_no'},{l:'Batch ID',k:'batch_id'},
-          {l:'Student Name *',k:'student_name'},{l:'Father\'s Name',k:'father_name'},
-          {l:'Course Name *',k:'course_name'},{l:'Grade',k:'grade'},
-          {l:'Issue Date',k:'issue_date',type:'date'},
-        ].map(({l,k,type,span})=>
-          h('div',{key:k,style:{gridColumn:span===2?'1/-1':'auto'}}, lbl(l),
-            h('input',{type:type||'text',value:form[k]??'',onChange:e=>upd(k,e.target.value),style:s})
+
+      h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' } },
+
+        // text fields
+        ...textFields.map(({ l, k, placeholder }) =>
+          h('div', { key: k },
+            lbl(l),
+            h('input', {
+              type: 'text',
+              value: form[k] ?? '',
+              onChange: e => upd(k, e.target.value),
+              placeholder: placeholder || '',
+              style: s,
+            })
           )
         ),
-        h('div',{style:{display:'flex',alignItems:'center',gap:'10px'}},
-          h('input',{type:'checkbox',checked:!!form.is_active,onChange:e=>upd('is_active',e.target.checked),style:{width:'16px',height:'16px',accentColor:'#1c3d7a'}}),
-          lbl('Active (verifiable online)')
+
+        // grade select
+        h('div', { key: 'grade' },
+          lbl('Grade'),
+          h('select', { value: form.grade ?? '', onChange: e => upd('grade', e.target.value), style: { ...s, cursor: 'pointer' } },
+            h('option', { value: '' }, 'Select grade'),
+            ...['A+', 'A', 'B+', 'B', 'C+', 'C', 'D', 'Pass', 'Distinction'].map(g =>
+              h('option', { key: g, value: g }, g)
+            )
+          )
+        ),
+
+        // marks obtained
+        h('div', { key: 'marks_obtained' },
+          lbl('Marks Obtained'),
+          h('input', { type: 'number', value: form.marks_obtained ?? '', onChange: e => upd('marks_obtained', e.target.value), placeholder: 'e.g. 85', min: 0, max: 1000, style: s })
+        ),
+
+        // total marks
+        h('div', { key: 'total_marks' },
+          lbl('Total Marks'),
+          h('input', { type: 'number', value: form.total_marks ?? '', onChange: e => upd('total_marks', e.target.value), placeholder: 'e.g. 100', min: 0, max: 1000, style: s })
+        ),
+
+        // FROM DATE  ← was missing
+        h('div', { key: 'from_date' },
+          lbl('Course Start Date (From Date)'),
+          h('input', { type: 'date', value: form.from_date ?? '', onChange: e => upd('from_date', e.target.value), style: s })
+        ),
+
+        // TO / ISSUE DATE
+        h('div', { key: 'issue_date' },
+          lbl('Course End / Issue Date (To Date)'),
+          h('input', { type: 'date', value: form.issue_date ?? '', onChange: e => upd('issue_date', e.target.value), style: s })
+        ),
+
+        // active checkbox — full width
+        h('div', { key: 'is_active', style: { gridColumn: '1 / -1', display: 'flex', alignItems: 'center', gap: '10px', marginTop: '4px' } },
+          h('input', {
+            type: 'checkbox',
+            checked: !!form.is_active,
+            onChange: e => upd('is_active', e.target.checked),
+            style: { width: '16px', height: '16px', accentColor: '#1c3d7a' }
+          }),
+          h('span', { style: { fontSize: '13px', fontWeight: '600', color: '#475569' } }, 'Active (verifiable online)')
         )
       ),
-      h('div',{style:{display:'flex',gap:'10px',marginTop:'20px'}},
-        h('button',{onClick:save,disabled:saving,style:{flex:1,padding:'12px',background:saving?'#94a3b8':'#1c3d7a',color:'#fff',border:'none',borderRadius:'10px',fontWeight:'700',cursor:saving?'not-allowed':'pointer'}},
-          saving?'Saving...':editId?'✅ Update':'✅ Issue Certificate'
-        ),
-        h('button',{onClick:()=>setShow(false),style:{padding:'12px 20px',border:'1px solid #e2e8f0',borderRadius:'10px',background:'#fff',fontWeight:'600',cursor:'pointer'}},'Cancel')
+
+      // error
+      saveErr && h('div', {
+        style: { marginTop: '12px', padding: '10px 14px', background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '8px', color: '#dc2626', fontSize: '13px' }
+      }, saveErr),
+
+      // actions
+      h('div', { style: { display: 'flex', gap: '10px', marginTop: '20px' } },
+        h('button', {
+          onClick: save,
+          disabled: saving,
+          style: { flex: 1, padding: '12px', background: saving ? '#94a3b8' : '#1c3d7a', color: '#fff', border: 'none', borderRadius: '10px', fontWeight: '700', cursor: saving ? 'not-allowed' : 'pointer' }
+        }, saving ? 'Saving...' : editId ? '✅ Update' : '✅ Issue Certificate'),
+        h('button', {
+          onClick: () => setShow(false),
+          style: { padding: '12px 20px', border: '1px solid #e2e8f0', borderRadius: '10px', background: '#fff', fontWeight: '600', cursor: 'pointer' }
+        }, 'Cancel')
       )
     ),
-    h('input',{type:'text',placeholder:'🔍 Search certificate no, student name, course...',value:search,onChange:e=>setSearch(e.target.value),
-      style:{padding:'10px 16px',border:'1px solid #e2e8f0',borderRadius:'10px',fontSize:'14px',outline:'none',width:'100%',boxSizing:'border-box'}}),
-    h('div',{style:{background:'#fff',borderRadius:'14px',border:'1px solid #e2e8f0',overflow:'hidden'}},
+
+    // ── search ──
+    h('input', {
+      type: 'text',
+      placeholder: '🔍 Search by cert no, student name, father name, course...',
+      value: search,
+      onChange: e => setSearch(e.target.value),
+      style: { padding: '10px 16px', border: '1px solid #e2e8f0', borderRadius: '10px', fontSize: '14px', outline: 'none', width: '100%', boxSizing: 'border-box' }
+    }),
+
+    // ── table ──
+    h('div', { style: { background: '#fff', borderRadius: '14px', border: '1px solid #e2e8f0', overflow: 'hidden' } },
       loading
-        ? h('div',{style:{padding:'40px',textAlign:'center',color:'#94a3b8'}},'Loading...')
-        : filtered.length===0
-          ? h('div',{style:{padding:'40px',textAlign:'center',color:'#94a3b8'}},'No certificates found.')
-          : h('div',{style:{overflowX:'auto'}},
-              h('table',{style:{width:'100%',borderCollapse:'collapse',fontSize:'13px'}},
-                h('thead',{},h('tr',{style:{background:'#f8fafc',borderBottom:'1px solid #e2e8f0'}},
-                  ...['Cert No.','Student','Father','Course','Grade','Issue Date','Status','Actions'].map(col =>
-                    h('th',{key:col,style:{padding:'12px 16px',textAlign:'left',fontWeight:'700',color:'#475569',fontSize:'12px',textTransform:'uppercase',whiteSpace:'nowrap'}},col)
+        ? h('div', { style: { padding: '40px', textAlign: 'center', color: '#94a3b8' } }, 'Loading...')
+        : filtered.length === 0
+          ? h('div', { style: { padding: '40px', textAlign: 'center', color: '#94a3b8' } }, 'No certificates found.')
+          : h('div', { style: { overflowX: 'auto' } },
+              h('table', { style: { width: '100%', borderCollapse: 'collapse', fontSize: '13px' } },
+                h('thead', {},
+                  h('tr', { style: { background: '#f8fafc', borderBottom: '1px solid #e2e8f0' } },
+                    ...['Cert No.', 'Student', 'Father', 'Course', 'Grade', 'From Date', 'To Date', 'Status', 'Actions'].map(col =>
+                      h('th', { key: col, style: { padding: '12px 16px', textAlign: 'left', fontWeight: '700', color: '#475569', fontSize: '12px', textTransform: 'uppercase', whiteSpace: 'nowrap' } }, col)
+                    )
                   )
-                )),
-                h('tbody',{},...filtered.map(r =>
-                  h('tr',{key:r.id,style:{borderBottom:'1px solid #f1f5f9'},
-                    onMouseEnter:e=>{e.currentTarget.style.background='#f8fafc'},
-                    onMouseLeave:e=>{e.currentTarget.style.background='#fff'}},
-                    h('td',{style:{padding:'12px 16px',fontWeight:'700',color:'#1c3d7a',fontFamily:'monospace'}},r.certificate_no),
-                    h('td',{style:{padding:'12px 16px',fontWeight:'600'}},r.student_name),
-                    h('td',{style:{padding:'12px 16px',color:'#64748b'}},r.father_name||'—'),
-                    h('td',{style:{padding:'12px 16px',color:'#64748b'}},r.course_name),
-                    h('td',{style:{padding:'12px 16px',fontWeight:'700',color:'#166534'}},r.grade||'—'),
-                    h('td',{style:{padding:'12px 16px',color:'#94a3b8',fontSize:'12px',whiteSpace:'nowrap'}},r.issue_date||'—'),
-                    h('td',{style:{padding:'12px 16px'}},
-                      h('span',{style:{background:r.is_active?'#dcfce7':'#fee2e2',color:r.is_active?'#166534':'#991b1b',fontSize:'11px',fontWeight:'700',padding:'3px 10px',borderRadius:'12px'}},
-                        r.is_active?'✅ Active':'⭕ Inactive'
-                      )
-                    ),
-                    h('td',{style:{padding:'12px 16px',whiteSpace:'nowrap'}},
-                      h('div',{style:{display:'flex',gap:'6px'}},
-                        h('button',{onClick:()=>openEdit(r),style:{padding:'5px 10px',background:'#eff6ff',color:'#1c3d7a',border:'none',borderRadius:'6px',fontSize:'11px',fontWeight:'600',cursor:'pointer'}},'✏️ Edit'),
-                        r.is_active && h('button',{onClick:()=>deactivate(r.id),style:{padding:'5px 10px',background:'#fee2e2',color:'#991b1b',border:'none',borderRadius:'6px',fontSize:'11px',fontWeight:'600',cursor:'pointer'}},'⭕ Deactivate')
+                ),
+                h('tbody', {},
+                  ...filtered.map(r =>
+                    h('tr', {
+                      key: r.id,
+                      style: { borderBottom: '1px solid #f1f5f9' },
+                      onMouseEnter: e => { e.currentTarget.style.background = '#f8fafc' },
+                      onMouseLeave: e => { e.currentTarget.style.background = '#fff' },
+                    },
+                      h('td', { style: { padding: '12px 16px', fontWeight: '700', color: '#1c3d7a', fontFamily: 'monospace' } }, r.certificate_no),
+                      h('td', { style: { padding: '12px 16px', fontWeight: '600' } }, r.student_name),
+                      h('td', { style: { padding: '12px 16px', color: '#64748b' } }, r.father_name || '—'),
+                      h('td', { style: { padding: '12px 16px', color: '#64748b' } }, r.course_name),
+                      h('td', { style: { padding: '12px 16px', fontWeight: '700', color: '#166534' } }, r.grade || '—'),
+                      h('td', { style: { padding: '12px 16px', color: '#94a3b8', fontSize: '12px', whiteSpace: 'nowrap' } },
+                        r.from_date ? new Date(r.from_date).toLocaleDateString('en-IN') : '—'
+                      ),
+                      h('td', { style: { padding: '12px 16px', color: '#94a3b8', fontSize: '12px', whiteSpace: 'nowrap' } },
+                        r.issue_date ? new Date(r.issue_date).toLocaleDateString('en-IN') : '—'
+                      ),
+                      h('td', { style: { padding: '12px 16px' } },
+                        h('span', {
+                          style: {
+                            background: r.is_active ? '#dcfce7' : '#fee2e2',
+                            color: r.is_active ? '#166534' : '#991b1b',
+                            fontSize: '11px', fontWeight: '700', padding: '3px 10px', borderRadius: '12px'
+                          }
+                        }, r.is_active ? '✅ Active' : '⭕ Inactive')
+                      ),
+                      h('td', { style: { padding: '12px 16px', whiteSpace: 'nowrap' } },
+                        h('div', { style: { display: 'flex', gap: '6px' } },
+                          h('button', {
+                            onClick: () => openEdit(r),
+                            style: { padding: '5px 10px', background: '#eff6ff', color: '#1c3d7a', border: 'none', borderRadius: '6px', fontSize: '11px', fontWeight: '600', cursor: 'pointer' }
+                          }, '✏️ Edit'),
+                          r.is_active && h('button', {
+                            onClick: () => deactivate(r.id),
+                            style: { padding: '5px 10px', background: '#fee2e2', color: '#991b1b', border: 'none', borderRadius: '6px', fontSize: '11px', fontWeight: '600', cursor: 'pointer' }
+                          }, '⭕ Deactivate')
+                        )
                       )
                     )
                   )
-                ))
+                )
               )
             )
     )
   )
 }
-createRoot(document.getElementById('root')).render(h(Mgr,null))
+
+createRoot(document.getElementById('root')).render(h(Mgr, null))
 </script>
