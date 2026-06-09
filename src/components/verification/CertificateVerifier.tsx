@@ -1,5 +1,5 @@
 // src/components/verification/CertificateVerifier.tsx
-// Shows: Certificate No, Batch_ID, Name, Father Name, Course Name,
+// Shows: Certificate No, Student ID, Name, Father Name, Course Name,
 //        From Date, To Date (issue_date), No Of Hours, Grade
 // Matches the old atecedu.com PHP site output exactly.
 
@@ -153,7 +153,7 @@ export default function CertificateVerifier() {
                 />
               </div>
               <div>
-                <label style={labelStyle}>BATCH ID</label>
+                <label style={labelStyle}>STUDENT ID</label>
                 <input
                   type="text"
                   value={batchId}
@@ -299,7 +299,7 @@ export default function CertificateVerifier() {
           <div style={{ padding: '12px 24px 24px' }}>
             {[
               { label: 'Certificate No', value: result.certificate_no },
-              { label: 'Batch_ID',       value: result.batch_id || '—' },
+              { label: 'Student ID',     value: result.batch_id || '—' },
               { label: 'Name',           value: result.student_name },
               { label: 'Father Name',    value: result.father_name || '—' },
               { label: 'Course Name',    value: result.course_name },

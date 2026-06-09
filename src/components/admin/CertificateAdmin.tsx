@@ -635,7 +635,7 @@ export default function CertificateAdmin() {
                   <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
                     <thead>
                       <tr style={{ background: '#1e293b' }}>
-                        {['Cert No', 'Student Name', "Father's Name", 'Course', 'Batch', 'Grade', 'Issue Date', 'Status', 'Actions'].map(h => (
+                        {['Cert No', 'Student Name', "Father's Name", 'Course', 'Student ID', 'Grade', 'Issue Date', 'Status', 'Actions'].map(h => (
                           <th key={h} style={{ padding: '10px 14px', textAlign: 'left', color: '#64748b', fontWeight: 600, fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.5, borderBottom: '1px solid #334155', whiteSpace: 'nowrap' }}>
                             {h}
                           </th>
@@ -740,12 +740,12 @@ export default function CertificateAdmin() {
                   disabled={!!editingId}
                 />
               </FormField>
-              <FormField label="Batch ID">
+              <FormField label="Student ID">
                 <input
                   type="text"
                   value={form.batch_id || ''}
                   onChange={e => setForm(f => ({ ...f, batch_id: e.target.value }))}
-                  placeholder="e.g. B2024-HN"
+                  placeholder="e.g. S-241476"
                   style={inputStyle}
                 />
               </FormField>
@@ -887,7 +887,7 @@ export default function CertificateAdmin() {
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 6 }}>
                 {[
                   ['certificate_no / cert_no', 'Certificate Number'],
-                  ['batch_id', 'Batch ID'],
+                  ['batch_id', 'Student ID'],
                   ['student_name / name', 'Student Name'],
                   ['father_name / fname', "Father's Name"],
                   ['mother_name', "Mother's Name"],

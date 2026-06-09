@@ -138,7 +138,7 @@ function Mgr() {
   // ── field definitions ──────────────────────────────────────────────────────
   const textFields = [
     { l: 'Certificate No. *', k: 'certificate_no' },
-    { l: 'Batch ID',          k: 'batch_id' },
+    { l: 'Student ID',         k: 'batch_id' },
     { l: 'Student Name *',    k: 'student_name' },
     { l: "Father's Name *",   k: 'father_name' },
     { l: "Mother's Name",     k: 'mother_name' },
@@ -274,7 +274,7 @@ function Mgr() {
               h('table', { style: { width: '100%', borderCollapse: 'collapse', fontSize: '13px' } },
                 h('thead', {},
                   h('tr', { style: { background: '#f8fafc', borderBottom: '1px solid #e2e8f0' } },
-                    ...['Cert No.', 'Student', 'Father', 'Course', 'Grade', 'From Date', 'To Date', 'Status', 'Actions'].map(col =>
+                    ...['Cert No.', 'Student', 'Father', 'Course', 'Grade', 'Student ID', 'From Date', 'To Date', 'Status', 'Actions'].map(col =>
                       h('th', { key: col, style: { padding: '12px 16px', textAlign: 'left', fontWeight: '700', color: '#475569', fontSize: '12px', textTransform: 'uppercase', whiteSpace: 'nowrap' } }, col)
                     )
                   )
@@ -289,6 +289,7 @@ function Mgr() {
                     },
                       h('td', { style: { padding: '12px 16px', fontWeight: '700', color: '#1c3d7a', fontFamily: 'monospace' } }, r.certificate_no),
                       h('td', { style: { padding: '12px 16px', fontWeight: '600' } }, r.student_name),
+                      h('td', { style: { padding: '12px 16px', color: '#64748b', fontFamily: 'monospace', fontSize: '12px' } }, r.batch_id || '—'),
                       h('td', { style: { padding: '12px 16px', color: '#64748b' } }, r.father_name || '—'),
                       h('td', { style: { padding: '12px 16px', color: '#64748b' } }, r.course_name),
                       h('td', { style: { padding: '12px 16px', fontWeight: '700', color: '#166534' } }, r.grade || '—'),
