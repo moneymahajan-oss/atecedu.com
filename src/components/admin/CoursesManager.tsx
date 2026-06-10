@@ -55,6 +55,9 @@ const EMPTY_FORM = {
   certificate_offered: true, is_active: true, is_featured: false,
   thumbnail_url: '', promo_video_url: '', demo_zoom_url: '', one_line_syllabus: '', description_3line: '', brochure_url: '', demo_video_url: '',
   prerequisites: '', sort_order: 0,
+  what_you_learn_raw: '',   // newline-separated, converted to JSONB on save
+  highlights_raw: '',       // newline-separated, converted to JSONB on save
+  faq_raw: '',              // JSON array string, saved as JSONB
 }
 
 const EMPTY_LESSON = {
@@ -150,7 +153,18 @@ export default function CoursesManager() {
   }
 
   function openEdit(course: Course) {
-    setForm({ ...EMPTY_FORM, ...course }); setEditId(course.id); setShowForm(true)
+    // Convert JSONB arrays back to editable raw text
+    const rawLearn = Array.isArray((course as any).what_you_learn)
+      ? (course as any).what_you_learn.join('\n')
+      : ''
+    const rawHighlights = Array.isArray((course as any).highlights)
+      ? (course as any).highlights.join('\n')
+      : ''
+    const rawFaq = Array.isArray((course as any).faq) && (course as any).faq.length
+      ? JSON.stringify((course as any).faq, null, 2)
+      : ''
+    setForm({ ...EMPTY_FORM, ...course, what_you_learn_raw: rawLearn, highlights_raw: rawHighlights, faq_raw: rawFaq })
+    setEditId(course.id); setShowForm(true)
     // Load existing syllabus into editor
     const existing = Array.isArray((course as any).syllabus)
       ? (course as any).syllabus
@@ -163,8 +177,23 @@ export default function CoursesManager() {
 
   async function saveCourse() {
     setSaving(true)
+    try {
     // Use syllabusWeeks directly (setState is async so form.syllabus may be stale)
-    const { id, total_enrolled, rating, created_at, updated_at, ...rest } = form
+    const { id, total_enrolled, rating, created_at, updated_at,
+            what_you_learn_raw, highlights_raw, faq_raw,
+            what_you_learn, highlights, faq,
+            ...rest } = form
+
+    // Convert raw textarea → JSONB
+    const whatYouLearnArr: string[] = (what_you_learn_raw || '')
+      .split('\n').map((s: string) => s.trim()).filter(Boolean)
+    const highlightsArr: string[] = (highlights_raw || '')
+      .split('\n').map((s: string) => s.trim()).filter(Boolean)
+    let faqArr: { q: string; a: string }[] = []
+    if (faq_raw?.trim()) {
+      try { faqArr = JSON.parse(faq_raw) } catch { /* invalid JSON — skip */ }
+    }
+
     const payload = {
       ...rest,
       fee_inr:           parseInt(rest.fee_inr) || 0,
@@ -179,6 +208,10 @@ export default function CoursesManager() {
       promo_video_url:   rest.promo_video_url?.trim()     || null,
       demo_zoom_url:     rest.demo_zoom_url?.trim()       || null,
       prerequisites:     rest.prerequisites?.trim()       || null,
+      // JSONB fields
+      what_you_learn: whatYouLearnArr.length ? whatYouLearnArr : null,
+      highlights:     highlightsArr.length   ? highlightsArr   : null,
+      faq:            faqArr.length          ? faqArr          : null,
       // Syllabus from the visual editor — filter empty weeks/topics
       syllabus: syllabusWeeks
         .filter(w => w.topic.trim())
@@ -192,11 +225,18 @@ export default function CoursesManager() {
       payload.slug = payload.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
     }
     if (editId) {
-      await supabase.from('courses').update(payload).eq('id', editId)
+      const { error } = await supabase.from('courses').update(payload).eq('id', editId)
+      if (error) throw error
     } else {
-      await supabase.from('courses').insert(payload)
+      const { error } = await supabase.from('courses').insert(payload)
+      if (error) throw error
     }
-    setSaving(false); setShowForm(false); loadCourses()
+    setShowForm(false); loadCourses()
+    } catch(e: any) {
+      alert('Save failed: ' + (e.message ?? String(e)))
+    } finally {
+      setSaving(false)
+    }
   }
 
   async function uploadBrochure(file: File) {
@@ -624,6 +664,55 @@ export default function CoursesManager() {
                     rows={3}
                     style={{ ...inputStyle, resize: 'vertical', fontFamily: 'inherit', lineHeight: '1.65', width: '100%' }}
                   />
+                </div>
+
+                {/* ── What You'll Learn ── */}
+                <div style={{ gridColumn: '1 / -1' }}>
+                  <label style={{ fontSize: '12px', fontWeight: '600', color: '#475569', display: 'block', marginBottom: '4px' }}>
+                    ✅ What You'll Learn <span style={{ fontWeight: 400, color: '#94a3b8' }}>(one item per line — shown as green tick grid on course page)</span>
+                  </label>
+                  <textarea
+                    value={form.what_you_learn_raw ?? ''}
+                    onChange={e => update('what_you_learn_raw', e.target.value)}
+                    placeholder={'Build REST APIs with Node.js\nDesign responsive UIs with React\nDeploy apps to cloud platforms\nWork with MongoDB databases'}
+                    rows={5}
+                    style={{ ...inputStyle, resize: 'vertical', fontFamily: 'inherit', lineHeight: '1.65', width: '100%' }}
+                  />
+                </div>
+
+                {/* ── Course Highlights ── */}
+                <div style={{ gridColumn: '1 / -1' }}>
+                  <label style={{ fontSize: '12px', fontWeight: '600', color: '#475569', display: 'block', marginBottom: '4px' }}>
+                    🏷️ Course Highlights <span style={{ fontWeight: 400, color: '#94a3b8' }}>(one item per line — shown as pill tags on course page)</span>
+                  </label>
+                  <textarea
+                    value={form.highlights_raw ?? ''}
+                    onChange={e => update('highlights_raw', e.target.value)}
+                    placeholder={'ISO 9001:2015 Certified\nLive Projects Included\nJob Placement Support\nCertificate on Completion'}
+                    rows={4}
+                    style={{ ...inputStyle, resize: 'vertical', fontFamily: 'inherit', lineHeight: '1.65', width: '100%' }}
+                  />
+                </div>
+
+                {/* ── FAQ ── */}
+                <div style={{ gridColumn: '1 / -1' }}>
+                  <label style={{ fontSize: '12px', fontWeight: '600', color: '#475569', display: 'block', marginBottom: '4px' }}>
+                    ❓ FAQ <span style={{ fontWeight: 400, color: '#94a3b8' }}>(JSON array — shown as accordion on course page)</span>
+                  </label>
+                  <div style={{ fontSize: '11px', color: '#94a3b8', marginBottom: '6px', lineHeight: '1.6' }}>
+                    Format: <code style={{ background: '#f1f5f9', padding: '1px 5px', borderRadius: '4px' }}>{'[{"q":"Question?","a":"Answer here."}]'}</code>
+                  </div>
+                  <textarea
+                    value={form.faq_raw ?? ''}
+                    onChange={e => update('faq_raw', e.target.value)}
+                    placeholder={'[\n  {"q": "Who is this course for?", "a": "Anyone with basic computer knowledge."},\n  {"q": "Is a certificate provided?", "a": "Yes, upon successful completion."}\n]'}
+                    rows={6}
+                    style={{ ...inputStyle, resize: 'vertical', fontFamily: 'monospace', fontSize: '12px', lineHeight: '1.6', width: '100%' }}
+                  />
+                  {form.faq_raw?.trim() && (() => {
+                    try { JSON.parse(form.faq_raw); return null }
+                    catch { return <div style={{ marginTop: '4px', fontSize: '11px', color: '#dc2626', fontWeight: '600' }}>⚠ Invalid JSON — FAQ will not be saved</div> }
+                  })()}
                 </div>
                 <div>
                   <label style={{ fontSize: '12px', fontWeight: '600', color: '#475569', display: 'block', marginBottom: '5px' }}>Mode</label>

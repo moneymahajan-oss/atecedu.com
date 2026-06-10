@@ -3,6 +3,7 @@
 import BaseLayout from '../../layouts/BaseLayout.astro'
 import { supabase } from '../../lib/supabase'
 import AddToCartButton from '../../components/courses/AddToCartButton'
+import CoursePricingCard from '../../components/courses/CoursePricingCard'
 
 export async function getStaticPaths() {
   // Fallback slugs ensure pages always build even if Supabase is empty at build time
@@ -54,9 +55,22 @@ const whatYouLearn = (course.what_you_learn as string[]) ?? []
 const highlights = (course.highlights as string[]) ?? []
 const faq = (course.faq as { q: string; a: string }[]) ?? []
 
-const discount = course.original_fee_inr && course.fee_inr
-  ? Math.round((1 - course.fee_inr / course.original_fee_inr) * 100)
-  : null
+// Extract bare YouTube ID from any URL format or bare ID
+function extractYouTubeId(raw: string | null | undefined): string | null {
+  if (!raw) return null
+  const s = raw.trim()
+  // Already a bare 11-char ID (no slashes or dots)
+  if (/^[A-Za-z0-9_-]{11}$/.test(s)) return s
+  // youtu.be/ID
+  const short = s.match(/youtu\.be\/([A-Za-z0-9_-]{11})/)
+  if (short) return short[1]
+  // youtube.com/watch?v=ID or /embed/ID or /shorts/ID
+  const long = s.match(/(?:v=|\/embed\/|\/shorts\/|\/v\/)([A-Za-z0-9_-]{11})/)
+  if (long) return long[1]
+  return null
+}
+
+const promoVideoId = extractYouTubeId((course as any).promo_video_url)
 
 const jsonLd = {
   "@context": "https://schema.org",
@@ -192,11 +206,11 @@ const jsonLd = {
           )}
 
           <!-- ── Promo Video (moved from hero) ── -->
-          {course.promo_video_url && (
+          {promoVideoId && (
             <div style="margin-bottom:24px;border-radius:14px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,0.12);">
               <div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;">
                 <iframe
-                  src={`https://www.youtube.com/embed/${course.promo_video_url}?rel=0&modestbranding=1`}
+                  src={`https://www.youtube.com/embed/${promoVideoId}?rel=0&modestbranding=1`}
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                   allowfullscreen
                   title={`${course.title} demo`}
@@ -288,8 +302,8 @@ const jsonLd = {
                   </a>
                 )}
                 {/* Watch button — resolves bare YouTube ID OR full URL */}
-                {((course as any).demo_video_url || course.promo_video_url) && (() => {
-                  const raw = (course as any).demo_video_url || course.promo_video_url || ''
+                {((course as any).demo_video_url || promoVideoId) && (() => {
+                  const raw = (course as any).demo_video_url || (course as any).promo_video_url || ''
                   // If it looks like a bare 11-char YouTube ID (no slashes, no dots), build full URL
                   const videoUrl = raw.startsWith('http')
                     ? raw
@@ -340,44 +354,17 @@ const jsonLd = {
 
         <!-- Right: sticky pricing sidebar -->
         <div class="sticky-sidebar">
-          <div class="pricing-card">
-            <div class="pricing-body">
-              <div class="pricing-price-row">
-                <span class="pricing-price">₹{course.fee_inr?.toLocaleString('en-IN')}</span>
-                {course.original_fee_inr && (
-                  <>
-                    <span class="pricing-old">₹{course.original_fee_inr?.toLocaleString('en-IN')}</span>
-                    {discount && <span class="pricing-discount">{discount}% off</span>}
-                  </>
-                )}
-              </div>
-              {/* One-line syllabus or short description in sidebar */}
-              {((course as any).one_line_syllabus || course.short_description) && (
-                <p style="font-size:13px;color:#6b7280;margin:8px 0 12px;line-height:1.5;">
-                  {(course as any).one_line_syllabus || course.short_description}
-                </p>
-              )}
-              <div class="pricing-btns">
-                <AddToCartButton client:load courseId={course.id} courseTitle={course.title} courseSlug={slug} />
-              </div>
-              {/* Quick syllabus bullets */}
-              {syllabus.length > 0 && (
-                <div style="margin-top:16px;border-top:1px solid #f1f5f9;padding-top:14px;">
-                  <div style="font-size:12px;font-weight:700;color:#374151;margin-bottom:8px;">📋 Course Highlights</div>
-                  <ul style="margin:0;padding:0 0 0 16px;font-size:12px;color:#6b7280;line-height:1.7;">
-                    {syllabus.slice(0,5).map(w => (
-                      <li>{w.topic}</li>
-                    ))}
-                    {syllabus.length > 5 && <li style="color:#0b1525;font-weight:600;">+{syllabus.length - 5} more weeks...</li>}
-                  </ul>
-                </div>
-              )}
-              <div class="pricing-guarantee" style="margin-top:14px;">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                7-day money-back guarantee
-              </div>
-            </div>
-          </div>
+          <CoursePricingCard
+            client:load
+            courseSlug={slug}
+            courseId={course.id}
+            courseTitle={course.title}
+            initialFee={course.fee_inr ?? 0}
+            initialOriginalFee={course.original_fee_inr ?? null}
+            initialShortDesc={course.short_description ?? null}
+            initialOneLine={(course as any).one_line_syllabus ?? null}
+            initialSyllabus={syllabus}
+          />
         </div>
       </div>
     </div>
@@ -413,10 +400,18 @@ const jsonLd = {
 
   <!-- Mobile floating CTA -->
   <div class="floating-cta">
-    <div style="font-family:var(--font-display);font-size:18px;font-weight:800;color:var(--navy)">
-      ₹{course.fee_inr?.toLocaleString('en-IN')}
-    </div>
-    <AddToCartButton client:load courseId={course.id} courseTitle={course.title} courseSlug={slug} compact />
+    <CoursePricingCard
+      client:load
+      courseSlug={slug}
+      courseId={course.id}
+      courseTitle={course.title}
+      initialFee={course.fee_inr ?? 0}
+      initialOriginalFee={course.original_fee_inr ?? null}
+      initialShortDesc={null}
+      initialOneLine={null}
+      initialSyllabus={[]}
+      compact
+    />
   </div>
 
   <!-- JSON-LD -->

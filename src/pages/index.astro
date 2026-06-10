@@ -51,10 +51,10 @@ const bottomBarBg    = heroSettings.bottom_bar_bg   || '#0b1525'
 
 // Fallback courses
 const fallbackCourses = courses.length > 0 ? courses : [
-  { id:'1', title:'GEN AI', slug:'gen-ai', short_description:'Master AI tools, ChatGPT, image gen & automation', mode:'online', fee_inr:4999, original_fee_inr:9999, category:'ai', is_featured:true },
-  { id:'2', title:'MERN Stack', slug:'mern-stack', short_description:'Full-stack web development with React, Node, MongoDB', mode:'online', fee_inr:5999, original_fee_inr:11999, category:'web', is_featured:true },
-  { id:'3', title:'Tally Prime', slug:'tally-prime', short_description:'Complete accounting & GST with Tally Prime', mode:'hybrid', fee_inr:2999, original_fee_inr:5999, category:'accounting', is_featured:false },
-  { id:'4', title:'Hardware & Networking', slug:'hardware-networking', short_description:'Chip-level repair, CCNA, server admin', mode:'hybrid', fee_inr:3999, original_fee_inr:7999, category:'hardware', is_featured:false },
+  { id:'1', title:'GEN AI', slug:'gen-ai', short_description:'Master AI tools, ChatGPT, image gen & automation', mode:'online', fee_inr:0, original_fee_inr:null, category:'ai', is_featured:true },
+  { id:'2', title:'MERN Stack', slug:'mern-stack', short_description:'Full-stack web development with React, Node, MongoDB', mode:'online', fee_inr:0, original_fee_inr:null, category:'web', is_featured:true },
+  { id:'3', title:'Tally Prime', slug:'tally-prime', short_description:'Complete accounting & GST with Tally Prime', mode:'hybrid', fee_inr:0, original_fee_inr:null, category:'accounting', is_featured:false },
+  { id:'4', title:'Hardware & Networking', slug:'hardware-networking', short_description:'Chip-level repair, CCNA, server admin', mode:'hybrid', fee_inr:0, original_fee_inr:null, category:'hardware', is_featured:false },
 ]
 
 const fallbackTestimonials = testimonials.length > 0 ? testimonials : [
@@ -3065,46 +3065,46 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
     {
       name:'AI & Machine Learning', color:'#7c3aed', bg_color:'#f5f3ff',
       courses:[
-        { title:'GEN AI for Everyone', slug:'gen-ai', mode:'online', fee_inr:4999, original_fee_inr:9999, thumbnail_url:'' },
-        { title:'Machine Learning', slug:'machine-learning', mode:'online', fee_inr:5999, original_fee_inr:11999, thumbnail_url:'' },
-        { title:'Python Programming', slug:'python', mode:'online', fee_inr:3999, original_fee_inr:7999, thumbnail_url:'' },
-        { title:'Deep Learning', slug:'deep-learning', mode:'online', fee_inr:6999, original_fee_inr:13999, thumbnail_url:'' },
+        { title:'GEN AI for Everyone', slug:'gen-ai', mode:'online', fee_inr:0, original_fee_inr:0, thumbnail_url:'' },
+        { title:'Machine Learning', slug:'machine-learning', mode:'online', fee_inr:0, original_fee_inr:0, thumbnail_url:'' },
+        { title:'Python Programming', slug:'python', mode:'online', fee_inr:0, original_fee_inr:0, thumbnail_url:'' },
+        { title:'Deep Learning', slug:'deep-learning', mode:'online', fee_inr:0, original_fee_inr:0, thumbnail_url:'' },
       ]
     },
     {
       name:'Web & Full-Stack', color:'#0b1525', bg_color:'#eff6ff',
       courses:[
-        { title:'MERN Stack', slug:'mern-stack', mode:'online', fee_inr:5999, original_fee_inr:11999, thumbnail_url:'' },
-        { title:'React.js', slug:'react', mode:'online', fee_inr:4499, original_fee_inr:8999, thumbnail_url:'' },
-        { title:'PHP & MySQL', slug:'php-mysql', mode:'hybrid', fee_inr:2999, original_fee_inr:5999, thumbnail_url:'' },
-        { title:'WordPress Design', slug:'wordpress', mode:'hybrid', fee_inr:2499, original_fee_inr:4999, thumbnail_url:'' },
+        { title:'MERN Stack', slug:'mern-stack', mode:'online', fee_inr:0, original_fee_inr:0, thumbnail_url:'' },
+        { title:'React.js', slug:'react', mode:'online', fee_inr:0, original_fee_inr:0, thumbnail_url:'' },
+        { title:'PHP & MySQL', slug:'php-mysql', mode:'hybrid', fee_inr:0, original_fee_inr:0, thumbnail_url:'' },
+        { title:'WordPress Design', slug:'wordpress', mode:'hybrid', fee_inr:0, original_fee_inr:0, thumbnail_url:'' },
       ]
     },
     {
       name:'Commerce & Accounting', color:'#065f46', bg_color:'#ecfdf5',
       courses:[
-        { title:'Tally Prime + GST', slug:'tally-prime', mode:'hybrid', fee_inr:2999, original_fee_inr:5999, thumbnail_url:'' },
-        { title:'MS Office Advanced', slug:'ms-office', mode:'hybrid', fee_inr:1999, original_fee_inr:3999, thumbnail_url:'' },
-        { title:'Digital Marketing', slug:'digital-marketing', mode:'online', fee_inr:3999, original_fee_inr:7999, thumbnail_url:'' },
-        { title:'E-Commerce', slug:'ecommerce', mode:'online', fee_inr:2999, original_fee_inr:5999, thumbnail_url:'' },
+        { title:'Tally Prime + GST', slug:'tally-prime', mode:'hybrid', fee_inr:0, original_fee_inr:0, thumbnail_url:'' },
+        { title:'MS Office Advanced', slug:'ms-office', mode:'hybrid', fee_inr:0, original_fee_inr:0, thumbnail_url:'' },
+        { title:'Digital Marketing', slug:'digital-marketing', mode:'online', fee_inr:0, original_fee_inr:0, thumbnail_url:'' },
+        { title:'E-Commerce', slug:'ecommerce', mode:'online', fee_inr:0, original_fee_inr:0, thumbnail_url:'' },
       ]
     },
     {
       name:'Kids & Beginners', color:'#b45309', bg_color:'#fffbeb',
       courses:[
-        { title:'Coding for Kids', slug:'kids-coding', mode:'online', fee_inr:2499, original_fee_inr:4999, thumbnail_url:'' },
-        { title:'Scratch Programming', slug:'scratch', mode:'online', fee_inr:1999, original_fee_inr:3999, thumbnail_url:'' },
-        { title:'Computer Basics', slug:'computer-basics', mode:'hybrid', fee_inr:1499, original_fee_inr:2999, thumbnail_url:'' },
-        { title:'Robotics', slug:'robotics', mode:'hybrid', fee_inr:3499, original_fee_inr:6999, thumbnail_url:'' },
+        { title:'Coding for Kids', slug:'kids-coding', mode:'online', fee_inr:0, original_fee_inr:0, thumbnail_url:'' },
+        { title:'Scratch Programming', slug:'scratch', mode:'online', fee_inr:0, original_fee_inr:0, thumbnail_url:'' },
+        { title:'Computer Basics', slug:'computer-basics', mode:'hybrid', fee_inr:0, original_fee_inr:0, thumbnail_url:'' },
+        { title:'Robotics', slug:'robotics', mode:'hybrid', fee_inr:0, original_fee_inr:0, thumbnail_url:'' },
       ]
     },
     {
       name:'Hardware & Networking', color:'#be123c', bg_color:'#fff1f2',
       courses:[
-        { title:'Hardware + Networking', slug:'hardware-networking', mode:'hybrid', fee_inr:3999, original_fee_inr:7999, thumbnail_url:'' },
-        { title:'CCNA Networking', slug:'ccna', mode:'hybrid', fee_inr:4999, original_fee_inr:9999, thumbnail_url:'' },
-        { title:'Linux Admin', slug:'linux', mode:'online', fee_inr:3499, original_fee_inr:6999, thumbnail_url:'' },
-        { title:'Cybersecurity', slug:'cybersecurity', mode:'online', fee_inr:5499, original_fee_inr:10999, thumbnail_url:'' },
+        { title:'Hardware + Networking', slug:'hardware-networking', mode:'hybrid', fee_inr:0, original_fee_inr:0, thumbnail_url:'' },
+        { title:'CCNA Networking', slug:'ccna', mode:'hybrid', fee_inr:0, original_fee_inr:0, thumbnail_url:'' },
+        { title:'Linux Admin', slug:'linux', mode:'online', fee_inr:0, original_fee_inr:0, thumbnail_url:'' },
+        { title:'Cybersecurity', slug:'cybersecurity', mode:'online', fee_inr:0, original_fee_inr:0, thumbnail_url:'' },
       ]
     },
   ]
