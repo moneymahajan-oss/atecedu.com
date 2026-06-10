@@ -92,7 +92,8 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
       --nm-inset: inset 4px 4px 10px #c5c1bc, inset -4px -4px 10px #ffffff;
       --nm-float: 10px 10px 24px #bab6b1, -10px -10px 24px #ffffff;
     }
-    #hero-content { display:grid; grid-template-columns:1fr 1fr; align-items:center; gap:44px; }
+    #hero-content { display:grid; grid-template-columns:1.1fr 0.9fr; align-items:center; gap:44px; }
+    @media(min-width:1400px){ #hero-content { grid-template-columns:1.15fr 0.85fr; gap:64px; } }
     @media(max-width:768px){ #hero-content { grid-template-columns:1fr; } #hero-thumb-wrap { order:2; } }
     .nm-btn-primary { background:#d4f01a;color:#1a1a1a;padding:12px 26px;border-radius:12px;font-weight:800;font-size:14px;text-decoration:none;box-shadow:5px 5px 12px #c0bcb7,-3px -3px 8px #fff;display:inline-block;transition:box-shadow 0.15s; }
     .nm-btn-primary:hover { box-shadow:3px 3px 8px #c0bcb7,-2px -2px 5px #fff; }
@@ -165,11 +166,11 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
   </style>
 
   <section id="hero-section" style={`background:${heroBg};`}>
-    <div id="hero-content" style="width:100%;max-width:1200px;margin:0 auto;padding:32px 40px 28px;">
+    <div id="hero-content" style="width:100%;max-width:var(--max-width,1400px);margin:0 auto;padding:32px 40px 28px;">
       <div>
         <h1
           id="hero-heading"
-          style={`font-family:'Sora',sans-serif;font-size:clamp(2.2rem,4vw,3.4rem);font-weight:900;line-height:1.08;color:${heroTextColor};margin:0 0 10px;`}
+          style={`font-family:'Sora',sans-serif;font-size:clamp(2.2rem,3.5vw,4.2rem);font-weight:900;line-height:1.08;color:${heroTextColor};margin:0 0 10px;`}
           set:html={heroHeading}
         />
         <p
@@ -566,7 +567,7 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
       pointer-events: none;
     }
     .schol-inner {
-      max-width: 1200px;
+      max-width: var(--max-width, 1400px);
       margin: 0 auto;
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -832,7 +833,7 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
   ══════════════════════════════════════════════════════════════ -->
   <style is:global>
     .faculty-section { padding:72px 32px 80px; background:#f8f4ef; }
-    .faculty-header  { max-width:1200px; margin:0 auto 48px; text-align:center; }
+    .faculty-header  { max-width:var(--max-width,1400px); margin:0 auto 48px; text-align:center; }
     .faculty-title   { font-family:'Sora',sans-serif; font-size:clamp(1.8rem,3.5vw,2.6rem); font-weight:900; color:#1c1c1c; margin:0 0 10px; }
     .faculty-sub     { font-size:15px; color:#64748b; margin:0; }
     /* Slider */
@@ -1064,7 +1065,7 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
        WHY ATEC — DB-driven, 5 cards, admin manageable, dark navy bg
   ══════════════════════════════════════════════════════════════ -->
   <section id="why-atec-section" style="padding:72px 32px;background:#0b1525;">
-    <div style="max-width:1200px;margin:0 auto;">
+    <div style="max-width:var(--max-width,1400px);margin:0 auto;">
       <div style="text-align:center;margin-bottom:48px;">
         <h2 id="why-atec-title" style="font-family:'Sora',sans-serif;font-size:clamp(1.6rem,3vw,2.2rem);font-weight:800;color:#fff;margin:0 0 12px;">Why Choose ATEC?</h2>
         <p id="why-atec-sub" style="color:rgba(255,255,255,0.7);font-size:16px;margin:0;">25+ years of excellence. Real skills. Real placements.</p>
@@ -1095,7 +1096,7 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
        YOUTUBE VIDEOS SECTION — runtime loaded from youtube_videos table
   ══════════════════════════════════════════════════════════════ -->
   <section id="yt-section" style="padding:72px 32px;background:#fff;display:none;">
-    <div style="max-width:1200px;margin:0 auto;">
+    <div style="max-width:var(--max-width,1400px);margin:0 auto;">
       <div style="text-align:center;margin-bottom:36px;">
           <p style="font-size:13px;font-weight:700;color:#d4f01a;text-transform:uppercase;letter-spacing:0.08em;margin:0 0 6px;background:#0b1525;display:inline-block;padding:3px 10px;border-radius:4px;">Our Channel</p>
           <h2 style="font-family:'Sora',sans-serif;font-size:clamp(1.6rem,3vw,2.2rem);font-weight:800;color:#1c1c1c;margin:0 0 16px;">Watch &amp; Learn</h2>
@@ -1113,7 +1114,7 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
        BLOG SECTION — runtime loaded from blog_posts table
   ══════════════════════════════════════════════════════════════ -->
   <section id="blog-section" style="padding:72px 32px;background:#f8f4ef;display:none;">
-    <div style="max-width:1200px;margin:0 auto;">
+    <div style="max-width:var(--max-width,1400px);margin:0 auto;">
       <div style="text-align:center;margin-bottom:36px;">
           <p style="font-size:13px;font-weight:700;color:#d4f01a;text-transform:uppercase;letter-spacing:0.08em;margin:0 0 6px;background:#0b1525;display:inline-block;padding:3px 10px;border-radius:4px;">Knowledge Hub</p>
           <h2 style="font-family:'Sora',sans-serif;font-size:clamp(1.6rem,3vw,2.2rem);font-weight:800;color:#1c1c1c;margin:0 0 16px;">Latest from Our Blog</h2>
@@ -1127,7 +1128,7 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
        PODCAST SECTION — runtime loaded from podcast_episodes table
   ══════════════════════════════════════════════════════════════ -->
   <section id="podcast-section" style="padding:72px 32px;background:#0b1525;display:none;">
-    <div style="max-width:1200px;margin:0 auto;">
+    <div style="max-width:var(--max-width,1400px);margin:0 auto;">
       <div style="text-align:center;margin-bottom:36px;">
           <p style="font-size:13px;font-weight:700;color:#d4f01a;text-transform:uppercase;letter-spacing:0.08em;margin:0 0 6px;">🎙️ Podcast</p>
           <h2 style="font-family:'Sora',sans-serif;font-size:clamp(1.6rem,3vw,2.2rem);font-weight:800;color:#fff;margin:0;">ATEC Talks</h2>
@@ -1141,7 +1142,7 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
        NEWS / UPDATES SECTION — runtime loaded from news_items table
   ══════════════════════════════════════════════════════════════ -->
   <section id="news-section" style="padding:72px 32px;background:#fff;display:none;">
-    <div style="max-width:1200px;margin:0 auto;">
+    <div style="max-width:var(--max-width,1400px);margin:0 auto;">
       <div style="text-align:center;margin-bottom:36px;">
           <p style="font-size:13px;font-weight:700;color:#d4f01a;text-transform:uppercase;letter-spacing:0.08em;margin:0 0 6px;background:#0b1525;display:inline-block;padding:3px 10px;border-radius:4px;">Latest Updates</p>
           <h2 style="font-family:'Sora',sans-serif;font-size:clamp(1.6rem,3vw,2.2rem);font-weight:800;color:#1c1c1c;margin:8px 0 0;">News &amp; Announcements</h2>
@@ -1665,7 +1666,7 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
   ══════════════════════════════════════════════════════════════ -->
   <style is:global>
     .contact-section { padding:72px 32px 80px; background:#f8f4ef; }
-    .contact-inner { max-width:1200px; margin:0 auto; }
+    .contact-inner { max-width:var(--max-width,1400px); margin:0 auto; }
     .contact-layout { display:grid; grid-template-columns:1fr 1fr; gap:48px; align-items:start; }
     @media(max-width:768px){ .contact-layout { grid-template-columns:1fr; gap:32px; } }
     .contact-info-card {
@@ -1812,7 +1813,7 @@ const fallbackInstructors = instructors.length > 0 ? instructors : [
   ══════════════════════════════════════════════════════════════ -->
   <style is:global>
     .downloads-section { padding:72px 32px 80px; background:#f8f4ef; }
-    .downloads-inner { max-width:1200px; margin:0 auto; }
+    .downloads-inner { max-width:var(--max-width,1400px); margin:0 auto; }
     .downloads-grid {
       display:grid;
       grid-template-columns:repeat(auto-fill,minmax(280px,1fr));
