@@ -364,6 +364,8 @@ const jsonLd = {
             initialShortDesc={course.short_description ?? null}
             initialOneLine={(course as any).one_line_syllabus ?? null}
             initialSyllabus={syllabus}
+            initialThumbnail={course.thumbnail_url ?? null}
+            initialPromoVideoId={promoVideoId}
           />
         </div>
       </div>
@@ -410,6 +412,8 @@ const jsonLd = {
       initialShortDesc={null}
       initialOneLine={null}
       initialSyllabus={[]}
+      initialThumbnail={null}
+      initialPromoVideoId={null}
       compact
     />
   </div>
