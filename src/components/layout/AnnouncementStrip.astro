@@ -1,5 +1,9 @@
 ---
 // src/components/layout/AnnouncementStrip.astro
+// FIX: link URLs saved without https:// (e.g. "www.ateceducation.in") were
+// treated as relative paths → atecedu.com/www.ateceducation.in → 404.
+// normalizeUrl() now prepends https:// to bare domains; internal paths
+// starting with "/" are left untouched. External links open in a new tab.
 ---
 
 <div id="announcement-strip" style="display:none;position:sticky;top:0;z-index:10000;">
@@ -21,6 +25,20 @@
 
 <script>
   ;(function() {
+
+    // ── Normalize a link from admin into a valid href ──
+    // "/courses"               → "/courses"               (internal, unchanged)
+    // "https://example.com"    → "https://example.com"    (unchanged)
+    // "www.ateceducation.in"   → "https://www.ateceducation.in"
+    // "ateceducation.in"       → "https://ateceducation.in"
+    function normalizeUrl(raw: string): string {
+      const s = (raw || '').trim()
+      if (!s) return '#'
+      if (s.startsWith('/') || s.startsWith('#')) return s          // internal path / anchor
+      if (/^https?:\/\//i.test(s)) return s                        // already absolute
+      if (/^mailto:|^tel:/i.test(s)) return s                      // mail / phone links
+      return 'https://' + s                                        // bare domain → https
+    }
 
     async function loadStrip(SB_URL: string, SB_KEY: string) {
       try {
@@ -63,10 +81,13 @@
           timerHtml = `<span class="atec-timer-badge" style="background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.25);border-radius:5px;padding:2px 10px;font-weight:800;font-size:12px;color:#d4f01a;font-family:monospace;flex-shrink:0;">⏱ <span id="strip-timer">--</span></span>`
         }
 
-        // Link box
+        // Link box — normalize URL so bare domains don't 404 as relative paths
         let linkHtml = ''
         if (s.link && s.link_text) {
-          linkHtml = `<a href="${s.link}" style="display:inline-flex;align-items:center;background:${s.box_bg_color||'rgba(255,255,255,0.15)'};border:1px solid ${s.box_border_color||'rgba(255,255,255,0.3)'};border-radius:5px;padding:3px 12px;font-size:12px;font-weight:700;color:${s.box_text_color||'#d4f01a'};text-decoration:none;white-space:nowrap;flex-shrink:0;" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">${s.link_text}</a>`
+          const href = normalizeUrl(s.link)
+          const isExternal = /^https?:\/\//i.test(href)
+          const targetAttr = isExternal ? ' target="_blank" rel="noopener"' : ''
+          linkHtml = `<a href="${href}"${targetAttr} style="display:inline-flex;align-items:center;background:${s.box_bg_color||'rgba(255,255,255,0.15)'};border:1px solid ${s.box_border_color||'rgba(255,255,255,0.3)'};border-radius:5px;padding:3px 12px;font-size:12px;font-weight:700;color:${s.box_text_color||'#d4f01a'};text-decoration:none;white-space:nowrap;flex-shrink:0;" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">${s.link_text}</a>`
         }
 
         inner.style.cssText = 'display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;max-width:1200px;margin:0 auto;'
