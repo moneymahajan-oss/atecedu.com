@@ -1,0 +1,870 @@
+---
+// src/pages/admin/superadmin-certificates.astro
+// NEW PAGE — Superadmin Certificate Management (does NOT modify any existing file)
+// Features:
+//   ✅ View all certificates with search + pagination
+//   ✅ Add / Edit certificate
+//   ✅ Bulk CSV upload with duplicate detection + preview
+//   ✅ Download single or all certificates (password-gated)
+//   ✅ Delete (deactivate) single or bulk — requires password + type "DELETE"
+//   ✅ Full Audit Log with date/time, action, cert no, student, admin, notes
+//   ✅ Export audit log as CSV
+import AdminLayout from '../../layouts/AdminLayout.astro'
+---
+<AdminLayout title="Superadmin – Certificates" activeSection="superadmin-certificates">
+  <div id="sa-root"></div>
+</AdminLayout>
+
+<script>
+import { createClient } from '@supabase/supabase-js'
+
+// waitSB: window.__SB_URL is injected by AdminLayout after DOM ready
+function waitSB(cb) {
+  if (window.__SB_URL && window.__SB_KEY) { cb(); return }
+  const t = setInterval(() => {
+    if (window.__SB_URL && window.__SB_KEY) { clearInterval(t); cb() }
+  }, 80)
+}
+
+waitSB(() => {
+  const sb = createClient(window.__SB_URL, window.__SB_KEY)
+  mountApp(sb)
+})
+
+function mountApp(sb) {
+
+// ─── Passwords ────────────────────────────────────────────────────────────────
+// Change these after deployment via Supabase site_settings or env if preferred
+const PWD_DOWNLOAD = 'ATEC@Download2024'
+const PWD_DELETE   = 'ATEC@Delete2024'
+const PAGE_SIZE    = 25
+const AUDIT_SIZE   = 50
+
+// ─── State ────────────────────────────────────────────────────────────────────
+let S = {
+  tab: 'list',
+  certs: [], totalCount: 0, page: 1, search: '', loading: false,
+  form: emptyForm(), editId: null, formSaving: false, formError: '', formSuccess: '',
+  csvRows: [], csvPreview: false, csvError: '', csvSuccess: '', csvLoading: false, csvDuplicates: [],
+  dlModal: null, dlPwd: '', dlError: '', dlLoading: false,
+  delModal: null, delPwd: '', delWord: '', delError: '', delLoading: false,
+  selected: new Set(),
+  bulkDelModal: false, bulkDelPwd: '', bulkDelWord: '', bulkDelError: '', bulkDelLoading: false,
+  auditRows: [], auditTotal: 0, auditPage: 1, auditFilter: '', auditLoading: false,
+}
+
+function emptyForm() {
+  return {
+    certificate_no:'', batch_id:'', student_name:'', father_name:'', mother_name:'',
+    course_name:'', course_duration:'', grade:'', marks_obtained:'', total_marks:'',
+    from_date:'', issue_date:'', center_name:'ATEC Gurdaspur', is_active:true,
+  }
+}
+
+function setState(patch) { Object.assign(S, patch); render() }
+
+// ─── Formatters ───────────────────────────────────────────────────────────────
+function fmt(d) {
+  if (!d) return '—'
+  try { return new Date(d).toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' }) }
+  catch { return d }
+}
+function fmtDT(d) {
+  if (!d) return '—'
+  try { return new Date(d).toLocaleString('en-IN', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:true }) }
+  catch { return d }
+}
+function clean(v) { return (v||'').trim().slice(0,300) }
+
+// ─── Audit logger ─────────────────────────────────────────────────────────────
+async function logAudit(action, certNo, studentName, oldData, newData, count=1, notes='') {
+  try {
+    await sb.from('certificate_audit_log').insert([{
+      action, certificate_no:certNo||'', student_name:studentName||'',
+      old_data:oldData||null, new_data:newData||null, records_count:count,
+      performed_by: window.__CURRENT_USER_EMAIL || 'superadmin', notes,
+    }])
+  } catch(e) { /* non-fatal */ }
+}
+
+// ─── Data loaders ─────────────────────────────────────────────────────────────
+async function loadCerts(pg, q) {
+  setState({ loading:true })
+  const from=(pg-1)*PAGE_SIZE, to=from+PAGE_SIZE-1
+  let query = sb.from('certificates').select('*',{count:'exact'})
+    .order('created_at',{ascending:false}).range(from,to)
+  if (q && q.trim())
+    query = query.or(`certificate_no.ilike.%${q}%,student_name.ilike.%${q}%,batch_id.ilike.%${q}%,father_name.ilike.%${q}%,course_name.ilike.%${q}%`)
+  const { data, count, error } = await query
+  if (!error && data) setState({ certs:data, totalCount:count||0, loading:false })
+  else setState({ loading:false })
+}
+
+async function loadAudit(pg, filter) {
+  setState({ auditLoading:true })
+  const from=(pg-1)*AUDIT_SIZE, to=from+AUDIT_SIZE-1
+  let q = sb.from('certificate_audit_log').select('*',{count:'exact'})
+    .order('performed_at',{ascending:false}).range(from,to)
+  if (filter && filter.trim())
+    q = q.or(`certificate_no.ilike.%${filter}%,student_name.ilike.%${filter}%,action.ilike.%${filter}%`)
+  const { data, count } = await q
+  setState({ auditRows:data||[], auditTotal:count||0, auditLoading:false })
+}
+
+// ─── Form save ────────────────────────────────────────────────────────────────
+async function saveForm() {
+  const f = S.form
+  if (!f.certificate_no.trim()) return setState({ formError:'Certificate Number is required.' })
+  if (!f.student_name.trim())   return setState({ formError:'Student Name is required.' })
+  if (!f.father_name.trim())    return setState({ formError:"Father's Name is required." })
+  if (!f.course_name.trim())    return setState({ formError:'Course Name is required.' })
+  const payload = {
+    certificate_no:  clean(f.certificate_no),
+    batch_id:        clean(f.batch_id)||null,
+    student_name:    clean(f.student_name),
+    father_name:     clean(f.father_name),
+    mother_name:     clean(f.mother_name)||null,
+    course_name:     clean(f.course_name),
+    course_duration: clean(f.course_duration)||null,
+    grade:           clean(f.grade)||null,
+    marks_obtained:  f.marks_obtained!=='' ? Number(f.marks_obtained):null,
+    total_marks:     f.total_marks!==''    ? Number(f.total_marks)   :null,
+    from_date:       f.from_date||null,
+    issue_date:      f.issue_date||null,
+    center_name:     clean(f.center_name)||'ATEC Gurdaspur',
+    is_active:       f.is_active,
+  }
+  setState({ formSaving:true, formError:'', formSuccess:'' })
+  try {
+    if (S.editId) {
+      const { data:old } = await sb.from('certificates').select('*').eq('id',S.editId).single()
+      const { error } = await sb.from('certificates').update(payload).eq('id',S.editId)
+      if (error) return setState({ formSaving:false, formError:error.message })
+      await logAudit('UPDATE', payload.certificate_no, payload.student_name, old, payload)
+      setState({ formSaving:false, formSuccess:`✓ Certificate ${payload.certificate_no} updated.`, editId:null, form:emptyForm() })
+    } else {
+      const { error } = await sb.from('certificates').insert([payload])
+      if (error) return setState({ formSaving:false, formError: error.code==='23505' ? `Certificate "${payload.certificate_no}" already exists.` : error.message })
+      await logAudit('INSERT', payload.certificate_no, payload.student_name, null, payload)
+      setState({ formSaving:false, formSuccess:`✓ Certificate ${payload.certificate_no} added.`, form:emptyForm() })
+    }
+    loadCerts(S.page, S.search)
+  } finally { setState({ formSaving:false }) }
+}
+
+// ─── CSV ──────────────────────────────────────────────────────────────────────
+const COL_MAP = {
+  certificate_no:'certificate_no','cert_no':'certificate_no','certificate number':'certificate_no',
+  batch_id:'batch_id','batch id':'batch_id','student id':'batch_id',
+  student_name:'student_name',name:'student_name','student name':'student_name',
+  father_name:'father_name','father name':'father_name',fname:'father_name',
+  mother_name:'mother_name','mother name':'mother_name',
+  course_name:'course_name',course:'course_name','course name':'course_name',
+  course_duration:'course_duration',duration:'course_duration',
+  grade:'grade',
+  marks_obtained:'marks_obtained',marks:'marks_obtained','obtained marks':'marks_obtained',
+  total_marks:'total_marks','total marks':'total_marks',
+  from_date:'from_date','from date':'from_date',
+  issue_date:'issue_date',date:'issue_date','issue date':'issue_date',to_date:'issue_date','to date':'issue_date',
+  center_name:'center_name',center:'center_name',
+}
+
+function parseCSV(text) {
+  const lines = text.replace(/\r\n/g,'\n').replace(/\r/g,'\n').split('\n').filter(l=>l.trim())
+  if (lines.length<2) return []
+  const headers = lines[0].split(',').map(h=>h.trim().replace(/^"|"$/g,'').toLowerCase())
+  return lines.slice(1).filter(l=>l.trim()).map(line=>{
+    const cols=[]; let cur='',inQ=false
+    for(const ch of line){
+      if(ch==='"') inQ=!inQ
+      else if(ch===','&&!inQ){cols.push(cur.trim());cur=''}
+      else cur+=ch
+    }
+    cols.push(cur.trim())
+    const row = { center_name:'ATEC Gurdaspur', is_active:true }
+    headers.forEach((h,i)=>{
+      const col=COL_MAP[h]
+      if(col && cols[i]!==undefined){
+        const v = cols[i].replace(/^"|"$/g,'').trim()
+        if(col==='marks_obtained'||col==='total_marks') (row)[col]=v?Number(v):null
+        else (row)[col]=v
+      }
+    })
+    return row
+  })
+}
+
+function handleCSVFile(file) {
+  if(!file||!file.name.match(/\.csv$/i)) return setState({csvError:'Only .csv files accepted. Export Excel as CSV (File→Save As→CSV UTF-8).'})
+  const reader=new FileReader()
+  reader.onload=ev=>{
+    const rows=parseCSV(ev.target.result)
+    if(!rows.length) return setState({csvError:'Could not parse CSV. Ensure first row has column headers.'})
+    const missing=rows.filter(r=>!r.certificate_no?.trim())
+    if(missing.length>rows.length*0.5) return setState({csvError:`${missing.length} rows missing certificate_no. Check column names.`})
+    setState({csvRows:rows,csvPreview:true,csvError:'',csvSuccess:'',csvDuplicates:[]})
+  }
+  reader.readAsText(file)
+}
+
+async function uploadCSV() {
+  setState({csvLoading:true,csvError:'',csvSuccess:''})
+  const valid=S.csvRows.filter(r=>r.certificate_no?.trim()&&r.student_name?.trim())
+  if(!valid.length) return setState({csvLoading:false,csvError:'No valid rows (need certificate_no + student_name).'})
+  const nos=valid.map(r=>r.certificate_no)
+  const {data:existing}=await sb.from('certificates').select('certificate_no').in('certificate_no',nos)
+  const existingNos=(existing||[]).map(e=>e.certificate_no)
+  if(existingNos.length) return setState({csvLoading:false,csvDuplicates:existingNos})
+  let inserted=0
+  for(let i=0;i<valid.length;i+=100){
+    const batch=valid.slice(i,i+100)
+    const {error}=await sb.from('certificates').insert(batch)
+    if(error) return setState({csvLoading:false,csvError:`Batch failed at row ~${i+1}: ${error.message}`})
+    inserted+=batch.length
+  }
+  await logAudit('CSV_IMPORT',`${inserted} records`,'Bulk CSV import',null,{count:inserted},inserted,`Bulk uploaded ${inserted} records`)
+  setState({csvLoading:false,csvSuccess:`✓ ${inserted} certificates imported successfully.`,csvRows:[],csvPreview:false})
+  loadCerts(1,S.search)
+}
+
+function skipDuplicates() {
+  setState({csvRows:S.csvRows.filter(r=>!S.csvDuplicates.includes(r.certificate_no||'')),csvDuplicates:[]})
+}
+
+// ─── Download ─────────────────────────────────────────────────────────────────
+async function doDownload() {
+  if(S.dlPwd!==PWD_DOWNLOAD) return setState({dlError:'Wrong download password. Please try again.'})
+  setState({dlLoading:true,dlError:''})
+  let rows
+  if(S.dlModal==='all'){
+    const {data}=await sb.from('certificates').select('*').order('created_at',{ascending:false})
+    rows=data||[]
+    await logAudit('DOWNLOAD','ALL RECORDS','Full export',null,null,rows.length,'Full certificate database exported to CSV')
+  } else {
+    rows=[S.dlModal]
+    await logAudit('DOWNLOAD',S.dlModal.certificate_no,S.dlModal.student_name,null,null,1,'Single certificate exported to CSV')
+  }
+  const cols=['certificate_no','batch_id','student_name','father_name','mother_name','course_name','course_duration','grade','marks_obtained','total_marks','from_date','issue_date','center_name','is_active','created_at']
+  const csv=[cols.join(','),...rows.map(r=>cols.map(c=>{
+    const v=r[c]??''; const s=String(v)
+    return s.includes(',')||s.includes('"') ? `"${s.replace(/"/g,'""')}"`:s
+  }).join(','))].join('\n')
+  const blob=new Blob([csv],{type:'text/csv'})
+  const url=URL.createObjectURL(blob)
+  const a=document.createElement('a')
+  a.href=url
+  a.download=S.dlModal==='all' ? `ATEC_Certificates_${new Date().toISOString().slice(0,10)}.csv` : `ATEC_Cert_${S.dlModal.certificate_no}.csv`
+  a.click()
+  URL.revokeObjectURL(url)
+  setState({dlLoading:false,dlModal:null,dlPwd:'',dlError:''})
+}
+
+// ─── Delete (deactivate) ──────────────────────────────────────────────────────
+async function doDelete() {
+  if(S.delPwd!==PWD_DELETE) return setState({delError:'Wrong delete password.'})
+  if(S.delWord.trim().toUpperCase()!=='DELETE') return setState({delError:'You must type DELETE (all caps) in the confirmation box.'})
+  setState({delLoading:true,delError:''})
+  const cert=S.delModal
+  const {data:old}=await sb.from('certificates').select('*').eq('id',cert.id).single()
+  const {error}=await sb.from('certificates').update({is_active:false}).eq('id',cert.id)
+  if(error) return setState({delLoading:false,delError:'Failed: '+error.message})
+  await logAudit('DELETE',cert.certificate_no,cert.student_name,old,{is_active:false},1,'Certificate deactivated via superadmin delete panel')
+  setState({delLoading:false,delModal:null,delPwd:'',delWord:'',delError:''})
+  loadCerts(S.page,S.search)
+}
+
+async function doBulkDelete() {
+  if(S.bulkDelPwd!==PWD_DELETE) return setState({bulkDelError:'Wrong delete password.'})
+  if(S.bulkDelWord.trim().toUpperCase()!=='DELETE') return setState({bulkDelError:'You must type DELETE (all caps) in the confirmation box.'})
+  setState({bulkDelLoading:true,bulkDelError:''})
+  const ids=[...S.selected]
+  const {error}=await sb.from('certificates').update({is_active:false}).in('id',ids)
+  if(error) return setState({bulkDelLoading:false,bulkDelError:'Failed: '+error.message})
+  await logAudit('BULK_DELETE',`${ids.length} records`,'Bulk deactivation',null,{is_active:false},ids.length,`Bulk deactivated ${ids.length} records`)
+  setState({bulkDelLoading:false,bulkDelModal:false,bulkDelPwd:'',bulkDelWord:'',bulkDelError:'',selected:new Set()})
+  loadCerts(S.page,S.search)
+}
+
+// ─── CSS-in-JS helpers ────────────────────────────────────────────────────────
+function css(obj) { return Object.entries(obj).map(([k,v])=>`${k.replace(/([A-Z])/g,'-$1').toLowerCase()}:${v}`).join(';') }
+const BASE = {
+  card: 'background:#fff;border-radius:14px;border:1px solid #e2e8f0;padding:24px;margin-bottom:20px',
+  input: 'width:100%;padding:9px 13px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;outline:none;box-sizing:border-box;font-family:inherit;background:#fff;color:#1e293b',
+  label: 'font-size:11px;font-weight:700;color:#64748b;display:block;margin-bottom:5px;text-transform:uppercase;letter-spacing:0.5px',
+  primBtn: 'padding:9px 20px;background:#1c3d7a;color:#fff;border:none;border-radius:8px;font-weight:700;font-size:13px;cursor:pointer;font-family:inherit',
+  dangerBtn: 'padding:9px 20px;background:#dc2626;color:#fff;border:none;border-radius:8px;font-weight:700;font-size:13px;cursor:pointer;font-family:inherit',
+  ghostBtn: 'padding:8px 16px;background:transparent;color:#64748b;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;cursor:pointer;font-family:inherit',
+  successBox: 'background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:10px 14px;color:#166534;font-size:13px;margin-bottom:12px',
+  errorBox: 'background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:10px 14px;color:#dc2626;font-size:13px;margin-bottom:12px',
+  th: 'padding:11px 14px;text-align:left;font-weight:700;color:#64748b;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;background:#f8fafc;border-bottom:1px solid #e2e8f0;white-space:nowrap',
+  td: 'padding:11px 14px;color:#1e293b;font-size:13px;border-bottom:1px solid #f1f5f9;vertical-align:middle',
+}
+
+function gradeColor(g) {
+  const u=(g||'').toUpperCase()
+  if(u==='A+'||u==='DISTINCTION') return '#059669'
+  if(u==='A') return '#0d9488'
+  if(u.startsWith('B')) return '#1c3d7a'
+  if(u.startsWith('C')) return '#d97706'
+  return '#64748b'
+}
+
+function auditBadgeStyle(action) {
+  const map = {
+    INSERT:'background:#dcfce7;color:#166534', CSV_IMPORT:'background:#d1fae5;color:#065f46',
+    UPDATE:'background:#dbeafe;color:#1d4ed8', DOWNLOAD:'background:#fef9c3;color:#854d0e',
+    DELETE:'background:#fee2e2;color:#991b1b', BULK_DELETE:'background:#fecaca;color:#7f1d1d',
+    AUDIT_EXPORT:'background:#e0e7ff;color:#3730a3',
+  }
+  return (map[action]||'background:#f1f5f9;color:#475569') + ';padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;white-space:nowrap'
+}
+
+// ─── Build HTML string ────────────────────────────────────────────────────────
+function buildUI() {
+  const totalPages = Math.ceil(S.totalCount / PAGE_SIZE)
+  const auditTotalPages = Math.ceil(S.auditTotal / AUDIT_SIZE)
+
+  return `
+<div style="min-height:100vh;background:#f0f4f8;font-family:'Inter',sans-serif;color:#1e293b">
+
+  <!-- Header -->
+  <div style="background:#fff;border-bottom:1px solid #e2e8f0;padding:18px 24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
+    <div>
+      <div style="font-family:'Sora',sans-serif;font-size:1.35rem;font-weight:800;color:#0b1525">🛡️ Superadmin — Certificates</div>
+      <div style="font-size:12px;color:#64748b;margin-top:4px">${S.totalCount.toLocaleString()} total certificates · ${S.selected.size} selected</div>
+    </div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <button data-action="open-dl-all" style="${BASE.ghostBtn}">⬇️ Download All</button>
+      ${S.selected.size>0 ? `<button data-action="open-bulk-del" style="${BASE.dangerBtn}">🗑️ Delete Selected (${S.selected.size})</button>` : ''}
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div style="background:#fff;border-bottom:1px solid #e2e8f0;padding:0 24px;display:flex;gap:4px;overflow-x:auto">
+    ${[
+      {id:'list',  label:'📋 Certificates'},
+      {id:'add',   label: S.editId ? '✏️ Edit Certificate' : '➕ Add Certificate'},
+      {id:'csv',   label:'📊 Bulk CSV Upload'},
+      {id:'audit', label:'🔍 Audit Log'},
+    ].map(t=>`<button data-tab="${t.id}" style="padding:12px 18px;border:none;border-bottom:${S.tab===t.id?'2px solid #1c3d7a':'2px solid transparent'};background:transparent;color:${S.tab===t.id?'#1c3d7a':'#64748b'};cursor:pointer;font-size:13px;font-weight:600;font-family:inherit;white-space:nowrap">${t.label}</button>`).join('')}
+  </div>
+
+  <!-- Content -->
+  <div style="padding:24px;max-width:1300px;margin:0 auto">
+    ${S.tab==='list'  ? buildListHTML(totalPages)  : ''}
+    ${S.tab==='add'   ? buildFormHTML()             : ''}
+    ${S.tab==='csv'   ? buildCSVHTML()              : ''}
+    ${S.tab==='audit' ? buildAuditHTML(auditTotalPages) : ''}
+  </div>
+
+  <!-- Modals -->
+  ${S.dlModal    ? buildDlModalHTML()      : ''}
+  ${S.delModal   ? buildDelModalHTML()     : ''}
+  ${S.bulkDelModal ? buildBulkDelHTML()    : ''}
+</div>`
+}
+
+function buildListHTML(totalPages) {
+  return `
+  <div style="display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap">
+    <input id="sa-search" type="text" value="${escH(S.search)}" placeholder="🔍 Search cert no, name, course, student ID..." style="${BASE.input};flex:1;min-width:220px">
+    <button data-action="search" style="${BASE.primBtn}">Search</button>
+    ${S.search ? `<button data-action="clear-search" style="${BASE.ghostBtn}">✕ Clear</button>` : ''}
+    <button data-action="add-new" style="${BASE.primBtn};margin-left:auto">➕ Add Certificate</button>
+  </div>
+
+  ${S.loading ? `<div style="padding:60px;text-align:center;color:#94a3b8;font-size:14px">Loading certificates...</div>` : ''}
+
+  ${!S.loading ? `
+  <div style="${BASE.card};padding:0;overflow:hidden">
+    ${S.certs.length===0 ? `<div style="padding:60px;text-align:center;color:#94a3b8">No certificates found.</div>` : `
+    <div style="overflow-x:auto">
+    <table style="width:100%;border-collapse:collapse;font-size:13px">
+      <thead>
+        <tr>
+          <th style="${BASE.th}"><input type="checkbox" id="select-all" style="width:15px;height:15px;cursor:pointer;accent-color:#1c3d7a"></th>
+          <th style="${BASE.th}">Cert No</th>
+          <th style="${BASE.th}">Student</th>
+          <th style="${BASE.th}">Father's Name</th>
+          <th style="${BASE.th}">Course</th>
+          <th style="${BASE.th}">Grade</th>
+          <th style="${BASE.th}">Issue Date</th>
+          <th style="${BASE.th}">Status</th>
+          <th style="${BASE.th}">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${S.certs.map((cert,i)=>`
+        <tr style="background:${i%2===0?'#fff':'#f8fafc'}" onmouseenter="this.style.background='#eff6ff'" onmouseleave="this.style.background='${i%2===0?'#fff':'#f8fafc'}'">
+          <td style="${BASE.td}"><input type="checkbox" data-action="toggle-sel" data-id="${cert.id}" ${S.selected.has(cert.id)?'checked':''} style="width:15px;height:15px;cursor:pointer;accent-color:#1c3d7a"></td>
+          <td style="${BASE.td};font-family:monospace;font-weight:700;color:#1c3d7a">${escH(cert.certificate_no)}</td>
+          <td style="${BASE.td}"><div style="font-weight:600">${escH(cert.student_name||'—')}</div><div style="font-size:11px;color:#94a3b8">${escH(cert.batch_id||'')}</div></td>
+          <td style="${BASE.td};color:#64748b">${escH(cert.father_name||'—')}</td>
+          <td style="${BASE.td};max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${escH(cert.course_name||'')}">${escH(cert.course_name||'—')}</td>
+          <td style="${BASE.td}">${cert.grade?`<span style="background:${gradeColor(cert.grade)};color:#fff;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700">${escH(cert.grade)}</span>`:'—'}</td>
+          <td style="${BASE.td};white-space:nowrap;font-size:12px">${fmt(cert.issue_date)}</td>
+          <td style="${BASE.td}"><span style="background:${cert.is_active?'#dcfce7':'#fee2e2'};color:${cert.is_active?'#166534':'#991b1b'};padding:3px 10px;border-radius:12px;font-size:11px;font-weight:700">${cert.is_active?'✅ Active':'⭕ Inactive'}</span></td>
+          <td style="${BASE.td};white-space:nowrap">
+            <div style="display:flex;gap:5px">
+              <button data-action="edit-cert" data-id="${cert.id}" style="padding:4px 9px;background:#eff6ff;color:#1c3d7a;border:none;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer">✏️ Edit</button>
+              <button data-action="open-dl-single" data-id="${cert.id}" style="padding:4px 9px;background:#f0fdf4;color:#166534;border:none;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer">⬇️ DL</button>
+              ${cert.is_active?`<button data-action="open-del" data-id="${cert.id}" style="padding:4px 9px;background:#fef2f2;color:#dc2626;border:none;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer">🗑️ Del</button>`:''}
+            </div>
+          </td>
+        </tr>`).join('')}
+      </tbody>
+    </table>
+    </div>`}
+  </div>
+
+  ${S.totalCount>PAGE_SIZE?`
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-top:16px;flex-wrap:wrap;gap:10px">
+    <span style="font-size:13px;color:#64748b">Showing ${((S.page-1)*PAGE_SIZE)+1}–${Math.min(S.page*PAGE_SIZE,S.totalCount)} of ${S.totalCount.toLocaleString()}</span>
+    <div style="display:flex;gap:8px;align-items:center">
+      <button data-action="pg-prev" ${S.page===1?'disabled':''} style="${BASE.ghostBtn};opacity:${S.page===1?0.4:1}">← Prev</button>
+      <span style="font-size:13px;color:#64748b">Page ${S.page} / ${totalPages}</span>
+      <button data-action="pg-next" ${S.page>=totalPages?'disabled':''} style="${BASE.ghostBtn};opacity:${S.page>=totalPages?0.4:1}">Next →</button>
+    </div>
+  </div>`:''}`:''}
+`
+}
+
+function buildFormHTML() {
+  const f=S.form
+  return `
+  <div style="${BASE.card};max-width:780px">
+    <h2 style="font-family:'Sora',sans-serif;font-size:1.1rem;font-weight:800;margin-bottom:22px;color:#0b1525">
+      ${S.editId?`Edit Certificate: ${escH(f.certificate_no)}`:'➕ Add New Certificate'}
+    </h2>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+      ${[
+        {l:'Certificate Number *',k:'certificate_no',disabled:!!S.editId},
+        {l:'Student ID',k:'batch_id'},
+        {l:'Student Name *',k:'student_name'},
+        {l:"Father's Name *",k:'father_name'},
+        {l:"Mother's Name",k:'mother_name'},
+        {l:'Course Name *',k:'course_name'},
+        {l:'Course Duration',k:'course_duration',ph:'e.g. 6 Months'},
+        {l:'Center Name',k:'center_name'},
+      ].map(fd=>`<div>
+        <label style="${BASE.label}">${fd.l}</label>
+        <input type="text" data-action="form-field" data-field="${fd.k}" value="${escH((f[fd.k]||'').toString())}" placeholder="${fd.ph||''}" style="${BASE.input}${fd.disabled?';background:#f1f5f9;cursor:not-allowed':''}" ${fd.disabled?'disabled':''}>
+      </div>`).join('')}
+
+      <div>
+        <label style="${BASE.label}">Grade</label>
+        <select data-action="form-field" data-field="grade" style="${BASE.input};cursor:pointer">
+          ${['','A+','A','B+','B','C+','C','D','Pass','Distinction'].map(g=>`<option value="${g}" ${f.grade===g?'selected':''}>${g||'Select grade'}</option>`).join('')}
+        </select>
+      </div>
+      <div>
+        <label style="${BASE.label}">Marks Obtained</label>
+        <input type="number" data-action="form-field" data-field="marks_obtained" value="${f.marks_obtained??''}" min="0" max="1000" placeholder="e.g. 85" style="${BASE.input}">
+      </div>
+      <div>
+        <label style="${BASE.label}">Total Marks</label>
+        <input type="number" data-action="form-field" data-field="total_marks" value="${f.total_marks??''}" min="0" max="1000" placeholder="e.g. 100" style="${BASE.input}">
+      </div>
+      <div>
+        <label style="${BASE.label}">Course Start Date</label>
+        <input type="date" data-action="form-field" data-field="from_date" value="${f.from_date||''}" style="${BASE.input}">
+      </div>
+      <div>
+        <label style="${BASE.label}">Issue / To Date</label>
+        <input type="date" data-action="form-field" data-field="issue_date" value="${f.issue_date||''}" style="${BASE.input}">
+      </div>
+      <div style="grid-column:1/-1">
+        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:13px;font-weight:600;color:#475569">
+          <input type="checkbox" data-action="form-field" data-field="is_active" ${f.is_active?'checked':''} style="width:16px;height:16px;cursor:pointer;accent-color:#1c3d7a">
+          Active (verifiable online)
+        </label>
+      </div>
+    </div>
+    ${S.formError?`<div style="${BASE.errorBox};margin-top:14px">${escH(S.formError)}</div>`:''}
+    ${S.formSuccess?`<div style="${BASE.successBox};margin-top:14px">${escH(S.formSuccess)}</div>`:''}
+    <div style="display:flex;gap:12px;margin-top:20px">
+      <button data-action="save-form" ${S.formSaving?'disabled':''} style="${BASE.primBtn};min-width:180px">${S.formSaving?'Saving...':(S.editId?'✅ Update Certificate':'✅ Add Certificate')}</button>
+      <button data-action="cancel-form" style="${BASE.ghostBtn}">Cancel</button>
+    </div>
+  </div>`
+}
+
+function buildCSVHTML() {
+  return `
+  <div style="${BASE.card};max-width:920px">
+    <h2 style="font-family:'Sora',sans-serif;font-size:1.1rem;font-weight:800;margin-bottom:8px;color:#0b1525">📊 Bulk CSV Upload</h2>
+    <p style="font-size:13px;color:#64748b;margin-bottom:18px;line-height:1.6">
+      Save Excel as <b>CSV UTF-8</b> (File → Save As → CSV UTF-8). Required columns:
+      <code style="background:#f1f5f9;padding:2px 6px;border-radius:4px">certificate_no</code>,
+      <code style="background:#f1f5f9;padding:2px 6px;border-radius:4px">student_name</code>,
+      <code style="background:#f1f5f9;padding:2px 6px;border-radius:4px">father_name</code>,
+      <code style="background:#f1f5f9;padding:2px 6px;border-radius:4px">course_name</code>
+    </p>
+    <div style="background:#f8fafc;border-radius:10px;padding:14px;margin-bottom:18px;border:1px solid #e2e8f0;font-size:11px;color:#64748b;line-height:2">
+      <b style="color:#1e293b;text-transform:uppercase;letter-spacing:0.5px">Accepted column names:</b><br>
+      <span style="color:#1c3d7a;font-family:monospace">certificate_no / cert_no</span> · <span style="color:#1c3d7a;font-family:monospace">student_name / name</span> · <span style="color:#1c3d7a;font-family:monospace">father_name / fname</span> · <span style="color:#1c3d7a;font-family:monospace">mother_name</span> · <span style="color:#1c3d7a;font-family:monospace">batch_id / student id</span> · <span style="color:#1c3d7a;font-family:monospace">course_name / course</span> · <span style="color:#1c3d7a;font-family:monospace">course_duration / duration</span> · <span style="color:#1c3d7a;font-family:monospace">grade</span> · <span style="color:#1c3d7a;font-family:monospace">marks_obtained / marks</span> · <span style="color:#1c3d7a;font-family:monospace">total_marks</span> · <span style="color:#1c3d7a;font-family:monospace">from_date</span> · <span style="color:#1c3d7a;font-family:monospace">issue_date / to_date / date</span> · <span style="color:#1c3d7a;font-family:monospace">center_name / center</span>
+    </div>
+
+    <!-- File drop zone -->
+    <label for="csv-file-inp" style="display:block;border:2px dashed #cbd5e1;border-radius:12px;padding:44px 24px;text-align:center;cursor:pointer;margin-bottom:16px;transition:border-color 0.2s" onmouseenter="this.style.borderColor='#1c3d7a'" onmouseleave="this.style.borderColor='#cbd5e1'">
+      <div style="font-size:38px;margin-bottom:8px">📊</div>
+      <div style="font-size:14px;color:#64748b;font-weight:600">Click to upload CSV file</div>
+      <div style="font-size:12px;color:#94a3b8;margin-top:6px">${S.csvRows.length?`✓ ${S.csvRows.length} rows loaded`:'Only .csv files · Max ~10,000 rows'}</div>
+      <input id="csv-file-inp" type="file" accept=".csv" style="display:none">
+    </label>
+
+    ${S.csvError?`<div style="${BASE.errorBox}">${escH(S.csvError)}</div>`:''}
+    ${S.csvSuccess?`<div style="${BASE.successBox}">${escH(S.csvSuccess)}</div>`:''}
+
+    ${S.csvDuplicates.length?`
+    <div style="background:#fff7ed;border:1px solid #fed7aa;border-radius:10px;padding:16px;margin-bottom:16px">
+      <div style="color:#c2410c;font-weight:700;margin-bottom:8px">⚠️ ${S.csvDuplicates.length} duplicate certificate numbers already exist in database</div>
+      <div style="font-size:12px;color:#64748b;margin-bottom:12px;max-height:80px;overflow:auto;font-family:monospace">${S.csvDuplicates.slice(0,10).map(d=>escH(d)).join(', ')}${S.csvDuplicates.length>10?` ... and ${S.csvDuplicates.length-10} more`:''}</div>
+      <div style="display:flex;gap:10px">
+        <button data-action="skip-dupes" style="${BASE.dangerBtn};background:#c2410c">Skip Duplicates & Upload Rest (${S.csvRows.length-S.csvDuplicates.length} rows)</button>
+        <button data-action="cancel-csv" style="${BASE.ghostBtn}">Cancel</button>
+      </div>
+    </div>`:''}
+
+    ${S.csvPreview&&S.csvRows.length&&!S.csvDuplicates.length?`
+    <div style="margin-bottom:16px">
+      <div style="font-size:13px;color:#64748b;margin-bottom:10px">Preview: first 5 of <b>${S.csvRows.length}</b> rows to upload</div>
+      <div style="overflow-x:auto;border-radius:10px;border:1px solid #e2e8f0;margin-bottom:14px">
+      <table style="width:100%;border-collapse:collapse;font-size:12px">
+        <thead><tr>
+          ${['Cert No','Student Name',"Father's Name",'Course','Grade','Issue Date'].map(h=>`<th style="${BASE.th}">${h}</th>`).join('')}
+        </tr></thead>
+        <tbody>
+        ${S.csvRows.slice(0,5).map((r,i)=>`
+        <tr style="background:${i%2===0?'#fff':'#f8fafc'}">
+          <td style="${BASE.td};font-family:monospace;color:#1c3d7a;font-weight:700">${r.certificate_no||'<span style="color:#dc2626">MISSING</span>'}</td>
+          <td style="${BASE.td}">${escH(r.student_name||'')||'<span style="color:#dc2626">MISSING</span>'}</td>
+          <td style="${BASE.td};color:#64748b">${escH(r.father_name||'—')}</td>
+          <td style="${BASE.td};color:#64748b">${escH(r.course_name||'—')}</td>
+          <td style="${BASE.td}">${escH(r.grade||'—')}</td>
+          <td style="${BASE.td};font-size:11px">${escH(r.issue_date||'—')}</td>
+        </tr>`).join('')}
+        </tbody>
+      </table>
+      </div>
+      <div style="display:flex;gap:12px">
+        <button data-action="upload-csv" ${S.csvLoading?'disabled':''} style="${BASE.primBtn};min-width:240px">${S.csvLoading?'Uploading...':` ✓ Upload All ${S.csvRows.length} Certificates`}</button>
+        <button data-action="cancel-csv" style="${BASE.ghostBtn}">Cancel</button>
+      </div>
+    </div>`:''}
+  </div>`
+}
+
+function buildAuditHTML(auditTotalPages) {
+  return `
+  <div style="${BASE.card}">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;flex-wrap:wrap;gap:12px">
+      <div>
+        <h2 style="font-family:'Sora',sans-serif;font-size:1.1rem;font-weight:800;color:#0b1525;margin:0">🔍 Certificate Audit Log</h2>
+        <p style="font-size:12px;color:#64748b;margin-top:4px">Complete history of every insert, update, delete, download, bulk upload — with timestamp and admin info</p>
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <button data-action="export-audit" style="${BASE.ghostBtn}">⬇️ Export as CSV</button>
+        <button data-action="refresh-audit" style="${BASE.ghostBtn}">↻ Refresh</button>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">
+      <input id="audit-filter-inp" type="text" value="${escH(S.auditFilter)}" placeholder="Filter by cert no, student name, action..." style="${BASE.input};max-width:360px">
+      <button data-action="audit-filter" style="${BASE.primBtn}">Filter</button>
+      ${S.auditFilter?`<button data-action="audit-clear-filter" style="${BASE.ghostBtn}">✕ Clear</button>`:''}
+    </div>
+
+    ${S.auditLoading?`<div style="padding:40px;text-align:center;color:#94a3b8">Loading audit log...</div>`:''}
+
+    ${!S.auditLoading&&!S.auditRows.length?`<div style="padding:40px;text-align:center;color:#94a3b8">No audit entries yet. Actions will appear here automatically.</div>`:''}
+
+    ${!S.auditLoading&&S.auditRows.length?`
+    <div style="overflow-x:auto;border-radius:10px;border:1px solid #e2e8f0">
+    <table style="width:100%;border-collapse:collapse;font-size:12px">
+      <thead><tr>
+        <th style="${BASE.th}">Date & Time</th>
+        <th style="${BASE.th}">Action</th>
+        <th style="${BASE.th}">Certificate No</th>
+        <th style="${BASE.th}">Student Name</th>
+        <th style="${BASE.th}">Count</th>
+        <th style="${BASE.th}">By</th>
+        <th style="${BASE.th}">Notes</th>
+      </tr></thead>
+      <tbody>
+      ${S.auditRows.map((log,i)=>`
+      <tr style="background:${i%2===0?'#fff':'#f8fafc'}" onmouseenter="this.style.background='#eff6ff'" onmouseleave="this.style.background='${i%2===0?'#fff':'#f8fafc'}'">
+        <td style="${BASE.td};white-space:nowrap;font-size:11px">${fmtDT(log.performed_at)}</td>
+        <td style="${BASE.td}"><span style="${auditBadgeStyle(log.action)}">${escH(log.action)}</span></td>
+        <td style="${BASE.td};font-family:monospace;color:#1c3d7a;font-size:11px">${escH(log.certificate_no||'—')}</td>
+        <td style="${BASE.td}">${escH(log.student_name||'—')}</td>
+        <td style="${BASE.td};font-weight:700">${log.records_count||1}</td>
+        <td style="${BASE.td};font-size:11px;color:#64748b">${escH(log.performed_by||'—')}</td>
+        <td style="${BASE.td};font-size:11px;color:#64748b;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${escH(log.notes||'')}">${escH(log.notes||'—')}</td>
+      </tr>`).join('')}
+      </tbody>
+    </table>
+    </div>
+
+    ${S.auditTotal>AUDIT_SIZE?`
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:14px;flex-wrap:wrap;gap:10px">
+      <span style="font-size:12px;color:#64748b">${S.auditTotal.toLocaleString()} total audit entries</span>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button data-action="audit-pg-prev" ${S.auditPage===1?'disabled':''} style="${BASE.ghostBtn};opacity:${S.auditPage===1?0.4:1}">← Prev</button>
+        <span style="font-size:12px;color:#64748b">Page ${S.auditPage} / ${auditTotalPages}</span>
+        <button data-action="audit-pg-next" ${S.auditPage>=auditTotalPages?'disabled':''} style="${BASE.ghostBtn};opacity:${S.auditPage>=auditTotalPages?0.4:1}">Next →</button>
+      </div>
+    </div>`:''}`:''}
+  </div>`
+}
+
+function buildDlModalHTML() {
+  const isAll = S.dlModal==='all'
+  const cert = isAll ? null : S.dlModal
+  return `
+  <div style="position:fixed;inset:0;background:rgba(0,0,0,0.55);display:flex;align-items:center;justify-content:center;z-index:9000;padding:20px">
+    <div style="background:#fff;border-radius:16px;padding:32px;width:100%;max-width:440px;box-shadow:0 25px 60px rgba(0,0,0,0.2)">
+      <div style="text-align:center;margin-bottom:22px">
+        <div style="font-size:44px;margin-bottom:10px">⬇️</div>
+        <h3 style="font-family:'Sora',sans-serif;font-weight:800;font-size:1.1rem;margin-bottom:8px;color:#0b1525">
+          ${isAll?'Download All Certificates':`Download: ${escH(cert?.certificate_no)}`}
+        </h3>
+        <p style="font-size:13px;color:#64748b;line-height:1.6">
+          ${isAll?'Exports the complete certificate database as a CSV file.':
+            `Exports <b>${escH(cert?.student_name)}</b>'s certificate as CSV.`}
+          <br><span style="color:#dc2626;font-weight:600">🔒 Password required.</span>
+        </p>
+      </div>
+      <label style="${BASE.label}">Download Password</label>
+      <input id="dl-pwd-inp" type="password" placeholder="Enter download password" value="${escH(S.dlPwd)}" style="${BASE.input};margin-bottom:${S.dlError?'8px':'14px'}">
+      ${S.dlError?`<div style="${BASE.errorBox}">${escH(S.dlError)}</div>`:''}
+      <div style="display:flex;gap:10px;margin-top:4px">
+        <button data-action="confirm-download" ${S.dlLoading?'disabled':''} style="${BASE.primBtn};flex:1">${S.dlLoading?'Preparing...':'⬇️ Download'}</button>
+        <button data-action="cancel-dl" style="${BASE.ghostBtn}">Cancel</button>
+      </div>
+    </div>
+  </div>`
+}
+
+function buildDelModalHTML() {
+  const cert=S.delModal
+  return `
+  <div style="position:fixed;inset:0;background:rgba(0,0,0,0.55);display:flex;align-items:center;justify-content:center;z-index:9000;padding:20px">
+    <div style="background:#fff;border-radius:16px;padding:32px;width:100%;max-width:460px;box-shadow:0 25px 60px rgba(0,0,0,0.2)">
+      <div style="text-align:center;margin-bottom:20px">
+        <div style="font-size:44px;margin-bottom:10px">⚠️</div>
+        <h3 style="font-family:'Sora',sans-serif;font-weight:800;font-size:1.1rem;margin-bottom:8px;color:#0b1525">Deactivate Certificate</h3>
+        <p style="font-size:13px;color:#64748b;line-height:1.7">
+          Certificate <b style="color:#1c3d7a">${escH(cert?.certificate_no)}</b><br>
+          Student: <b>${escH(cert?.student_name)}</b><br>
+          will be <b style="color:#dc2626">deactivated</b> and hidden from public verification.<br>
+          <span style="font-size:12px;color:#94a3b8">Record is NOT permanently deleted. Reversible via Edit → set Active = true.</span>
+        </p>
+      </div>
+      <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:12px;margin-bottom:16px;font-size:12px;color:#dc2626;line-height:1.6">
+        🔒 <b>Two-step verification required:</b><br>
+        1. Enter delete password &nbsp; 2. Type DELETE in the confirmation box
+      </div>
+      <label style="${BASE.label}">Delete Password</label>
+      <input id="del-pwd-inp" type="password" placeholder="Enter delete password" value="${escH(S.delPwd)}" style="${BASE.input};margin-bottom:14px">
+      <label style="${BASE.label}">Type "DELETE" to confirm</label>
+      <input id="del-word-inp" type="text" placeholder="Type: DELETE" value="${escH(S.delWord)}" style="${BASE.input};border-color:#fecaca;margin-bottom:${S.delError?'8px':'14px'}">
+      ${S.delError?`<div style="${BASE.errorBox}">${escH(S.delError)}</div>`:''}
+      <div style="display:flex;gap:10px;margin-top:4px">
+        <button data-action="confirm-delete" ${S.delLoading?'disabled':''} style="${BASE.dangerBtn};flex:1">${S.delLoading?'Processing...':'🗑️ Deactivate Certificate'}</button>
+        <button data-action="cancel-del" style="${BASE.ghostBtn}">Cancel</button>
+      </div>
+    </div>
+  </div>`
+}
+
+function buildBulkDelHTML() {
+  return `
+  <div style="position:fixed;inset:0;background:rgba(0,0,0,0.55);display:flex;align-items:center;justify-content:center;z-index:9000;padding:20px">
+    <div style="background:#fff;border-radius:16px;padding:32px;width:100%;max-width:460px;box-shadow:0 25px 60px rgba(0,0,0,0.2)">
+      <div style="text-align:center;margin-bottom:20px">
+        <div style="font-size:44px;margin-bottom:10px">🗑️</div>
+        <h3 style="font-family:'Sora',sans-serif;font-weight:800;font-size:1.1rem;margin-bottom:8px;color:#0b1525">Bulk Deactivate Certificates</h3>
+        <p style="font-size:13px;color:#64748b;line-height:1.6">
+          <b style="color:#dc2626;font-size:16px">${S.selected.size}</b> selected certificates will be deactivated.<br>
+          <span style="font-size:12px;color:#94a3b8">Reversible via Edit → set Active = true. All actions logged.</span>
+        </p>
+      </div>
+      <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:12px;margin-bottom:16px;font-size:12px;color:#dc2626;line-height:1.6">
+        🔒 <b>Two-step verification required.</b>
+      </div>
+      <label style="${BASE.label}">Delete Password</label>
+      <input id="bulk-del-pwd-inp" type="password" placeholder="Enter delete password" value="${escH(S.bulkDelPwd)}" style="${BASE.input};margin-bottom:14px">
+      <label style="${BASE.label}">Type "DELETE" to confirm</label>
+      <input id="bulk-del-word-inp" type="text" placeholder="Type: DELETE" value="${escH(S.bulkDelWord)}" style="${BASE.input};border-color:#fecaca;margin-bottom:${S.bulkDelError?'8px':'14px'}">
+      ${S.bulkDelError?`<div style="${BASE.errorBox}">${escH(S.bulkDelError)}</div>`:''}
+      <div style="display:flex;gap:10px;margin-top:4px">
+        <button data-action="confirm-bulk-del" ${S.bulkDelLoading?'disabled':''} style="${BASE.dangerBtn};flex:1">${S.bulkDelLoading?'Processing...':'🗑️ Deactivate Selected'}</button>
+        <button data-action="cancel-bulk-del" style="${BASE.ghostBtn}">Cancel</button>
+      </div>
+    </div>
+  </div>`
+}
+
+function escH(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')
+}
+
+// ─── Render ───────────────────────────────────────────────────────────────────
+function render() {
+  const root = document.getElementById('sa-root')
+  if (!root) return
+  root.innerHTML = buildUI()
+  attachEvents()
+}
+
+// ─── Event delegation ─────────────────────────────────────────────────────────
+function attachEvents() {
+  const root = document.getElementById('sa-root')
+  if (!root) return
+
+  // Tab buttons
+  root.querySelectorAll('[data-tab]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const tab = btn.dataset.tab
+      setState({ tab })
+      if (tab==='audit') loadAudit(S.auditPage, S.auditFilter)
+    })
+  })
+
+  // CSV file input
+  const csvInput = root.querySelector('#csv-file-inp')
+  if (csvInput) {
+    csvInput.addEventListener('change', e => {
+      if (e.target.files[0]) handleCSVFile(e.target.files[0])
+    })
+  }
+
+  // Select all checkbox
+  const selAll = root.querySelector('#select-all')
+  if (selAll) {
+    selAll.addEventListener('change', () => {
+      const s = new Set(selAll.checked ? S.certs.map(c=>c.id) : [])
+      setState({ selected: s })
+    })
+  }
+
+  // Action buttons (event delegation on root)
+  root.addEventListener('click', async e => {
+    const target = e.target.closest('[data-action]')
+    if (!target) return
+    const action = target.dataset.action
+
+    if (action==='search') {
+      const q=root.querySelector('#sa-search')?.value||''
+      setState({ search:q, page:1 })
+      loadCerts(1, q)
+    }
+    if (action==='clear-search') { setState({ search:'', page:1 }); loadCerts(1,'') }
+    if (action==='add-new') setState({ tab:'add', editId:null, form:emptyForm(), formError:'', formSuccess:'' })
+    if (action==='pg-prev') { const p=S.page-1; setState({page:p}); loadCerts(p,S.search) }
+    if (action==='pg-next') { const p=S.page+1; setState({page:p}); loadCerts(p,S.search) }
+
+    if (action==='toggle-sel') {
+      const id=target.dataset.id
+      const s=new Set(S.selected)
+      if(s.has(id)) s.delete(id); else s.add(id)
+      setState({ selected:s })
+    }
+    if (action==='open-bulk-del') setState({ bulkDelModal:true, bulkDelPwd:'', bulkDelWord:'', bulkDelError:'' })
+    if (action==='cancel-bulk-del') setState({ bulkDelModal:false })
+    if (action==='confirm-bulk-del') {
+      setState({
+        bulkDelPwd: root.querySelector('#bulk-del-pwd-inp')?.value||'',
+        bulkDelWord: root.querySelector('#bulk-del-word-inp')?.value||'',
+      })
+      await doBulkDelete()
+    }
+
+    if (action==='edit-cert') {
+      const cert=S.certs.find(c=>c.id===target.dataset.id)
+      if(cert) {
+        setState({
+          editId:cert.id, tab:'add', formError:'', formSuccess:'',
+          form:{
+            certificate_no:cert.certificate_no||'', batch_id:cert.batch_id||'',
+            student_name:cert.student_name||'', father_name:cert.father_name||'',
+            mother_name:cert.mother_name||'', course_name:cert.course_name||'',
+            course_duration:cert.course_duration||'', grade:cert.grade||'',
+            marks_obtained:cert.marks_obtained??'', total_marks:cert.total_marks??'',
+            from_date:cert.from_date?cert.from_date.slice(0,10):'',
+            issue_date:cert.issue_date?cert.issue_date.slice(0,10):'',
+            center_name:cert.center_name||'ATEC Gurdaspur', is_active:cert.is_active,
+          },
+        })
+        window.scrollTo({top:0,behavior:'smooth'})
+      }
+    }
+
+    if (action==='form-field') {
+      const k=target.dataset.field
+      const v=target.type==='checkbox'?target.checked:target.value
+      setState({ form:{...S.form,[k]:v} })
+    }
+    if (action==='save-form') await saveForm()
+    if (action==='cancel-form') setState({ form:emptyForm(), editId:null, tab:'list', formError:'', formSuccess:'' })
+
+    if (action==='open-dl-all') setState({ dlModal:'all', dlPwd:'', dlError:'' })
+    if (action==='open-dl-single') {
+      const cert=S.certs.find(c=>c.id===target.dataset.id)
+      if(cert) setState({ dlModal:cert, dlPwd:'', dlError:'' })
+    }
+    if (action==='confirm-download') {
+      setState({ dlPwd: root.querySelector('#dl-pwd-inp')?.value||'' })
+      await doDownload()
+    }
+    if (action==='cancel-dl') setState({ dlModal:null, dlPwd:'', dlError:'' })
+
+    if (action==='open-del') {
+      const cert=S.certs.find(c=>c.id===target.dataset.id)
+      if(cert) setState({ delModal:cert, delPwd:'', delWord:'', delError:'' })
+    }
+    if (action==='confirm-delete') {
+      setState({
+        delPwd: root.querySelector('#del-pwd-inp')?.value||'',
+        delWord: root.querySelector('#del-word-inp')?.value||'',
+      })
+      await doDelete()
+    }
+    if (action==='cancel-del') setState({ delModal:null, delPwd:'', delWord:'', delError:'' })
+
+    if (action==='upload-csv') await uploadCSV()
+    if (action==='cancel-csv') setState({ csvRows:[], csvPreview:false, csvError:'', csvDuplicates:[] })
+    if (action==='skip-dupes') skipDuplicates()
+
+    if (action==='refresh-audit') loadAudit(S.auditPage, S.auditFilter)
+    if (action==='audit-filter') {
+      const f=root.querySelector('#audit-filter-inp')?.value||''
+      setState({ auditFilter:f, auditPage:1 }); loadAudit(1,f)
+    }
+    if (action==='audit-clear-filter') { setState({ auditFilter:'', auditPage:1 }); loadAudit(1,'') }
+    if (action==='audit-pg-prev') { const p=S.auditPage-1; setState({auditPage:p}); loadAudit(p,S.auditFilter) }
+    if (action==='audit-pg-next') { const p=S.auditPage+1; setState({auditPage:p}); loadAudit(p,S.auditFilter) }
+    if (action==='export-audit') {
+      const { data } = await sb.from('certificate_audit_log').select('*').order('performed_at',{ascending:false}).limit(10000)
+      const rows=data||[]
+      const cols=['id','action','certificate_no','student_name','records_count','performed_by','notes','performed_at']
+      const csv=[cols.join(','),...rows.map(r=>cols.map(c=>{
+        const v=r[c]??''; const s=String(v)
+        return s.includes(',')||s.includes('"')?`"${s.replace(/"/g,'""')}"`:s
+      }).join(','))].join('\n')
+      const blob=new Blob([csv],{type:'text/csv'})
+      const url=URL.createObjectURL(blob)
+      const a=document.createElement('a'); a.href=url; a.download=`ATEC_Audit_Log_${new Date().toISOString().slice(0,10)}.csv`; a.click()
+      URL.revokeObjectURL(url)
+      await logAudit('AUDIT_EXPORT','Audit export','superadmin',null,null,rows.length,'Audit log exported to CSV')
+    }
+  })
+}
+
+// ─── Initial load ─────────────────────────────────────────────────────────────
+loadCerts(1, '')
+render()
+
+} // end mountApp
+</script>

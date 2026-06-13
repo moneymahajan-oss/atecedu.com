@@ -222,9 +222,12 @@ const ADMIN_EMAILS = ['atecgsp@gmail.com', 'admin@atecedu.com']
 
         <!-- ── NEW: Admin Users — superadmin only ── -->
         <div class="nav-section superadmin-only" id="superadmin-section">
-          <span class="nav-section-label">Admin Users</span>
+          <span class="nav-section-label">Superadmin</span>
           <a href="/admin/admin-users" class:list={['nav-link', { active: activeSection === 'admin-users' }]}>
             <span class="icon">🔐</span> Manage Admins
+          </a>
+          <a href="/admin/superadmin-certificates" class:list={['nav-link', { active: activeSection === 'superadmin-certificates' }]}>
+            <span class="icon">🛡️</span> Cert Superadmin
           </a>
         </div>
 
