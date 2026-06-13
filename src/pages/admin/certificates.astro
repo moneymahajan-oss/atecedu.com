@@ -16,15 +16,11 @@ const EMPTY = {
   batch_id: '',
   student_name: '',
   father_name: '',
-  mother_name: '',
   course_name: '',
   course_duration: '',
   grade: 'A',
-  marks_obtained: '',
-  total_marks: '',
   from_date: '',
   issue_date: '',
-  center_name: 'ATEC Gurdaspur',
   is_active: true,
 }
 
@@ -62,11 +58,7 @@ function Mgr() {
       ...r,
       from_date:  r.from_date  ? r.from_date.slice(0, 10)  : '',
       issue_date: r.issue_date ? r.issue_date.slice(0, 10) : '',
-      marks_obtained: r.marks_obtained ?? '',
-      total_marks:    r.total_marks    ?? '',
-      mother_name:    r.mother_name    ?? '',
       course_duration: r.course_duration ?? '',
-      center_name:    r.center_name    ?? 'ATEC Gurdaspur',
     })
     setEditId(r.id)
     setSaveErr('')
@@ -86,15 +78,11 @@ function Mgr() {
       batch_id:        form.batch_id?.trim() || null,
       student_name:    form.student_name.trim(),
       father_name:     form.father_name.trim(),
-      mother_name:     form.mother_name?.trim() || null,
       course_name:     form.course_name.trim(),
       course_duration: form.course_duration?.trim() || null,
       grade:           form.grade?.trim() || null,
-      marks_obtained:  form.marks_obtained !== '' ? Number(form.marks_obtained) : null,
-      total_marks:     form.total_marks    !== '' ? Number(form.total_marks)    : null,
       from_date:       form.from_date  || null,
       issue_date:      form.issue_date || null,
-      center_name:     form.center_name?.trim() || 'ATEC Gurdaspur',
       is_active:       form.is_active,
     }
 
@@ -141,10 +129,8 @@ function Mgr() {
     { l: 'Student ID',         k: 'batch_id' },
     { l: 'Student Name *',    k: 'student_name' },
     { l: "Father's Name *",   k: 'father_name' },
-    { l: "Mother's Name",     k: 'mother_name' },
     { l: 'Course Name *',     k: 'course_name' },
     { l: 'Course Duration',   k: 'course_duration', placeholder: 'e.g. 6 Months' },
-    { l: 'Center Name',       k: 'center_name' },
   ]
 
   return h('div', { style: { display: 'flex', flexDirection: 'column', gap: '20px' } },
@@ -198,18 +184,6 @@ function Mgr() {
               h('option', { key: g, value: g }, g)
             )
           )
-        ),
-
-        // marks obtained
-        h('div', { key: 'marks_obtained' },
-          lbl('Marks Obtained'),
-          h('input', { type: 'number', value: form.marks_obtained ?? '', onChange: e => upd('marks_obtained', e.target.value), placeholder: 'e.g. 85', min: 0, max: 1000, style: s })
-        ),
-
-        // total marks
-        h('div', { key: 'total_marks' },
-          lbl('Total Marks'),
-          h('input', { type: 'number', value: form.total_marks ?? '', onChange: e => upd('total_marks', e.target.value), placeholder: 'e.g. 100', min: 0, max: 1000, style: s })
         ),
 
         // FROM DATE  ← was missing
